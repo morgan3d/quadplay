@@ -622,6 +622,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 with open(os.path.join(dst_path, dir_name + '.game.json'), 'wt', encoding='utf8') as f:
                     f.write(workjson.dumps(game_json, indent=4))
 
+                # Delete the old starter game file
+                os.remove(os.path.join(dst_path, src_filename))
+                
                 response_obj = {'game': '/' + dst_path + '/'}
                 
         elif command == 'update':
@@ -757,6 +760,12 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 # Search (quad_filepath | aux_webpath) + type + 's/*.' + type + '.json'
                 asset_type_array = ['font', 'sprite', 'sound', 'map', 'data']
+                raw_extension_table = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map': 'tmx'}
+                source_extension_array = ['kra', 'psd', 'ase', 'aseprite']
+
+                # Get json assets from the game directory and build the exclude list.
+                # This must be done before iterating for raw assets because multiple
+                # asset types use the same type of raw file (e.g., PNG).
                 for t in asset_type_array:
                     # Get the json files from the game directory
                     response_obj[t] = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + t + '.json'), recursive=True)
@@ -770,22 +779,43 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                         except:
                             maybe_print('Warning: Could not parse ' + file)
 
-                raw_extension = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map': 'tmx'}
+                # Art source files, pre-export. These will be used by
+                # the IDE to set up source_url when performing import
+                # of a PNG
+                response_obj['source'] = []
+                for source_extension in source_extension_array:
+                    raw_files = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + source_extension), recursive=True)
+
+                    # Remove anything in a magic directory
+                    response_obj['source'] = [f for f in raw_files if not self.special_dir_regex.search(f)]
+
+                    # Sort
+                    response_obj['source'] = sorted(response_obj['source'])
+
+                    # Fix slashes on windows
+                    if isWindows: response_obj['source'] = [f.replace('\\', '/') for f in response_obj['source']]
+                
+                            
+                # Get additional raw files from the game directory and
+                # json assets from the quadplay directory.
                 for t in asset_type_array:
                     # Get raw files
                     if t != 'data':
-                        raw_files = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + raw_extension[t]), recursive=True)
+                        raw_files = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + raw_extension_table[t]), recursive=True)
                     else:
                         raw_files = []
 
-                    # Remove from raw_files anything that is in exclude_table
+                    # Remove anything that is in exclude_table from raw_files 
                     raw_files = [f for f in raw_files if not f in exclude_table]
                     
-                    # Sort all files from the game directory
-                    response_obj[t] = sorted(response_obj[t] + raw_files)
+                    # Append these raw files
+                    response_obj[t] += raw_files
 
                     # Remove anything in a magic directory
                     response_obj[t] = [f for f in response_obj[t] if not self.special_dir_regex.search(f)]
+
+                    # Sort
+                    response_obj[t] = sorted(response_obj[t])
 
                     # Get the json files from the quadplay directory,
                     # sort, and append them to the list

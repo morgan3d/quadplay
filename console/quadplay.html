@@ -3,7 +3,6 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="quadplay.css">
     <link rel="icon" href="icons/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -12,6 +11,7 @@
     <meta property="og:title" content="quadplay✜">
     <meta property="og:image" content="https://morgan3d.github.io/quadplay/doc/emulator.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>quadplay✜</title>
@@ -735,17 +735,17 @@
       </div>
     </div>
 
-    <div id="addAssetDialog" class="modal hidden">
+    <div id="importAssetDialog" class="modal hidden">
       <div class="dialog" style="margin-top: 10vh; width: 410px">
         <center>
           <span class="title">Import Existing Asset</span>
           <table style="width: 100%; margin-top: 10px">
             <tr>
               <td width="60px">
-                <label for="addAssetType">Type&nbsp;&nbsp;</label>
+                <label for="importAssetType">Type&nbsp;&nbsp;</label>
               </td>
               <td>
-                <select id="addAssetType" style="width: 100%" onchange="onAddAssetTypeChange()">
+                <select id="importAssetType" style="width: 100%" onchange="onImportAssetTypeChange()">
                   <option value="sprite">Sprite</option>
                   <option value="sound">Sound</option>
                   <option value="font">Font</option>
@@ -759,27 +759,27 @@
                 Filter
               </td>
               <td>
-                <input id="addAssetFilter" type="text" style="width: 100%" oninput="onAddAssetFilterChange()"></input>
+                <input id="importAssetFilter" type="text" style="width: 100%" oninput="onImportAssetFilterChange()"></input>
               </td>
             </tr>
             <tr>
               <td colspan=2 style="text-align:center; padding-top: 10px; padding-bottom: 10px">
-                <div id="addAssetList" style="width:100%; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
+                <div id="importAssetList" style="width:100%; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
                 </div>
               </td>
             </tr>
             <tr>
               <td>
-                <label for="addAssetName">Name&nbsp;&nbsp;</label>
+                <label for="importAssetName">Name&nbsp;&nbsp;</label>
               </td>
               <td>
-                <input id="addAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 100%" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/^_+/, '');document.getElementById('addAssetAddButton').disabled = (this.value === '' || !addAssetFiles.selected)"></input>
+                <input id="importAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 100%" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/^_+/, '');document.getElementById('importAssetImportButton').disabled = (this.value === '' || !importAssetFiles.selected)"></input>
               </td>
             </tr>
           </table>
           <br/>
-          <button type="button" style="width: 80px" onclick="hideAddAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
-          <button type="button" style="width: 80px" id="addAssetAddButton" onclick="onAddAssetAdd()">Add</button>
+          <button type="button" style="width: 80px" onclick="hideImportAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" style="width: 80px" id="importAssetImportButton" onclick="onImportAssetImport()">Import</button>
         </center>
       </div>
     </div>

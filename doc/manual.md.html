@@ -2031,6 +2031,12 @@ def launchpad_show_sprite(sprite):
     midi_send_raw(port, msg)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+To reduce permission dialogs for the player, MIDI is only available if
+the source code explicitly references an object or property directly
+on the `midi` object by name at least once. Exclusively renaming or
+passing the `midi` object as an argument and then accessing properties
+of it by another name will not trigger the initialization correctly.
+
 
 Modes
 ------------------------------------------------------------------------
@@ -6913,10 +6919,12 @@ The sprite sheet JSON descriptor looks like:
     // in game.
     "transpose":    false,
     
-    // Optional name of the file to load with an external editor from the IDE
-    // instead of the url one when editing. For example, if you export from
-    // another tool such as Aseprite or Photoshop and would like to load *this*
-    // instead from the IDE when editing the sprite.
+    // Optional name of the file from which this PNG was generated.
+    // This is the file that will be loaded with an external editor from the IDE
+    // instead of the PNG when editing. This file will also be managed by version control
+    // alongside the PNG nad JOSN.
+    //
+    // Useul if you export from another tool such as Aseprite, Krita, or Photoshop.
     "source_url":   "hero.psd",
 
     // Default value for sprite.frames, the number of 1/60-second frames

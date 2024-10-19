@@ -733,7 +733,13 @@ div.disabled span.label, div.disabled:active span.label {
     .WideIDEUI .project:not(:hover) .hideScrollBars {
         visibility: hidden;
     }
+
+    /* Hide when the project pane is collapsed */
+    .WideIDEUI .project:not(:hover) #versionControl {
+        visibility: hidden;
+    }
 }
+
 
 .WideIDEUI #editorFrame {
     /* Sized for large screens */
@@ -938,10 +944,26 @@ code, .code {
     }
 }
 
+/**************************************************/
+
+#versionControl {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    height: 19px;
+}
+
+#versionControl button {
+    width: 50%;
+    height: 19px;
+    font-size: 14px;
+}
+
 
 /**************************************************/
 
-/* Needed for hiding vertical scroll bars on windows. See http://jsfiddle.net/5GCsJ/954/ */
+/* Needed for hiding vertical scroll bars on windows, but doesn't
+   work on all browsers. See http://jsfiddle.net/5GCsJ/954/ */
 .hideScrollBars {
     overflow: auto;
     padding: 0px;

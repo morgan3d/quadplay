@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64x64.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>quadplay✜</title>
@@ -16,19 +17,6 @@
     <!-- <div style="z-index: 1000; height: 2000px; width: 10px; background: #FF0"></div> -->
     <iframe id="quadplayFrame" style="position: fixed; width: 100%; height: 100%; border: none"></iframe>
     <script>
-      /*
-      {
-          const isUIWebView = ! /chrome|firefox|safari|edge/i.test(navigator.userAgent) && /applewebkit/i.test(navigator.userAgent);  
-          const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
-          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || isUIWebView;
-          const isMobile = window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 1);
-
-          // Make iOS show fullscreen
-          if (true || isApple && isSafari && isMobile) {
-            document.write('<div style="z-index: -1000; height: 2000px; pointer-events: none;"></div>');
-          }
-       }*/
-      
        // Load the embedded quadplay. This allows it to refresh itself while still full screen.
        // Have to generate the src string using code because it must copy over all of the query
        // parameters.

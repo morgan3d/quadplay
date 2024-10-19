@@ -3,7 +3,8 @@
 
 // Mapped to QRuntime.midi
 const midi = Object.freeze({
-    $options: {sysex: false, software: true, access: undefined},
+    // midiAccess is undefined until initialized
+    $options: {sysex: false, software: true, midiAccess: undefined},
     
     input_port_table: {},
     input_port_array: [],

@@ -1,19 +1,19 @@
 "use strict";
 
-let addAssetFiles = null;
-function showAddAssetDialog() {
-    document.getElementById('addAssetDialog').classList.remove('hidden');
-    document.getElementById('addAssetAddButton').disabled = true;
-    document.getElementById('addAssetFilter').value = '';
-    const text = document.getElementById('addAssetName');
+let importAssetFiles = null;
+function showImportAssetDialog() {
+    document.getElementById('importAssetDialog').classList.remove('hidden');
+    document.getElementById('importAssetImportButton').disabled = true;
+    document.getElementById('importAssetFilter').value = '';
+    const text = document.getElementById('importAssetName');
     text.value = '';
     text.focus();
 
-    fetchAssetTable(function(table) {
-        addAssetFiles = table;
+    fetchAssetTable(function (table) {
+        importAssetFiles = table;
 
         // Create the initial display
-        onAddAssetTypeChange();
+        onImportAssetTypeChange();
     });
 }
 
@@ -49,38 +49,38 @@ function fetchAssetTable(callback) {
 }
 
 
-/* Called to regenerate the addAssetList display for the add asset dialog
+/* Called to regenerate the importAssetList display for the add asset dialog
    when the type of asset to be added is changed by the user. */
-function onAddAssetTypeChange() {
-    const t = document.getElementById('addAssetType').value;
-    let s = '<ol id="addAssetListOL" class="select-list">\n';
-    if (addAssetFiles) {
-        const fileArray = addAssetFiles[t];
+function onImportAssetTypeChange() {
+    const t = document.getElementById('importAssetType').value;
+    let s = '<ol id="importAssetListOL" class="select-list">\n';
+    if (importAssetFiles) {
+        const fileArray = importAssetFiles[t];
         for (let i = 0; i < fileArray.length; ++i) {
             const file = fileArray[i];
             const path = (file.indexOf('/') === -1) ? '' : file.replace(/\/[^\/]+$/, '/');
             const rest = file.replace(/^.*\//, '');
             const base = rest.replace(/\..+?$/, '');
             const ext  = rest.replace(/^[^\.]+/, '');
-            s += `<li onclick="onAddAssetListSelect(this)">${path}<b style="color:#000">${base}</b>${ext}</li>\n`;
+            s += `<li onclick="onImportAssetListSelect(this)">${path}<b style="color:#000">${base}</b>${ext}</li>\n`;
         }
     }
     s += '</ol>';
 
-    const list = document.getElementById('addAssetList');
+    const list = document.getElementById('importAssetList');
     list.innerHTML = s;
 
-    onAddAssetFilterChange();
+    onImportAssetFilterChange();
 
-    addAssetFiles.selected = null;
+    importAssetFiles.selected = null;
     // Recreating the list destroys any selection
-    document.getElementById('addAssetAddButton').disabled = true;
+    document.getElementById('importAssetImportButton').disabled = true;
 }
 
 
-function onAddAssetFilterChange() {
-    const filter = document.getElementById('addAssetFilter').value.trim().toLowerCase();
-    const list = document.querySelectorAll('#addAssetListOL li');
+function onImportAssetFilterChange() {
+    const filter = document.getElementById('importAssetFilter').value.trim().toLowerCase();
+    const list = document.querySelectorAll('#importAssetListOL li');
     for (let i = 0; i < list.length; ++i) {
         const element = list[i];
         element.style.display = (filter === '') || (element.innerText.toLowerCase().indexOf(filter) !== -1) ? '' : 'none';
@@ -111,9 +111,9 @@ function suggestedAssetFilename(url, suffix) {
 }
 
 
-/* Called from the "Add" button */
-function onAddAssetAdd() {
-    const nameBox = document.getElementById('addAssetName');
+/* Called from the "Import" button */
+function onImportAssetImport() {
+    const nameBox = document.getElementById('importAssetName');
     const name = nameBox.value;
 
     // Warn on overwrite
@@ -127,8 +127,8 @@ function onAddAssetAdd() {
     // Warn on double add
     for (const key in gameSource.json.assets) {
         const value = gameSource.json.assets[key];
-        if ((key[0] !== '_') && (value === addAssetFiles.selected)) {
-            if (window.confirm('The asset ' + addAssetFiles.selected + ' is already in your game, called ' + key + '. Add the same asset again anyway?')) {
+        if ((key[0] !== '_') && (value === importAssetFiles.selected)) {
+            if (window.confirm('The asset ' + importAssetFiles.selected + ' is already in your game, called ' + key + '. Add the same asset again anyway?')) {
                 // The user accepted...go along with it
                 break;
             } else {
@@ -137,8 +137,9 @@ function onAddAssetAdd() {
         }
     }
 
-    const url = addAssetFiles.selected;
-    hideAddAssetDialog();
+    const url = importAssetFiles.selected;
+    const sourceFiles = importAssetFiles.source;
+    hideImportAssetDialog();
 
     if (url.endsWith('.png') ||
         url.endsWith('.tmx') ||
@@ -146,26 +147,45 @@ function onAddAssetAdd() {
         // Handle raw assets
         
         const rawName = url;
-        const type = document.getElementById('addAssetType').value;
+        const type = document.getElementById('importAssetType').value;
         const jsonBase = rawName.replace(/\..*$/, '.' + type + '.json');
         const jsonAbsoluteURL = makeURLRelativeToGame(jsonBase);
 
         const json = {
             'url': rawName,
-            'license': 'TODO'
+            'license': 'todo'
         };
         
         if (type === 'map') {
             json.sprite_url_table = {'todo': 'todo'};
+        } else if (type === 'sprite') {
+            // Autdetect source_url for psd, kra, ase, aseprite files
+            const baseName = rawName.replace(/\.png$/, '');
+            console.log(importAssetFiles);
+            for (const sourceName of sourceFiles) {
+                if (baseName === sourceName.replace(/\.(kra|psd|ase|aseprite)$/i, '')) {
+                    // Found a source URL
+                    json.source_url = sourceName;
+                    break;
+                }
+            }
         }
 
         gameSource.json.assets[name] = jsonBase;
 
         // Save the new JSON file, and then reload the game
         serverWriteFile(jsonAbsoluteURL, 'utf8', WorkJSON.stringify(json, undefined, 4), function () {
-            serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+            serverSaveGameJSON(function () {
+                loadGameIntoIDE(window.gameURL, function () {
+                    // Show the new object
+                    onProjectSelect(document.getElementById('projectAsset_' + name), 'asset', gameSource.assets[name]);
+                }, true);
+            });
         });
+        
     } else {
+        // Not a sprite, sound, or map
+        
         gameSource.json.assets[name] = url;
     
         // Save and reload the game
@@ -174,27 +194,27 @@ function onAddAssetAdd() {
 }
 
 
-function onAddAssetListSelect(target) {
-    const list = document.getElementById('addAssetListOL');
+function onImportAssetListSelect(target) {
+    const list = document.getElementById('importAssetListOL');
     for (let i = 0; i < list.children.length; ++i) {
         list.children[i].classList.remove('selected');
     }
     target.classList.add('selected');
-    addAssetFiles.selected = target.innerText;
+    importAssetFiles.selected = target.innerText;
 
-    const addAssetName = document.getElementById('addAssetName');
-    if (addAssetName.value.length === 0) {
-        const type = document.getElementById('addAssetType').value;
-        addAssetName.value = suggestedAssetFilename(addAssetFiles.selected, '_' + type);
+    const importAssetName = document.getElementById('importAssetName');
+    if (importAssetName.value.length === 0) {
+        const type = document.getElementById('importAssetType').value;
+        importAssetName.value = suggestedAssetFilename(importAssetFiles.selected, '_' + type);
     }
     
-    document.getElementById('addAssetAddButton').disabled = (addAssetName.value.length === 0);
+    document.getElementById('importAssetImportButton').disabled = (importAssetName.value.length === 0);
 }
 
 
-function hideAddAssetDialog() {
-    document.getElementById('addAssetDialog').classList.add('hidden');
-    addAssetFiles = null;
+function hideImportAssetDialog() {
+    document.getElementById('importAssetDialog').classList.add('hidden');
+    importAssetFiles = null;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,7 +748,7 @@ function onRemoveAsset(key) {
 
 function onOpenAssetExternally(appName, assetName) {
     // Assumes that the asset was local and not built-in
-    const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName].$url;
+    const url = gameSource.assets[assetName].$sourceURL || gameSource.assets[assetName].$url;
     const filename = serverConfig.rootPath + urlToLocalWebPath(url);
     postToServer({command: 'open',
                   app: appName,
@@ -742,7 +762,7 @@ function showAssetContextMenu(assetName) {
 
     let externalCmds = '';
     if (gameSource.assets) {
-        const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName].$url;
+        const url = gameSource.assets[assetName].$sourceURL || gameSource.assets[assetName].$url;
         if (! isRemote(url) && !isBuiltIn(url)) {
             if (serverConfig.hasFinder) {
                 externalCmds += `<div onmousedown="onOpenAssetExternally('<finder>', '${assetName}')">Show in ${isApple ? 'Finder' : 'Explorer'}</div>`;

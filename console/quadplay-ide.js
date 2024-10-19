@@ -83,7 +83,7 @@ let allow_bloom = true;
     for (let i = 0; i < banner.length; ++i) {
         banner[i] = '%c' + banner[i];
         const a = Math.min(1, Math.max(0, (i - 1) / (banner.length - 2)));
-        style.push(`color: rgb(${clerp(255, 0, a)}, ${clerp(64, 169, a)}, ${clerp(158, 227, a)}); text-shadow: 0px 2px 3px #000`);
+        style.push(`color: rgb(${clerp(255, 0, a)}, ${clerp(64, 169, a)}, ${clerp(158, 227, a)}); text-shadow: 0px 2px 3px rgba(0, 0, 0, 20%)`);
     }
     console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2024 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n' +
                 '\nSecure Context: ' + window.isSecureContext +
@@ -1051,11 +1051,22 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                 // runtime and compile and launch this code within it.
                 programNumLines = compiledProgram.split('\n').length;
 
-                if (gameSource.json.midi_sysex && midi && ! midi.$options.sysex) {
-                    // Reinitialize MIDI using sysex requests, and wipe out MIDI devices while waiting
+                const gameRequiresMidi = /\bmidi\./.test(compiledProgram);
+                console.log('gameRequiresMidi =', gameRequiresMidi);
+                
+                if (gameRequiresMidi && (! midi.$options.midiAccess ||
+                                         (gameSource.json.midi_sysex && !midi.$options.sysex))) {
+                
+                    // Initialize or re-initialize MIDI, and wipe out MIDI devices while waiting
                     midiReset();
-                    if (window.top.navigator.requestMIDIAccess) {
-                        window.top.navigator.requestMIDIAccess({sysex: true, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+                    try {
+                        if (window.top.navigator.requestMIDIAccess) {
+                            window.top.navigator.requestMIDIAccess({sysex: gameSource.json.midi_sysex, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+                        } else {
+                            console.log('MIDI not supported on this device');
+                        }
+                    } catch (e) {
+                        console.log('Ignoring MIDI initialization error', e);
                     }
                 }
                 
@@ -2259,6 +2270,7 @@ function onProjectSelect(target, type, object) {
         
         if (/\.png$/i.test(url)) {
             // Sprite or font
+            spriteEditor.selectedAssetName = object.$name;
             spriteEditor.style.visibility = 'visible';
             // Force a reload with the ?
             spriteEditor.style.backgroundImage = `url("${url}?reload${Math.floor(Math.random() * 1e6)}")`;
@@ -2744,6 +2756,7 @@ function createProjectWindow(gameSource) {
         const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
         s += `<b title="${gameSource.extendedJSON.title} (${gameSource.jsonURL})" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${badge}">${gameSource.extendedJSON.title}</b>`;
     }
+
     s += '<div style="border-left: 1px solid #ccc; margin-left: 4px; padding-top: 5px; padding-bottom: 9px; margin-bottom: -7px"><div style="margin:0; margin-left: -2px; padding:0">';
 
     s += '— <i>Scripts</i>\n';
@@ -2830,8 +2843,11 @@ function createProjectWindow(gameSource) {
     s += '</ul>';
 
     s += '</div></div>';
+
     s += '<div style="margin-left: 3px; position: relative; top: -2px">— <i>Assets</i>\n';
-    s += '<ul class="assets">';
+
+    // Leave a lot of space at the bottom for the git buttons
+    s += '<ul class="assets" style="margin-bottom: 36px">';
     {
         const keys = Object.keys(gameSource.assets);
         keys.sort();
@@ -2860,17 +2876,23 @@ function createProjectWindow(gameSource) {
     }
     
     if (editableProject) {
-        s += '<li class="clickable import" onclick="showAddAssetDialog()"><i>Import existing asset…</i></li>';
+        s += '<li class="clickable import" onclick="showImportAssetDialog()"><i>Import existing asset…</i></li>';
         s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>Create new asset…</i></li>';
     }
     s += '</ul>';
     s += '</div>'
+
+    let versionControl = '';
+    if (editableProject && false) {
+        // TODO: If in git!
+        versionControl += `<div id="versionControl"><button title="Receive changes from collaborators using git">Pull</button><button title="Send your work to collaborators using git">Push</button></div>`;
+    }
     
     // Build the project list for the IDE
     const projectElement = document.getElementById('project');
 
-    // Hide the scrollbars on Windows
-    projectElement.innerHTML = '<div class="hideScrollBars">' + s + '</div>';
+    // Hide the scrollbars
+    projectElement.innerHTML = `<div class="hideScrollBars" style="top: 0px; bottom: 40px; position: absolute; ${versionControl !== '' ? 'bottom: 40px' : ''}">` + s + '</div>' + versionControl;
 }
 
 
@@ -4717,9 +4739,15 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
                 document.getElementById('playButton').enabled = true;
             
             const modeEditor = document.getElementById('modeEditor');
+            const spriteEditor = document.getElementById('spriteEditor');
+            
             if (modeEditor.style.visibility === 'visible') {
                 // Update the mode diagram if it is visible
                 visualizeModes(modeEditor);
+            } else if (spriteEditor.style.visibility === 'visible') {
+                // Update the sprite editor
+                const assetName = spriteEditor.selectedAssetName;
+                onProjectSelect(document.getElementById(`projectAsset_${assetName}`), 'asset', gameSource.assets[assetName]);
             }
             
             if (! noUpdateCode) {
@@ -5282,18 +5310,6 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 
 // As early as possible, make the browser aware that we want gamepads
 navigator.getGamepads();
-
-// Initialize MIDI without requiring sysex, which can prompt.
-// If the game needs sysex then onPlay will re-initialize.
-try {
-    if (window.top.navigator.requestMIDIAccess) {
-        window.top.navigator.requestMIDIAccess({sysex: false, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
-    } else {
-        console.log('MIDI not supported on this device');
-    }
-} catch (e) {
-    console.log('Ingnoring error', e);
-}
 
 /* Called from the quit menu item. Forces closing the server for a nativeapp,
    which macOS can't detect because the Chromium browser doesn't close on that
