@@ -279,7 +279,7 @@
       
     </div>
 
-    <div id="realBody" style="position: absolute; top: 23px; left: 0px; right: 0px; bottom: 16px">
+    <div id="realBody" style="position: absolute; top: 23px; left: 0px; right: 1px; bottom: 16px">
     <div class="project ide unselectable idePart" id="project"> </div>
 
     <div id="emulatorFrame" class="ide idePart"> </div>
@@ -529,6 +529,52 @@
     <div id="error" class="ide"> </div>
 
     <div id="waitDialog" class="modal hidden" style="z-index: 100"> </div>
+
+    <div id="versionControlDialog" class="modal hidden" style="z-index: 99"> 
+      <div class="dialog" style="top:20vh; width: 400px">
+        <center>
+          <span id="versionControlTitle" class="title">Git Version Control</span>
+        
+          <div id="versionControlTerminal" style="margin-top: 20px; margin-bottom: 20px; font-size: 12px; text-align: left; background: #000; text-color: #fff; white-space: pre-wrap; font-family: monospace; height: 200px; padding: 5px; border-radius: 4px; border: 1px solid #888; overflow: scroll"></div>
+
+          <button class="button" id="gitCloseButton" onclick="document.getElementById('versionControlDialog').classList.add('hidden')" style="min-width:60px">Close</button>
+        <center>
+      </div>
+    </div>
+
+    <div id="versionControlCommitMessage" class="modal hidden" style="z-index: 100"> 
+      <div class="dialog" style="top:20vh; width: 400px">
+        <center>
+          <span id="versionControlCommitMessageTitle" class="title">Commit Local Changes</span>
+          <p style="text-align:left">
+            Describe your changes (<i>Optional</i>)
+            <br><input id="versionControlCommitMessageText" type="text" style="width: 390px"></input>
+          </p>
+          <button class="button" id="gitNoSendButton" onclick="onGitNoSendButton()" style="min-width:120px">Don't Send</button>
+          <button class="button" id="gitSendButton" onclick="onGitSendButton()" style="min-width:120px">Send Changes</button>
+        <center>
+      </div>
+    </div>
+
+    <!-- The file list is stored on this dialog itself during the merge conflict to simplify callbacks -->
+    <div id="versionControlMergeConflictDialog" class="modal hidden" style="z-index: 100"> 
+      <div class="dialog" style="top:20vh; width: 400px">
+        <center>
+          <span id="versionControlMergeConflictTitle" class="title">Merge Conflict</span>
+
+          <p style="text-align:left">Your local files changes conflict with other remote file changes from your collaborators.
+          How do you want to resolve this?<p>
+
+          <p>
+          <button class="button" id="gitMine" onclick="onGitResolveConflictMine()" style="min-width:180px; margin-bottom: 2px">Mine Overwrite Theirs</button>
+          <br><button class="button" id="gitTheirs" onclick="onGitResolveConflictTheirs()" style="min-width:180px; margin-bottom: 2px">Theirs Overwrite Mine</button>
+          <br><button class="button" id="gitUndo" onclick="onGitResolveConflictUndo()" style="min-width:180px; margin-bottom: 2px">Undo the Sync</button>
+          </p>
+
+          <i>If you undo, your local files will be left in the state from before you started the sync.</i>
+        <center>
+      </div>
+    </div>
 
     <!-- Appear over all other dialogs -->
     <div id="confirmDialog" class="modal hidden" style="z-index: 110">
@@ -964,19 +1010,6 @@
     </div>
 
     <div id="customContextMenu" style="visibility:hidden; z-index: 20; position: fixed"></div>
-    
-    <!-- based on https://github.com/sitexw/BlockAdBlock/blob/master/blockadblock.js -->
-    <!--
-    <div id="adblockDetector" class="pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links"></div>
-    <script>
-      setTimeout(function() {
-      var adblockDetector = document.getElementById("adblockDetector");
-      if (!adblockDetector || (adblockDetector.offsetHeight === 0)) {
-         document.getElementById('adblockWarning').innerHTML = "<a href='../doc/adblock.html' target='_blank'>Enable Downloads</a>";
-      }
-      }, 500);
-    </script>
-    -->
 
   </body>
   
@@ -1062,5 +1095,6 @@
   <script defer src="quadplay-debug.js?" charset="utf-8"></script>
   <script defer src="quadplay-network.js?" charset="utf-8"></script>
   <script defer src="quadplay-midi.js?" charset="utf-8"></script>
+  <script defer src="quadplay-vcs.js?" charset="utf-8"></script>
   <script defer src="quadplay-ide.js?" charset="utf-8"></script>
 </html>

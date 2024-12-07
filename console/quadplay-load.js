@@ -218,6 +218,14 @@ function makeGameURLAbsolute(gameURL) {
     return gameURL;
 }
 
+/* If url is local to this game, add just the relative part of it to gameSource.localFileTable */
+function maybeRecordURLDependency(url) {
+    if (url.startsWith(gameSource.urlBase)) {
+        const relative = url.substring(gameSource.urlBase.length);
+        gameSource.localFileTable[relative] = true;
+    }
+}
+
 /* Loads the game and then runs the callback() or errorCallback() */
 function afterLoadGame(gameURL, callback, errorCallback) {
     const isLauncher = gameURL.endsWith('/console/launcher/launcher.game.json') || gameURL.endsWith('/console/launcher/') || gameURL.endsWith('/console/launcher');
@@ -259,8 +267,14 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         debug: {
             // Has field 'json' if a debug.json exists
             constants: {}
-        }
+        },
+
+        // All local files in this game (not built-ins)
+        localFileTable: {'preview.png': true, 'label64.png': true, 'label128.png': true},
+        urlBase: gameURL.replace(/\/[^/]+$/, '') + '/'
     };
+
+    gameSource.localFileTable[gameURL.replace(/^.*\//, '')] = true;
 
     // Wipe the virtual GPU memory
     spritesheetArray = [];
@@ -413,6 +427,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 
                 const scriptURL = makeURLAbsolute(gameURL, gameJSON.scripts[i]);
                 gameSource.scripts.push(scriptURL);
+
+                maybeRecordURLDependency(scriptURL);
                 
                 loadManager.fetch(scriptURL, 'text', null, function (scriptText) {
                     scriptText = scriptText.replace(/\r/g, '');
@@ -439,6 +455,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 if (name === gameJSON.start_mode) {
                     ++numStartModes;
                 }
+
+                maybeRecordURLDependency(modeURL);
 
                 // Remove the quad://... from internal modes
                 gameSource.modes.push({name: name, url: modeURL});                
@@ -473,13 +491,14 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 
                 // Capture values for the function below
                 const assetURL = makeURLAbsolute(gameURL, gameJSON.assets[a]);
-                const assetName = a;
+                const assetName = a;                
+                maybeRecordURLDependency(assetURL);
 
                 const isIndexingSprite =
                     assetURL.endsWith('preview.png') ||
                     assetURL.endsWith('label64.png') ||
                     assetURL.endsWith('label128.png');
-                
+
                 if (isIndexingSprite) {
                     
                     // Special spritesheet assets used for the
@@ -505,6 +524,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     loadManager.fetch(assetURL, 'text', jsonParser, function (json) {
                         // assetURL is the asset json file
                         // json.url is the png, mp3, etc. referenced by the file
+
+                        maybeRecordURLDependency(makeURLAbsolute(assetURL, json.url));
+                        if (json.source_url) {
+                            maybeRecordURLDependency(makeURLAbsolute(assetURL, json.source_url));
+                        }
+
                         switch (type) {
                         case 'font':
                             gameSource.assets[assetName] = loadFont(assetName, json, assetURL);
@@ -550,12 +575,14 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             gameSource.docs = gameJSON.docs.slice(0);
             for (let d = 0; d < gameSource.docs.length; ++d) {
                 const doc = gameSource.docs[d];
+                                        
                 if (typeof doc === 'string') {
-                    gameSource.docs[d] = makeURLAbsolute(gameURL, doc);
+                    gameSource.docs[d] = makeURLAbsolute(gameURL, doc);                   
                 } else {
                     // Legacy game.json format with metadata on the document. No longer supported
                     gameSource.docs[d] = makeURLAbsolute(gameURL, doc.url);
                 }
+                maybeRecordURLDependency(gameSource.docs[d]);                 
             }
         } // if docs        
     } // processGameJSON
@@ -607,6 +634,8 @@ function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
             
             // Raw value loaded from a URL
             const constantURL = makeURLAbsolute(gameURL, definition.url);
+            maybeRecordURLDependency(constantURL);
+
             if (/\.json$/.test(constantURL)) {
                 loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
                     result[c] = data;
@@ -964,6 +993,7 @@ function recordSpriteStats(spritesheet) {
 
 function loadData(name, json, jsonURL) {
     const dataURL = makeURLAbsolute(jsonURL, json.url);
+    maybeRecordURLDependency(dataURL);
 
     const forceReload = computeForceReloadFlag(dataURL);
 

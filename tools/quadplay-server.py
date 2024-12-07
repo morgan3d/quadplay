@@ -51,9 +51,17 @@
 #       - `_update_progress.json` reports on the status of the update
 #         thread once launched.
 #
+#       - `_git` executes the command specified in the query in the
+#         specified directory and then returns the output, with the
+#         return code on the last line
+#
 # A "path" in this code is a file-system path, where '/' means the filesystem true root
 #
 # A "webpath" is a URL subpath, where '/' means the server root = filesystem root_path
+
+
+# --git-dir (dir)
+# --work-tree (dir)
 
 import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request
 
@@ -81,8 +89,9 @@ server_root_filepath = None
 # Path to the token.txt file
 token_absfilepath = None
 
-# Magic path that the browser will use to communicate that it wants an asset listing
-# or game listing for import in IDE mode
+# Magic paths that the browser will use to communicate that it wants
+# an asset listing or game listing for import in IDE mode. Any command
+# ending in /_git will be a git command
 asset_query_webpath = None
 script_query_webpath = None
 doc_query_webpath = None
@@ -98,6 +107,7 @@ webpath_allowlist = None
 isWindows = (platform.system() == 'Windows')
 isMacOS   = (platform.system() == 'Darwin')
 isLinux   = (platform.system() == 'Linux')
+hasGit = shutil.which('git') != None
 
 # Authentication token, used to ensure that only browsers launched by this server can
 # ask it to POST
@@ -246,7 +256,7 @@ args = parse_args()
 # Where the user's games are stored. Will be made relative to the CWD later
 my_games_filepath = canonicalize_filepath(os.path.expanduser(args.my_quadplay))
 
-if my_games_filepath.find(" ") != -1:
+if my_games_filepath.find(' ') != -1:
     fatal_error("The my_quadplay directory (" + my_games_filepath + ") may not contain spaces in this release. Use the --my_quadplay command line argument to select a path without spaces in the name.")
 
 if len(my_games_filepath) == 0 or (isWindows and (len(my_games_filepath) < 3 or my_games_filepath[1:3] != ':/')) or (not isWindows and (len(my_games_filepath) < 2 or my_games_filepath[0] != '/')):
@@ -293,15 +303,21 @@ def this_line_number(): return str(inspect.currentframe().f_back.f_lineno)
 
 # Throws an exception with the output on a non-zero error code,
 # otherwise returns the command's output.
-def run_shell_command(cmd):
-    maybe_print(cmd)
+def run_shell_command(cmd, noExceptions, quiet):
+    if not quiet: maybe_print(cmd)
+    
     with os.popen(cmd) as stream:
         output = stream.read()
-        if stream.close():
-            raise Exception(output)
+        if not quiet: maybe_print(output)
+        status = stream.close()
+
+        if status:
+            if noExceptions:
+                return (output, os.waitstatus_to_exitcode(status))
+            else:
+                raise Exception(output)
         else:
-            maybe_print(output)
-            return output
+            return (output, 0)
 
 
 class UpdateThread(threading.Thread):
@@ -347,7 +363,7 @@ class UpdateThread(threading.Thread):
         try:
             if quadplay_origin == 'git clone' or quadplay_origin == 'development git clone':
                 # Verify that we have git
-                if not shutil.which('git'):
+                if not hasGit:
                     raise Exception('Your quadplay was installed via git clone but the updater cannot find the git program to pull the latest version. Delete the .git directory or manually update.')
         
                 # Run git
@@ -449,7 +465,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if request_token != token:
             maybe_print('WARNING: Ignored request without proper token (expected ', token, '/ received ', request_token, ')')
             response = json.dumps('Bad token', separators = (',', ':'));
-            self.send_response(401)
+            self.send_response(403)
             self.send_header('Content-type', 'text/json')
             self.send_header('Content-length', len(response))
             self.end_headers()
@@ -471,7 +487,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
             maybe_print('WARNING: Ignored illegal request to delete file (' + this_line_number() + ')', filename)
             response_obj = 'Illegal'
-            code = 401
+            code = 403
         else:
             maybe_print('deleted file', filename)
             os.remove(filename)
@@ -507,10 +523,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if not re.search(self.mutable_file_regex, filename): maybe_print('  Legal file regex is', self.mutable_file_regex)
                 if not any([webpath.startswith(prefix) for prefix in webpath_allowlist]): maybe_print('  Web path allow list is', webpath_allowlist)
                 response_obj = 'Illegal'
-                code = 401
+                code = 403
             else:
                 if encoding == 'binary':
-                    # Contents is base64 encoded for the JSON transmission.
+                    # Contents are base64 encoded for the JSON transmission.
                     # Convert back to bytes
                     contents = base64.standard_b64decode(contents)
                     with open(filename, 'wb') as f: 
@@ -659,7 +675,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         # Security: Check if path has a prefix in webpath_allowlist
         if (not any([webpath == ignore for ignore in ['/favicon.ico', '/apple-touch-icon-precomposed.png', '/apple-touch-icon.png', '/apple-touch-icon-120x120-precomposed.png', '/apple-touch-icon-120x120.png']]) and
             not any([webpath.startswith(prefix) for prefix in webpath_allowlist])):
-            self.send_error(404, 'Illegal webpath (' + this_line_number() + '): ' + webpath)
+            self.send_error(403, 'Illegal webpath (' + this_line_number() + '): ' + webpath)
             return
 
         filepath = remove_leading_slash(webpath)
@@ -667,6 +683,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
         if webpath in [config_query_webpath, asset_query_webpath, game_query_webpath, doc_query_webpath, script_query_webpath, update_progress_query_webpath]:
             response_obj = {}
+
+            # default to "OK"
+            response_code = 200
+            
             if webpath == update_progress_query_webpath:
                 if update_thread:
                     status = update_thread.get_status()
@@ -682,6 +702,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if not args.kiosk: response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
                 response_obj['rootPath'] = server_root_filepath
                 response_obj['hasFinder'] = isWindows or isMacOS
+                response_obj['hasGit'] = hasGit
 
                 if isWindows or isMacOS:
                     applications = []
@@ -702,7 +723,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 aux_webpath = query[query.index('=') + 1:]
                 # Security: check if aux_webpath has a prefix in webpath_allowlist
                 if not any([aux_webpath.startswith(prefix) for prefix in webpath_allowlist]):
-                    self.send_error(404, 'Illegal webpath (' + this_line_number() + '): ' + aux_webpath)
+                    self.send_error(403, 'Illegal webpath (' + this_line_number() + '): ' + aux_webpath)
                     return
 
                 # List the pyxl files
@@ -726,7 +747,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 # Security: check if aux_webpath has a prefix in webpath_allowlist
                 if not any([aux_webpath.startswith(prefix) for prefix in webpath_allowlist]):
-                    self.send_error(404, 'Illegal webpath: (' + this_line_number() + ')' + aux_webpath)
+                    self.send_error(403, 'Illegal webpath: (' + this_line_number() + ')' + aux_webpath)
                     return
 
                 aux_filepath = remove_leading_slash(aux_webpath)
@@ -749,7 +770,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 # Security: check if aux_webpath has a prefix in webpath_allowlist
                 if not any([aux_webpath.startswith(prefix) for prefix in webpath_allowlist]):
-                    self.send_error(404, 'Illegal webpath: (' + this_line_number() + ')' + aux_webpath)
+                    self.send_error(403, 'Illegal webpath: (' + this_line_number() + ')' + aux_webpath)
                     return
                 
                 # Raw files to exclude because they are already in use. Exclude
@@ -865,9 +886,55 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                                     
                     response_obj[key] = list
 
-            response = json.dumps(response_obj, separators = (',', ':'));
-            self.send_response(200)
+            response = json.dumps(response_obj, separators = (',', ':'))
+            self.send_response(response_code)
             self.send_header('Content-type', 'text/json')
+            self.send_header('Content-length', len(response))
+            self.end_headers()
+            self.wfile.write(response.encode('utf8'))
+            
+        elif webpath.endswith('/_git'):
+            response_code = 200
+            response = '-1\n'
+
+            git_cmd = urllib.parse.unquote(query)
+            maybe_print('git ' + git_cmd)
+            
+            if not hasGit:
+                # Should not have issued a git command
+                response_code = 404
+            else:
+                # For security, verify that this is a permitted command
+                # and has nothing else packed into it
+                if git_cmd.split(' ')[0] in ['pull', 'push', 'status', 'commit', 'merge', 'reset', 'fetch'] and not ('&' in git_cmd or '|' in git_cmd or ';' in git_cmd):
+                    # Run the git command
+                    response = '0\n'
+
+                    file_path = os.path.dirname(remove_leading_slash(webpath))
+                    git_cmd = 'git -C ' + file_path + ' ' + git_cmd
+                  
+                   
+                    # Build the command, wrapping it with directory changes and
+                    # capturing stderr so it doesn't spam the console.
+                    # 
+                    # No need to restore the directory after the command because
+                    # run_shell_command makes a new shell
+                    
+                    if not isWindows:
+                        # Send stderr to stdout
+                        git_cmd = git_cmd + ' 2>&1'
+                        
+                    (response, return_code) = run_shell_command(git_cmd, True, True)
+                    response = str(return_code) + '\n' + response
+                    
+                else:
+                    # Illegal command
+                    maybe_print('Rejected illegal git command: git ' + git_cmd)
+                    # "Forbidden" error code
+                    response_code = 403
+            
+            self.send_response(response_code)
+            self.send_header('Content-type', 'text/plain')
             self.send_header('Content-length', len(response))
             self.end_headers()
             self.wfile.write(response.encode('utf8'))

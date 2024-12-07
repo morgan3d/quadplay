@@ -952,6 +952,7 @@ function sleepPollCallback() {
     }
 }
 
+
 /* sleep.pollHandler is the gamepad polling event while sleeping */
 function sleep() {
     console.log('Sleeping due to inactivity...');
@@ -1052,8 +1053,6 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                 programNumLines = compiledProgram.split('\n').length;
 
                 const gameRequiresMidi = /\bmidi\./.test(compiledProgram);
-                console.log('gameRequiresMidi =', gameRequiresMidi);
-                
                 if (gameRequiresMidi && (! midi.$options.midiAccess ||
                                          (gameSource.json.midi_sysex && !midi.$options.sysex))) {
                 
@@ -2883,9 +2882,9 @@ function createProjectWindow(gameSource) {
     s += '</div>'
 
     let versionControl = '';
-    if (editableProject && false) {
-        // TODO: If in git!
-        versionControl += `<div id="versionControl"><button title="Receive changes from collaborators using git">Pull</button><button title="Send your work to collaborators using git">Push</button></div>`;
+    if (editableProject && serverConfig.hasGit) {
+        // Will be hidden and shown elsewhere
+        versionControl += `<div id="versionControl" style="visibility: hidden"><button style="width: 100%" title="Sync your local files with the git server" onclick="runPendingSaveCallbacksImmediately(); setTimeout(onGitSync);">Sync Git</button></div>`;
     }
     
     // Build the project list for the IDE
@@ -3127,7 +3126,7 @@ function onOpenGameTypeChange() {
             let label_path = game.url.replace('quad://', location.origin + getQuadPath());
 
             // Remove the game.json file
-            label_path = label_path.replace(/\/[^/]+\.game.json$/, '/');
+            label_path = label_path.replace(/\/[^/]+\.game\.json$/, '/');
             label_path += 'label64.png';
             
             s += `<li ondblclick="onOpenGameOpen()" onclick="onOpenGameListSelect(this, '${game.url}')" class="unselectable" title="${game.url}">
@@ -4618,13 +4617,16 @@ function appendToBootScreen(msg) {
     bootScreen.scrollTop = bootScreen.scrollHeight;
 }
 
-/** If loadFast is true, do not make any cosmetic delays. 
+/** If loadFast is true, do not make any cosmetic delays. This is typically
+    set for hot reloads or after configuration changes.
 
     If noUpdateCode is true, do not update code editors. This is used to
     prevent cursor jump when that file is itself being further updated
     by typing in the editor.
 */
 function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
+    const oldVersionControl = gameSource && gameSource.versionControl;
+    
     if (url !== gameURL) {
         // A new game is being loaded. Throw away the editor sessions.
         removeAllCodeEditorSessions();
@@ -4756,6 +4758,22 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
             hideWaitDialog();
 
             if (callback) { callback(); }
+
+            if (! loadFast && editableProject && serverConfig.hasGit) {                          
+                // See if this project is in git
+                serverGitCommand('status .', function (text, code) {
+                    if (code === 0) {
+                        gameSource.versionControl = 'git';
+                        document.getElementById('versionControl').style.visibility = 'visible';
+                    }
+                });
+            } else {
+                gameSource.versionControl = oldVersionControl;
+                if (oldVersionControl === 'git') {
+                    document.getElementById('versionControl').style.visibility = 'visible';
+                }
+            }
+
         }, function (e) {
             updateAllCodeEditorSessions();
             document.getElementById('restartButtonContainer').enabled =

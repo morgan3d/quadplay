@@ -136,7 +136,7 @@ function serverScheduleSaveGameJSON(delaySeconds) {
     }
 
     const saveCallback = function () {
-        // Remove the callback
+        // Remove this callback
         removePendingSaveCallback(saveCallback);
         // Clear the timeout in case this function was explicitly invoked
         clearTimeout(gameSource.saveTimeoutID);

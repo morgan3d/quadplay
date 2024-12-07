@@ -41,8 +41,7 @@ function removePendingSaveCallback(callback) {
 
 /**
    If there are saves pending, run the callbacks as soon
-   as possible and execute the followup function when
-   
+   as possible.
  */
 function runPendingSaveCallbacksImmediately() {
     // Work with a clone of the array because calling these functions

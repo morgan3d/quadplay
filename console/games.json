@@ -165,7 +165,7 @@
             "highscores": false
         },
         {
-            "url": "quad://examples/dynamic_accel/accel_demo.game.json",
+            "url": "quad://examples/dynamic_accel/",
             "title": "Dynamic Acceleration Library Demo",
             "description": "",
             "version": 0,

@@ -144,7 +144,12 @@ body {
 /* Do not set properties on ::-webkit-scrollbar because it will blank out that region on the bottom of the page */
 
 div, pane {
-    scrollbar-width: none; /* Firefox  hide scrollbars */
+    scrollbar-width: none;  /* Firefox hide scrollbars */
+}
+
+/* Needed to have visible, usable scrollbars on Windows (even though they are super ugly) */
+div#ace, #ace > div {
+    scrollbar-width: unset;
 }
 
 body.fullscreenEmulator {
@@ -954,7 +959,6 @@ code, .code {
 }
 
 #versionControl button {
-    width: 50%;
     height: 19px;
     font-size: 14px;
 }

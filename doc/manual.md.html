@@ -69,12 +69,14 @@ debugger, and profiler.
 - Games run on web, mobile, desktop, tablet, Jetson Nano, Raspberry Pi 4/400
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
-- Run locally and offline using Python + web browser
+- Run locally and offline, using a full development environment that
+  requires only Python + web browser, no binary installation
 - Hundreds of built-in Creative Commons assets
 - Full command line, external editor, and external art tool support
   for power users with automatic file sync
 - Open source: use online, fork, or run locally
 - Runtime PNG, MP3, TMX, JSON, YAML, TXT, and CSV data formats
+- Built-in support for collaboration via git version control from the IDE
 
 **API**
 
@@ -2335,7 +2337,7 @@ Array
   array of length _n_.
 
 `random_from_distribution(array, random default random)`
-: Return a random index of the array, chosen proportional to the values.
+: Return a random index (key) of the array, chosen proportional to the values.
 
 `random_key(array, random default random)`
 : Return a random index into the array.
@@ -8460,6 +8462,49 @@ represent the "X"/cross buttons on PlayStation, Xbox, and Nintendo
 controllers. Note that the preferred way of generating button prompts
 is using the `gamepad.prompt` object with the string `replace()`
 function, rather than hardcoding.
+
+
+Version Control
+====================================================================================
+
+<quadplay/> is designed to work well with version control systems such
+as git, svn, Perforce, etc. The metadata and project files are all
+simple JSON text files and assets are all common binary formats.  No
+hidden directories or temporary files are generated that could confuse
+a version control system.
+
+If you use git in particular, there is additional built-in support for
+simplifying workflow. The "Git Sync" button appears at the bottom of
+the project tree when <quadplay/> detects that your game is stored in
+a git repository. 
+
+Pressing the "Git Sync" button will download changes by others from
+the repo on the current branch to your local machine. These will be
+merged into any changes you have made. If there was a substantial
+merge, then you should probably test the game before proceeding
+further.
+
+If you have changes of your own, <quadplay/> will ask if you want to
+upload them. If you choose to upload, it will prompt for a commit
+message.
+
+Sometimes a merge will produce a conflict. This happens when both you
+and your collaborator changed the same line of a file in different
+ways, or edited the same art asset. If a merge conflict occurs, you
+will be presented with the following choices:
+
+- Prefer Mine: Merge everything, and on lines where there is a 
+  conflict replace their changes with yours.
+- Prefer Theirs: Merge everything, and on lines where there is a conflict
+  replace your changes with theirs.
+- Undo Sync: Stop the merge and put all of the files back the way they
+  were before you pressed "Sync". You can then choose to address
+  the problem with command line tools or ask a collaborator for help.
+
+For advanced git users, all of the git commands used and their outputs
+are shown on screen. You can also freely mix git command line or other
+GUI git tools with the built-in git support (although don't try it
+_while_ a command is being processed).
 
 
 Advanced Tools
