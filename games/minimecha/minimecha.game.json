@@ -5,8 +5,8 @@
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
+        "quad://scripts/mat3x3_lib.pyxl",
         "util.pyxl",
-        "quad://scripts/mat3x3.pyxl",
         "game.pyxl",
         "debug.pyxl",
         "gui.pyxl",

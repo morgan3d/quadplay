@@ -125,7 +125,9 @@ function parseHex(str) {
     return parseInt(str, 16) / div;
 }
 
-// Assumes no prefix
+
+/* Assumes no '0x' or '#' prefix, just raw Y, YY, RGB, RGBA, RRGGBBAA, or
+   RRGGBB values.  Returns {r,g,b,a} floating point values on [0, 1] */
 function parseHexColor(str) {
     let r, g, b, a = 1;
 
@@ -885,33 +887,52 @@ function getImageData4BitAndFlip(image, region, options) {
         // mapping every RGB color to itself
         const palette = new Uint16Array(4096);
         for (let i = 0; i < 4096; ++i) {
-            palette[i] = i;
+            palette[i] = 0xF000 | i;
         }
 
         // Now override the individual colors
         for (const src in options.palette_swap) {
-            const dst = options.palette_swap[src];
+            let dst = options.palette_swap[src];
             // Parse src and dst
-            if (src[0] !== '#' || dst[0] !== '#' || src.length !== 4 || dst.length !== 4) { throw 'palette_swap colors must have the form "#RGB" in hexadecimal'; }
+            if (src[0] !== '#' || dst[0] !== '#' || src.length !== 4 || (dst.length !== 4 && dst.length !== 5)) { throw 'palette_swap source colors must have the form "#RGB" in hexadecimal and destination colors must have the form "#RGB" or "#RGBA"'; }
 
             // Remove leading zeros
-            let src_int = (src === '#000') ? 0 : parseInt(src.substring(1).replace(/^0*/, ''), 16);
+            let src_rgb = (src === '#000') ? 0 : parseInt(src.substring(1).replace(/^0*/, ''), 16);
             // Byte reorder
-            src_int = ((src_int & 0xF) << 8) | (src_int & 0x0F0) | (src_int >> 8);
-            
-            let dst_int = (dst === '#000') ? 0 : parseInt(dst.substring(1).replace(/^0*/, ''), 16);
-            dst_int = ((dst_int & 0xF) << 8) | (dst_int & 0x0F0) | (dst_int >> 8);
+            src_rgb = ((src_rgb & 0xF) << 8) | (src_rgb & 0x0F0) | (src_rgb >> 8);
+
+            // Remove the leading '#'
+            dst = dst.substring(1);
+            let dst_a000 = 0xF000;
+
+            if (dst.length === 4) {
+                // dst has an alpha channel as the 4th
+                // character. Parse and remove A for followup
+                // RGB parsing.
+                dst_a000 = parseInt(dst.substring(3), 16) << 12;
+                dst = dst.substring(0, 3);
+            }
+
+            // Parse and re-order bytes, removing leading zeros
+            let dst_rgb = (dst === '000') ? 0 : parseInt(dst.replace(/^0*/, ''), 16);
+            dst_rgb = ((dst_rgb & 0xF) << 8) | (dst_rgb & 0x0F0) | (dst_rgb >> 8);
 
             // Store the value
-            palette[src_int] = dst_int;
+            palette[src_rgb] = dst_a000 | dst_rgb;
         }
         
-        // Replace all values in place, preserving alpha.
+        // Replace all values in the image in place, preserving alpha.
         // Most will be unchanged.
         for (let i = 0; i < data.length; ++i) {
-            const c = data[i];
-            //if (c !== 0) { console.log(c.toString(16)); }
-            data[i] = (c & 0xF000) | (palette[c & 0xFFF]);
+            const src = data[i];
+            const src_a000 = src & 0xF000;
+            const src_rgb  = src & 0x0FFF;
+            
+            const dst = palette[src_rgb];
+            const dst_a000 = dst & 0xF000;
+            const dst_rgb  = dst & 0x0FFF;
+            
+            data[i] = (src_a000 & dst_a000) | dst_rgb;
         }
     }
     
@@ -1299,9 +1320,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                         const alpha15 = (data[index] >>> 12) & 0xf;
 
                         const alpha = alpha15 / 15;
-                        mean_color.r += alpha * (data[index] >>> 8) & 0xf;
+                        mean_color.r += alpha * data[index] & 0xf;
                         mean_color.g += alpha * (data[index] >>> 4) & 0xf;
-                        mean_color.b += alpha * data[index] & 0xf;
+                        mean_color.b += alpha * (data[index] >>> 8) & 0xf;
                         mean_color.a += alpha;
                         
                         if (alpha15 < 0xf) {
@@ -1318,9 +1339,12 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 }
 
                 if (mean_color.a > 0) {
-                    mean_color.r /= 15 * mean_color.a;
-                    mean_color.g /= 15 * mean_color.a;
-                    mean_color.b /= 15 * mean_color.a;
+                    // The unnormalized alpha already factors in the
+                    // number of pixels to the sum
+                    const k = 15 * mean_color.a;
+                    mean_color.r /= k;
+                    mean_color.g /= k;
+                    mean_color.b /= k;
                     mean_color.a /= spritesheet.sprite_size.x * spritesheet.sprite_size.y;
                 }
                 mean_color.$color = QRuntime.$colorToUint16(mean_color);

@@ -139,7 +139,6 @@ function onImportAssetImport() {
 
     const url = importAssetFiles.selected;
     const sourceFiles = importAssetFiles.source;
-    hideImportAssetDialog();
 
     if (url.endsWith('.png') ||
         url.endsWith('.tmx') ||
@@ -161,7 +160,7 @@ function onImportAssetImport() {
         } else if (type === 'sprite') {
             // Autdetect source_url for psd, kra, ase, aseprite files
             const baseName = rawName.replace(/\.png$/, '');
-            console.log(importAssetFiles);
+
             for (const sourceName of sourceFiles) {
                 if (baseName === sourceName.replace(/\.(kra|psd|ase|aseprite)$/i, '')) {
                     // Found a source URL
@@ -191,6 +190,8 @@ function onImportAssetImport() {
         // Save and reload the game
         serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
     }
+
+    hideImportAssetDialog();
 }
 
 

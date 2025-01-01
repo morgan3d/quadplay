@@ -1,0 +1,196 @@
+/*
+quad://scripts/cursor_lib.pyxl
+
+Immediate mode GUI gamepad/mouse/touch cursor management routines
+for selection and buttons.
+
+Supports multiple cursors for multiplayer games or different modes.
+
+Copyright 2025, Morgan McGuire
+<br>Open source under the MIT license
+<br>https://opensource.org/licenses/MIT
+
+
+```````````````````````````````````````````````` PyxlScript
+// Once:
+const cursor = make_cursor()
+
+def button_callback(data, cursor)
+& if cursor.gamepad.aa or touch.aa:
+    // Do the thing
+    
+//////////////////////////////////////////////////    
+// Per frame:
+
+const button_pos = xy(100, 100)
+const button_size = xy(50, 15)
+cursor_register_target(cursor, button_pos, button_size, button_callback, {});
+
+…
+
+cursor_update(cursor)
+
+````````````````````````````````````````````````
+
+*/
+
+
+
+/* 
+  Call once per frame for each UI target for the cursor.
+  
+  Coordinates are relative to the current transform  
+
+  - `callback`: Callback `callback(data, cursor)` runs if the _any_ button is pressed on this target or
+    there is a touch on the target. Test cursor.gamepad.aa, .bb, touch.aa, etc. to determine
+    what was pressed. If `callback == ∅`, the cursor changes to show that no callback is allowed.
+*/
+def cursor_register_target(cursor, pos, size, callback default ∅, data default ∅, shape default "rect"):
+    // Transform pos and size to screen space
+    const z = pos.z default 0
+    const A = transform_ws_to_ss(pos + ½ size)
+    const B = transform_ws_to_ss(pos - ½ size)
+    pos = ½ (A + B)
+    size = |B - A|
+    const ss_z = transform_ws_z_to_ss_z(z)
+    
+    assert(not callback or type(callback) == "function")
+
+    push(cursor._target_array, {pos: pos, z: ss_z, size: xy(size), shape: shape, callback: callback, data: data});
+
+
+
+/* Find closest target to `pos` that was declared this frame with 
+   `register_cursor_target()`.
+
+   - `allow_exact`: if true, allow distance 0 (for mouse), 
+     otherwise exclude distance 0 (for controller)   
+   - `dir`: Direction to search for the target. If ∅, consider all directions 
+     and does not require an exact match.
+   
+ */
+def cursor_find_closest_target(cursor, pos, dir):
+    let closest_target = ∅
+    let closest_distance = ∞
+    
+    for target in cursor._target_array:
+        const v = target.pos - pos
+        let d = ‖v‖
+        
+        // Favor those closest to the direction
+        if dir: d /= dot(direction(v), dir) 
+                        
+        if (not dir or d > 0) and d < closest_distance:
+            closest_distance = d
+            closest_target = target
+    
+    return closest_target
+    
+
+
+/* Call once per frame after registering targets to update
+   the cursor, process input, invoke callbacks, and render
+   the selection/cursor. */
+def cursor_update(cursor)
+& with pos, gamepad in cursor
+& preserving_transform:
+    // Operate directly in screen space
+    reset_camera()
+    reset_transform()
+    
+    // Process input:
+    let target = ∅
+    if gamepad.xx or gamepad.yy:
+        const new_target = cursor_find_closest_target(cursor, pos, gamepad.xy)
+        if new_target:
+            if cursor.new_target_sound:
+                play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
+            target = new_target
+        else if cursor.bad_sound:
+            play_sound({sound: cursor.bad_sound, pan: cursor.pos})
+    
+    const mouse = device_control("get_mouse_state")
+    if mouse.dx or mouse.dy or touch.aa:
+        
+        const mouse_pos = if touch.aa then touch.xy else mouse.xy
+        
+        // Find target *under* mouse
+        const new_target = cursor_find_closest_target(cursor, mouse_pos)
+
+        // Make sure the target is actually under the mouse
+        // and not just nearby
+        if new_target and overlaps(new_target, mouse_pos):
+            // Only play sound if this is a change of target
+            if cursor.new_target_sound and XY_DISTANCE(cursor.pos, new_target.pos) > 1: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
+            target = new_target
+    
+    if not target:
+        // If here, no input was processed, so the target
+        // is whatever is currently under the cursor
+        target = cursor_find_closest_target(cursor, pos)
+        
+    if target:
+        // We have a target, move the cursor to it
+        pos = xy(target.pos)
+        
+    // Was there any request for callback 
+    if target and target.callback:
+        if any_button_press(gamepad):
+            target.callback(target.data, cursor)
+        else if any_button_press(touch):
+            if overlaps(target, touch.xy):
+                target.callback(target.data, cursor)
+            else if cursor.bad_sound:
+                play_sound({sound: cursor.bad_sound, pan: target.pos})
+    
+    // Wipe the UI targets in preparation for the next frame
+    resize(cursor._target_array, 0)
+
+    // Rendering
+    if target:
+        cursor.draw(cursor, target)
+
+
+
+/* Default cursor drawing function */
+def cursor_draw_cursor(cursor, target):
+    if not target: return
+
+    const active_color   = lerp(#F0F, #FF0, oscillate(2 now()))
+    const inactive_color = lerp(#CCC, #999, oscillate(2 now()))
+    
+    const color = if target.callback then active_color else inactive_color
+    const cursor_z = 20
+
+    if target.shape == "disk":
+        draw_disk(target.pos, 0.5 + 25% (target.size.x + target.size.y), rgba(color, 50%), color, cursor_z)
+    else:
+        draw_rect(target.pos, target.size, rgba(color, 50%), color, ∅, cursor_z)
+
+
+/* */
+def make_cursor(
+    pos default ½ SCREEN_SIZE,
+    gamepad default gamepad_array[0],
+    draw default cursor_draw_cursor,
+    new_target_sound default ∅,
+    bad_sound default ∅):
+        
+    return {
+        pos: pos,
+        gamepad: gamepad,
+        draw: draw,
+        
+        new_target_sound: new_target_sound,
+        bad_sound: bad_sound,
+        
+        /*
+         Places the cursor can go. Refreshed every frame by 
+         cursor_update().
+         All coordinates stored in screen space.
+         */
+        _target_array: []
+    }
+
+
+    

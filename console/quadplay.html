@@ -334,11 +334,14 @@
       <input id="watchTab" type="radio" name="tabs">
       <label for="watchTab" class="ide unselectable">Watch</label>
 
+      <input id="manualTab" type="radio" name="tabs">
+      <label for="manualTab" class="ide unselectable">Help</label>
+
       <input id="todoTab" type="radio" name="tabs">
       <label for="todoTab" class="ide unselectable">To Do</label>
 
       <input id="controlTab" type="radio" name="tabs">
-      <label for="controlTab" class="ide unselectable">Controls</label>
+      <label for="controlTab" class="ide unselectable">Input</label>
       
       <input id="serverTab" type="radio" name="tabs">
       <label for="serverTab" class="ide unselectable">Mobile</label>
@@ -368,21 +371,34 @@
         <button style="margin-top: 5px; font-size: 80%" onclick="onCopyPerformanceSummary()">Copy Summary</button>
         <div id="resourcePane"></div>
       </pane>
-      
+
+      <pane id="manualPane" class="ide" style="overflow-y:auto;overflow-x:hidden">
+        <div style="border-bottom: 1px solid #CCC; padding-bottom: 1px">
+          <input id="manualPaneManual" type="radio" name="manualPaneRadio" checked onchange="onShowManual()"/>
+          <label for="manualPaneManual" style="margin-right:25px">Manual</label>
+          <input id="manualPaneProgramAPI" type="radio" name="manualPaneRadio" onchange="onShowProgramAPI()"/>
+          <label for="manualPaneProgramAPI">Game Documentation</label>
+        </div>
+        <div style="position: absolute; top:21px; width:100%; bottom: 0; left: 0; right: 0">
+          <iframe id="manual" style="position: absolute; top:0; width:100%; height: 100%; right: 0"></iframe>
+          <iframe id="programAPI" style="position: absolute; top:0; width:100%; height: 100%; right: 0; visibility: hidden"></iframe>
+        </div>
+      </pane>
+
       <!-- We can't hide just vertical scrollbars reliably on Chrome on Windows, but we can hide both scrollbars for
            these controls that don't have horizontal ones anyway -->
-        <style>#performancePane::-webkit-scrollbar, #todoPane::-webkit-scrollbar, #controlPane::-webkit-scrollbar { display: none; }</style>
-        <pane id="controlPane" class="ide" style="overflow-y:auto;overflow-x:hidden;text-align:center">
-          <div id="gamepadIndexPane" style="width:100%; box-sizing: border-box;">
+      <style>#performancePane::-webkit-scrollbar, #todoPane::-webkit-scrollbar, #controlPane::-webkit-scrollbar { display: none; }</style>
+      <pane id="controlPane" class="ide" style="overflow-y:auto;overflow-x:hidden;text-align:center">
+        <div id="gamepadIndexPane" style="width:100%; box-sizing: border-box;">
             
-          </div>
-          <br/>
-          <img src="keyboard.png" style="width:100%; margin-bottom:10px">
-          <br/>
-          <img src="xbox_controller.png" style="width:80%; margin-bottom:10px">
-          <br/>
-          <img src="gamepad.png" style="width:80%; margin-bottom:10px">
-          <table style="text-align: center; border-collapse: collapse">
+        </div>
+        <br/>
+        <img src="keyboard.png" style="width:100%; margin-bottom:10px">
+        <br/>
+        <img src="xbox_controller.png" style="width:80%; margin-bottom:10px">
+        <br/>
+        <img src="gamepad.png" style="width:80%; margin-bottom:10px">
+        <table style="text-align: center; border-collapse: collapse">
             <tr style="border-bottom: 1px solid #888"><th style="padding-right:4px">quadplay✜</th><th>Player 1 Key</th><th>Player 2 Key</th><th>Xbox</th><th>PS4</th><th>SNES</th></tr>
             <tr><td>▲         </td><td> W or ↑      </td><td> I           </td><td> ▲          </td><td> ▲       </td><td> ▲</td></tr>
             <tr><td>◀         </td><td> A or ←      </td><td> J           </td><td> ◀          </td><td> ◀       </td><td> ◀</td></tr>
@@ -548,7 +564,7 @@
           <span id="versionControlCommitMessageTitle" class="title">Commit Local Changes</span>
           <p style="text-align:left">
             Describe your changes (<i>Optional</i>)
-            <br><input id="versionControlCommitMessageText" type="text" style="width: 390px"></input>
+            <br><input id="versionControlCommitMessageText" type="text" style="width: 390px" autocomplete="off" onkeydown="if (event.key === 'Enter') { onGitSendButton();}"></input>
           </p>
           <button class="button" id="gitNoSendButton" onclick="onGitNoSendButton()" style="min-width:120px">Don't Send</button>
           <button class="button" id="gitSendButton" onclick="onGitSendButton()" style="min-width:120px">Send Changes</button>
@@ -649,7 +665,7 @@
                   <label for="newConstantName">Name</label>
                 </td>
                 <td>
-                  <code id="newConstantNameParent"></code><input id="newConstantName" type="text" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '') && (this.style.visibility === 'visible')">
+                  <code id="newConstantNameParent"></code><input id="newConstantName" type="text" autocomplete="off" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '') && (this.style.visibility === 'visible')">
                 </td>
               </tr>
               <tr valign="top">
@@ -676,11 +692,10 @@
               <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject"><label for="newConstantTypeObject">Object <code>{}</code></label>
               <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray"><label for="newConstantTypeArray">Array <code>[]</code></label>
               <br/><input type="radio" name="newConstantType" value="distribution" id="newConstantTypeDistribution"><label for="newConstantTypeDistribution">Distribution</label>
-              <!-- <br/><input style = "margin-left: 25px" type="checkbox" checked=true id="newConstantDistribution"><label for="newConstantDistribution">object</label></input> -->
               <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label style="color:#aaa" for="newConstantTypeRaw">Raw&nbsp;JSON/YAML</label>
               <br/><input type="radio" name="newConstantType" value="table" id="newConstantTypeTable" disabled><label style="color:#aaa" for="newConstantTypeTable">CSV Table</label>
               <br/><input type="radio" name="newConstantType" value="textfile" id="newConstantTypeTextFile" disabled><label style="color:#aaa" for="newConstantTypeTextFile">Text File</label>
-              <br/><input type="radio" name="newConstantType" value="number" checked=true id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
+              <br/><input type="radio" name="newConstantType" value="number" checked=true id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label><button style="width:20px;margin-left:12px;padding:0" onclick="onNewConstantNumberPreset('infinity')">∞</button><button onclick="onNewConstantNumberPreset('int')" style="width:20px;padding:0">i</button><button style="width:20px;padding:0" onclick="onNewConstantNumberPreset('percent')">%</button>
               <table style="padding-left:25px">
                 <tr title="Smallest value allowed"><td>min</td><td><input id="newConstantNumberMin" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
                 <tr title="Largest value allowed"><td>max</td><td><input id="newConstantNumberMax" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
@@ -1092,6 +1107,7 @@
   <script defer src="quadplay-edit-game.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-constant.js?" charset="utf-8"></script>
+  <script defer src="quadplay-help.js?" charset="utf-8"></script>
   <script defer src="quadplay-debug.js?" charset="utf-8"></script>
   <script defer src="quadplay-network.js?" charset="utf-8"></script>
   <script defer src="quadplay-midi.js?" charset="utf-8"></script>

@@ -761,22 +761,28 @@ div.disabled span.label, div.disabled:active span.label {
     margin-right: 0 !important;
 }
 
+
+
 .aceErrorMarker {
-    position:absolute;
-    background:rgba(160, 50, 50);
-    z-index:20 
+    position: absolute;
+    background: rgba(160, 50, 50);
+    z-index: 20 
 }
 
 .ace_gutter-cell {
     padding-left: 0 !important;
     padding-top: 0.42em;
-    width: 32px;
     font-size: 65%;
+}
+
+/* Larger fold widgets */
+.ace_fold-widget {
+    background-size: auto 0.6em;
 }
 
 .ace_gutter-cell span {
     position: relative;
-    /* Pull the collapse icons back up*/
+    /* Pull the collapse icons back up */
     margin-top: -0.42em;
     left: -1px;
 }
@@ -903,7 +909,7 @@ code, .code {
 #debugger > label {
     font-family: quadplay;
     font-size: 13px;
-    min-width: 58px;
+    min-width: 50px;
     padding-left: 2px;
     padding-right: 2px;
 }
@@ -916,6 +922,7 @@ code, .code {
 /* Hide the debugger in emulator modes and full screen editor */
 .MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger, .GhostUI #debugger {
     visibility: hidden;
+    display: none;
 }
 
 .TestUI #debugger {
@@ -926,8 +933,7 @@ code, .code {
 }
 
 /* When in the TestUI *and* the screen is wide, adjust the debugger
-   layout to also show the constant editor.
-*/
+   layout to also show the constant editor. */
 @media screen and (min-width: 640px) {
 
     .TestUI #debugger {
@@ -1341,7 +1347,7 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     left: -5px;
 }
 
-.EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage, .EditorUI canvas {
+.EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage, .EditorUI .screenBorder canvas {
     visibility: hidden !important;
 }
 
@@ -1411,7 +1417,7 @@ hr {
 .GhostUI .ide {
     text-shadow: rgba(0,0,0,100%) 0px 2px 6px, rgba(0,0,0,100%) 0px 0px 3px;
     mix-blend-mode: screen;
-    color:#fff;
+    color: #fff;
 }
 
 /* Avoid text shadow in ghost mode */
@@ -1741,12 +1747,32 @@ tabbox > input:checked + label.ide {
 tabbox #performanceTab:checked ~ #performancePane,
 tabbox #controlTab:checked ~ #controlPane,
 tabbox #todoTab:checked ~ #todoPane,
+tabbox #manualTab:checked ~ #manualPane,
 tabbox #outputTab:checked ~ #outputPane,
 tabbox #watchTab:checked ~ #watchPane,
 tabbox #serverTab:checked ~ #serverPane {
     display: block;
 }
 
+#manualPane {
+    padding: unset;
+}
+
+#manualPane iframe {
+    border: none;
+}
+
+/**********************************************/
+
+#codePlusFrame.resizing {
+    cursor: ns-resize;
+}
+
+/* Prevent the iframe from stealing mouseover while resizing
+   https://stackoverflow.com/questions/5261328/receive-mousemove-events-from-iframe-too */
+#codePlusFrame.resizing #doc {
+    pointer-events: none;
+}
 /********************************************************/
 
 svg.modeGraph .node {
@@ -1883,3 +1909,14 @@ button.license {
     border: none;
     text-overflow: ellipsis;
 } 
+
+
+.terminalComment {
+    font-style: italic;
+    color: #27ae60;
+}
+
+.terminalCommand {
+    font-weight: bold;
+    color: #a569bd;
+}

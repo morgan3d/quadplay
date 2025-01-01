@@ -113,8 +113,14 @@ color: #93d884\
 .ace-quadplay .ace_c9searchresults.ace_keyword {\
 color: #798aee\
 }\
-.ace-quadplay .ace_indent-guide {\
-background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWNgYGBgYFBXV/8PAAJoAXX4kT2EAAAAAElFTkSuQmCC) right repeat-y\
+.ace-quadplay .ace_indent-guide:nth-child(3n+1) {\
+    border-right: rgba(255, 255, 255, 8%) 1px dotted;\
+}\
+.ace-quadplay .ace_indent-guide:nth-child(3n+2) {\
+    border-right: rgba(20, 255, 255, 10%) 1px dotted;\
+}\
+.ace-quadplay .ace_indent-guide:nth-child(3n+0) {\
+    border-right: rgba(255, 55, 200, 17%) 1px dotted;\
 }";
 
 var dom = require("../lib/dom");

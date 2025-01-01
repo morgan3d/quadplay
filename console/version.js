@@ -1,1 +1,1 @@
-const version = '2024.12.05.16';
+const version = '2025.01.01.14';

@@ -1,0 +1,63 @@
+body { background: #302b2b }
+
+@font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
+.big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
+em.asterisk { font-style: normal; font-weight: bold; }
+.md div.title { font-family: quadplay; font-size: 40px}
+.md div.title, .md div.subtitle {text-align: center}
+img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
+.md .hljs-built_in {font-weight: bold; color: #f7a8fd}
+.md .hljs-keyword {font-weight: bold; color: #a1aefe}
+.md .hljs-title {font-weight: bold; color: #FFF}
+.md div.listingcaption {margin: 5px 0 15px}
+
+@media screen and (min-width: 750px) {
+.md .longToc {
+font-size: 80%;
+width: 200px;
+}
+body {
+left: 230px;
+}
+}
+
+.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-built_in, a code .hljs-selector-tag {
+color: #80bfff !important;
+}
+table.aligned tr {
+  vertical-align: top;
+}
+
+div.preview, div.font {
+  width:  335px;
+  height: 100px;
+  background-size: auto 550px;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated;
+  border: 1px solid #666;
+}
+
+
+div.preview {
+  background-size: 600% 1000%;
+  width: 256px;
+  height: 149px;
+  float:right;
+}
+
+.md h1, .md h2, .md h3 { font-family: quadplay }
+.md pre.listing.backtick {
+  margin-bottom: 0px;
+}
+
+quadplay::before {
+content: "quadplay✜";
+font-family: quadplay;
+}
+
+table {font-size: 16px}
+table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
+table.nested td code {white-space: nowrap} 
+table.nested th {border-bottom: 1px solid}
+table.nested tr {vertical-align: top}
+table.nested td {margin-bottom: 5px}

@@ -513,8 +513,13 @@ function createCodeEditorSession(url, bodyText, assetName) {
             // code changes, so not a good idea.
             // if (! aceEditor.curOp || ! aceEditor.curOp.command.name) { return; }
 
-            if ((session.aux.fileType === 'pyxl') && document.getElementById('automathEnabled').checked) {
-                autocorrectSession(session);
+            if (session.aux.fileType === 'pyxl') {
+
+                if (document.getElementById('automathEnabled').checked) {
+                    autocorrectSession(session);
+                }
+
+                maybeShowDocumentationForSession(session);
             }
             
             // Cancel the previous pending timeout if there is one
@@ -752,6 +757,7 @@ function serverWriteFile(webpath, encoding, contents, callback, errorCallback) {
 
     if (webpath.endsWith('.pyxl')) {
         updateTodoList();
+        updateProgramDocumentation();
     }
 }
 
@@ -1241,7 +1247,6 @@ function showImportDocDialog() {
         // Strip the path to the current game off docs in the same dir
         // or subdirectory of it.
 
-        // TODO: This looks wrong
         if (gamePath.length > 0 && gamePath[0] === '/') {
             gamePath = gamePath.substring(1);
         }
@@ -1306,14 +1311,14 @@ let codeEditorDividerInDrag = false;
 
 function onCodeEditorDividerDragStart() {
     codeEditorDividerInDrag = true;
-    document.getElementById('codePlusFrame').style.cursor = 'ns-resize';
+    document.getElementById('codePlusFrame').classList.add('resizing');
 }
 
 
 function onCodeEditorDividerDragEnd() {
     if (codeEditorDividerInDrag) {
         codeEditorDividerInDrag = false;	
-        document.getElementById('codePlusFrame').style.cursor = 'auto';
+        document.getElementById('codePlusFrame').classList.remove('resizing');
         aceEditor.resize();
     }
 }
@@ -1790,5 +1795,6 @@ function onRemoveDoc(docURL) {
     gameSource.json.docs.splice(index, 1);
     serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
 }
+
 
 

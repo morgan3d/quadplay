@@ -1,6 +1,8 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
-
 'use strict';
+
+var $physicsTimeTotal = 0;
+
 function entity_inertia(entity, mass) {
     const scaleX = entity.scale ? entity.scale.x : 1;
     const scaleY = entity.scale ? entity.scale.y : 1;

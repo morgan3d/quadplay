@@ -1,10 +1,10 @@
 ;; pyxlscript-mode.el --- Major mode for editing Quadplay PyxLScript. -*- coding: utf-8 -*-
 
-;; Copyright © 2024, by Morgan McGuire
+;; Copyright © 2025, by Morgan McGuire
 
 ;; Author: Morgan McGuire, https://casual-effects.com
 ;; URL: https://github.com/morgan3d/quadplay/blob/main/tools/pyxlscript-mode.el
-;; Version: 0.0.2
+;; Version: 0.0.3
 ;; Keywords: languages, pyxlscript
 
 ;; To use this mode, put the file in your elisp directory. Mine is "~/.emacs.d/lisp"
@@ -63,7 +63,7 @@
                                    
                                    "ADD" "DIV" "MAD" "MUL" "SUB" "MAX" "MIN" "SIGN" "CLAMP"
                                    
-                                   "RGB_ADD_RGB" "RGB_SUB_RGB" "RGB_MUL_RGB" "RGB_DIV_RGB" "RGB_MUL" "RGB_DIV" "RGB_DOT_RGB" "RGB_LERP"
+                                   "RGB_ADD" "RGB_ADD_RGB" "RGB_SUB_RGB" "RGB_MUL_RGB" "RGB_DIV_RGB" "RGB_MUL" "RGB_DIV" "RGB_DOT_RGB" "RGB_LERP"
 
                                    "RGBA_ADD_RGBA" "RGBA_SUB_RGBA" "RGBA_MUL_RGBA" "RGBA_DIV_RGBA" "RGBA_MUL" "RGBA_DIV" "RGBA_DOT_RGBA" "RGBA_LERP"
 

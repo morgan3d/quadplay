@@ -5,8 +5,8 @@
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
-        "quad://scripts/mat3x3.pyxl",
-        "quad://scripts/dice.pyxl"
+        "quad://scripts/mat3x3_lib.pyxl",
+        "quad://scripts/dice_lib.pyxl"
     ],
     "modes": [
         "Play",
@@ -71,7 +71,7 @@
                 },
                 "g": {
                     "type": "number",
-                    "value": "47%"
+                    "value": "38%"
                 },
                 "b": {
                     "type": "number",

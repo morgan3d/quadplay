@@ -4,14 +4,18 @@
 // For debugging
 // git log --graph --oneline --decorate --all
 
+function addToVCSLog(html) {
+    const terminal = document.getElementById('versionControlTerminal');
+    terminal.innerHTML += html;
+    terminal.scrollTop = terminal.scrollHeight;  
+}
+
 /* Runs a git command that is in the string 'cmd' in the current game's directory
    and runs the success function if it succeeds.
    
    Assumes hasGit and editableProject are true. */
 function serverGitCommand(cmd, successFunction) {
-    const terminal = document.getElementById('versionControlTerminal');
-    terminal.innerHTML += `<b>&gt; git ${cmd}</b>\n\n`;
-    terminal.scrollTop = terminal.scrollHeight;  
+    addToVCSLog(`<span class="terminalCommand">&gt; git ${cmd}</span>\n\n`);
     
     LoadManager.fetchOne({}, gameURL.replace(/\/[^/]+\.game\.json$/, '/_git?' + encodeURI(cmd)), 'text', null, function (text) {
         // Parse the result
@@ -19,8 +23,11 @@ function serverGitCommand(cmd, successFunction) {
         const code = parseInt(text.substring(0, i));
         text = text.substring(i + 1);
 
-        terminal.innerHTML += text + '\n';
-        terminal.scrollTop = terminal.scrollHeight;  
+        // Remove this confusing string from the output
+        const remove_string = 'nothing to commit (use -u to show untracked files)';
+        text = text.replace(remove_string, '');
+        
+        addToVCSLog(text + '\n');
             
         // Run the callback
         successFunction(text, code);
@@ -38,7 +45,10 @@ function gitDoMergeAndCommit(mergeOptions, commitFileList) {
         const dialog = document.getElementById('versionControlCommitMessage');
         dialog.classList.remove('hidden');
         dialog.commitFileList = commitFileList;
-        document.getElementById('versionControlCommitMessageText').value = '';
+        addToVCSLog(`<span class="terminalComment"># Ready to commit ${commitFileList}</span>\n`);
+        const textbox = document.getElementById('versionControlCommitMessageText');
+        textbox.focus();
+        textbox.value = '';
         // Wait for dialog callback
     }); // merge
 }
@@ -55,35 +65,60 @@ function onGitSync() {
     let commitFileList = '';
     serverGitCommand('status --porcelain .', function (text, code) {
         const fileArray = text.trim().split('\n');
+
+        const commonBase = gameURL.replace(location.href.replace(/console\/quadplay\.html.*/, ''), '').replace(/\/[^/]+\.game.json$/, '/');
+
+        let addFileList = '';
+        
         for (const line of fileArray) {
             const args = line.trim().split(' ');
-            const filename = args[1];
+            let filename = args[1];
+
+            // Make filename relative to the game directory
+            // as we might be working with a game that is rooted
+            // somewhere within a git hierarchy.
+            if (filename.startsWith(commonBase)) {
+                filename = filename.substring(commonBase.length);
+            }
+            
             // Modified, new, renamed, or copied AND in the project
             // or Deleted AND NOT in the project
-            if ((['M', '?', 'R', 'C'].indexOf(args[0]) !== -1 && gameSource.localFileTable[filename]) ||
-                (args[0] === 'D' && ! gameSource.localFileTable[filename])) {
+            if ((['M', '?', 'R', 'C'].indexOf(args[0][0]) !== -1 && gameSource.localFileTable[filename]) ||
+                (args[0][0] === 'D' && ! gameSource.localFileTable[filename])) {
                 commitFileList += ' ' + filename;
+
+                if (args[0][0] === '?') {
+                    addFileList += ' ' + filename;
+                }
+            } else {
+                //console.log('ignoring', filename);
+                //console.log(args[0], ['M', '?', 'R', 'C'].indexOf(args[0][0]), gameSource.localFileTable[filename]);
             }
         }
 
         // Remove the leading space
         commitFileList = commitFileList.trimStart();
+        addFileList = addFileList.trimStart();
 
-            // Get changes from server
+        const needTestMerge = commitFileList !== '' || addFileList !== '';
+
+        // Get changes from server
         serverGitCommand('fetch', function (text, code) {
             function doTestMerge() {                
-                if (commitFileList === '') {
+                if (! needTestMerge) {
                     // Directly merge. Since no files changed locally there is no chance of conflict.
                     serverGitCommand('merge', function (text, code) {
                         console.log('Reloading after git merge.');
                         loadGameIntoIDE(window.gameURL, null, true);
 
                         closeButton.disabled = false;
+                        closeButton.focus();
                         // Done!
                     });
                     
                 } else {
                     // Files changed locally. Test the merge, backing it out immediately no matter what
+                    addToVCSLog('<span class="terminalComment"># Check for merge conflict</span>\n');
                     serverGitCommand('merge --no-commit --no-ff', function (mergeText, code) {   
                         // Do not reload; the files are potentially broken by a failed merge
 
@@ -111,11 +146,21 @@ function onGitSync() {
                 } // if files to commit
             } // function doMerge
 
-            if (commitFileList !== '') {
-                // Checkpoint the pre-merge state and then merge
-                serverGitCommand(`commit --untracked-files=no --quiet -m "Automated pre-merge commit" ${commitFileList}`, function (text, code) {
-                    doTestMerge();
-                }); // commit
+            if (needTestMerge) {
+                // Code that runs after adding, if needed
+                function theRest() {
+                    // Checkpoint the pre-merge state and then merge
+                    serverGitCommand(`commit --untracked-files=no --quiet -m "Automated pre-merge commit" ${commitFileList}`, function (text, code) {
+                        doTestMerge();
+                    }); // commit
+                }
+
+                if (addFileList !== '') {
+                    serverGitCommand(`add ${commitFileList}`, theRest)
+                } else {
+                    theRest();
+                }
+                
             } else {
                 // Merge directly
                 doTestMerge();
@@ -131,13 +176,16 @@ function onGitResolveConflictUndo() {
     // The merge was already undone by the time we hit this callback, so just close the dialogs
     const dialog = document.getElementById('versionControlMergeConflictDialog');
     dialog.classList.add('hidden');
-    document.getElementById('gitCloseButton').disabled = false;
+    const closeButton = document.getElementById('gitCloseButton');
+    closeButton.disabled = false;
+    closeButton.focus();
 }
 
 
 function onGitResolveConflictMine() {
     const dialog = document.getElementById('versionControlMergeConflictDialog');
     dialog.classList.add('hidden');
+    addToVCSLog('<span class="terminalComment"># Resolve conflicts with my local files</span>\n');
     gitDoMergeAndCommit('--no-commit -s ort -X ours', dialog.commitFileList);
 }
 
@@ -145,6 +193,7 @@ function onGitResolveConflictMine() {
 function onGitResolveConflictTheirs() {
     const dialog = document.getElementById('versionControlMergeConflictDialog');
     dialog.classList.add('hidden');
+    addToVCSLog('<span class="terminalComment"># Resolve conflicts with the remote files</span>\n');
     gitDoMergeAndCommit('--no-commit -s ort -X theirs', dialog.commitFileList);
 }
 
@@ -166,19 +215,24 @@ function onGitSendButton(noSend) {
     if (message === '') { message = 'Changed ' + commitFileList; }
 
 
-    serverGitCommand(`commit -m "${message}" ${commitFileList}`, function (text, code) {
+    serverGitCommand(`commit --untracked-files=no -m "${message}" ${commitFileList}`, function (text, code) {
         if (noSend) {
             // Done 
-            document.getElementById('gitCloseButton').disabled = false;
+            const closeButton = document.getElementById('gitCloseButton');
+            closeButton.disabled = false;
+            closeButton.focus();
         } else {
+            addToVCSLog(`<span class="terminalComment"># Pushing changes to ${commitFileList}</span>\n`);
             serverGitCommand('push', function (text, code) {
                 if ((text.indexOf('[rejected]') !== -1) || (code === 1)) {
                     // Try again
-                    alert('Command failed');
-                    document.getElementById('gitCloseButton').disabled = false;
+                    alert('Your collaborators pushed changes to the remote server while you were syncing files. The sync process needs to be performed again.');
+                    setTimeout(onGitSync);
                 } else {
                     // Done!
-                    document.getElementById('gitCloseButton').disabled = false;
+                    const closeButton = document.getElementById('gitCloseButton');
+                    closeButton.disabled = false;
+                    closeButton.focus();
                 }
             }); // push
         }

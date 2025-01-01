@@ -3,6 +3,8 @@
         {
             "name": "Photoshop",
             "paths": [
+                "/Applications/Adobe Photoshop 2025/Adobe Photoshop 2025.app",
+                "/Applications/Adobe Photoshop 2024/Adobe Photoshop 2024.app",
                 "/Applications/Adobe Photoshop 2022/Adobe Photoshop 2022.app",
                 "/Applications/Adobe Photoshop 2020/Adobe Photoshop 2020.app",
                 "/Applications/Adobe Photoshop CC 2019/Adobe Photoshop CC 2019.app",

@@ -6,7 +6,7 @@
     "packages": [],
     "scripts": [
         "quad://scripts/particle.pyxl",
-        "quad://scripts/platformer.pyxl"
+        "quad://scripts/platformer_lib.pyxl"
     ],
     "modes": [
         "Play"

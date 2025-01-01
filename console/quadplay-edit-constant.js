@@ -799,11 +799,8 @@ function showNewConstantDialog(parentKey) {
     }
 
     document.getElementById('newConstantCreateButton').onclick = function () { onNewConstantCreate(parentKey); };
-    
-    document.getElementById('newConstantNumberMin').value = '-infinity';
-    document.getElementById('newConstantNumberMax').value = '+infinity';
-    document.getElementById('newConstantNumberQuantum').value = '0.01';
-    document.getElementById('newConstantNumberFormat').value = '0.00';
+
+    onNewConstantNumberPreset('infinity');
     
     // Only make reference types valid if there is already some other
     // asset or constant to refer to.
@@ -1056,4 +1053,40 @@ function showConstantContextMenu(constantName) {
         <div onmousedown="onEditConstantDescription('${constantName}')">Edit Description&hellip;</div>
         <hr><div onmousedown="onRemoveConstant('${constantName}')""><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${constantName}'</div>`;
     showContextMenu('project');
+}
+
+
+function onNewConstantNumberPreset(type) {
+    let min = 0;
+    let max = 1;
+    let qnt = 1;
+    let fmt = '0';
+
+    switch (type) {
+    case 'infinity':
+        min = '-infinity';
+        max = '+infinity';
+        qnt = 0.01;
+        fmt = '0.00';
+        break;
+        
+    case 'int':
+        min = 0;
+        max = 128;
+        qnt = 1;
+        fmt = '0';
+        break;
+
+    case 'percent':
+        min = 0;
+        max = 1;
+        qnt = 0.01;
+        fmt = '0%';
+        break;
+    }
+
+    document.getElementById('newConstantNumberMin').value = min;
+    document.getElementById('newConstantNumberMax').value = max;
+    document.getElementById('newConstantNumberQuantum').value = qnt;
+    document.getElementById('newConstantNumberFormat').value = fmt;
 }

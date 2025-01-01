@@ -180,7 +180,7 @@ def parse_args():
         '--nativeapp',
         action='store_true',
         default=False,
-        help='Attempt to open quadplay as a native app window on platforms with Chrome or Edge. Defaults to True for the quadplay script and False for the quadplay-server script.'
+        help='Attempt to open quadplay as a native app window on platforms with Chromium (Chrome, Brave, or Edge). Defaults to True for the quadplay script and False for the quadplay-server script.'
     )
 
     parser.add_argument(
@@ -808,13 +808,13 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     raw_files = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + source_extension), recursive=True)
 
                     # Remove anything in a magic directory
-                    response_obj['source'] = [f for f in raw_files if not self.special_dir_regex.search(f)]
+                    response_obj['source'] += [f for f in raw_files if not self.special_dir_regex.search(f)]
 
-                    # Sort
-                    response_obj['source'] = sorted(response_obj['source'])
+                # Sort
+                response_obj['source'] = sorted(response_obj['source'])
 
-                    # Fix slashes on windows
-                    if isWindows: response_obj['source'] = [f.replace('\\', '/') for f in response_obj['source']]
+                # Fix slashes on windows
+                if isWindows: response_obj['source'] = [f.replace('\\', '/') for f in response_obj['source']]
                 
                             
                 # Get additional raw files from the game directory and
@@ -898,24 +898,24 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             response = '-1\n'
 
             git_cmd = urllib.parse.unquote(query)
-            maybe_print('git ' + git_cmd)
             
             if not hasGit:
                 # Should not have issued a git command
+                maybe_print('Prevented: git ' + git_cmd)
                 response_code = 404
             else:
                 # For security, verify that this is a permitted command
                 # and has nothing else packed into it
-                if git_cmd.split(' ')[0] in ['pull', 'push', 'status', 'commit', 'merge', 'reset', 'fetch'] and not ('&' in git_cmd or '|' in git_cmd or ';' in git_cmd):
+                if git_cmd.split(' ')[0] in ['pull', 'push', 'status', 'add', 'commit', 'merge', 'reset', 'fetch'] and not ('&' in git_cmd or '|' in git_cmd or ';' in git_cmd):
                     # Run the git command
                     response = '0\n'
 
                     file_path = os.path.dirname(remove_leading_slash(webpath))
                     git_cmd = 'git -C ' + file_path + ' ' + git_cmd
                   
-                   
-                    # Build the command, wrapping it with directory changes and
-                    # capturing stderr so it doesn't spam the console.
+                    maybe_print(git_cmd)
+
+                    # Build the command capturing stderr so it doesn't spam the console.
                     # 
                     # No need to restore the directory after the command because
                     # run_shell_command makes a new shell

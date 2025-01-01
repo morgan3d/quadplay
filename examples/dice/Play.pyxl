@@ -2,6 +2,9 @@ Play
 ════════════════════════════════════════════════════════════════════════
 set_random_seed()
 
+// These will be in the coordinate system used throughout
+// of:    set_transform(½ SCREEN_SIZE, xy(1, -1))
+// where origin = center, Y = up
 const tray = make_dice(xy(½ (SCREEN_SIZE.x - TRAY_WIDTH), 0), xy(TRAY_WIDTH, SCREEN_SIZE.y), 80% TRAY_BACKGROUND_COLOR)
 const dice = make_dice(xy(-½ TRAY_WIDTH, 0), xy(SCREEN_SIZE.x - TRAY_WIDTH, SCREEN_SIZE.y), 80% BACKGROUND_COLOR, dice_dice_sound, dice_table_sound, dice_wall_sound)
 
@@ -73,10 +76,10 @@ def process_ui():
     // Swap dice
     if (touch.aa or joy.bb) and selected_die:
         if contains(dice.die_array, selected_die):
-            dice_insert(tray, selected_die)
+            dice_transfer(tray, selected_die)
             last_selected_die = find_closest_die(selected_die.pos, ∅, dice)
         else:
-            dice_insert(dice, selected_die)
+            dice_transfer(dice, selected_die)
             last_selected_die = find_closest_die(selected_die.pos, ∅, tray)
         
         play_sound({sound: dice_wall_sound, pan: selected_die.pos})
@@ -104,45 +107,45 @@ def process_ui():
 def make_demo_dice():
     // Pip d6
     for i < 4:
-        dice_add_die(tray, 6, xy(0, 0), 9, ∅, pip_sprite[0], #EEE, #BBC, #000)
+        dice_add_die(tray, 6, xy(0, 0), 9, ∅, pip_sprite[0], ∅, #EEE, #BBC, #000)
 
     // Icon d12
-    dice_add_die(dice, 12, xy(0, 0), 18, ∅, icon_sprite.all, 47%)
+    dice_add_die(dice, 12, xy(0, 0), 18, ∅, icon_sprite.all, ∅, 47%)
 
     // Black d12
-    dice_add_die(dice, 12, xy(0, 0), 14, font5, ∅, #000, #200)
+    dice_add_die(dice, 12, xy(0, 0), 14, font5, ∅, ∅, #000, #200)
 
     // Blue percentile d10
-    dice_add_die(tray, 10, xy(0, 0), 14, font7, "1234567890", #14F, #740)
-    dice_add_die(tray, 10, xy(0, 0), 14, font7, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], #14F, #740)
+    dice_add_die(tray, 10, xy(0, 0), 14, font7, "1234567890", ∅, #14F, #740)
+    dice_add_die(tray, 10, xy(0, 0), 14, font7, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], ∅, #14F, #740)
     
     // Blue Greek d12
-    dice_add_die(dice, 12, xy(0, 0), 14, font7, "αβγδεζηθικλμ", #14F, #740)
+    dice_add_die(dice, 12, xy(0, 0), 14, font7, "αβγδεζηθικλμ", ∅, #14F, #740)
     
     // Blue d20
-    dice_add_die(dice, 20, xy(0, 0), 14, font4, ∅, #14F, #740)
+    dice_add_die(dice, 20, xy(0, 0), 14, font4, ∅, ∅, #14F, #740)
 
     // White duplicated d8 as d4
-    dice_add_die(dice, 8, xy(0, 0), 10, font5, "12341234", #EEE, #BBC, #D22)
+    dice_add_die(dice, 8, xy(0, 0), 10, font5, "12341234", ∅, #EEE, #BBC, #D22)
 
     // Yellow direction d6
-    dice_add_die(tray, 6, xy(0, 0), 10, font5, ["N", "S", "E", "W", "up", "dn"], #FE0, #A50, #000)
+    dice_add_die(tray, 6, xy(0, 0), 10, font5, ["N", "S", "E", "W", "up", "dn"], ∅, #FE0, #A50, #000)
 
     // Gold runes d10
-    dice_add_die(dice, 10, xy(0, 0), 18, runes9_font, "ABCDEFGHIJ", 20%, ∅, #444)
+    dice_add_die(dice, 10, xy(0, 0), 18, runes9_font, "ABCDEFGHIJ", ∅, 20%, ∅, #444)
 
     // Gold d20
-    dice_add_die(dice, 20, xy(0, 0), 16, font5, ∅, 20%, ∅, #444)
+    dice_add_die(dice, 20, xy(0, 0), 16, font5, ∅, ∅, 20%, ∅, #444)
 
     // Green letter d8
-    dice_add_die(tray, 8, xy(0, 0), 14, font7, "ABCDEFGH", #F90, #0C2, #484)
+    dice_add_die(tray, 8, xy(0, 0), 14, font7, "ABCDEFGH", ∅, #F90, #0C2, #484)
 
     // Big red d20
-    dice_add_die(dice, 20, xy(0, 0), 24, font7, ∅, 0%)
+    dice_add_die(dice, 20, xy(0, 0), 24, font7, ∅, ∅, 0%)
 
-    // Matching purple set
+    // Matching purple set of gem dice
     for s in [4, 6, 8, 10, 12, 20]:
-        dice_add_die(dice, s, xy(0, 0), 14, font5, ∅, DIE_BRIGHT, DIE_DIM)
+        dice_add_die(dice, s, xy(0, 0), 14, font5, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, true)
 
 
         
@@ -155,11 +158,11 @@ if SINGLE_SET:
         // Tweak sizes across the set
         const size = if s == 20 then 26 else (if s == 8 then 22 else 24)
         
-        dice_add_die(if s == 20 then dice else tray, s, xy(0, 0), size, suchet_9_font, nil, #14F, #740)
+        dice_add_die(if s == 20 then dice else tray, s, xy(0, 0), size, suchet_9_font, ∅, ∅, #14F, #740)
 
     // Percentile
-    dice_add_die(tray, 10, xy(0, 0), 20, font8, "0123456789", 20%, ∅, #444)
-    dice_add_die(tray, 10, xy(0, 0), 20, font8, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], 20%, ∅, #444)
+    dice_add_die(tray, 10, xy(0, 0), 20, font8, "0123456789", ∅, 20%, ∅, #444)
+    dice_add_die(tray, 10, xy(0, 0), 20, font8, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], ∅, 20%, ∅, #444)
         
 else:
     make_demo_dice()  

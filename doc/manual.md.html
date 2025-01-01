@@ -20,7 +20,7 @@
 
 > "Imagine the year 1989 in a fantasy timeline. Instead of chasing
 > realistic 3D, game consoles get modern tools and mechanics for
-> 2D. <quadplay/> is the fantasy predecessor of Nintendo64 and
+> 2D. <quadplay/> is the fantasy sibling of the SNES, Neo Geo, and 
 > PlayStation that puts fun first in game jams and education. Its
 > retro constraints scope art and code for success. <quadplay/>'s
 > modern scripting, physics, local and online multiplayer, and AI
@@ -90,10 +90,10 @@ debugger, and profiler.
 - Per-mode callback "hooks"
 
 <quadplay/> is ideal for game jams, and it has been used for many 
-including [Ludum Dare](https://ludumdare.com/) and the 
-[Global Game Jam](https://globalgamejam.org/). It has special
-support of MIDI I/O for [Alt.Ctrl.GDC](https://gdconf.com/alt-ctrl-gdc)
-and a 64x64 screen mode for [Lowrezjam](https://itch.io/jam/lowrezjam-2022).
+including [Ludum Dare](https://ludumdare.com/ target="_blank") and the 
+[Global Game Jam](https://globalgamejam.org/ target="_blank"). It has special
+support of MIDI I/O for [Alt.Ctrl.GDC](https://gdconf.com/alt-ctrl-gdc target="_blank")
+and a 64x64 screen mode for [Lowrezjam](https://itch.io/jam/lowrezjam-2024 target="_blank").
 
 
 Quick Start
@@ -106,10 +106,9 @@ Welcome to <quadplay/>!
 </td><td>
 *macOS and Linux:*
 
-1. Install [Python 3.7](https://www.python.org/) or newer
+1. Install [Python 3.7](https://www.python.org/ target="_blank") or newer
 2. Unzip [<quadplay/>](https://github.com/morgan3d/quadplay/archive/main.zip) to wherever you want
 3. Run `quadplay` from the terminal
-<!-- - A modern web browser ([_Edge_](https://www.microsoft.com/en-us/edge), [_Chrome_](https://www.google.com/chrome/), [_Brave_](https://brave.com/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), or _Safari_) -->
 </td></tr></table>
 
 To make a game, select the "Tools" menu from inside the quadplay
@@ -1290,29 +1289,29 @@ directly use the built-in integrated development environment within
 the browser in the Develop and Debug modes.
 
 
-![](../console/ui-fullscreen.png width=32) Full Screen
+![](../console/icons/ui-fullscreen.png width=32) Full Screen
 : Play your game full screen. Good for playtesting.
 
-![](../console/ui-touchscreen.png width=32) Touch Screen
+![](../console/icons/ui-touchscreen.png width=32) Touch Screen
 : Play your game with single-player mobile touch controls.
 
-![](../console/ui-test.png width=32) Test
+![](../console/icons/ui-test.png width=32) Test
 : Run with a large emulator and the debugger visible. This is 
   good for using on the left or right half of the screen when 
   running an external editor on the other half.
   
-![](../console/ui-debug.png width=32) Debug
+![](../console/icons/ui-debug.png width=32) Debug
 : Pixel-doubled emulator and compressed text editor. Good for
   debugging graphics code and tuning constants.
   
-![](../console/ui-develop.png width=32) Develop
+![](../console/icons/ui-develop.png width=32) Develop
 : 1:1 pixel emulator with text editor and debugger. Good for
   working on gameplay code.
   
-![](../console/ui-edit.png width=32) Edit
+![](../console/icons/ui-edit.png width=32) Edit
 : Full-screen code editor. Good for writing lots of code.
 
-![](../console/ui-ghost.png width=32) Ghost
+![](../console/icons/ui-ghost.png width=32) Ghost
 : Show-off mode for livestreaming, with the full screen code
   editor and the game running behind it full screen, like a
   ghost. Press the Play button to switch input to the game
@@ -1579,7 +1578,7 @@ previous work, here are the resolutions of classic and retro machines:
 quantize✜
 ---------------------------------------------------------------------------------------------
 
-[quantize✜](../tools/quantize.html) is a standalone browser tool for
+[quantize✜](../tools/quantize.html target="_blank") is a standalone browser tool for
 converting any image format that your browser can load into a sRGB8 PNG
 for <quadplay/>. While the console emulator can load any PNG file, if you convert
 them using quantize✜ you will have control over the color reduction process
@@ -1589,7 +1588,7 @@ and be able to produce much smaller files for distribution.
 fontgen✜
 ---------------------------------------------------------------------------------------------
 
-[fontgen✜](../tools/fontgen.html) is a standalone browser tool for
+[fontgen✜](../tools/fontgen.html target="_blank") is a standalone browser tool for
 producing rough <quadplay/> font images from fonts installed on your local
 computer. You can then screen capture these and edit them in your
 favorite pixel editor to clean them up.
@@ -1598,7 +1597,7 @@ favorite pixel editor to clean them up.
 fontpack✜
 ---------------------------------------------------------------------------------------------
 
-[fontpack✜](../tools/fontpack.html) is a standalone browser tool for
+[fontpack✜](../tools/fontpack.html target="_blank") is a standalone browser tool for
 taking a font PNG file with regular tiles (such as the one produced by
 fontgen✜) and packing it tightly. It will generate the output PNG
 and the `.font.json` file for you.
@@ -1617,7 +1616,7 @@ a few pixels.
 scalepix✜
 ---------------------------------------------------------------------------------------------
 
-[scalepix✜](../tools/scalepix.html) is a standalone browser tool for
+[scalepix✜](../tools/scalepix.html target="_blank") is a standalone browser tool for
 upscaling a font or sprit PNG file to twice the resolution in each
 dimension, for upscaling existing assets or importing
 NES, PICO8, and Game Boy assets.
@@ -3089,10 +3088,6 @@ of seconds that it will play before ending or looping.
     demands. Graphics are time scaled, so the visual frames may be independent
     of both the audio clock and the frame events.
 
-`play_sound(args)`
-: Object version of `play_sound()`, allowing keyword argument style call.
-  Values default according to the positional argument version.
-
 `play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)`
 : Play `sound`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
@@ -3107,6 +3102,10 @@ of seconds that it will play before ending or looping.
   If `stopped` is true, the sound initially starts in the `"STOPPED"` mode
   and can be restarted with `resume_audio()`. Useful for setting up loops
   that do not play immediately.
+
+`play_sound(args)`
+: Object version of `play_sound()`, allowing keyword argument style call.
+  Values default according to the positional argument version.
 
 `resume_audio(audio)`
 : Resume a sound previously stopped with `stop_audio()`. Sets the state to `"PLAYING"`.
@@ -3337,6 +3336,7 @@ The transformation routines are:
 
 `transform_ws_to_ss(ws_point, ws_z default 0)`
 : Transform `ws_point` from world space through camera space to screen space.
+  If there is a `ws_point.z` value, it is ignored, only `ws_z` is used for z.
 
 `transform_ws_z_to_cs_z(ws_z)`
 : Make `ws_z` relative to the camera.
@@ -3344,10 +3344,16 @@ The transformation routines are:
 `transform_cs_z_to_ws_z(cs_z)`
 : Make `cs_z` absolute in world space.
 
+`transform_ws_z_to_ss_z(ws_z)`
+: Transform from world space through camera space to screen space.
+
 `transform_ws_to_cs(ws_point, ws_z default 0)`
 : Transform world space `ws_point` to camera space. There is no
   transformation function for `cs_z` value because you can 
   transform it yourself `cs_z = ws_z - get_camera().z`.
+  
+  If there is a `ws_point.z` value, it is ignored. Only `ws_z` is used
+  for z.
 
 `transform_cs_to_ws(cs_point, cs_z default 0)`
 : Transform camera space `cs_point` to world space. There is no
@@ -3398,14 +3404,14 @@ The transformation routines are:
 
 Note that `preserving_transform` also preserves the clipping rectangle.
 
-`compose_transform(args)`
-: Named argument version of `compose_transform()`.
-
 `compose_transform(pos default ∅, dir default ∅, z default ∅, zDir default ∅, skew default ∅)`
 : Apply this local transformation _before_ the current one. Used for entering a child
   coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
   Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
   nested coordinate systems.
+
+`compose_transform(args)`
+: Named argument version of `compose_transform()`.
 
 `get_transform()`
 : Returns the current net transformation as an `args` object that could be passed to
@@ -3431,9 +3437,6 @@ Note that `preserving_transform` also preserves the clipping rectangle.
 : Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
   This overrides the `y_up` flag from the .game.json file.
 
-`set_transform(args)`
-: Named argument object version of `set_transform()`.
-
 `set_transform(pos default ∅, dir default ∅, z default ∅, z_dir default ∅, skew default ∅)`
 : Set the transformation applied to all camera coordinates to compute screen coordinates. Nil values
   or nil properties default to their previous value. The equation applied when mapping from
@@ -3452,6 +3455,9 @@ Note that `preserving_transform` also preserves the clipping rectangle.
   be used to make increasing values farther back.
 
   The skew transform applies after direction flipping and can be used for isometric 3D.
+
+`set_transform(args)`
+: Named argument object version of `set_transform()`.
 
 <code lang=PyxlScript>up_y()</code>
 : Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
@@ -3524,9 +3530,6 @@ Note that `preserving_transform` also preserves the camera.
 `reset_camera()`
 : `set_camera({pos: xy(0, 0), angle: 0deg, zoom: 100%, z: 0})`
 
-`set_camera(args)`
-: Named argument object version of `set_camera()`.
-
 `set_camera(pos default xy(0, 0), angle default 0, zoom default 1, z default 0)`
 : Positions the camera used to transform other draw calls. Note that
   `zoom` is the inverse of a scale transformation on the camera
@@ -3543,6 +3546,9 @@ Note that `preserving_transform` also preserves the camera.
   
   To render sprites with parallax but 1:1 pixel scaling when using a
   zoom function, set the sprite or entity `scale` to `1 / camera.zoom(entity.pos.z - camera.pos.z)`.
+
+`set_camera(args)`
+: Named argument object version of `set_camera()`.
 
 ### Entity Space
 
@@ -4764,24 +4770,21 @@ endpoints and borders.
 
 ### Drawing
 
-`draw_corner_rect(args)`
-: Named argument version of `draw_corner_rect()`.
-
 `draw_corner_rect(corner, size, color, outline default ∅, z default corner.z default 0)`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
 
-  If the top or right
-  sides exactly touch a pixel center (at a half-integer), then they do
-  not cover it. The direction in which the `size` applies is determined
-  by the current transform. Note that if `up_y()` is positive, then
-  the rectangle will extend _upward_ from the corner.
+  If the top or right sides exactly touch a pixel center (at a
+  half-integer), then they do not cover it. The direction in which the
+  `size` applies is determined by the current transform. Note that if
+  `up_y()` is positive, then the rectangle will extend _upward_ from
+  the corner.
 
   See also `draw_rect()`.
 
-`draw_disk(args)`
-: Object version of `draw_disk()`.
+`draw_corner_rect(args)`
+: Named argument version of `draw_corner_rect()`.
 
 `draw_disk(pos, radius, color, outline default ∅, z default pos.z default 0)`
 : Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
@@ -4796,8 +4799,8 @@ endpoints and borders.
    - disk exactly inscribes the containing rectangle 
    - the total number of pixels covered will not change size under subpixel translation if the circle radius is an integer or half-integer
 
-`draw_line(args)`
-: Named argument version of `draw_line()`.
+`draw_disk(args)`
+: Object version of `draw_disk()`.
 
 `draw_line(A, B, color, z default A.z default 0, width default 1)`
 : Draw a line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
@@ -4810,8 +4813,8 @@ endpoints and borders.
   The `width` will be scaled by the `camera.zoom`. The line is always
   at least one pixel thick in screen space.
 
-`draw_point(args)`
-: Named argument version of `draw_point()`.
+`draw_line(args)`
+: Named argument version of `draw_line()`.
 
 `draw_point(pos, color, z default pos.z default 0)`
 : Set the color of pixel (`pos.x`, `pos.y`) to color `color` with z-order `z`.
@@ -4820,15 +4823,18 @@ endpoints and borders.
   For the best alignment under the default transformation, put the endpoints
   at half-pixel positions.
 
-`draw_poly(args)`
-: Named argument version of `draw_poly()`.
+`draw_point(args)`
+: Named argument version of `draw_point()`.
 
-`draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
+`draw_poly(vertex_array, color, outline default nil, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
 : Draws the _convex_ polygon defined by the `vertex_array`, first
   scaling by `scale`, rotating by `angle`, and then translating by
   `pos`. The polygon may have any winding direction. If the polygon is
   not convex, then the outcome of the drawn result is undefined and
   may change across platforms (but there will never be an error).
+
+`draw_poly(args)`
+: Named argument version of `draw_poly()`.
 
 `draw_previous_mode()`
 : Re-issue all of the drawing commands from the previous mode's frame
@@ -4838,20 +4844,14 @@ endpoints and borders.
   the z-order.  Useful for drawing the main game background during
   inventory, pause, menu, and dialogue modes.
 
-`draw_rect(args)`
-: Named argument version of `draw_rect()`.
-
 `draw_rect(pos, size, color, outline default ∅, angle default 0, z default pos.z default 0)`
 : Draws the rectangle _centered_ at `pos` with the given `size` and `angle`.
   No `scale` argument is provided because it is easy for the caller to
   explicitly multiply `size` by `scale`.
   See also `draw_corner_rect()` and `draw_sprite_corner_rect()`.
 
-`draw_sprite(args)`
-: Keyword version of `draw_sprite()`. Pass an object that has properties
-  whose names match the arguments of the positional version. For example,
-  `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
-  Values default according to the positional argument version.
+`draw_rect(args)`
+: Named argument version of `draw_rect()`.
 
 `draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default pos.z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", pivot default sprite.pivot)`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
@@ -4879,6 +4879,12 @@ endpoints and borders.
   The `z` value is used for ordering. The value `pos.z default z`
   is used for camera zoom perspective and transform skew.
 
+`draw_sprite(args)`
+: Keyword version of `draw_sprite()`. Pass an object that has properties
+  whose names match the arguments of the positional version. For example,
+  `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
+  Values default according to the positional argument version.
+
 `draw_sprite_corner_rect(sprite, corner, size, z default 0)`
 : Draw a rectangle enclosing points `corner` and `corner+size`
   filled with `sprite` tiled as needed (and aligned to the
@@ -4892,12 +4898,6 @@ endpoints and borders.
   See also `draw_corner_rect()` and `draw_rect()`.
   
   This routine ignores the global camera. That may change before SDK version 1.0.
-
-`draw_text(args)`
-: Keyword version of `draw_text()`. Pass an object that has properties
-  whose names match the arguments of the positional version. For example,
-  `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
-  Values default according to the positional argument version.
 
 `draw_text(font default ∅, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "center", y_align default "center", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
 : Print string `text` relative to `pos`. If the font is unspecified,
@@ -4972,14 +4972,20 @@ endpoints and borders.
   
   To insert a single linebreak within markup, use `"{br}"`.
 
-`draw_tri(args)`
-: Named argument version of `draw_tri()`.
+`draw_text(args)`
+: Keyword version of `draw_text()`. Pass an object that has properties
+  whose names match the arguments of the positional version. For example,
+  `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
+  Values default according to the positional argument version.
 
 `draw_tri(A, B, C, color, outline default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
   any winding direction.
+
+`draw_tri(args)`
+: Named argument version of `draw_tri()`.
 
 `get_background()`
 : Returns the value previously set with `set_background()`.
@@ -4996,12 +5002,12 @@ endpoints and borders.
   returns `nil` if there is no `result` specified and `rgba(0,0,0,0)`
   in `result` otherwise.
 
-`intersect_clip(args)`
-: Object version of `intersect_clip()`.
-
 `intersect_clip(corner default ∅, size default ∅, z default ∅, z_size default ∅)`
 : Intersect the current clipping region with this new one. Ignores the
   current transformation.
+
+`intersect_clip(args)`
+: Object version of `intersect_clip()`.
 
 `reset_clip()`
 : Reset to the default clipping region, `set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)`.
@@ -5014,9 +5020,6 @@ endpoints and borders.
 : Replace the background with this sprite, which must be the exact size of
   the screen and in a spritesheet that is the exact size of the screen.
 
-`set_clip(args)`
-: Object version of `set_clip()`.
-
 `set_clip(corner default ∅, size default ∅, z default ∅, z_size default ∅)`
 : Set the clipping region to this corner rectangle in screen
   space. Unspecified and `nil` values retain their current
@@ -5025,6 +5028,9 @@ endpoints and borders.
   screen and z to the range [-2047, 2048]. `size` and `z_size` may be
   negative. It is impossible to set a clipping region smaller than
   1x1x1 pixels.
+
+`set_clip(args)`
+: Object version of `set_clip()`.
 
 `text_width(font, s, markup default false)`
 : Returns the pixel width of string `s` in this font, including border padding.
@@ -5114,7 +5120,6 @@ Setting any post effects may slow down rendering slightly.
 : The arguments have the following fields, all optional. `nil` values
   default to their previous value.  Invoke `reset_post_effects()`
   first for a clean set.
-
 
   - `color` is an `rgba()` to combine with the the new frame before it
     is composited. Setting the `a` to 0 disables the color.
@@ -5295,9 +5300,6 @@ The following functions relate maps, pixels, and sprites. In them, a
 commands operate and a "map coordinate" is in the space of the map
 indices. The map's z-axis corresponds to layers.
 
-`draw_map(args)`
-: Draw the map using the named argument object.
-
 `draw_map(map, min_layer default 0, max_layer default length(map.layer), replacement_array default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp")`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
@@ -5329,8 +5331,8 @@ indices. The map's z-axis corresponds to layers.
   is used for transform skew and perspective camera zoom. The `map.z_scale`
   and `map.z_offset` affect both.
 
-`draw_map_span(args)`
-: Object version of `draw_map_span()`.
+`draw_map(args)`
+: Draw the map using the named argument object.
 
 `draw_map_span(start, size, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default start.z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0), quality default 100%)`
 : Draws a perfectly horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
@@ -5356,6 +5358,9 @@ indices. The map's z-axis corresponds to layers.
   any value below 50% samples at half resolution.
   
   Respects the wrapping and wraps infinitely.
+
+`draw_map_span(args)`
+: Object version of `draw_map_span()`.
 
 `map_find_path(map, start_xy, goal_xy, edge_cost, cost_layer default 0, use_sprite_id default true)`
 : Specialized version of `find_path` for maps. The start and end positions
@@ -5892,9 +5897,10 @@ debug_graphics and debug_print("Running iteration" + i)
   server.
 
 `todo(message default "")`
-: If todo errors are enabled in the IDE, reports the error `"Unimplemented: " + message`,
-  otherwise does nothing. The `message` must be a compile-time constant
-  string, similar to `because`.
+: Adds to the todo list in the IDE. If todo as error is enabled, 
+  at runtime also reports the error `"Unimplemented: " + message`. 
+  The `message` must be a compile-time constant string, similar 
+  to `because`.
 
 
 Persistence
@@ -6139,6 +6145,9 @@ and other operations that naturally compile with maximum efficiency.
 : Returns the product of the numbers in the array. The result is one
   if the array has zero length.
 
+`RGB_ADD(srcrgb, s, dstrgb)`
+: Add `s` to each element of `srcrgb` and return the result in `dstrgb`.
+
 `RGB_ADD_RGB(srcrgb, srcrgb, dstrgb)`
 : Element addition.
 
@@ -6165,7 +6174,7 @@ and other operations that naturally compile with maximum efficiency.
   `dstrgb`.  The destination may be the same as one of the sources.
   
 `RGB_DISTANCE(srcrgb1, srcrgb2)`
-: `magnitude(srcrgb1, srcrgb2)`
+: Color vector distance `magnitude(srcrgb1 - srcrgb2)`
 
 `RGBA_ADD_RGBA(srcrgba1, srcrgba2, dstrgba)`
 : Element addition.
@@ -6227,7 +6236,7 @@ and other operations that naturally compile with maximum efficiency.
 
 `XY_LERP(srcxy1, srcxy2, s1, dstxy)`
 : Interpolates between the two source values and returns the result in
-  `dstxy`.  The destination may be the same as one of the sources.
+  `dstx`.  The destination may be the same as one of the sources.
 
 `XY_DOT_XY(srcxy1, srcxy2)`
 : Returns the scalar result.
@@ -6720,7 +6729,7 @@ Double-quoted text may contain newlines.
 Consider the following CSV files, produced using a spreadsheet program
 or by hand:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 state,      bird,                 flower
 Louisiana,  Brown pelican,        Magnolia
 Maine,      Chickadee,            White pine cone and tassel
@@ -6728,7 +6737,7 @@ Wisconsin,  American robin,       Wood violet
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [`state.csv`]
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 slot,        fighter,              rogue,             wizard
 main,        sword,                dagger,            fireball
 off,         shield,               blackjack,         teleport
@@ -6765,7 +6774,7 @@ debug_print( 'off-hand actions: ', slot.off) // {fighter:"shield", rogue:"blackj
 Consider the following CSV files, produced using a spreadsheet program
 or by hand:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 x,y
 101,89
 106,88
@@ -6786,7 +6795,7 @@ x,y
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [`positions.csv`]
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 level, strength,  hit_points,   total_skills
 0,         0,         0,           0
 1,        16,        10,           1
@@ -6803,7 +6812,7 @@ level, strength,  hit_points,   total_skills
 [`level_table.csv`]
 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  0,  10,  20,  30
  1,  11,  21,  31
  2,  12,  22,  32
@@ -6934,12 +6943,17 @@ The sprite sheet JSON descriptor looks like:
     "default_frames": 1,
     
     // Optional table mapping color value strings to strings.
-    // These must be exactly (4-bit) #RGB values; they cannot have
+    // The source values (keys) must be exactly (4-bit) #RGB values; they cannot have
     // alpha or use the 8-bit form #RRGGBB. They are applied to the source
-    // image after loading to recolor it. Alpha values are preserved.
+    // image after loading to recolor it. 
+    // 
+    // The destination values can be either 4-bit #RGB or #RGBA values.
+    // When remapping a color, the source alpha will be *bit masked*
+    // (not multiplied) by the destination alpha. So, only values of 
+    // A = 1, 3, 7, and F are generally useful.
     "palette_swap": {
-        "#F00": "#0F0",
-        "#DD0": "#C0D"
+        "#F00": "#0F0", // Convert red to green
+        "#DD0": "#C0D0" // Make #DD0 transparent
     },
 
     // Optional. Applies to pre-transpose coordinates. Each becomes
@@ -8793,6 +8807,8 @@ The
 is a complete computer for only $70 that can run <quadplay/> and plug
 directly into a television or monitor.
 
+![Cort Stratton's [Rec Room Xtension/(https://recroommasters.com/product/upright-4-player-arcade-machine/) <quadplay> arcade cabinet powered by Raspberry Pi 5.](postgoodism.jpg width=50%)
+
 With a 3D-printed case and some Bluetooth or wired game controllers,
 you can build your own <quadplay/> retro mini console to connect to a TV
 or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
@@ -9003,13 +9019,14 @@ Some other physical handhelds that may be capable of running <quadplay/>
 games include:
 
  - 2560x1600 [GPD Win Max 2](https://gpd.hk/gpdwinmax2)
- - 1280x800 [AYA Neo, Neo Pro, Neo Next](https://store.ayaneo.com/)
- - TBD [Lyra+](https://www.creoqode.com/lyra-plus)
  - 2560x1600 [OneXPlayer](https://onexplayerstore.com/)
+ - 2560x1600 [AYN Odin](https://www.indiegogo.com/projects/odin-the-ultimate-gaming-handheld/x/27430815#/) with sideloaded Windows 10
+ - 1920x1080 [GPD Win 5](https://www.gpd.hk/gpdwin42025)
+ - 1920x1080 [AYANEO Flip, Flip DS](https://store.ayaneo.com/)
  - 1920x1080 [OneXPlayer Mini](https://onexplayerstore.com/)
+ - 1280x800 [AYANEO, Neo Pro, Neo Next](https://store.ayaneo.com/)
  - 1280x720 [Anbernic Win600](https://anbernic.com/products/new-anbernic-win600)
  - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res <quadplay/> 3x/3.33x scaling
- - 2560x1600 [AYN Odin](https://www.indiegogo.com/projects/odin-the-ultimate-gaming-handheld/x/27430815#/) with sideloaded Windows 10
  - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res <quadplay/> 1x scaling; poor fit
 
 
@@ -9033,10 +9050,10 @@ quadplay --serve games/quadpaddle/
 (Use your own game, not the `quadpaddle` sample, of course).
 
 Second, in the web browser that opens on your computer, select the Project or Test
-view at the upper right. Click on the Host tab of the debugging pane on the lower
+view at the upper right. Click on the Mobile tab of the debugging pane on the lower
 right:
 
-![The QR code in the Host tab of the IDE](host-tab.png)
+![The QR code in the Host tab of the IDE](mobile-tab.png)
 
 Third, _on your mobile device_, either scan the QR code and then open the URL
 it shows in a browser, or manually type the URL into your mobile browser.
@@ -9311,7 +9328,7 @@ Take note of the 4-bit sprite
 quality produced by Photoshop for color reduction.
 
 
-Road Map
+Vision
 ====================================================================================
 
 The <quadplay/> API is stable, and many people are using it to make
@@ -9321,7 +9338,7 @@ The soul of <quadplay/> as a console is described by:
 
 - Up to four players with a shared screen
 - Minimal time from launch to main play
-- 1985 output limitations, 2023 development power
+- 1992 output limitations, 2025 development power
 
 The overarching design principles of the quadplay IDE and language are:
 
@@ -9338,6 +9355,7 @@ The overarching design principles of the quadplay IDE and language are:
    - Primarily in external tools
    - Or any combination!
 
+<!--
 There's a long feature list and a short bug list that I'm working
 on. The highlights of this are, in priority order:
 
@@ -9358,7 +9376,7 @@ on. The highlights of this are, in priority order:
 [ ] Export to:
   [ ] macOS binary executable
   [ ] Windows binary executable
-
+-->
 
 Credits
 ====================================================================================
@@ -9397,6 +9415,8 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay-edit-code.js`](../console/quadplay-edit-code.js)
 - [`quadplay-edit-game.js`](../console/quadplay-edit-game.js)
 - [`quadplay-edit-constant.js`](../console/quadplay-edit-constant.js)
+- [`quadplay-vcs.js`](../console/quadplay-vcs.js)
+- [`quadplay-help.js`](../console/quadplay-help.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
 - [`quadplay-debug.js`](../console/quadplay-debug.js)
@@ -9499,67 +9519,9 @@ bundled together with a script.
 
 
 <script>
-markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
+markdeepOptions = {tocStyle:'long', definitionStyle:'long', inlineCodeLang: 'PyxlScript'};</script>
 <link rel="stylesheet" href="slate.css">
-<style>
-@font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
-.big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
-em.asterisk { font-style: normal; font-weight: bold; }
-.md div.title { font-family: quadplay; font-size: 40px}
-.md div.title, .md div.subtitle {text-align: center}
-img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
-.md .hljs-built_in {font-weight: bold; color: #f7a8fd}
-.md .hljs-keyword {font-weight: bold; color: #a1aefe}
-.md .hljs-title {font-weight: bold; color: #FFF}
-.md div.listingcaption {margin: 5px 0 15px}
-.md .longToc {
-font-size: 80%;
-width: 200px;
-}
-body {
-left: 230px;
-}
-.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-built_in, a code .hljs-selector-tag {
-color: #80bfff !important;
-}
-table.aligned tr {
-  vertical-align: top;
-}
-
-div.preview, div.font {
-  width:  335px;
-  height: 100px;
-  background-size: auto 550px;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: pixelated;
-  border: 1px solid #666;
-}
-
-
-div.preview {
-  background-size: 600% 1000%;
-  width: 256px;
-  height: 149px;
-  float:right;
-}
-
-.md h1, .md h2, .md h3 { font-family: quadplay }
-.md pre.listing.backtick {
-  margin-bottom: 0px;
-}
-
-quadplay::before {
-content: "quadplay✜";
-font-family: quadplay;
-}
-
-table {font-size: 16px}
-table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
-table.nested td code {white-space: nowrap} 
-table.nested th {border-bottom: 1px solid}
-table.nested tr {vertical-align: top}
-table.nested td {margin-bottom: 5px}
-</style>
+<link rel="stylesheet" href="manual.css">
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);
 setTimeout(function(){document.title='manual✜';},5000)</script>

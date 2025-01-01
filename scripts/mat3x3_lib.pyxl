@@ -1,47 +1,84 @@
-/* 3D transformation routines using `mat3x3` = where M[r][c] is row r column c */
+/*
+quad://scripts/mat3x3_lib.pyxl
 
+Copyright 2025, Morgan McGuire
+Open source under the MIT license
+https://opensource.org/licenses/MIT
+
+3D transformation routines using a `mat3x3` type,
+where `M[r][c]` is row `r` column `c`. Compatible
+with the `MAT3x3_` intrinsics from quadplay. */
+
+
+/* Create the row-major 3x3 matrix
+$\begin{bsmallmatrix}
+a & b & c\\
+d & e & f\\
+g & h & i
+\end{bsmallmatrix}$.
+*/
+def mat3x3(a, b, c, d, e, f, g, h, i):
+    return [[a, b, c], [d, e, f], [g, h, i]]
+
+/* The 3x3 identity matrix,
+$\begin{bsmallmatrix}
+1 & 0 & 0\\
+0 & 1 & 0\\
+0 & 0 & 1
+\end{bsmallmatrix}$.
+*/
 def mat3x3_identity():
     return [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
 
 
-/* Create a scale matrix.
+/* Create a scale matrix. Pass an `xy()` if using
+   3x3 matrices for 2D transformations and a number
+   or `xyz()` if using for 3D transformations.
 
-   `S`: number or vec3 */
+   - `S`: number, `xyz()`, or `xy()`.
+
+ */
 def mat3x3_scale(S):
     if is_number(S): S = xyz(S, S, S)
+    if S.z == nil: S = xyz(S.x, S.y, 1)
     return [[S.x, 0, 0],
             [0, S.y, 0],
             [0, 0, S.z]]
 
 
-/* Create a yaw rotation matrix */
+/* Create a yaw rotation matrix that rotates by θ about the y-axis.
+   Use for 3D transformations. */
 def mat3x3_yaw(θ):
     return [[cos θ,  0,  sin θ],
             [ 0,     1,   0   ],
             [-sin θ, 0,  cos θ]]
            
            
-/* Create a pitch rotation matrix */
+/* Create a pitch rotation matrix that rotates by θ about the x-axis.
+   Use for 3D transformations. */
 def mat3x3_pitch(θ):
     return [[1,     0,    0  ],
             [0, cos θ, -sin θ],
             [0, sin θ,  cos θ]]
 
 
-/* Create a roll rotation matrix */
+/* Create a roll rotation matrix that rotates by θ about the z-axis.
+   Use for 2D and 3D transformations. */
 def mat3x3_roll(θ):
     return [[cos θ, -sin θ,  0],
             [sin θ,  cos θ,  0],
             [0,      0,      1]]
 
 
-/* Multiply 3x3 matrix `M` by xyz `v` and return the result as a new
-   vector, or multiply 3x3 matrix `M` by 3x3 matrix `V` and
+/* Multiply 3x3 matrix `M` by `v` and return the result as a new
+   vector, or multiply 3x3 matrix `M` by 3x3 matrix `v` and
    return the result as a new matrix.
 
-   `orthonormalize`: if true, correct any roundoff errors after multiplication
-   by snapping the result to the nearest pure rotation matrix or direction
-   vector.
+   - `M`: a `mat3x3()`
+   - `v`: a `xyz()` or `mat3x3()`
+   - `orthonormalize`: if true, correct any roundoff errors after multiplication
+     by snapping the result to the nearest pure rotation matrix or direction
+     vector.
 */
 def mat3x3_mul(M, v, orthonormalize default false):
     if is_array(v):
@@ -75,43 +112,53 @@ def mat3x3_transpose(M):
 
 
 
-/* Computes the rotation matrix that takes xyz direction `A`
-    to xyz direction `B` by the shortest path. */
+/* Computes the rotation matrix that takes `xyz()` direction `A`
+   to `xyz()` direction `B` by the shortest path. */
 def mat3x3_rotation_between(A, B):
     A = direction(A)
     B = direction(B)
     
     // Axis and angle of rotation
     const axis = cross(A, B)
-    const m = ‖axis‖
+    const mag = ‖axis‖
 
     const d = dot(A, B)
     
-    if m <= epsilon:
-        if d:
+    if mag ≤ epsilon:
+        if d > 0:
+            // Vectors are in the same direction
             return mat3x3_identity()
         else:
+            // Vectors point in exactly opposite directions
             // 180 degree flip
-            return yaw_matrix(180 deg)
+            return mat3x3_yaw(180°)
     else:
-        let angle = asin(m)
-        if d < 0: angle = 180 deg - angle
-        XYZ_DIV(axis, m, axis)
+        let angle = asin(mag)
+        if d < 0: angle = 180° - angle
+        
+        // Normalize the axis
+        XYZ_DIV(axis, mag, axis)
     
         return mat3x3_from_axis_angle(axis, angle)
 
 
 
-/* Rotate by `angle` about xyz `axis` */
+/* Rotate by `angle` about `axis`.
+
+   - `axis`: `xyz()`, does not have to be unit length
+   - `angle`: number */
 def mat3x3_from_axis_angle(axis, angle):
+
+    axis = direction(axis)
+    
     // Rodrigues' formula
     const fCos  = cos angle
     const fSin  = sin angle
     const fOneMinusCos = 1 - fCos
     
-    const fX2   = axis.x^2
-    const fY2   = axis.y^2
-    const fZ2   = axis.z^2
+    const fX2   = axis.x²
+    const fY2   = axis.y²
+    const fZ2   = axis.z²
     const fXYM  = axis.x * axis.y * fOneMinusCos
     const fXZM  = axis.x * axis.z * fOneMinusCos
     const fYZM  = axis.y * axis.z * fOneMinusCos
@@ -124,7 +171,7 @@ def mat3x3_from_axis_angle(axis, angle):
             [fXZM - fYSin, fYZM + fXSin, fZ2 * fOneMinusCos + fCos]]
 
 
-/* Returns [axis, angle] of rotation for matrix `M` */
+/* Returns `[axis, angle]` of rotation for matrix `M` */
 def mat3x3_to_axis_angle(M):
     // 
     // Let (x,y,z) be the unit-length axis and let A be an angle of rotation.

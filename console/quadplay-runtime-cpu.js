@@ -2803,6 +2803,9 @@ function transform_ss_z_to_cs_z(ss_z) {
     return (ss_z - $offsetZ) / $scaleZ;
 }
 
+function transform_ws_z_to_ss_z(ws_z) {
+    return transform_cs_z_to_ss_z(transform_ws_z_to_cs_z(ws_z));
+}
 
 function transform_ws_to_cs(ws_point, ws_z) {
     const cs_z = (ws_z || 0) - $camera.z;
@@ -7184,7 +7187,7 @@ function $makeRng(seed) {
 var [random, set_random_seed] = $makeRng(0);
 
 function make_random(seed) {
-    var [random, set_random_seed] = $makeRng(seed || (local_time().millisecond() * 1e6));
+    var [random, set_random_seed] = $makeRng(seed || (local_time().millisecond * 1e6));
     return random;
 }
 
@@ -8825,6 +8828,12 @@ function RGBA_DIV(c, s, r) {
 
 function RGBA_DOT_RGBA(c1, c2) {
     return c1.r * c2.r + c1.g * c2.g + c1.b * c2.b + c1.a * c2.a;
+}
+
+function RGB_ADD(c1, s, r) {
+    r.r = c1.r + s;
+    r.g = c1.g + s;
+    r.b = c1.b + s;
 }
 
 function RGB_ADD_RGB(c1, c2, r) {

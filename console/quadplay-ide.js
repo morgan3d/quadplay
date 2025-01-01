@@ -1,4 +1,4 @@
-/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 "use strict";
 
 // Set to false when working on quadplay itself.
@@ -8,8 +8,8 @@ const deployed = true;
 // appears in the CPU runtime as well.
 const $THREADED_GPU = true;
 
-/* The containing web page that quadplay is embedded within, or quadplay's iframe
-   if running cross-origin */
+/* The containing web page that quadplay is embedded within, or
+   quadplay's iframe if running cross-origin */
 const page = (function () {
     try {
         // These will fail with a cross-origin exception when quadplay is embedded
@@ -1621,9 +1621,9 @@ function restartProgram(numBootAnimationFrames) {
             coroutine = QRuntime.$makeCoroutine(compiledProgram);
             QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
             lastAnimationRequest = setTimeout(mainLoopStep, 0);
-            emulatorKeyboardInput.focus({preventScroll:true});
+            emulatorKeyboardInput.focus({preventScroll: true});
             updateDebugger(true);
-            
+            firstPrintOrWatch = true;            
         } catch (e) {
             // "Link"-time or run-time on a script error
             onError(e);
@@ -2014,8 +2014,12 @@ if (useIDE) {
     
     // Stop auto-completion of parentheses
     aceEditor.setBehavioursEnabled(false);
-    aceEditor.setOptions({showPrintMargin:false});
 
+    // https://ajaxorg.github.io/ace-api-docs/interfaces/ace.Ace.EditorOptions.html
+    aceEditor.setOptions({
+        showPrintMargin: false,
+        displayIndentGuides: true}); // true is the default
+    
     // Save when losing focus
     aceEditor.on('blur', runPendingSaveCallbacksImmediately);
 
@@ -2024,10 +2028,7 @@ if (useIDE) {
     aceEditor.commands.addCommand({
         name: "go to line",
         bindKey: {win: "Ctrl-G", linux: "Ctrl-G", mac: "Command-G"},
-        exec: function(editor) {
-        onCodeEditorGoToLineButton();
-        }
-    });
+        exec: onCodeEditorGoToLineButton});
 }
 
 
@@ -2397,11 +2398,13 @@ function setIFrameScroll(iframe, x, y) {
     html.scrollTop = y;
 }
 
+
 function setEditorTitle(url) {
     const editorTitle = document.getElementById('editorTitle');
     editorTitle.innerHTML = url.replace(/^.*\//, '').replace(/[<>&]/g, '');
     editorTitle.title = url;
 }
+
 
 /* Updates the preview pane of the doc editor. If useFileContents is true,
    use fileContents[url] when not undefined instead of actually reloading. */
@@ -2436,20 +2439,24 @@ function showGameDoc(url, useFileContents) {
     console.assert(url !== undefined);
     url = url.replace(/['" ><]/g, '');
 
-    // Add a base tag to HTML documents so that relative URLs are parsed correctly
-    const baseTag = `<base href="${urlDir(url)}">`;
+    docEditor.innerHTML = `<iframe id="doc" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" border=0 width=125% height=125%></iframe>`;
     if (url.endsWith('.html')) {
         // Includes the .md.html case
-        let s = `<iframe id="doc" width="125%" height="125%" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" `;
         
-        if (srcdoc !== undefined) {
-            const html = (baseTag + srcdoc).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-            s += 'srcdoc="' + html + '"';
+        if (srcdoc !== undefined && false) {
+            // TODO: Why would we want this case? It causes problems with reloads
+            
+            // Already loaded content.
+            // Add a base tag to HTML documents so that relative URLs are parsed correctly
+            const baseTag = `<base href="${urlDir(url)}">`;
+            document.getElementById('doc').srcdoc = (baseTag + srcdoc).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
         } else {
-            s += `src="${url}?"`;
+            // Load from the file
+            document.getElementById('doc').src = url;
         }
-        docEditor.innerHTML = s +'></iframe>';
     } else if (url.endsWith('.md')) {
+        const baseTag = `<base href="${urlDir(url)}">`;
+
         // Trick out .md files using Markdeep
         
         function markdeepify(text) {
@@ -2477,13 +2484,13 @@ margin-top: 0; padding-top: 0
 <!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;            
         }
 
-        if (srcdoc !== undefined) {
-            docEditor.innerHTML = `<iframe id="doc" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" srcdoc="${markdeepify(srcdoc)}" border=0 width=125% height=125%></iframe>`;
+        if (srcdoc !== undefined && false) {
+            document.getElementById('doc').srcdoc = markdeepify(srcdoc);
         } else {
             LoadManager.fetchOne({
                 errorCallback: function () { console.log('Error while loading', url); },
                 forceReload: true}, url, 'text', null,  function (text) {
-                    docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(text)}" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" border=0 width=125% height=125%></iframe>`;
+                    document.getElementById('doc').srcdoc = markdeepify(srcdoc);
                 });
         }
     } else {
@@ -2765,7 +2772,7 @@ function createProjectWindow(gameSource) {
         if (! /\/console\/(os|launcher)\/_[A-Za-z0-9_]+\.pyxl$/.test(script)) {
             const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
             const contextMenu = editableProject ? `oncontextmenu="showScriptContextMenu('${script}')" ` : '';
-            s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
+            s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script).replace('.pyxl', '')}</li>\n`;
         }
     }
     if (editableProject) {
@@ -3224,6 +3231,7 @@ function setErrorStatus(e, location) {
     error.innerHTML = e;
     if (e !== '') {
         $outputAppend(`\n<span style="color:#f55">${e}<span>\n`, location, location !== undefined);
+        document.getElementById('outputTab').checked = true;
     }
 }
 
@@ -3461,7 +3469,6 @@ function resetTouchInput() {
     }
     QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = 0;
 }
-
 
 // Invoked by requestAnimationFrame() or setTimeout. 
 function mainLoopStep() {
@@ -4686,7 +4693,10 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
-            updateTodoList();
+            if (useIDE) {
+                updateTodoList();
+                updateProgramDocumentation();
+            }
             page.document.title = gameSource.extendedJSON.title;
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
@@ -4742,7 +4752,7 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
             
             const modeEditor = document.getElementById('modeEditor');
             const spriteEditor = document.getElementById('spriteEditor');
-            
+
             if (modeEditor.style.visibility === 'visible') {
                 // Update the mode diagram if it is visible
                 visualizeModes(modeEditor);

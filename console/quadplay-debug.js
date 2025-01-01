@@ -4,6 +4,11 @@
 // Maps expression strings to values
 let debugWatchTable = {changed: false};
 
+/* True if no debug_print or debug_watch statement
+   has yet been hit this run. Set to true by restartProgram() */
+let firstPrintOrWatch;
+
+
 function debug_watch(location, expression, value) {
     // The value must be unparsed immediately, since it can be mutated
     // after this function returns.
@@ -19,6 +24,11 @@ function debug_watch(location, expression, value) {
     };
     
     debugWatchTable.changed = true;
+    if (firstPrintOrWatch) {
+        firstPrintOrWatch = false;
+        // Show the tab
+        document.getElementById('watchTab').checked = true;
+    }
 }
 
 
@@ -80,6 +90,13 @@ function debug_print(location, expression, ...args) {
     }
     
     $outputAppend(s + '\n', location);
+
+    if (firstPrintOrWatch) {
+        firstPrintOrWatch = false;
+        // Show the tab
+        document.getElementById('outputTab').checked = true;
+    }
+
 }
 
 
