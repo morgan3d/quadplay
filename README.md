@@ -18,7 +18,7 @@ build your own programmable arcade machine from a Raspberry Pi, Tegra,
 or old computer. Here are some of the many supported quadplay
 platforms:
 
-<img src="doc/laptop.jpg" height=180> <img src="doc/desktop.jpg" height=180> <img src="doc/phone.jpg" height=180> <img src="doc/rpi-arcade.jpg" height=180> <img src="doc/steamdeck.jpg" height=180> <img src="doc/arcade.jpg" height=180> <img src="doc/xarcade-arcade.jpg" height=180> <img src="doc/nano-arcade.jpg" height=180> <img src="doc/quad-arcade.jpg" height=180> <img src="doc/gpd-win3.jpg" height=180> <img src="doc/gpd-win.jpg" height=180>
+<img src="doc/laptop.jpg" height=180> <img src="doc/desktop.jpg" height=180> <img src="doc/phone.jpg" height=180> <img src="doc/rpi-arcade.jpg" height=180> <img src="doc/steamdeck.jpg" height=180> <img src="doc/arcade.jpg" height=180> <img src="doc/xarcade-arcade.jpg" height=180> <img src="doc/nano-arcade.jpg" height=180> <img src="doc/quad-arcade.jpg" height=180> <img src="doc/gpd-win3.jpg" height=180> <img src="doc/gpd-win.jpg" height=180> <img src="doc/postgoodism.jpg" height=180>
 
 Games
 ========================================================
@@ -69,10 +69,10 @@ and the following freely-available software.
 
 _Required_:
 
-- On some Distributions you might need to install `tkinter`, e.g. on Fedora `sudo dnf install -y python3-tkinter`
 - [**This SDK**](https://github.com/morgan3d/quadplay/archive/main.zip), which includes the IDE and assets
-- [**Python 3.10**](https://www.python.org/downloads/)
+- [**Python 3.13**](https://www.python.org/downloads/)
 - A **modern web browser** such as Chrome, Edge, Brave, Safari, or Firefox
+- On some Linux distributions you might need to install `tkinter`, e.g. on Fedora `sudo dnf install -y python3-tkinter`
 
 _Optional_:
 
@@ -111,4 +111,4 @@ All sounds, sprites, and games distributed with quadplay✜ are Creative
 Commons licensed. The copyright and license on each of those is in 
 a JSON file next to the asset.
 
-© 2020-2024 Morgan McGuire
+© 2020-2025 Morgan McGuire
