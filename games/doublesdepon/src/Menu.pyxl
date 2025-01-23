@@ -14,7 +14,7 @@ const MenuBackdropFrames = {
     // TODO, remainder
 }
 
-const MenuBackdropCenterColor = get_sprite_pixel_color(
+const MenuBackdropCenterColor = sprite_pixel_color(
         menuBackdrop_sprite[0][MenuBackdropFrames.C], xy(0, 0))
 
 def MenuBackdropDraw(pos, tileWidth, tileHeight, z = 0, a = 1):

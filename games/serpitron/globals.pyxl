@@ -82,7 +82,7 @@ def makeSnake(playerIndex, control, colorName):
                         ⌊½ playerIndex⌋ * (SCREEN_SIZE.y - INFO_HEIGHT))
    }
 
-   snake.color = get_sprite_pixel_color(snake.headSprite, xy(9, 6))
+   snake.color = sprite_pixel_color(snake.headSprite, xy(9, 6))
    snake.text_color = 160% snake.color
    for i < 3 startSnakeBody + 1:
       push(snake.body, {angle: 0, pos: xy(0, 0)})

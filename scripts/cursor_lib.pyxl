@@ -44,10 +44,16 @@ cursor_update(cursor)
   - `callback`: Callback `callback(data, cursor)` runs if the _any_ button is pressed on this target or
     there is a touch on the target. Test cursor.gamepad.aa, .bb, touch.aa, etc. to determine
     what was pressed. If `callback == ∅`, the cursor changes to show that no callback is allowed.
+  - `hover_callback`: Callback `hover_callback(data, cursor)` runs when this target is selected
+    by gamepad navigation or mouse hover.
+
+  Sounds and visuals differ for the cursor based on which callbacks are set. If `callback` is
+  set, the target is activateable by pressing gamepad.aa. Otherwise, the target may be used
+  for cursor traversal but is not selectable.
 */
-def cursor_register_target(cursor, pos, size, callback default ∅, data default ∅, shape default "rect"):
+def cursor_register_target(cursor, pos, size, callback default ∅, data default ∅, shape default "rect", hover_callback default ∅):
     // Transform pos and size to screen space
-    const z = pos.z default 0
+    const z = transform_ws_z_to_ss_z(pos.z default 0)
     const A = transform_ws_to_ss(pos + ½ size)
     const B = transform_ws_to_ss(pos - ½ size)
     pos = ½ (A + B)
@@ -56,12 +62,12 @@ def cursor_register_target(cursor, pos, size, callback default ∅, data default
     
     assert(not callback or type(callback) == "function")
 
-    push(cursor._target_array, {pos: pos, z: ss_z, size: xy(size), shape: shape, callback: callback, data: data});
+    push(cursor._target_array, {pos: pos, z: ss_z, size: xy(size), shape: shape, callback: callback, data: data, hover_callback: hover_callback});
 
 
 
 /* Find closest target to `pos` that was declared this frame with 
-   `register_cursor_target()`.
+   `cursor_register_target()`.
 
    - `allow_exact`: if true, allow distance 0 (for mouse), 
      otherwise exclude distance 0 (for controller)   
@@ -97,6 +103,9 @@ def cursor_update(cursor)
     // Operate directly in screen space
     reset_camera()
     reset_transform()
+
+    let old_pos = pos
+    let changed = false
     
     // Process input:
     let target = ∅
@@ -106,8 +115,9 @@ def cursor_update(cursor)
             if cursor.new_target_sound:
                 play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
             target = new_target
+            changed = true
         else if cursor.bad_sound:
-            play_sound({sound: cursor.bad_sound, pan: cursor.pos})
+            play_sound({sound: cursor.bad_sound, pan: pos})
     
     const mouse = device_control("get_mouse_state")
     if mouse.dx or mouse.dy or touch.aa:
@@ -121,7 +131,9 @@ def cursor_update(cursor)
         // and not just nearby
         if new_target and overlaps(new_target, mouse_pos):
             // Only play sound if this is a change of target
-            if cursor.new_target_sound and XY_DISTANCE(cursor.pos, new_target.pos) > 1: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
+            if XY_DISTANCE(cursor.pos, new_target.pos) > 1:
+                changed = true
+                if cursor.new_target_sound: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
             target = new_target
     
     if not target:
@@ -132,6 +144,10 @@ def cursor_update(cursor)
     if target:
         // We have a target, move the cursor to it
         pos = xy(target.pos)
+
+    changed = changed or XY_DISTANCE(cursor.pos, old_pos) > 1
+    if target and changed and target.hover_callback:
+        target.hover_callback(target.data, cursor)
         
     // Was there any request for callback 
     if target and target.callback:
@@ -157,18 +173,23 @@ def cursor_draw_cursor(cursor, target):
     if not target: return
 
     const active_color   = lerp(#F0F, #FF0, oscillate(2 now()))
-    const inactive_color = lerp(#CCC, #999, oscillate(2 now()))
+    const inactive_color = lerp(#FFF, #888, oscillate(2 now()))
     
     const color = if target.callback then active_color else inactive_color
     const cursor_z = 20
 
+    const fill = if target.callback then rgba(color, 50%) else ∅
+
     if target.shape == "disk":
-        draw_disk(target.pos, 0.5 + 25% (target.size.x + target.size.y), rgba(color, 50%), color, cursor_z)
+        draw_disk(target.pos, 0.5 + 25% (target.size.x + target.size.y), fill, color, cursor_z)
     else:
-        draw_rect(target.pos, target.size, rgba(color, 50%), color, ∅, cursor_z)
+        draw_rect(target.pos, target.size, fill, color, ∅, cursor_z)
 
 
-/* */
+        
+/* Creates a new cursor object for use with the other routines.
+   Separate cursors can be created for different players with
+   different gamepads, rendering routines, and sounds. */
 def make_cursor(
     pos default ½ SCREEN_SIZE,
     gamepad default gamepad_array[0],
@@ -187,10 +208,10 @@ def make_cursor(
         /*
          Places the cursor can go. Refreshed every frame by 
          cursor_update().
+        
          All coordinates stored in screen space.
          */
-        _target_array: []
-    }
+        _target_array: []}
 
 
     

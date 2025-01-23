@@ -3,7 +3,7 @@
 // stored in a yaml file.
 const COLORS = {}
 for coordinate at name in Colors_YAML:
-    COLORS[name] = get_sprite_pixel_color(
+    COLORS[name] = sprite_pixel_color(
         // the sprite to sample
         palette_sprite[0][0],
         // pixel coordinate to sample

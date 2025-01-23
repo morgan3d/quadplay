@@ -46,7 +46,7 @@ def drawMesh(mesh):
          let faceColor
          if fade > 0.1:
             // Grab a random pixel off the logo as a fake reflection
-            faceColor = get_sprite_pixel_color(logoSprite[0][0],
+            faceColor = sprite_pixel_color(logoSprite[0][0],
                                             xy(36, (z - 100) / 20 + 2 (quad[0].y - quad[2].y) + |quad[0].x - 2 camera.x| / 10 + 26)) or black
             faceColor = faceColor * 90% min((fade - 0.1) * 0.009 |quad[0].x + quad[2].x|, 1)³
             faceColor.a = 1

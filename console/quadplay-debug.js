@@ -14,7 +14,7 @@ function debug_watch(location, expression, value) {
     // after this function returns.
 
     // Pretty-print the value (hint = expression, specialStructs = true)
-    const html = QRuntime.$unparse(value, new Map(), ': ', false, true, false, '', expression, true);
+    const html = QRuntime.$unparse(value, new Map(), ': ', false, true, false, false, '', expression, true, true);
 
     debugWatchTable[location.url + ':' + location.line_number] = {
         location: location,
@@ -70,7 +70,7 @@ function debug_print(location, expression, ...args) {
         let m = args[i]
 
         if (typeof m !== 'string') {
-            m = QRuntime.$unparse(m, new Map(), ': ', false, true, false, '', expression, prettyPrint);
+            m = QRuntime.$unparse(m, new Map(), ': ', false, true, false, false, '', expression, prettyPrint, prettyPrint);
             
             if (! prettyPrint) {
                 // Pretty printing automatically escapes HTML entities

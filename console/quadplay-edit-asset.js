@@ -95,7 +95,7 @@ function suggestedAssetFilename(url, suffix) {
     // Remove prefix
     url = url.replace(/^.*\//, '');
 
-    // Spaces (!) and punctuation to underscores
+    // Spaces and punctuation to underscores
     url = url.replace(/[+\- ,\(\)\[\]\$]/g, '_');
 
     // Remove dimension specifications
@@ -746,10 +746,8 @@ function onRemoveAsset(key) {
 }
 
 
-
-function onOpenAssetExternally(appName, assetName) {
+function onOpenUrlExternally(appName, url) {
     // Assumes that the asset was local and not built-in
-    const url = gameSource.assets[assetName].$sourceURL || gameSource.assets[assetName].$url;
     const filename = serverConfig.rootPath + urlToLocalWebPath(url);
     postToServer({command: 'open',
                   app: appName,
@@ -757,39 +755,182 @@ function onOpenAssetExternally(appName, assetName) {
 }
 
 
-
 function showAssetContextMenu(assetName) {
     const getElement = `document.getElementById('projectAsset_${assetName}')`;
 
-    let externalCmds = '';
+    let allExternalCmds = '';
     if (gameSource.assets) {
-        const url = gameSource.assets[assetName].$sourceURL || gameSource.assets[assetName].$url;
-        if (! isRemote(url) && !isBuiltIn(url)) {
-            if (serverConfig.hasFinder) {
-                externalCmds += `<div onmousedown="onOpenAssetExternally('<finder>', '${assetName}')">Show in ${isApple ? 'Finder' : 'Explorer'}</div>`;
-            }
+        // Process once for the sourceURL and once for the asset URL
+        for (let url of [gameSource.assets[assetName].$sourceURL, gameSource.assets[assetName].$url]) {
+            if (url && ! isRemote(url) && !isBuiltIn(url)) {
+                let externalCmds = '';
+                const ext = url.split('.').pop();
 
-            const ext = url.split('.').pop();
-            const list = serverConfig.applications;
-            if (list) {
-                for (let i = 0; i < list.length; ++i) {
-                    if (list[i].types.indexOf(ext) !== -1) {
-                        externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open ${ext.toUpperCase()} with ${list[i].name}</div>`;
+                if (serverConfig.hasFinder) {
+                    externalCmds += `<div onmousedown="onOpenUrlExternally('<finder>', '${url}')">Show ${ext.toUpperCase()} in ${isApple ? 'Finder' : 'Explorer'}</div>`;
+                }
+
+                const list = serverConfig.applications;
+                if (list) {
+                    for (let i = 0; i < list.length; ++i) {
+                        if (list[i].types.indexOf(ext) !== -1) {
+                            externalCmds += `<div onmousedown="onOpenUrlExternally('${list[i].path}', '${url}')">Open ${ext.toUpperCase()} with ${list[i].name}</div>`;
+                        }
                     }
                 }
-            }
 
-            if (externalCmds.length > 0) {
-                externalCmds = '<hr>' + externalCmds;
+                if (externalCmds.length > 0) {
+                    allExternalCmds += '<hr>' + externalCmds;
+                }
             }
-        }    
+        }
     }
 
     customContextMenu.innerHTML =
         `<div onmousedown="onProjectSelect(${getElement}, 'asset', gameSource.assets['${assetName}'])">Inspect</div>
         <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>
         <div onmousedown="onCloneAsset('${assetName}')">Clone&hellip;</div>` +
-        externalCmds + 
+        allExternalCmds + 
         `<hr><div onmousedown="onRemoveAsset('${assetName}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${assetName}'</div>`;
     showContextMenu('project');
+}
+
+
+/////////////////////////////////////////////////////////////////
+
+function showPNGEditor(object, assetName) {
+    const url = object.$url;
+    const spriteEditor = document.getElementById('spriteEditor');
+    
+    // Sprite or font
+    spriteEditor.selectedAssetName = object.$name;
+    spriteEditor.style.visibility = 'visible';
+
+    const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
+
+    // Support both fonts.$size and  spritesheet.size
+    const size = object.size || object.$size;
+    spriteEditorCanvas.style.width = `${size.x}px`;
+    spriteEditorCanvas.style.height = `${size.y}px`;
+    // Force a reload with the ?
+    spriteEditorCanvas.style.backgroundImage = `url("${url}?reload${new Date() / 1000}")`;
+    
+    if (object.$type === 'spritesheet') {
+        spriteEditorCanvas.onmousemove = spriteEditorCanvas.onmousedown = function (e) {
+            
+            if (object.size === undefined) {
+                console.warn('object.size is undefined');
+                return;
+            }
+            const canvasBounds = spriteEditorCanvas.getBoundingClientRect();
+            const scale = parseFloat(spriteEditorCanvas.style.scale);
+            
+            const mouseX = e.clientX - canvasBounds.left;
+            const mouseY = e.clientY - canvasBounds.top;
+
+            const scaledSpriteWidth = object.sprite_size.x * scale;
+            const scaledSpriteHeight = object.sprite_size.y * scale;
+
+            const scaledSpriteStrideWidth = (object.sprite_size.x + object.$gutter) * scale;
+            const scaledSpriteStrideHeight = (object.sprite_size.y + object.$gutter) * scale;
+
+            spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
+
+            // Offset for the sprite region within the PNG
+            const scaledCornerX = object.$sourceRegion.corner.x * scale;
+            const scaledCornerY = object.$sourceRegion.corner.y * scale;
+
+            // Integer spritesheet index (before transpose)
+            let X = Math.floor((mouseX - scaledCornerX) / scaledSpriteStrideWidth);
+            let Y = Math.floor((mouseY - scaledCornerY) / scaledSpriteStrideHeight);
+
+            let spritePixelX = Math.floor(mouseX / scale - object.$sourceRegion.corner.x) % object.sprite_size.x;
+            let spritePixelY = Math.floor(mouseY / scale - object.$sourceRegion.corner.y) % object.sprite_size.y;
+
+            spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteStrideWidth + scaledCornerX) + 'px';
+            spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteStrideHeight + scaledCornerY) + 'px';
+            spriteEditorHighlight.style.width  = Math.floor(scaledSpriteWidth) + 'px';
+            spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
+
+            let U = X, V = Y;
+            if (object.$json.transpose) {
+                U = Y; V = X;
+                const temp = spritePixelX; spritePixelX = spritePixelY; spritePixelY = temp;
+            }
+
+            const sprite = object[U] && object[U][V];
+
+            if (sprite) {
+                const pivot = sprite.pivot || {x: 0, y: 0};
+                spriteEditorPivot.style.visibility = 'visible';
+                spriteEditorPivot.style.left = Math.floor(scale * (sprite.pivot.x + sprite.size.x / 2) - spriteEditorPivot.offsetWidth / 2) + 'px';
+                spriteEditorPivot.style.top = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
+
+                document.getElementById('spriteEditorInfoName').innerHTML = `${assetName}[${U}][${V}]`;
+
+                if (sprite.$animationName) {
+                    document.getElementById('spriteEditorInfoAnimationName').innerHTML = `${assetName}.${sprite.$animationName}`
+                    if (sprite.$animationIndex !== undefined) {
+                        const animation = object[sprite.$animationName];
+                        document.getElementById('spriteEditorInfoAnimationName').innerHTML += `[${sprite.$animationIndex}], extrapolate: "${animation.extrapolate || 'clamp'}"`;
+                    }
+                }
+
+                document.getElementById('spriteEditorInfoFrames').innerHTML = `frames: ${sprite.frames}`;
+
+                // Position in the texture map after borders and regions are removed
+                // and transpose is applied.
+                const texturePixelX = spritePixelX + object.sprite_size.x * U;
+                const texturePixelY = spritePixelY + object.sprite_size.y * V;
+                
+                const pixelValue = object.$uint16Data[texturePixelX + texturePixelY * object.size.x];
+                const r = (pixelValue >>  0) & 0xf;
+                const g = (pixelValue >>  4) & 0xf;
+                const b = (pixelValue >>  8) & 0xf;
+                const a = (pixelValue >> 12) & 0xf;
+
+                document.getElementById('spriteEditorInfoXY').innerHTML = `(${spritePixelX}, ${spritePixelY})`;
+                document.getElementById('spriteEditorInfoRGBA').innerHTML = `<code>#${r.toString(16)}${g.toString(16)}${b.toString(16)}${a.toString(16)}</code>`;
+
+                spriteEditorHighlight.style.visibility = 'inherit';
+                spriteEditor.style.cursor = 'crosshair';
+            } else {
+                // Out of bounds
+                spriteEditorHighlight.style.visibility = 'hidden';
+                spriteEditorPivot.style.visibility = 'hidden';
+                spriteEditor.style.cursor = 'auto';
+
+                for (let child of document.getElementById('spriteEditorInfo').children) {
+                    child.innerHTML = '';
+                }
+
+            }
+        };
+        
+        // Initialize from the current position
+        {
+            const canvasBounds = spriteEditorCanvas.getBoundingClientRect();
+            spriteEditorCanvas.onmousemove({clientX: canvasBounds.left, clientY: canvasBounds.top});
+        }
+    } else {
+        // Font
+        spriteEditorHighlight.style.visibility = 'hidden';
+        spriteEditorPivot.style.visibility = 'hidden';
+    }
+
+    onSpriteEditorZoomSliderChange();
+}
+
+
+function onSpriteEditorZoomSliderChange() {
+    const slider = document.getElementById('spriteEditorZoomSlider');
+    const alpha = (parseInt(slider.value) - parseInt(slider.min)) / (parseInt(slider.max) - parseInt(slider.min));
+    const scale = Math.pow(2, -2 + 7 * alpha);
+
+    const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
+    spriteEditorCanvas.style.scale = scale;
+
+    if (spriteEditorCanvas.onmousemove) {
+        spriteEditorCanvas.onmousemove({clientX:0, clientY:0});
+    }
 }

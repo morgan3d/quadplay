@@ -113,6 +113,19 @@
             "highscores": false
         },
         {
+            "url": "quad://examples/coordinate_system/",
+            "title": "Coordinate System",
+            "description": "Visualization of coordinate system options",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
+        },
+        {
             "url": "quad://examples/countdown/",
             "title": "Countdown Example",
             "description": "Example of local_time() for time zone math",

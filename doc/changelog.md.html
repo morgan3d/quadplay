@@ -6,6 +6,35 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
+2025 January TBD
+===================================
+- Added `convex_hull()`
+- Added `linstep()`
+- Added `spritesheet.size_in_sprites`
+- Renamed `get_sprite_pixel_color()` to `sprite_pixel_color()`
+- `random_within_region()` now works as expected on objects that have a scalar instead of `xy` `scale` property
+- `sprite_transfer_orientation()` now can operate on a spritesheet target as well as a sprite
+- Added support compressing PNGs on macOS with ImageOptim and on Windows with PNGGauntlet
+- Added support for Visual Studio 2022 and Krita on Windows
+- Added external editor support for .md, .html, .txt documents
+- Added `device_control("get_analog_triggers", ...)` support for directly reading analog
+  triggers on game controllers that have analog triggers
+- added `device_control("rumble", ...)` support for game controllers that have haptics
+- Made `unparse()` pretty-print output by recognizing common objects such as `xy()` and 
+  common conventions such as angles and fractions
+- Sprite editor now shows the current pixel position and pixel value
+- Explicit zoom slider for sprite editor
+- Fixed `sequence()` `begin_callback` and `end_callback` not running if `callback` was not
+  also specified
+- Fixed external application launching on Windows
+- Rewrote the coordinate systems section of the manual and added
+  a coordinate system example program
+- Reorganized the manual to document spritesheet properties and group
+  sprite functions
+- Reduced help system loading time significantly by only loading the quadplay API
+  and not the full manual
+- Upgraded to ace.js 1.37.1
+
 
 2025 January 1
 ===================================

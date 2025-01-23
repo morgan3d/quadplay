@@ -5,8 +5,8 @@ set_random_seed()
 // These will be in the coordinate system used throughout
 // of:    set_transform(½ SCREEN_SIZE, xy(1, -1))
 // where origin = center, Y = up
-const tray = make_dice(xy(½ (SCREEN_SIZE.x - TRAY_WIDTH), 0), xy(TRAY_WIDTH, SCREEN_SIZE.y), 80% TRAY_BACKGROUND_COLOR)
-const dice = make_dice(xy(-½ TRAY_WIDTH, 0), xy(SCREEN_SIZE.x - TRAY_WIDTH, SCREEN_SIZE.y), 80% BACKGROUND_COLOR, dice_dice_sound, dice_table_sound, dice_wall_sound)
+const tray = make_dice(xy(½ (SCREEN_SIZE.x - TRAY_WIDTH), 0), xy(TRAY_WIDTH, SCREEN_SIZE.y))
+const dice = make_dice(xy(-½ TRAY_WIDTH, 0), xy(SCREEN_SIZE.x - TRAY_WIDTH, SCREEN_SIZE.y), ∅, dice_dice_sound, dice_table_sound, dice_wall_sound)
 
 let selected_die = ∅
 

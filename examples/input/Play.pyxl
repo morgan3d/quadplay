@@ -1,12 +1,16 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 /*
-This program is useful for understanding the button layout
-and touch, analog, and mouse input.
+This program is useful for understanding (and debugging)
+the button layout and touch, analog, and mouse input.
+It is not a good demo of how to read input.
 
-The code reads the buttons in unusual ways in order to
-abstract the rendering. See other examples for how to incorporate
-input more typically into your programs.
+The code reads inputs in unusual ways in order to
+abstract the rendering. It also uses the non-standard
+device_control() access to extended input properties.
+
+See other examples for how to incorporate input more
+typically into your programs.
 */
 
 const OFF_COLOR = [#f5a, #0af, #fd3, #3e5]
@@ -71,6 +75,9 @@ for i < 4:
         // Track the just-pressed state
         for b in jp: if p[b]: jp[b] = mode_frames
         
+        // Rumble on A button press if supported
+        if p.aa: device_control("rumble", i)
+        
         const player_color = OFF_COLOR[i]
         
         draw_disk(xy(40, 60), 40, CONTROLLER_COLOR, #0, -2)
@@ -123,11 +130,18 @@ for i < 4:
         
         draw_text(small_font, format_number(p.angle, "deg"), xy(41, 62), if i > 1 then #0 else #f, ∅, ∅, "center", "center")
       
+        // Analog sticks
         for s < 2:
             const analog = 10 device_control("get_analog_axes", i, s)
             const center = xy(81 + 28 s, 81)
             draw_line(center, center + analog, #4)
             draw_disk(center + analog, 3, #4)
+            
+        // Analog triggers
+        const trigger_array = device_control("get_analog_triggers", i)
+        for t < 2:
+            const pos = xy(35 + t * (158 - 35), 17)
+            draw_line(pos, pos - xy(0, trigger_array[t] * 10), #FFF, -5, 15)
 
         //draw_text(small_font, format_number(p.angle, "degrees"), xy(40, 60) + offset, #f, nil, nil, "center", "center")
         //draw_text(small_font, format_number(p.dangle, "deg"), xy(94, 70), #f, nil, nil, "center", "center")

@@ -2142,9 +2142,9 @@ function onProjectSelect(target, type, object) {
     const codePlusFrame = document.getElementById('codePlusFrame');
 
     // Hide the viewers within the content pane for the code editor
-    const codeEditorContentFrame = document.getElementById('codeEditorContentFrame');
-    for (let i = 0; i < codeEditorContentFrame.children.length; ++i) {
-        codeEditorContentFrame.children[i].style.visibility = 'hidden';
+    const editorContentFrame = document.getElementById('editorContentFrame');
+    for (let i = 0; i < editorContentFrame.children.length; ++i) {
+        editorContentFrame.children[i].style.visibility = 'hidden';
     }
 
     const codeEditor     = document.getElementById('codeEditor');
@@ -2233,7 +2233,7 @@ function onProjectSelect(target, type, object) {
             setCodeEditorSession(url);
             // Show the code editor and hide the content pane
             codePlusFrame.style.visibility = 'visible';
-            codePlusFrame.style.gridTemplateRows = 'auto 0px 0px 1fr';
+            codePlusFrame.style.gridTemplateRows = '0px 0px auto 1fr';
             document.getElementById('codeEditorDivider').style.visibility = 'hidden';
         }
         break;
@@ -2261,123 +2261,16 @@ function onProjectSelect(target, type, object) {
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
         setCodeEditorDividerFromLocalStorage();
+        const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
         const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
         const spriteEditorPivot = document.getElementById('spriteEditorPivot');
         const spriteEditorInfo = document.getElementById('spriteEditorInfo');
         spriteEditorHighlight.style.visibility = 'hidden';
         spriteEditorPivot.style.visibility = 'hidden';
-        spriteEditor.onmousemove = spriteEditor.onmousedown = undefined;
+        spriteEditorCanvas.onmousemove = spriteEditorCanvas.onmousedown = undefined;
         
         if (/\.png$/i.test(url)) {
-            // Sprite or font
-            spriteEditor.selectedAssetName = object.$name;
-            spriteEditor.style.visibility = 'visible';
-            // Force a reload with the ?
-            spriteEditor.style.backgroundImage = `url("${url}?reload${Math.floor(Math.random() * 1e6)}")`;
-
-            if (! object.size || (object.size.x > object.size.y)) {
-                // Fit horizontally
-                spriteEditor.style.backgroundSize = '100% auto';
-            } else {
-                // Fit vertically
-                spriteEditor.style.backgroundSize = 'auto 100%';
-            }
-        
-            if (object.$type === 'spritesheet') {
-                spriteEditor.onmousemove = spriteEditor.onmousedown = function (e) {
-                    
-                    if (object.size === undefined) {
-                        console.warn('object.size is undefined');
-                        return;
-                    }
-                    const editorBounds = spriteEditor.getBoundingClientRect();
-
-                    // The spritesheet fits along the longer axis
-                    const scale = (object.size.x > object.size.y) ?
-                          (editorBounds.width / object.$sourceSize.x) :
-                          (editorBounds.height / object.$sourceSize.y);
-                    
-                    const mouseX = e.clientX - editorBounds.left;
-                    const mouseY = e.clientY - editorBounds.top;
-                    
-                    const scaledSpriteWidth = object.sprite_size.x * scale;
-                    const scaledSpriteHeight = object.sprite_size.y * scale;
-
-                    const scaledSpriteStrideWidth = (object.sprite_size.x + object.$gutter) * scale;
-                    const scaledSpriteStrideHeight = (object.sprite_size.y + object.$gutter) * scale;
-
-                    spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
-
-                    // Offset for the sprite region within the PNG
-                    const scaledCornerX = object.$sourceRegion.corner.x * scale;
-                    const scaledCornerY = object.$sourceRegion.corner.y * scale;
-
-                    // Integer spritesheet index (before transpose)
-                    let X = Math.floor((mouseX - scaledCornerX) / scaledSpriteStrideWidth);
-                    let Y = Math.floor((mouseY - scaledCornerY) / scaledSpriteStrideHeight);
-
-                    spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteStrideWidth + scaledCornerX) + 'px';
-                    spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteStrideHeight + scaledCornerY) + 'px';
-                    spriteEditorHighlight.style.width  = Math.floor(scaledSpriteWidth) + 'px';
-                    spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
-
-                    let U = X, V = Y;
-                    if (object.$json.transpose) { U = Y; V = X; }
-                    const sprite = object[U] && object[U][V];
-
-                    if (sprite) {
-                        const pivot = sprite.pivot || {x: 0, y: 0};
-                        spriteEditorPivot.style.visibility = 'visible';
-                        spriteEditorPivot.style.left = Math.floor(scale * (sprite.pivot.x + sprite.size.x / 2) - spriteEditorPivot.offsetWidth / 2) + 'px';
-                        spriteEditorPivot.style.top = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
-                            
-                        let str = `${assetName}[${U}][${V}]`;
-                        if (sprite.$animationName) {
-                            str += `<br>${assetName}.${sprite.$animationName}`
-                            if (sprite.$animationIndex !== undefined) {
-                                const animation = object[sprite.$animationName];
-                                str += `[${sprite.$animationIndex}]<br>extrapolate: "${animation.extrapolate || 'clamp'}"`;
-                            }
-                        }
-
-                        str += `<br>frames: ${sprite.frames}`;
-                        spriteEditorInfo.innerHTML = str;
-
-                        if (mouseX > editorBounds.width / 2) {
-                            // Move the info to be right aligned to keep it visible
-                            spriteEditorInfo.style.float = 'right';
-                            spriteEditorInfo.style.right = '10px';
-                            spriteEditorInfo.style.left = 'unset';
-                            spriteEditorHighlight.style.textAlign = 'right';
-                        } else {
-                            spriteEditorInfo.style.float = 'none';
-                            spriteEditorInfo.style.right = 'unset';
-                            spriteEditorInfo.style.left = '10px';
-                            spriteEditorHighlight.style.textAlign = 'left';
-                        }
-
-                        if (mouseY > editorBounds.height / 2) {
-                            // Move the info to the top to keep it visible
-                            spriteEditorInfo.style.top = '-60px';
-                        } else {
-                            spriteEditorInfo.style.top = Math.floor(scaledSpriteHeight + 5) + 'px';
-                        }
-                        spriteEditorHighlight.style.visibility = 'inherit';
-                    } else {
-                        // Out of bounds
-                        spriteEditorHighlight.style.visibility = 'hidden';
-                        spriteEditorPivot.style.visibility = 'hidden';
-                    }
-                };
-                
-                // Initial position
-                const editorBounds = spriteEditor.getBoundingClientRect();
-                spriteEditor.onmousemove({clientX: editorBounds.left, clientY: editorBounds.top});
-            } else {
-                // Font
-                spriteEditorHighlight.style.visibility = 'hidden';
-                spriteEditorPivot.style.visibility = 'hidden';
-            }
+            showPNGEditor(object, assetName);
         } else if (/\.mp3$/i.test(url)) {
             soundEditor.style.visibility = 'visible';
             soundEditorCurrentSound = object;
@@ -4039,7 +3932,8 @@ function reloadRuntime(oncomplete) {
 
                 // May be the empty string
                 $id: controlBindings.id,
-                $analog: [0, 0, 0, 0],
+                $analog: [0, 0, 0, 0, 0, 0],
+                $rumble: function (frames) {},
                 $name: `gamepad_array[${p}]`
             };
 

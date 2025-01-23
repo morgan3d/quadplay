@@ -176,6 +176,24 @@ function device_control(cmd) {
             return Object.freeze({x: pad.$analog[2 * stick] * QRuntime.$scaleX, y: pad.$analog[2 * stick + 1] * QRuntime.$scaleY});
             break;
         }
+    
+    case "get_analog_triggers":
+        {
+            const player = clamp(parseInt(arguments[1] || 0), 0, 3);
+            const pad = QRuntime.gamepad_array[player];
+            return Object.freeze([pad.$analog[4], pad.$analog[5]]);
+            break;
+        }
+
+    case "rumble":
+        {
+            const player = clamp(parseInt(arguments[1] || 0), 0, 3);
+            const frames = arguments[2] === undefined ? 10 : Math.max(parseInt(arguments[2] || 0), 0);
+            const strength = arguments[3] === undefined ? 1 : Math.max(Math.min(parseFloat(arguments[3] || 0), 1), 0);
+            QRuntime.gamepad_array[player].$rumble(frames, strength);
+            return;
+            break;
+        }
 
     case "set_mouse_cursor":
         {
@@ -810,10 +828,9 @@ const gamepadAxisRemap = {
    (Verified by Morgan 2022-09-27)
  */
 function getGamepads() {
-    
     if (getGamepads.counter === 0 || (! getGamepads.gamepads) || getGamepads.gamepads.length === 0) {
         // Update
-        getGamepads.gamepads = getGamepads.navigator.getGamepads();//getGamepads.poll();
+        getGamepads.gamepads = getGamepads.navigator.getGamepads();
     }
 
     // Amortize the cost over four frames
@@ -841,22 +858,31 @@ function getIdealGamepads() {
         const pad = gamepads[i];
         if (pad && pad.connected) {
             // Construct a simplified web gamepad API
-            const mypad = {axes: [0, 0, 0, 0], buttons: [], analogAxes: [0, 0, 0, 0], id: pad.id};
+            const mypad = {axes: [0, 0, 0, 0], buttons: [], analogAxes: [0, 0, 0, 0, 0, 0], id: pad.id};
 
-	    const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
+	        const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
             
-            for (let a = 0; a < Math.min(4, pad.axes.length); ++a) {
+            // Stick axes
+            for (let a = 0; a < 4; ++a) {
                 const axis = pad.axes[axisRemap[a]];
                 mypad.axes[a] = (Math.abs(axis) > deadZone) ? Math.sign(axis) : 0;
                 mypad.analogAxes[a] = axis;
             }
             
             // Process all 17 buttons as digital buttons first, even if they are analog
-	    const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
+	        const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
             for (let b = 0; b < 17; ++b) {
                 const button = pad.buttons[buttonRemap[b]];
-                // Different browsers follow different APIs for the value of buttons
+                // Different browsers follow different APIs for the value of buttons. It is supposed to
+                // be an object with pressed, touched, and value fields
                 mypad.buttons[b] = (typeof button === 'object') ? button.pressed : (button >= 0.5);
+            }
+            {
+                // Triggers, which we map to fake axes
+                for (let b = 4; b < 6; ++b) {
+                    const button = pad.buttons[buttonRemap[b + 2]];
+                    mypad.analogAxes[b] = (typeof button === 'object') ? button.value : button;
+                }
             }
 
             // On Steam Deck, the D-pad maps to axes 6 and 7 instead of buttons.
@@ -1546,15 +1572,35 @@ function updateInput() {
             pad.$id = realGamepad.id;
             pad.type = detectControllerType(realGamepad.id);
             pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
+            pad.$rumble = function (frames, strength) {
+                // Find this gamepad
+                for (let gamepad of getGamepads()) {
+                    if (gamepad.id === pad.$id) {
+                        const milliseconds = Math.ceil(frames * 1000 / 60);
+                        if (gamepad.vibrationActuator) {
+                            const args = {
+                                startDelay: 0,
+                                duration: milliseconds,
+                                weakMagnitude: strength,
+                                strongMagnitude: strength};
+                            gamepad.vibrationActuator.playEffect('dual-rumble', args);
+                        } else if (gamepad.hapticActuators) {
+                            gamepad.hapticActuators[0].pulse(strength, milliseconds);
+                        }
+                        return;
+                    } // if
+                } // for
+            };
         } else if (! realGamepad && (pad.$id !== '') && (pad.$id !== 'mobile')) {
             // Gamepad was just disconnected. Update the control scheme.
             pad.$id = isMobile ? 'mobile' : '';
             pad.type = defaultControlType(player);
             pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
+            pad.$rumble = function (frames) {};
         }
 
-        // Analog controls
-        for (let a = 0; a < 4; ++a) {
+        // Analog sticks and triggers for device_control() access
+        for (let a = 0; a < 6; ++a) {
             pad.$analog[a] = realGamepad ? realGamepad.analogAxes[a] : 0;
         }
         

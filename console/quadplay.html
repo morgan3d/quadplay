@@ -288,28 +288,34 @@
       <div id="modeEditor" style="position:absolute; top:0px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; right: 0; bottom: 0; overflow: scroll; padding: 10px; visibility:hidden"></div>
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
-        <div class="toolbar">
-          <script>
-            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
-            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
-            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
-          </script>
-          <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" id="editorTitle"></div>
-          <div style="position: absolute; right:5px; top:4px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
-        </div>
-          
-        <div id="codeEditorContentFrame">
+         
+        <div id="editorContentFrame">
           <div id="gameEditor" style="padding: 10px; overflow: scroll; visibility:hidden"> </div>
           <div id="docEditor"> </div>
           <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc" class="pixelate"></canvas></div>
-          <div id="spriteEditor" class="pixelate">
-            <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
-              <div id="spriteEditorPivot" style="line-height: 30px; height: 30px">☩</div>
-              <div id="spriteEditorInfo" style="white-space: nowrap; display: table; text-shadow: 0px 1px 4px #000, 0px 0px 2px #000, 0px 0px 3px #000"></div>
+          <div id="spriteEditor">
+            <div id="spriteEditorToolbar" class="toolbar">
+              <div id="spriteEditorInfo" class="unselectable" style="font-family: monospace">
+                <div id="spriteEditorInfoName" style="display: inline-block; width: 200px"></div>
+                <div id="spriteEditorInfoAnimationName" style="display: inline-block; width: 200px"></div>
+                <div id="spriteEditorInfoFrames" style="display: inline-block; width: 100px"></div>
+                <div id="spriteEditorInfoXY" style="display: inline-block; width: 100px"></div>
+                <div id="spriteEditorInfoRGBA" style="display: inline-block; width: 100px"></div>
+              </div>
+              <div style="position: absolute; left: 0px; top: 19px; width: 100%">
+                <span style="font-size: 14px; font-weight: bold; vertical-align: middle; position: relative; top: -1px" class="unselectable">
+                  −&nbsp;<input type="range" min="1" max="100" value="50" style="width: 80px; vertical-align: middle" id="spriteEditorZoomSlider" oninput="onSpriteEditorZoomSliderChange()" onchange="onSpriteEditorZoomSliderChange()">&nbsp;+
+                </span>
+              </div>
             </div>
+            <div id="spriteEditorCanvasScrollPane" class="force-show-scrollbars checker-background">
+              <div id="spriteEditorCanvas" class="pixelate" style="position: absolute; top: 0; left: 0; transform-origin: top left;"></div>
+              <div id="spriteEditorHighlight">
+                <div id="spriteEditorPivot" class="unselectable">☩</div>
+              </div>
+            </div>
+            <!-- cover up the scrollbar corner -->
+            <div style="background: #302b2b; position: absolute; bottom: 0px; right: 0px; width: 10px; height: 10px;"></div>
           </div>
           <div id="soundEditor">
             <audio controls style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -150px; width:300px; outline: none !important"></audio>
@@ -320,6 +326,19 @@
           <div style="width:20px; border-top: 1px solid #302b2b; border-bottom: 1px solid #302b2b; height: 1px; margin-top: 2px; margin-left: auto; margin-right: auto"></div>
         </div>
         
+        <div id="codeToolbar" class="toolbar">
+          <script>
+            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
+            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
+            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
+          </script>
+          <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
+          <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>
+        </div>
+
         <div id="ace"> </div>
       </div>  <!-- codePlusFrame -->
     </div>
@@ -418,7 +437,7 @@
       </pane>
 
       <pane id="outputPane" class="ide structPane" style="overflow:hidden; width:100%">
-        <div class="hideScrollBars">
+        <div>
             <div style="position: absolute; top:1px; left:0; right:0; padding-left:5px; border-bottom: solid 1px #888; height:20px">
               <input type="checkbox" id="debugPrintEnabled" onclick="debugOptionClick(event)" checked/><label for="debugPrintEnabled"><code>debug_print()</code></label>
               &nbsp; &nbsp;
@@ -429,8 +448,7 @@
               <input type="checkbox" id="printTouchEnabled" onclick="debugOptionClick(event)" checked/><label for="printTouchEnabled">Print&nbsp;<code>touch</code></label>
             </div>
 
-            <div id="outputDisplayPane" style="position: absolute; top: 22px; bottom:0; left:0; right:0; padding-left: 10px; font-family: monospace; white-space: pre-wrap; overflow:scroll; overflow-wrap:break-word; background: #222">
-            </div>
+            <div id="outputDisplayPane"></div>
         </div>
       </pane>
 
@@ -551,7 +569,7 @@
         <center>
           <span id="versionControlTitle" class="title">Git Version Control</span>
         
-          <div id="versionControlTerminal" style="margin-top: 20px; margin-bottom: 20px; font-size: 12px; text-align: left; background: #000; text-color: #fff; white-space: pre-wrap; font-family: monospace; height: 200px; padding: 5px; border-radius: 4px; border: 1px solid #888; overflow: scroll"></div>
+          <div id="versionControlTerminal" style="margin-top: 20px; margin-bottom: 20px; font-size: 12px; text-align: left; background: #000; color: #fff; white-space: pre-wrap; font-family: monospace; height: 200px; padding: 5px; border-radius: 4px; border: 1px solid #888; overflow: scroll"></div>
 
           <button class="button" id="gitCloseButton" onclick="document.getElementById('versionControlDialog').classList.add('hidden')" style="min-width:60px">Close</button>
         <center>

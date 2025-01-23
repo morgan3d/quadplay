@@ -7,7 +7,7 @@ Requires quad://scripts/mat3x3_lib.pyxl
 
 ───────────────────────────────────────────────
 
-
+s
 Usage:
 
 `````````````````
@@ -56,12 +56,12 @@ let _dice_geometry_cache = {}
  
  - `pos`: center of the dice rolling area in the coordinate system where dice_update() will be called
  - `size`: size of the dice rolling area in the coordinate system where dice_update() will be called
- - `shadow_color`: `rgb()` color of the drop shadow 
+ - `shadow_color`: `rgba()` color of the drop shadow 
  */
 def make_dice(
-    pos default xy(0, 0), 
+    pos default SCREEN_SIZE / 2,
     size default SCREEN_SIZE,
-    shadow_color default #444,
+    shadow_color default #0005,
     die_sound default ∅,
     table_sound default ∅,
     wall_sound default ∅):
@@ -70,7 +70,7 @@ def make_dice(
         pos: pos,
         size: size,
         physics: make_physics({gravity: xy(0, 0)}),
-        shadow_color: rgb(shadow_color),
+        shadow_color: rgba(shadow_color),
         wall_sound: wall_sound,
         table_sound: table_sound,
         die_sound: die_sound,
@@ -117,7 +117,7 @@ def make_dice(
 
 
 /* Helper equivalent to `die and die.value_array[die.result_index]`.
-   Returns nil if `die` is nil. */
+   Returns nil if `die` is ∅. */
 def die_value(die):
     return die and die.value_array[die.result_index]
 
@@ -165,7 +165,10 @@ def dice_add_obstruction(dice, tracked_entity):
 /*
  Create a new die, add it to `dice`, and return the new die.
 
- - `pos`: in the coordinate system where `dice_update()` will be called
+ - `dice`: Set of dice/tray to add to
+ - `pos`: in the coordinate system where `dice_update()` will be called.
+   It is the caller's responsibility to ensure this is inside the bounds
+   of the dice tray and use `dice_correct_overlaps()` as needed for cleanup.
  - `bright_color`: may be a color or a hue percentage.
  - `label_array`: may be an array of strings, sprites, or numbers. Defaults
     to the numbers 1 through sides.
@@ -177,7 +180,7 @@ def dice_add_obstruction(dice, tracked_entity):
 def dice_add_die(
     dice,
     sides,
-    pos default xy(0, 0),
+    pos default random_within_region(dice),
     radius default 12,
     font default ∅,
     label_array default ∅,
@@ -294,6 +297,29 @@ def dice_remove(dice, die_or_obstruction):
     physics_remove_entity(die_or_obstruction.dice.physics, die_or_obstruction)
     die_or_obstruction.dice = ∅
     
+
+/* Remove all dice and obstructions from `dice` */
+def dice_remove_all(dice):
+    dice_remove_all_obstructions(dice)
+    dice_remove_all_dice(dice)
+
+
+    
+def dice_remove_all_dice(dice):
+    for die in dice.die_array:
+        die.dice = ∅
+        remove_all(dice.history)
+        physics_remove_entity(die.dice.physics, die)
+
+    remove_all(dice.die_array)
+
+
+    
+def dice_remove_all_obstructions(dice):
+    for obstruction in dice.obstruction_array:
+        obstruction.dice = ∅
+        physics_remove_entity(entity.dice.physics, entity)
+    remove_all(dice.obstruction_array)
 
     
 /* Fix any out of bounds or overlapping dice */
@@ -422,13 +448,10 @@ def _dice_die_model_draw(
     const shadow_offset = -½ radius * xy(light_dir)
 
     if translucent:
-        // Make shadows based on the bright color, with high saturation and
-        // the value of the original shadow color
-        const value = ⅓ (shadow_color.r + shadow_color.g + shadow_color.b)
-        shadow_color = hsv(dim_color)
-        shadow_color.s = 1
-        shadow_color.v = 70% value
-        shadow_color = rgba(shadow_color, 28%)
+        // Tint shadows
+        shadow_color = rgba(shadow_color)
+        RGB_LERP(shadow_color, dim_color, 50%, shadow_color)
+   
     
     // If translucent is true, returns an rgba() and tweaks glossy intensity,
     // otherwise returns an rgb()
@@ -541,6 +564,8 @@ def _dice_die_model_draw(
         const V = vertex_array[v]
         MAT3x3_MATMUL_XYZ(SR, src_geometry.vertex_array[v], V)
         XYZ_ADD_XYZ(V, pos, V)
+
+    const shadow_poly = convex_hull(vertex_array)
     
     // Faces
     const face_array = dst_geometry.face_array
@@ -568,10 +593,7 @@ def _dice_die_model_draw(
             const face_color = shade(N, 60%, translucent, not front_face)
             draw_poly(poly, face_color, ∅, ∅, ∅, ∅, dst_face.z)
             
-            // Drop shadow
-            if front_face:
-                draw_poly(poly, shadow_color, ∅, shadow_offset, ∅, ∅, 0)
-            
+            if front_face:            
                 XYZ_DIV(centroid, size(dst_face.index_array), centroid)
             
                 centroid.y -= label_y_offset
@@ -582,12 +604,16 @@ def _dice_die_model_draw(
                 // Translucent backface. Flag z for edge detection
                 dst_face.z = -infinity
 
+    // Drop shadow
+    draw_poly(shadow_poly, shadow_color, ∅, shadow_offset, ∅, ∅, 0)
+
     // Caustic
     if translucent:
-        // In shadow
-        draw_disk(2.3 shadow_offset, 15% radius, rgba(bright_color, 14%), rgba(bright_color, 7%), 0)
+        // Caustic in shadow
+        if shadow_color.a > 0:
+            draw_disk(2.3 shadow_offset, 15% radius, rgba(bright_color, 14%), rgba(bright_color, 7%), 0)
 
-        // In center
+        // Caustic/highlight in the die center
         const alpha = if model.sides > 6 then 70% else 30%
         draw_disk(xy(0, 0), 50% radius, rgba(bright_color, alpha), rgba(bright_color, 1/3 alpha), 1)
         draw_disk(xy(0, 0), 30% radius, rgba(1, 1, 1, alpha), ∅, 1)
@@ -811,7 +837,7 @@ def _dice_replay_simulation(dice):
             die.vel = state.pos - die.pos
             die.pos = state.pos
             
-            if state.sound_data:
+            if state.sound_data and state.sound_data.sound:
                 play_sound({…state.sound_data, pos: die.pos})
             
         

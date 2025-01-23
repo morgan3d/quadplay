@@ -1,0 +1,69 @@
+Play
+════════════════════════════════════════════════════════════════════════
+/* 
+ Quadplay allows you to choose the most convenient 2D coordinate system
+ for your game, and to change it throughout the game code as needed.
+ See the Coordinate System section of the manual for more details. */
+
+def draw_axes(transform)
+& preserving_transform:
+    const AXIS_LENGTH = 40
+    
+    const ANGLE_LENGTH = 22
+    const ANGLE_COLOR = #FF0
+    
+    const AXIS_COLOR_X = #F00
+    const AXIS_COLOR_Y = #0F0
+    
+    const OUTLINE_COLOR = #000
+    
+    const LABEL_OFFSET = 7
+    
+    set_transform(transform)
+    
+    draw_sprite({sprite: shapes_sprite.lizard.rotated_270, pos: xy(0, 0), override_color: #0AA, z: -2})
+    
+    // y
+    draw_line(xy(0, 0), xy(AXIS_LENGTH, 0), AXIS_COLOR_X)
+    draw_tri(xy(AXIS_LENGTH, 0), xy(AXIS_LENGTH - 6, 3), xy(AXIS_LENGTH - 6, -3), AXIS_COLOR_X) 
+    draw_text(font, "x", xy(LABEL_OFFSET + AXIS_LENGTH, 0), AXIS_COLOR_X, ∅, OUTLINE_COLOR)
+    
+    // x    
+    draw_line(xy(0, 0), xy(0, AXIS_LENGTH), AXIS_COLOR_Y)
+    draw_tri(xy(0, AXIS_LENGTH), xy(3, AXIS_LENGTH - 6), xy(-3, AXIS_LENGTH - 6), AXIS_COLOR_Y)    
+    draw_text(font, "y", xy(0, LABEL_OFFSET + AXIS_LENGTH), AXIS_COLOR_Y, ∅, OUTLINE_COLOR)
+    
+    // Origin
+    draw_disk(xy(0, 0), 3, #FFF)
+
+    // Angles
+    for -2 ≤ a ≤ 2: 
+        const θ = 45° a
+        draw_text(font, format_number(θ, "°"), (LABEL_OFFSET + ANGLE_LENGTH) * angle_to_xy(θ), ANGLE_COLOR, ∅, OUTLINE_COLOR, ∅, ∅, 1)
+    
+    let ϕ = 0°
+    for 0 < a ≤ 30:
+        const θ = 3° a
+        draw_line(ANGLE_LENGTH * angle_to_xy(ϕ), ANGLE_LENGTH * angle_to_xy(θ), lerp(#000, ANGLE_COLOR, θ / 90°), -1)
+        ϕ = θ
+    draw_tri(xy(0, 0), xy(6 * transform.dir.x, -3), xy(6 * transform.dir.x, 3), ANGLE_COLOR, ∅, ANGLE_LENGTH * angle_to_xy(ϕ), ∅, transform.dir)
+    
+    let caption = "dir: " + unparse(transform.dir)
+        
+    draw_text({
+        font: font, 
+        text: caption, 
+        pos: xy(-40, 0), 
+        color: #FFF})
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+for x < 2:
+    for y < 2:
+        const pos = (xy(x, y) + ½) * ½ SCREEN_SIZE
+        if (x + y) mod 2:
+            draw_rect(pos, ½ SCREEN_SIZE, #222, ∅, ∅, -2) 
+            
+        draw_axes({pos: pos, dir: xy(1, 1) - 2 xy(x, y)})

@@ -1332,7 +1332,7 @@ function setCodeEditorDividerFromLocalStorage() {
     } else {
         dividerHeight += 'px';
     }
-    codePlusFrame.style.gridTemplateRows = `auto ${dividerHeight} auto 1fr`;
+    codePlusFrame.style.gridTemplateRows = `${dividerHeight} auto auto 1fr`;
 }
 
 
@@ -1340,7 +1340,7 @@ function onCodeEditorDividerDrag(event) {
     if (codeEditorDividerInDrag) {
 	const codePlusFrame = document.getElementById('codePlusFrame');
         const topHeight = Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - 26 - 24));
-	codePlusFrame.style.gridTemplateRows = `auto ${topHeight}px auto 1fr`;
+	codePlusFrame.style.gridTemplateRows = `${topHeight}px auto auto 1fr`;
         localStorage.setItem('codeDividerTop', Math.round(topHeight));
 	event.preventDefault();
         
@@ -1691,20 +1691,20 @@ function onRemoveScript(scriptURL) {
 function showScriptContextMenu(scriptURL) {
     if (! gameSource.scripts) { return; }
 
-    console.assert(scriptURL);
     const id = 'ScriptItem_' + scriptURL;
     const filename = urlFilename(scriptURL);
     const builtIn = isBuiltIn(scriptURL);
 
     const index = gameSource.scripts.indexOf(scriptURL);
     console.assert(index !== -1);
-    
+
     let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'}), 'script', '${scriptURL}'])">${builtIn ? 'View' : 'Edit'}</div>`;
     if (index > 0) {
         s += `<div onmousedown="onMoveScript('${scriptURL}', -1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&uarr;</span>Execute earlier</div>`
     }
 
-    if (index < gameSource.scripts.length - 1) {
+    // -2 because quadplay injects the _ui script into each game as a hidden final script
+    if (index < gameSource.scripts.length - 2) {
         s += `<div onmousedown="onMoveScript('${scriptURL}', +1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&darr;</span>Execute later</div>`
     }
     if (! builtIn) {
@@ -1780,8 +1780,30 @@ function showDocContextMenu(docURL) {
 
     const index = gameSource.docs.indexOf(docURL);
     console.assert(index !== -1);
+
+    let externalCmds = '';
+    if (! isRemote(docURL) && !isBuiltIn(docURL)) {
+        if (serverConfig.hasFinder) {
+            externalCmds += `<div onmousedown="onOpenUrlExternally('<finder>', '${docURL}')">Show in ${isApple ? 'Finder' : 'Explorer'}</div>`;
+        }
+
+        const ext = docURL.split('.').pop();
+        const list = serverConfig.applications;
+        if (list) {
+            for (let i = 0; i < list.length; ++i) {
+                if (list[i].types.indexOf(ext) !== -1) {
+                    externalCmds += `<div onmousedown="onOpenUrlExternally('${list[i].path}', '${docURL}')">Open ${ext.toUpperCase()} with ${list[i].name}</div>`;
+                }
+            }
+        }
+
+        if (externalCmds.length > 0) {
+            externalCmds = '<hr>' + externalCmds;
+        }
+    }    
     
-    let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'), 'doc', '${docURL}'])">${builtIn ? 'View' : 'Edit'}</div>`;
+    let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'), 'doc', '${docURL}'])">${builtIn ? 'View' : 'Edit'}</div>` +
+        externalCmds;
     s += `<hr><div onmousedown="onRemoveDoc('${docURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
 
     customContextMenu.innerHTML = s;

@@ -38,7 +38,7 @@ draw_rect(xy(½ SCREEN_SIZE.x, 66), xy(SCREEN_SIZE.x, 97), TITLE_SCRIM_COLOR)
 for p < 4:
     const sprite = robot_sprite[p][0]
     const gamepad = gamepad_array[p]
-    const color = get_sprite_pixel_color(sprite, ½ sprite.size)
+    const color = sprite_pixel_color(sprite, ½ sprite.size)
 
     player_status[p] = clamp(player_status[p] + gamepad.aa - gamepad.bb, 0, 2)
     if gamepad.aa: play_accept_sound(gamepad.index)

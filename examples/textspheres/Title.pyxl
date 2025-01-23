@@ -45,7 +45,7 @@ for j < 2:
         const θ = 1.5° mode_frames + 0.05 x
         
         for y < title_sprite.size.y:
-            if get_sprite_pixel_color(title_sprite[0][0], xy(x, y)).a:
+            if sprite_pixel_color(title_sprite[0][0], xy(x, y)).a:
                 pos.x = X
                 pos.y = MAD(-4, y, y_offset)
                 

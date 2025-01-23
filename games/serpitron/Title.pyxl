@@ -102,7 +102,7 @@ for p < 4:
    if state[p] != "out":
       // Draw the snake
       const colorName = colorNameArray[colorIndex[p]]
-      outline = get_sprite_pixel_color(snakeHeadSpritesheet[colorName], xy(9, 6))
+      outline = sprite_pixel_color(snakeHeadSpritesheet[colorName], xy(9, 6))
       color = 160% outline
       
       let θ = mode_frames / 40 + 90° p

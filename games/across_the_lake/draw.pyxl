@@ -182,10 +182,10 @@ def draw_distant_elements():
 
             
 def draw_background():
-   background_color = get_sprite_pixel_color(background, xy(0, 223))
+   background_color = sprite_pixel_color(background, xy(0, 223))
    if background != next_background:
       const α = clamp((game_frames - background_change_start_frame) / BACKGROUND_TRANSITION_FRAMES, 0, 1)
-      background_color = lerp(background_color, get_sprite_pixel_color(next_background, xy(0, 223)), α)
+      background_color = lerp(background_color, sprite_pixel_color(next_background, xy(0, 223)), α)
       if α == 1:
          // The transition is complete
          background = next_background

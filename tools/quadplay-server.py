@@ -147,9 +147,8 @@ with open(os.path.join(os.path.dirname(__file__), '../console/version.js')) as f
 ##########################################################################
 
 
-
 # Ensure that slashes and case are consistent when on Windows, and make absolute
-def canonicalize_filepath(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
+def canonicalize_filepath(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/').replace('//', '/')
 
 def fatal_error(message):
     # Initialize the GUI
@@ -578,17 +577,25 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 
         elif command == 'open':
             app = object['app']
-            filename = '"' + object['file'] + '"'
-            cmd = ''            
+            filename = canonicalize_filepath(object['file'])
+                   
             if app == '<finder>':
                 if isMacOS:
                     cmd = 'open -R "' + filename + '"'
-                else:
+                elif isWindows:
                     cmd = 'start "" "' + os.path.dirname(filename) + '"'
+                if cmd != '':
+                    maybe_print(cmd)
+                    os.system(cmd)
             elif isMacOS:
                 cmd = 'open -a "' + app + '" "' + filename + '"'
-                
-            os.system(cmd)
+                maybe_print(cmd)
+                os.system(cmd)
+            elif isWindows:
+                cmd = '"' + app + '" "' + filename + '"'
+                maybe_print(cmd)
+                subprocess.call(cmd, shell=True)
+
             response_obj = 'OK'
             
         elif command == 'new_game':
@@ -710,7 +717,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     potential_applications = workjson.load(os.path.join(quad_filepath, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
                     for app in potential_applications:
                         for path in app['paths']:
-                            path = os.path.expandvars(os.path.expanduser(path))
+                            path = canonicalize_filepath(os.path.expandvars(os.path.expanduser(path)))
                             if os.path.exists(path):
                                 # Found this app
                                 applications.append({'name': app['name'], 'path': path, 'types': app['types']})

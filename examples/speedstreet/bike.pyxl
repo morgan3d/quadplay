@@ -16,7 +16,7 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
    const frontWheelSSPos = xy(23, 19)
    const rearWheelSSPos = xy(4, 19)
 
-   const color = get_sprite_pixel_color(bikePart.engine[colorIndex], xy(16, 13))
+   const color = sprite_pixel_color(bikePart.engine[colorIndex], xy(16, 13))
    const darkColor = gray(80%) * color
    
    // The bike *is* the suspension as the root frame.

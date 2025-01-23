@@ -1,42 +1,31 @@
+const levelColor1_ = sprite_pixel_color(dashboard_sprite[0][0], xy(6, 57))
 
-
-const levelColor1_ = get_sprite_pixel_color(
-        dashboard_sprite[0][0], xy(6, 57))
-
-const levelColor2_ = get_sprite_pixel_color(
-        dashboard_sprite[0][0], xy(6, 58))
-
-
-
-
+const levelColor2_ = sprite_pixel_color(dashboard_sprite[0][0], xy(6, 58))
 
 
 def DashboardDraw():
     if size(Boards) == 1:
         const board = Boards[0]
 
-        const pos = xy(board.pos.x + board.sizeX * 16 + 44, 66)
+        const pos = xy(board.pos.x + 16 board.sizeX + 44, 66)
         draw_sprite(dashboardSolo_sprite[0][0], pos)
 
         ClockDraw(g_clock, pos + xy(-18, -30))
 
-        DrawStandardText(pos + xy(-20, -9),
-                format_number(Boards[0].score, "00000"))
+        DrawStandardText(pos + xy(-20, -9), format_number(Boards[0].score, "00000"))
 
-        DrawStandardText(pos + xy(-27, 12),
-                format_number(61 - Boards[0].autoRaiseSpeed, "0"))
+        DrawStandardText(pos + xy(-27, 12), format_number(61 - Boards[0].autoRaiseSpeed, "0"))
 
         const startX = pos.x + 9
 
-        const endX = startX + Level[0] * 2 - 1
+        const endX = startX + 2 Level[0] - 1
         const y = pos.y + 15
-        draw_line(xy(startX, y), xy(endX, y),
-                levelColor1_)
-        draw_line(xy(startX, y + 1), xy(endX, y + 1),
-                levelColor2_)
+        
+        draw_line(xy(startX, y), xy(endX, y), levelColor1_)
+        draw_line(xy(startX, y + 1), xy(endX, y + 1), levelColor2_)
 
         for i < Level[0] + 1: 
-            const x = startX - 1 + i * 2
+            const x = startX - 1 + 2 i
             draw_line(xy(x, y), xy(x, y + 1), levelColor2_)
 
 

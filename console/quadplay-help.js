@@ -15,7 +15,7 @@ function updateProgramDocumentation() {
         return;
     }
     
-    // Markdeep source
+    // Markdeep source for the help pane
     let mdSource = `\n      **${gameSource.json.title} Script Documentation**\n     ${gameSource.json.developer}\n\n`;
 
     documentationProgramAPIOverloads = {};
@@ -112,8 +112,6 @@ body {left:8px}
         // Don't trigger update if it isn't changing!
         iframe.srcdoc = mdSource;
     }
-    
-    //console.log(mdSource);
 }
 
 
@@ -125,9 +123,14 @@ if (useIDE) {
 
     // Initialize the documentation viewer
     {
-        const manualURL = location.origin + getQuadPath() + 'doc/manual.md.html';
-    
-        LoadManager.fetchOne({}, manualURL, 'text', null, function (text) {
+        const quadplayAPIURL = location.origin + getQuadPath() + 'doc/api.md.html';
+
+        // Load the source code for the manual. We'll end up fetching
+        // it *twice*, once as raw code for processing here, and then
+        // as a separate iframe load below. The browser should cache
+        // the html, however.
+        LoadManager.fetchOne({}, quadplayAPIURL, 'text', null, function (text) {
+            // Look for function call definitions in the manual
             const matchIterator = text.matchAll(/`([A-Za-z_][A-Za-z0-9_]*)\(.*\)`[ \t]*\n:/g);
             for (let match of matchIterator) {
                 const api = match[1];
@@ -137,13 +140,13 @@ if (useIDE) {
             }
         });
 
-        // Load the manual into the iframe. This triggers
-        // markdeep processing, so run it later to speed up
-        // initial load.
+        // Load the manual into the iframe. This triggers markdeep
+        // processing, so run it later to speed up initial load.
+        const MS_PER_SECOND = 1000;
         setTimeout(function () {
             const iframe = document.getElementById('manual');
-            iframe.src = manualURL;
-        }, 4000);
+            iframe.src = quadplayAPIURL;
+        }, 2 * MS_PER_SECOND);
     }
 
     aceEditor.on("mousedown", function (event) {        

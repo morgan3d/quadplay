@@ -33,7 +33,7 @@ def entity_to_particles(entity,
    for y < sprite.size.y:
       for x < sprite.size.x:
          const spritePos = xy(x, y)
-         const color = get_sprite_pixel_color(sprite, spritePos)
+         const color = sprite_pixel_color(sprite, spritePos)
          
          // Entity space position
          const ePos = (spritePos - center) * entity.scale

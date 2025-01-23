@@ -86,15 +86,15 @@ def drawPlanet(planet):
 
             // Cheap 3-tap integration/interpolation to reduce flicker
             tex.x = f bitand mask
-            get_sprite_pixel_color(sprite, tex, color)
+            sprite_pixel_color(sprite, tex, color)
 
             tex.x = ADD(f, ½) bitand mask
             //color += temp
-            RGB_ADD_RGB(color, get_sprite_pixel_color(sprite, tex, temp), color)
+            RGB_ADD_RGB(color, sprite_pixel_color(sprite, tex, temp), color)
             
             tex.x = ADD(f, ½) bitand mask
             //color += temp
-            RGB_ADD_RGB(color, get_sprite_pixel_color(sprite, tex, temp), color)
+            RGB_ADD_RGB(color, sprite_pixel_color(sprite, tex, temp), color)
             
             //color *= ⅓
             RGB_MUL(color, ⅓, color)

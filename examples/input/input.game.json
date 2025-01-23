@@ -9,7 +9,7 @@
         "Play"
     ],
     "assets": {
-        "small_font": "quad://fonts/weaver-5.font.json",
+        "small_font": "quad://fonts/deja-7.font.json",
         "font": "quad://fonts/weaver-7.font.json",
         "code_font": "quad://fonts/deja-8.font.json",
         "cursor_sprite": "quad://sprites/cursor-9x9.sprite.json"

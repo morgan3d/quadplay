@@ -44,7 +44,7 @@ def make_player(hex_pos, index, difficulty):
     const player = make_entity({
         gamepad: gamepad_array[index],
         
-        color: rgba(rgb(80% get_sprite_pixel_color(robot_sprite[index][0], ½ robot_sprite.sprite_size)), 100%),
+        color: rgba(rgb(80% sprite_pixel_color(robot_sprite[index][0], ½ robot_sprite.sprite_size)), 100%),
 
         // Start with the simple case of all directions
         action_array: [],

@@ -5,4 +5,4 @@ qrcode.js        2018          https://github.com/KeeeX/qrcodejs fork of https:/
 js-yaml.min.js   4.1.0         https://github.com/nodeca/js-yaml
 dagre.min.js
 decomp.min.js
-../ace/ace.js    1.24.1        https://github.com/ajaxorg/ace-builds/
+../ace/ace.js    1.37.1        https://github.com/ajaxorg/ace-builds/

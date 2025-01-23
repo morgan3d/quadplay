@@ -68,15 +68,34 @@ html {
     */
 }
 
-#spriteEditor {
-    background-size: 100% auto;
+#spriteEditorCanvas {
+    background-size: 100%;
     background-repeat: no-repeat;
     background-position: left top;
 }
 
-#serverQRCode img {
-    margin-left: auto;
-    margin-right: auto;
+#spriteEditorCanvasScrollPane {
+    position: absolute;
+    top: 42px;
+    left:0px;
+    right:0px;
+    bottom:0px;
+    scrollbar-width: unset;
+    overflow: scroll;
+}
+
+#spriteEditorHighlight {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    border: 1px solid #0f0;
+    color: #0f0;
+    overflow: visible;
+    box-shadow: 0px 1px 4px #000;
+    /* Must pass mouse events through to the canvas */
+    pointer-events: none;
 }
 
 #spriteEditorPivot {
@@ -91,8 +110,25 @@ html {
     font-family: Arial;
     color:#0f0;
     text-shadow: 0px 1px 4px #000;
+
+    line-height: 30px; height: 30px;
 }
 
+
+#spriteEditorToolbar {
+    height: 38px;
+}
+
+/*#spriteEditorInfo {
+    white-space: nowrap;
+    display: table;
+    text-shadow: 0px 1px 4px #000, 0px 0px 2px #000, 0px 0px 3px #000;
+}*/
+
+#serverQRCode img {
+    margin-left: auto;
+    margin-right: auto;
+}
 
 #soundEditor {
     width: 100%;
@@ -144,13 +180,39 @@ body {
 /* Do not set properties on ::-webkit-scrollbar because it will blank out that region on the bottom of the page */
 
 div, pane {
-    scrollbar-width: none;  /* Firefox hide scrollbars */
+    /* Firefox and several Windows browsers hide scrollbars where not necessary */
+    scrollbar-width: none;  
+}
+
+/***************************************************************/
+/* MacOS force scrollbars where desirable */
+
+.force-show-scrollbars {
+    scrollbar-width: unset !important;
+}
+
+div.force-show-scrollbars::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    background: #302b2b;
+}
+
+div.force-show-scrollbars::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+/***************************************************************/
+
+.checker-background {
+    background: repeating-conic-gradient(#CCC 0% 25%, #DDD 0% 50%) 50% / 6px 6px
 }
 
 /* Needed to have visible, usable scrollbars on Windows (even though they are super ugly) */
 div#ace, #ace > div {
     scrollbar-width: unset;
 }
+
 
 body.fullscreenEmulator {
     overflow: hidden;
@@ -210,6 +272,19 @@ a.outputLink {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+#outputDisplayPane {
+    position: absolute;
+    top: 22px;
+    bottom:0;
+    left:0; right:0;
+    padding-left: 10px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    overflow:scroll;
+    overflow-wrap:break-word;
+    background: #222;
 }
 
 .structPane ul {
@@ -287,6 +362,7 @@ li.closed ul {
 .emulator, .emulatorButton {
     touch-action: none;
     /* Disable text selection */
+    user-select: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -342,7 +418,7 @@ b.projectTitle.remote:before {
 }
 
 
-@-webkit-keyframes blink {
+@keyframes blink {
     from {opacity: 1.0;}
     to {opacity: 0.0;}
 }
@@ -379,6 +455,7 @@ b.projectTitle.remote:before {
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -591,6 +668,7 @@ div.debugOverride.disabled {
     /* Disable text selection */
     -webkit-touch-callout: none;
     -webkit-user-select: none;
+    user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -630,7 +708,7 @@ div.debugOverride.disabled {
     color:            #fff;
     box-shadow:       0px 1px 2px 0px rgba(0, 0, 0, 0.25);
     border:           1px solid #666;
-    boder-bottom:     none;
+    border-bottom:    none;
 }
 
 .button div.buttonIcon {
@@ -823,27 +901,28 @@ code, .code {
 
 /**************************************************/
 
-/* Contains the code editor and maybe a preview pane */
+/* Contains the code/metadata editor and an optional content editing
+   or display pane */
 #codePlusFrame {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0px;
     background: #302b2b;
     visibility: hidden;
     display: grid;
-    grid-template-areas: 'codeEditorToolbar' 'codeEditorContentFrame' 'codeEditorDivider' 'codeEditor';
-    grid-template-rows: 23px 7fr 7px 3fr;
+    grid-template-areas: 'editorContentFrame' 'codeEditorDivider' 'codeToolbar' 'codeEditor';
+    grid-template-rows: 7fr 7px 23px 3fr;
     grid-template-columns: 100%;
     /* Needed for Safari grid layout */
     height: 100%;
 }
 
 
-#codeEditorContentFrame {
-    grid-area: codeEditorContentFrame;
+#editorContentFrame {
+    grid-area: editorContentFrame;
     position: relative;
 }
 
-#codeEditorContentFrame div {
+#editorContentFrame > div {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
@@ -867,14 +946,18 @@ code, .code {
     -webkit-box-sizing: border-box;
 }
 
-
-#codePlusFrame .toolbar {
-    grid-area: codeEditorToolbar;
+.toolbar {
+    background: #302b2b;
     width: 100%;
     padding-top: 3px;
     padding-left: 3px;
     border-bottom: 1px solid #888;
     height: 19px;
+}
+
+#codePlusFrame #codeToolbar {
+    grid-area: codeToolbar;
+    position: relative;
     z-index: 1;
 }
 

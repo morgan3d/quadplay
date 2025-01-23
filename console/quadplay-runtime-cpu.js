@@ -313,7 +313,7 @@ function sequence(...seq) {
         
         const step = queue[0];
         
-        if (step.callback) {
+        if (step.callback || step.begin_callback || step.end_callback) {
             if (currentFrame === 0 && step.begin_callback) {
                 const result = step.begin_callback(step.data);
                 if (result === sequence.BREAK) {
@@ -322,7 +322,8 @@ function sequence(...seq) {
                 }
             }
             
-            const result = step.callback(step.frames - currentFrame - 1, step.frames, step.data);
+            const result = step.callback ? step.callback(step.frames - currentFrame - 1, step.frames, step.data) : undefined;
+            
             if (result === sequence.BREAK) {
                 remove_frame_hook(hook);
                 return;
@@ -614,7 +615,7 @@ function sort(array, k, reverse) {
     if (compare === undefined) {
         if (typeof array[0] === 'object') {
             // Find the first property, alphabetically
-            const keys = keys(array[0]);
+            const keys = Object.keys(array[0]);
             keys.sort();
             k = keys[0];
             if (reverse) {
@@ -3480,10 +3481,18 @@ function $make_maze(w, h, horizontal, vertical, straightness, imperfect, fill, d
 
 
 function sprite_transfer_orientation(orient_sprite, content_sprite) {
-    if (! orient_sprite || ! content_sprite || ! orient_sprite.$spritesheet || ! content_sprite.$spritesheet) {
-        $error('sprite_match_orientation() requires two sprites');
+    if (! orient_sprite || ! orient_sprite.$type === 'sprite') {
+        $error('The first argument to sprite_transfer_orientation() must be a sprite');
     }
 
+    if (! content_sprite || ! (content_sprite.$type === 'sprite' || content_sprite.$type === 'spritesheet')) {
+        $error('The second argument to sprite_transfer_orientation() must be a sprite or spritesheet');
+    }
+
+    if (content_sprite.$type === 'spritesheet') {
+        content_sprite = content_sprite[orient_sprite.tile_index.x][orient_sprite.tile_index.y];
+    }
+    
     const base = orient_sprite.base;
 
     if (base.$spritesheet !== orient_sprite.$spritesheet) {
@@ -3638,7 +3647,7 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
                 }
 
                 // Manually inlined and streamlined code from
-                // get_sprite_pixel_color, which saves about 2 ms when
+                // sprite_pixel_color, which saves about 2 ms when
                 // sampling every pixel on screen. Coordinate
                 // computation needs to be done per-sprite because
                 // they may be flipped. It is slightly faster (probably because of
@@ -5621,9 +5630,9 @@ function $clamp(x, L, H) {
 }
 
 
-function get_sprite_pixel_color(spr, pos, result) {
+function sprite_pixel_color(spr, pos, result) {
     if (! (spr && spr.$spritesheet)) {
-        $error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
+        $error('Called sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
     const x = ((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x)) | 0;
@@ -5649,6 +5658,8 @@ function get_sprite_pixel_color(spr, pos, result) {
         return result;
     }
 }
+
+var get_sprite_pixel_color = sprite_pixel_color;
 
 
 function draw_sprite_corner_rect(CC, corner, size, z) {
@@ -6289,7 +6300,7 @@ function $advanceRayGridIterator(it) {
 
 
 function $default_ray_map_pixel_callback(sprite, sprite_pixel_coord, ws_normal, ray, map, distance, ws_coord, map_coord) {
-    // Inlined optimization of: if (get_sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
+    // Inlined optimization of: if (sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
     const x = ((sprite.scale.x > 0) ? sprite_pixel_coord.x : (sprite.size.x - 1 - sprite_pixel_coord.x)) | 0;
     const y = ((sprite.scale.y > 0) ? sprite_pixel_coord.y : (sprite.size.y - 1 - sprite_pixel_coord.y)) | 0;
     const data = sprite.$spritesheet.$uint16Data;
@@ -6540,7 +6551,8 @@ function entity_area(entity) {
 // cleaned up object. If everything is present, returns the object
 // unmodified, otherwise clones it and adds the properties to the clone.
 function $cleanupRegion(A) {
-    if ((A.scale === undefined) || (A.pos === undefined) || (A.shape === undefined) || (A.size === undefined)) {
+    if ((A.scale === undefined) || (typeof(A.scale) === 'number') || (A.pos === undefined) || (A.shape === undefined) || (A.size === undefined)) {
+        
         if ((A.x !== undefined) && (A.y !== undefined)) {
             // This is a point. Default to disk because it makes
             // collision tests simpler.
@@ -6550,6 +6562,10 @@ function $cleanupRegion(A) {
         // Make a new object with default properties
         A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
 
+        if (typeof(A.scale) === 'number') {
+            A.scale = xy(A.scale, A.scale);
+        }
+    
         if (A.corner && ! A.pos) {
             A.pos = {x: A.corner.x + 0.5 * A.size.x * $Math.abs(A.scale.x),
                      y: A.corner.y + 0.5 * A.size.y * $Math.abs(A.scale.y)}
@@ -6559,7 +6575,7 @@ function $cleanupRegion(A) {
             }
 
             // Remove the corner property, which was a clone, to
-            // avoid the upcoming check for both clone and pos.
+            // avoid the upcoming check for both corner and pos.
             delete A.corner;
         }
     }
@@ -6578,6 +6594,7 @@ function $cleanupRegion(A) {
         A.pos = $maybeApplyPivot(A.pos, A.pivot, A.angle, A.scale);
         delete A.pivot;
     }
+
     
     // All required properties are present
     return A;
@@ -8017,14 +8034,16 @@ function parse(source) {
 }
 
 
-function unparse(x, level) {
-    if (level === undefined) { level = 1; }
-
+function unparse(x, level = 1) {
     const colon = level === 0 ? ':' : ': ';
     const closingBraceOnNewLine = level >= 3;
     const inlineShortContainers = level < 4;
-
-    return $unparse(x, new Map(), colon, closingBraceOnNewLine, inlineShortContainers, level === 0, '', '', false);
+    const inlineAllContainers = level <= 1;
+    const specialStructs = true;
+    const html_out = false;
+    const noWhitespace = level === 0; 
+    
+    return $unparse(x, new Map(), colon, closingBraceOnNewLine, inlineShortContainers, inlineAllContainers, noWhitespace, '', '', specialStructs, html_out);
 }
 
 
@@ -8055,8 +8074,10 @@ function unparse_hex_color(c) {
 
 
 /* Helper for $unparse */
-function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
-                           inlineShortContainers, terse, indent, hint, specialStructs, meta = {}) {
+function $unparseContainer(
+    x, alreadySeen, colon, closingBraceOnNewLine,
+    inlineShortContainers, inlineAllContainers, terse,
+    indent, hint, specialStructs, html_out, meta = {}) {
 
     const INCREASE_INDENT = '    ';
     const MAX_INLINE_CONTAINER_LENGTH = 4;
@@ -8070,26 +8091,30 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
     let first = true;
     
     let numPublicKeys = 0;
-    let inline = inlineShortContainers;
-    
+    let inline = inlineShortContainers || inlineAllContainers || terse;
+
     const keys = isArray ? undefined : $Object.keys(x);
     const N = isArray ? x.length : keys.length;
-    
-    for (let i = 0; i < N; ++i) {
-        const k = isArray ? i : keys[i];
-        if (isArray || k !== '$') {
-            ++numPublicKeys;
-            const v = x[k];
-            if (numPublicKeys > MAX_INLINE_CONTAINER_LENGTH ||
-                Array.isArray(v) ||
-                typeof v === 'object') {
-                // Too large or recursive value
-                inline = false;
+
+    if (! terse && ! inlineAllContainers) {
+        // Is this a long container?
+        for (let i = 0; i < N; ++i) {
+            const k = isArray ? i : keys[i];
+            
+            if (k !== '$') {
+                ++numPublicKeys;
+                const v = x[k];
+                if (numPublicKeys > MAX_INLINE_CONTAINER_LENGTH ||
+                    Array.isArray(v) ||
+                    typeof v === 'object') {
+                    // Too large or recursive value
+                    inline = false;
+                }
             }
         }
     }
 
-    meta.expandable = N > 0 && ! inline && specialStructs;
+    meta.expandable = N > 0 && ! inline && html_out;
 
     // Are child nodes expanded by default?
     const childExpansionClass = (N > 5 || indent.length >= INCREASE_INDENT.length) ? 'class="closed"' : '';
@@ -8111,7 +8136,7 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
             // Close out previous
             if (first) {
                 if (! inline) {
-                    if (specialStructs) {
+                    if (html_out) {
                         s += '<span class="hidden">\n' + childIndent + '</span>';
                     } else {
                         s += '\n' + childIndent;
@@ -8121,7 +8146,7 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
             } else if (inline) {
                 // Separator
                 s += (terse ? ',' : ', ');
-            } else if (specialStructs) {
+            } else if (html_out) {
                 s += ',</li><span class="hidden">\n' + childIndent + '</span>';
             } else {
                 s += ',\n' + childIndent;
@@ -8129,9 +8154,9 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
 
             // For arrays, pass the array's hint as the hint
             childMeta.expandable = false;
-            const child = $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent, isArray ? hint : k, specialStructs, childMeta);
+            const child = $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, inlineAllContainers, terse, childIndent, isArray ? hint : k, specialStructs, html_out, childMeta);
 
-            if (specialStructs && ! inline) {
+            if (html_out && ! inline) {
                 s += `<li ${childExpansionClass}><span onclick="onExpanderClick(event)" class="expanderButton" style="visibility: ${childMeta.expandable ? 'visible' : 'hidden'}"></span>`;
             }
             
@@ -8143,17 +8168,17 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
         }
     }
     
-    if (numPublicKeys > 0 && specialStructs && ! inline) { s += '</li>'; }
+    if (numPublicKeys > 0 && html_out && ! inline) { s += '</li>'; }
     
     if (numPublicKeys > 0 && closingBraceOnNewLine && ! inline) {
-        if (specialStructs) {
+        if (html_out) {
             s += '<span class="hidden">\n' + indent + '</span>';
         } else {
             s += '\n' + indent;
         }
     }
 
-    if (specialStructs && ! inline) {
+    if (html_out && ! inline) {
         s = '<ul>' + s + '</ul><span onclick="onExpanderClick(event)" class="expanderEllipses"></span>';
     }
 
@@ -8167,22 +8192,24 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
 }
 
 
-
 /*
   `hint` is for styling. It is usually the name of the variable being
   unparsed
 
-  `specialStructs` = true causes xy() and other common values to
-  pretty print instead of showing as generic objects, and escapes HTML
-  in strings.
+  `specialStructs` = true causes xy(), angle: fields, and other common
+  values to pretty print instead of showing as generic objects
+
+  `html_out` = true generates expansion HTML and escapes HTML in strings.
 */
-function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
-                  inlineShortContainers, terse, indent, hint, specialStructs, meta = {}) {
+function $unparse(
+    x, alreadySeen, colon, closingBraceOnNewLine,
+    inlineShortContainers, inlineAllContainers, terse, indent, hint,
+    specialStructs, html_out, meta = {}) {
 
     if (x && x.$name !== undefined) {
         // Internal object
         const editable = ['font', 'spritesheet', 'sound', 'data', 'map'];
-        if (specialStructs && editable.indexOf(x.$type) !== -1) {
+        if (html_out && editable.indexOf(x.$type) !== -1) {
             return `<a style="cursor:pointer; font-family: Arial" onclick="onProjectSelect(document.getElementById('projectAsset_${x.$name}'), 'asset', gameSource.assets['${x.$name}'])">${x.$name}</a>`;
         } else {
             return x.$name;
@@ -8193,11 +8220,13 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
         if (alreadySeen.has(x)) {
             return '[…]';
         } else {        
-            return $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
-                                     inlineShortContainers, terse, indent, hint, specialStructs, meta);
+            return $unparseContainer(
+                x, alreadySeen, colon, closingBraceOnNewLine,
+                inlineShortContainers, inlineAllContainers,
+                terse, indent, hint,
+                specialStructs, html_out, meta);
         }
     }
-
     
     switch (typeof x) {
     case 'object':
@@ -8240,14 +8269,19 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
                             color = `rgba(${100 * c.r}%, ${100 * c.g}%, ${100 * c.b}%, ${100 * c.a}%)`;
                         }
                         
-                        s += ` <div style="display:inline-block; width: 32px; height: 12px; overflow: hidden; position: relative; top: 2px" class="checkerboard8"><div style="background: ${color}; width: 32px; height: 12px"></div></div>`;
+                        if (html_out) {
+                            s += ` <div style="display:inline-block; width: 32px; height: 12px; overflow: hidden; position: relative; top: 2px" class="checkerboard8"><div style="background: ${color}; width: 32px; height: 12px"></div></div>`;
+                        }
                         return s;
                     }
                 }
             }
             
-            return $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
-                                     inlineShortContainers, terse, indent, hint, specialStructs, meta);
+            return $unparseContainer(
+                x, alreadySeen, colon, closingBraceOnNewLine,
+                inlineShortContainers, inlineAllContainers, terse,
+                indent, hint,
+                specialStructs, html_out, meta);
         }
 
     case 'boolean':
@@ -8297,7 +8331,7 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
         return '∅';
         
     case 'string':
-        if (specialStructs) { x = $escapeHTMLEntities(x); }
+        if (html_out) { x = $escapeHTMLEntities(x); }
         return '"' + x + '"';
 
     case 'function':
@@ -9261,6 +9295,11 @@ function lerp(a, b, t, t_min, t_max) {
 }
 
 
+function linstep(start, end, t) {
+    return $Math.max(0, $Math.min(1, (t - start) / (end - start)));
+}
+
+
 function smoothstep(start, end, t) {
     t = $Math.max(0, $Math.min(1, (t - start) / (end - start)));
     return t * t * (3 - 2 * t);
@@ -9576,6 +9615,76 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
 }
 
 
+/* Computes the convex hull of an array of points using the monotone
+   chain algorithm (Andrew 1979). This is O(n lg n) and slightly more robust than
+   Graham Scan by avoiding angle computations. The points are returned
+   in CCW order. The points themselves are only shallow cloned, so
+   will be the same objects that were in vertex_array. */
+function convex_hull(vertex_array) {
+    // 2D cross product of (A-P) x (B-P)
+    function orient(P, A, B) {
+        return (A.x - P.x) * (B.y - P.y) - (A.y - P.y) * (B.x - P.x);
+    }
+    
+    const N = vertex_array.length;
+
+    if (N <= 1) {
+        // Point: return it
+        return clone(vertex_array);
+    } else if (N === 2) {
+        // Line, which may be degenerate
+        if (vertex_array[0].x === vertex_array[1].x &&
+            vertex_array[0].y === vertex_array[1].y) {
+
+            // Degenerate
+            return [vertex_array[0]];
+        } else {
+            return clone(vertex_array);
+        }
+    }
+
+    // Below here we have at least a triangle, which may be degenerate
+
+    // Sort along the x-axis, using the y-axis to resolve ties
+    vertex_array = sorted(vertex_array, function(a, b) {
+        const dx = a.x - b.x;
+        if (dx !== 0) {
+            return dx;
+        } else {
+            return a.y - b.y;
+        }
+    });
+
+    const result = new Array(2 * N);
+    let k = 0;
+  
+    // Build lower hull
+    for (let i = 0; i < N; ++i) {
+ 
+        // If the point at K-1 position is not a part
+        // of hull as vector from ans[k-2] to ans[k-1] 
+        // and ans[k-2] to A[i] has a clockwise turn
+        while (k >= 2 && orient(result[k - 2], result[k - 1], vertex_array[i]) <= 0) {
+            --k;
+        }
+        result[k++] = vertex_array[i];
+    }
+ 
+    // Build upper hull
+    for (let i = N - 1, t = k + 1; i > 0; --i) {
+        // If the point at K-1 position is not a part
+        // of hull as vector from result[k-2] to result[k-1] 
+        // and result[k-2] to A[i] has a clockwise turn
+        while (k >= t && orient(result[k - 2], result[k - 1], vertex_array[i - 1]) <= 0) {
+            --k;
+        }
+        result[k++] = vertex_array[i - 1];
+    }
+ 
+    result.length = k - 1;
+ 
+    return result;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

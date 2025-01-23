@@ -139,12 +139,12 @@ for name at i in [
         "BLUE",
         ]:
     Palette[name] = {
-        DARK : get_sprite_pixel_color(
-                blocksPalette_sprite[0][0], xy(i * 3, 0)),
-        MID : get_sprite_pixel_color(
-                blocksPalette_sprite[0][0], xy(i * 3 + 1, 0)),
-        LIGHT : get_sprite_pixel_color(
-                blocksPalette_sprite[0][0], xy(i * 3 + 2, 0)),
+        DARK : sprite_pixel_color(
+                blocksPalette_sprite[0][0], xy(3 i + 0, 0)),
+        MID : sprite_pixel_color(
+                blocksPalette_sprite[0][0], xy(3 i + 1, 0)),
+        LIGHT : sprite_pixel_color(
+                blocksPalette_sprite[0][0], xy(3 i + 2, 0)),
     }
 
 const PaletteList = [
