@@ -7,13 +7,23 @@ Play
 // Tapping a button or moving an expression pedal
 // will update the display of the device on screen
 // to match.
-
+//
+// See also
+//    https://morgan3d.github.io/articles/2023-06-22-fcb1010/index.html
+//    https://mountainutilities.eu/fcb1010
 
 // Last PROGRAM_CHANGE message program index
 let last_pc = 0
 
 // Values of the expression pedals
-let expression = [0, 0]
+const expression = [0, 0]
+
+// If true, use https://morgan3d.github.io/articles/2023-06-22-fcb1010/index.html
+let morgan_mapping = false
+
+// The Control Change messages in bank 01 under the morgan mapping
+// corresponding to each foot pedal.
+const MORGAN_BANK01_CC = [22, 23, 24, 25, 26, 29, 30, 31, 84, 85]
 
 def draw_light(pos):
     draw_disk(pos, 3, BRIGHT, LED_COLOR)
@@ -28,12 +38,36 @@ set_background(#BBC)
 frame
 ────────────────────────────────────────────────────────────────────────
 
+if joy.aa: morgan_mapping = not morgan_mapping
+draw_text({
+    font: font, pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10), z: 1,
+    color: #000,
+    text: replace("Reading " + 
+    (if morgan_mapping then "Morgan's Ableton Live" else "Default FCB1010") + " Mode. Press (a) to change.", joy.prompt)})
+
+
 for msg in midi.message_queue:
+    debug_print(msg)
     if msg.type == "PROGRAM_CHANGE":
         last_pc = msg.program
+    else if msg.type == "NOTE_ON" and msg.velocity > 0:
+        // Morgan mode: send note on for buttons
+        last_pc = msg.note
     else if msg.type == "CONTROL_CHANGE":
-        const index = if msg.controller == 27 then 0 else 1
-        expression[index] = msg.data / 127
+        let already_found = false
+        if morgan_mapping:
+            const i = find(MORGAN_BANK01_CC, msg.controller)
+            if i ≠ ∅:
+                // We must be in bank 01 and received a specific CC,
+                // so set the bank number and light up the pedal, then
+                // skip trying to detect this as an expression pedal.
+                last_pc = i + 10
+                already_found = true
+                
+        if msg.controller ≠ 127 and not already_found:
+            // Left expression pedal is controller 27. Ignore controller 127 which
+            // Morgan mode uses for the unavoidable CNT message on FCB1010.
+            expression[if msg.controller == 27 then 0 else 1] = msg.data / 127
 
 // Background
 draw_sprite(device_sprite, ½ SCREEN_SIZE)

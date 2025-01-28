@@ -18,6 +18,7 @@ def ball_simulate(ball, world):
     ball.vel.z -= GRAVITY
     ball.pos += ball.vel
     if ball.pos.z ≤ 0:
+        play_sound({sound: random_value([splash_0_sound, splash_1_sound]), pan: ball.pos})
         water_disturb(world.water, ball.pos, -1, 2, 16, #000)
         return iterate.REMOVE
         

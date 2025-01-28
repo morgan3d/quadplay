@@ -62,9 +62,9 @@ water_draw(world.water)
 for boat in boat_array:
     draw_text({
         font: font, 
-        pos: if boat.gamepad.index == 0 then xy(5, 6) else SCREEN_SIZE - 5, 
-        text: replace("[<] TURN [>]    (e) FIRE (f)", boat.gamepad.prompt), 
-        color: lerp(boat.override_color, TEXT_COLOR, 40%), 
+        pos: if boat.gamepad.index == 0 then xy(5, 6) else SCREEN_SIZE - 5,
+        text: replace("[<] TURN [>]    (e) FIRE (f)", boat.gamepad.prompt),
+        color: lerp(boat.override_color, TEXT_COLOR, 40%),
         outline: rgba(0, 0, 0, 50%),
         shadow: rgba(0, 0, 0, 80%),
         x_align: if boat.gamepad.index == 0 then "left" else "right",

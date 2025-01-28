@@ -48,6 +48,8 @@ def boat_simulate(boat, world, ball_array)
     
     if gamepad.ee: push(ball_array, make_ball(boat, +90°))
     if gamepad.ff: push(ball_array, make_ball(boat, -90°))
+    
+    if gamepad.ee or gamepad.ff: play_sound({sound: cannon_sound, pan: pos})
 
     vel = angle_to_xy(angle) * speed_in_water + world.water.current
 

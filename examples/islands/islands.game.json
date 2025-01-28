@@ -20,7 +20,10 @@
         "water_palette": "water_palette.sprite.json",
         "font": "quad://fonts/wright-8.font.json",
         "map_color_sprite": "map_color.sprite.json",
-        "map_height": "map_height.data.json"
+        "map_height": "map_height.data.json",
+        "cannon_sound": "quad://sounds/shoot-14.sound.json",
+        "splash_0_sound": "quad://sounds/splash-04.sound.json",
+        "splash_1_sound": "quad://sounds/splash-07.sound.json"
     },
     "version": 0,
     "min_players": 2,

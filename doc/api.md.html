@@ -4002,14 +4002,15 @@ in the desired order regardless of the order in which drawing executes.
 
   Returns a main frame hook that can be removed to cancel the entire sequence.
 
-  If not `nil`, the `callback` signature is `def callback(frames_left, total_frames, data)`.
-  If not `nil`, the `begin_callback` signature is `def begin_callback(data)` and it runs
-  immediately before the first `callback` for that sequence entry.
-  If not `nil`, the `end_callback` signature is `def end_callback(data)` and it
-  runs immediately after the last `callback` for that sequence entry.
+  The signatures of the callbacks, if not `nil`, are:
+  
+  - `def callback(frames_left, total_frames, data)`
+  - `def begin_callback(data)`, which executes immediately before the first `callback` for that entry.
+  - `def end_callback(data)`, which executes immediately after the last `callback` for that sequence entry.
 
-  The callbacks run for the specified number of `frames`, rounded if fractional. 
-  If the `frames` is less than 1, then then they do not run at all.
+  The callbacks run for the specified number of `frames`, rounded if
+  fractional. If the `frames` is less than 1, then none of the
+  callbacks for that entry execute at all.
   
   Example: `sequence(6, draw_explosion, {callback: draw_fire, frames: 20}, {callback: draw_smoke, frames: 4, end_callback: cleanup})`.
   Skips 6 frames, runs `draw_explosion` after the 7th, `draw_fire` after each of
