@@ -8,7 +8,7 @@
         "ball.pyxl",
         "boat.pyxl",
         "water.pyxl",
-        "quad://scripts/particle.pyxl"
+        "quad://scripts/particle_lib.pyxl"
     ],
     "modes": [
         "Play"

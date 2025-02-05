@@ -1,5 +1,5 @@
 peer.js          1.4.7         https://peerjs.com/
-matter.js        0.17.1        http://brm.io/matter-js/
+matter.js        0.20.0        http://brm.io/matter-js/
 gif.js           0.2.0         https://github.com/jnordberg/gif.js
 qrcode.js        2018          https://github.com/KeeeX/qrcodejs fork of https://github.com/davidshimjs/qrcodejs
 js-yaml.min.js   4.1.0         https://github.com/nodeca/js-yaml

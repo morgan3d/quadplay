@@ -5,7 +5,7 @@
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
-        "quad://scripts/particle.pyxl",
+        "quad://scripts/particle_lib.pyxl",
         "space.pyxl",
         "entity.pyxl",
         "ship.pyxl",

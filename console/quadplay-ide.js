@@ -85,7 +85,7 @@ let allow_bloom = true;
         const a = Math.min(1, Math.max(0, (i - 1) / (banner.length - 2)));
         style.push(`color: rgb(${clerp(255, 0, a)}, ${clerp(64, 169, a)}, ${clerp(158, 227, a)}); text-shadow: 0px 2px 3px rgba(0, 0, 0, 20%)`);
     }
-    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2024 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n' +
+    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2025 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n' +
                 '\nSecure Context: ' + window.isSecureContext +
                 '\nQuadplay Server: ' + isQuadserver +
                 '\nBrowser: ' + browserName +
@@ -4231,8 +4231,9 @@ function redefineConstant(environment, key, value, alreadySeenMap) {
 
     // When looking for the gameJSON, some constants such as
     // SCREEN_SIZE will not be present, so allow this to fail to
-    // undefined.
-    const gameJSON = nestedGet(gameSource.json.constants, key, true, true);
+    // undefined. Also allow support for games that have NO constants defined
+    // at all in the JSON.
+    const gameJSON = gameSource.json.constants ? nestedGet(gameSource.json.constants, key, true, true) : undefined;
     
     if (gameJSON && (gameJSON.type === 'object' || (gameJSON.type === 'array' && gameJSON.url === undefined))) {
         // Recursive case (note that arrays loaded from urls are

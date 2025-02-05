@@ -551,7 +551,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     # there can be a race condition in the case of
                     # file renaming, where the client assumes the write
                     # has finished and then tries to read the same file.
-                    # So, check here:
+                    # So, check here to ensure the file exists before returning:
                     max_iterations = 10
                     while not os.path.exists(filename) and max_iterations > 0:
                         time.sleep(0.02)

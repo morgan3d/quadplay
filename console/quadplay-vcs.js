@@ -64,16 +64,17 @@ function onGitSync() {
     
     let commitFileList = '';
     serverGitCommand('status --porcelain .', function (text, code) {
-        const fileArray = text.trim().split('\n');
+        text = text.trim();
+        const fileArray = text.length === 0 ? [] : text.split('\n');
 
         const commonBase = gameURL.replace(location.href.replace(/console\/quadplay\.html.*/, ''), '').replace(/\/[^/]+\.game.json$/, '/');
 
         let addFileList = '';
-        
+
         for (const line of fileArray) {
             const args = line.trim().split(' ');
             let filename = args[1];
-
+            
             // Make filename relative to the game directory
             // as we might be working with a game that is rooted
             // somewhere within a git hierarchy.
@@ -86,7 +87,7 @@ function onGitSync() {
             if ((['M', '?', 'R', 'C'].indexOf(args[0][0]) !== -1 && gameSource.localFileTable[filename]) ||
                 (args[0][0] === 'D' && ! gameSource.localFileTable[filename])) {
                 commitFileList += ' ' + filename;
-
+                
                 if (args[0][0] === '?') {
                     addFileList += ' ' + filename;
                 }

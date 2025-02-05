@@ -1638,7 +1638,6 @@ function $popGraphicsState() {
     $camera.z = s.camera_z;
     $camera.angle = s.camera_angle;
     $camera.zoom = s.camera_zoom;
-
 }
 
 
@@ -2537,6 +2536,7 @@ function draw_entity(e, recurse) {
 
     if ($showEntityBoundsEnabled) {
         draw_bounds(e, false);
+        draw_text({font: $font5, text: e.name, pos: e.pos, color: rgb(1,1,1), outline: rgb(0,0,0), z: e.z + 0.001});
     }
     
     if (e.sprite) {
@@ -2569,12 +2569,38 @@ function $isEntity(e) {
     return e.shape && e.pos && e.vel && e.force;
 }
 
+// https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+function $poly_centroid(vertex) {
+    console.assert(vertex.length >= 3, "shape must have at least three vertices");
+    const centroid = {x: 0, y: 0};
+    let signedDoubleArea = 0;
+
+    for (let i = 0; i < vertex.length; ++i) {
+        const A = vertex[i];
+        const B = vertex[(i + 1) % vertex.length];
+        
+        const doubleArea = A.x * B.y - B.x * A.y;
+        
+        signedDoubleArea += doubleArea;
+        centroid.x += (A.x + B.x) * doubleArea;
+        centroid.y += (A.y + B.y) * doubleArea;
+    }
+
+    const norm = 3 * signedDoubleArea;
+    console.assert(Math.abs(norm) > 0, 'Shape must have nonzero area');
+    
+    centroid.x /= norm;
+    centroid.y /= norm;
+
+    return centroid;
+}
+
 
 var $entityID = 0;
 function make_entity(e, childTable) {
     const r = Object.assign({}, e || {});    
 
-    if (e.shape && (e.shape !== 'rect') && (e.shape !== 'disk')) {
+    if (e.shape && (e.shape !== 'rect') && (e.shape !== 'disk') && ! is_array(e.shape)) {
         $error('Illegal shape for entity: "' + e.shape + '"');
     }
 
@@ -2637,7 +2663,7 @@ function make_entity(e, childTable) {
     
     if (r.size === undefined) {
         if (r.sprite) {
-            if (r.shape === 'rect') {
+            if (r.shape === 'rect' || is_array(r.shape)) {
                 r.size = {x: r.sprite.size.x, y: r.sprite.size.y};
             } else if (r.shape === 'disk') {
                 const x = min_value(r.sprite.size);
@@ -2665,6 +2691,29 @@ function make_entity(e, childTable) {
         }
     } else {
         r.pivot = clone(r.pivot);
+    }
+
+    if (is_array(e.shape)) {
+        // Center the shape and then correct the pivot and size
+        const centroid = $poly_centroid(r.shape);
+        const poly = r.shape;
+        console.assert(! is_NaN(centroid.x) && is_number(centroid.x));
+        r.shape = [];
+
+        // Recompute size
+        r.size.x = 0; r.size.y = 0;
+        
+        // Move the polygon
+        for (let v of poly) {
+            const newV = {x: v.x - centroid.x, y: v.y - centroid.y};
+            r.shape.push(newV);
+            r.size.x = Math.max(2 * Math.abs(newV.x), r.size.x);
+            r.size.y = Math.max(2 * Math.abs(newV.y), r.size.y);
+        }
+
+        // Move the pivot so that the sprite alignment does not change
+        r.pivot.x += centroid.x;
+        r.pivot.y += centroid.y;
     }
 
     const child_array = r.child_array ? clone(r.child_array) : [];
@@ -4185,6 +4234,101 @@ function draw_disk(pos, radius, color, outline, z) {
     });
 }
 
+
+function $debug_draw_arrow_arc(pos, angle_start, angle_end, label, label_subscript, color, shadow, z, radius = 100, head_pixels = 3, line_pixels = 1) {
+    const vertex_array = [];
+
+    // One segment per 10 degrees
+    const segments = clamp($Math.abs(angle_end - angle_start) / 0.17, 2, 36);
+
+    for (let i = 0; i < segments; ++i) {
+        const a = (angle_start + i * (angle_end - angle_start) / (segments - 1)) * rotation_sign();
+        vertex_array.push({x: $Math.cos(a) * radius + pos.x, y: $Math.sin(a) * radius + pos.y});
+    }
+
+    // Add an extra vertex to make the arrowhead aligned with the end angle rather
+    // than the last segment.
+    const last = vertex_array[vertex_array.length - 1];
+    const a = angle_end + $Math.PI / 2 * rotation_sign() * sign(angle_end - angle_start); 
+    const dir = {x: $Math.cos(a), y: $Math.sin(a)};
+    vertex_array.push({x: last.x + 0.001 * dir.x, y: last.y + 0.001 * dir.y});
+
+    $debug_draw_arrow_helper(vertex_array, label, label_subscript, color, shadow, z, head_pixels, line_pixels);
+}
+
+
+/* 
+   Draw an arrow at `pos` along vector `vec` with optional `label` and `label_subscript` at the 
+   arrowhead.
+
+   Automatically adjusts the head_pixels and line_pixels for the current transformation scale.
+   dir is NOT scaled by the current transformation because it is expected to be consistent with
+   objects in the world.
+   
+   This is a debugging function because the output may change in future versions, it is not
+   optimized for performance, and it lacks customization options such as fonts.
+   */
+function $debug_draw_arrow(pos, dir, label, label_subscript, color, shadow, z, dir_scale, head_pixels = 3, line_pixels = 1) {
+    $debug_draw_arrow_helper([pos, $objectAdd(pos, $objectMul(dir, dir_scale))], label, label_subscript, color, shadow, z, head_pixels, line_pixels);
+}
+
+
+function $debug_draw_arrow_helper(vertex_array, label, label_subscript, color, shadow, z, head_pixels = 3, line_pixels = 1) {
+    // Current transform scaling
+    const scale = 1 / $zoom(z);
+
+    if (line_pixels <= 1) {
+        // Draw-line automatically scales "0" to be 1 pixel at the current transformation
+        line_pixels = 0;
+    }
+    
+    // One pixel in Y in camera space, for computing shadow and subscript offsets
+    const a = -$camera.angle * rotation_sign(); 
+    // One pixel on the screen-space negative Y axis, transformed into camera space
+    const onePix = {x: -scale * $Math.sin(a) * up_y(), y: -scale * $Math.cos(a) * up_y()};
+    if (shadow) {
+        // Recursively draw the shadow underneath. Text performs its own shadowing, so pass nothing for the shadow
+        // color
+        $debug_draw_arrow_helper(vertex_array.map(v => $objectAdd(v, onePix)), undefined, undefined, shadow, undefined, z - 0.001, head_pixels, line_pixels);
+    }
+
+    const tip = vertex_array[vertex_array.length - 1];
+
+    const dir = $objectSub(vertex_array[vertex_array.length - 1], vertex_array[vertex_array.length - 2]);
+    for (let i = 0; i < vertex_array.length - 1; ++i) {
+        draw_line(vertex_array[i], vertex_array[i + 1], color, z, line_pixels * scale);
+    }
+    draw_tri(xy(head_pixels, 0), xy(-head_pixels, head_pixels), xy(-head_pixels, -head_pixels), color, undefined, tip, xy_to_angle(dir), scale, z);
+
+    if (label) {
+        const separation = {x: scale * $Math.cos(a), y: -scale * $Math.sin(a)};
+        // Move the label out of the way
+        const d = perp(direction(dir));
+        const label_pos =  {x: tip.x + scale * (head_pixels + 5) * d.x,
+                            y: tip.y + scale * (head_pixels + 5) * d.y};
+        // F
+        draw_text({
+            color: color,
+            shadow: shadow,
+            pos: label_subscript ? $objectSub(label_pos, separation) : label_pos,
+            font: $font5,
+            text: label,
+            z: z + 0.01,
+            x_align: label_subscript ? "right" : "center"});
+
+        if (label_subscript) {
+            // Subscript
+            draw_text({
+                color: color,
+                shadow: shadow,
+                pos: {x: label_pos.x + 3 * onePix.x + separation.x, y: label_pos.y + 3 * onePix.y + separation.y},
+                font: $font5,
+                text: label_subscript,
+                z: z + 0.01,
+                x_align: "left"});
+        } // subscript
+    } // label
+}
 
 /** Converts {r,g,b}, {r,g,b,a}, {h,s,v}, or {h,s,v,a} to a packed Uint16 of the
     form 0xABGR.
@@ -6075,9 +6219,9 @@ function draw_bounds(entity, color, recurse) {
     }
     
     if (recurse === undefined) { recurse = true; }
-    color = color || {r:0.6, g:0.6, b:0.6};
+    color = color || {r: 0.6, g: 0.6, b: 0.6};
     const angle = (entity.angle || 0) * rotation_sign();
-    const scale = entity.scale || {x:1, y:1};
+    const scale = entity.scale || {x: 1, y: 1};
 
     let pos = $maybeApplyPivot(entity.pos, entity.pivot, entity.angle, scale);
     
@@ -6086,7 +6230,7 @@ function draw_bounds(entity, color, recurse) {
     const z_order = entity.z + 0.01;
     if ((entity.shape === 'disk') && entity.size) {
         draw_disk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z_order)
-    } else if (entity.size) {
+    } else if (entity.shape === 'rect' && entity.size) {
         const u = {x: $Math.cos(angle) * 0.5, y: $Math.sin(angle) * 0.5};
         const v = {x: -u.y, y: u.x};
         u.x *= entity.size.x * scale.x; u.y *= entity.size.x * scale.x;
@@ -6100,6 +6244,8 @@ function draw_bounds(entity, color, recurse) {
         draw_line(B, C, color, z_order);
         draw_line(C, D, color, z_order);
         draw_line(D, A, color, z_order);
+    } else if (is_array(entity.shape) && entity.size) {
+        draw_poly(entity.shape, undefined, color, entity.pos, entity.angle, scale, z_order);
     } else {
         draw_point(pos, color, z_order);
     }
@@ -6426,6 +6572,104 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
 }
 
 
+/* Returns true if (px, py) is inside of the convex polygon defined by the
+ array of 2D vertices. Does not assume a winding direction for the polygon. */
+function $point_in_poly(px, py, vertex) {
+    // Using the winding number algorithm for convex polygons
+    let prevSign = 0;
+
+    for (let i = 0; i < vertex.length; ++i) {
+        // Current vertex (scaled)
+        const ix = vertex[i].x;
+        const iy = vertex[i].y;
+
+        // Next vertex (wrap around)
+        const j = (i + 1) % vertex.length;
+
+        // Edge vector
+        const edgeDX = vertex[j].x - ix;
+        const edgeDY = vertex[j].y - iy;
+
+        // Vector from current vertex to point
+        const dx = px - ix;
+        const dy = py - iy;
+
+        // Determine the sign of the cross product
+        const currSign = Math.sign(edgeDX * dy - edgeDY * dx);
+
+        // Initialize sign on first iteration
+        if ((prevSign === 0) && (currSign !== 0)) {
+            prevSign = currSign;
+        }
+
+        // If the sign changes, then the point is outside the polygon
+        if ((currSign !== 0) && (currSign !== prevSign)) {
+            return false;
+        }
+    }
+
+    // The point is inside the polygon as it was on the same side of 
+    // all convex lines
+    return true;
+}
+
+
+function $ray_intersect_poly(originX, originY, directionX, directionY, vertex, scaleX, scaleY) {
+    // Check if the origin is inside the polygon
+    if ($point_in_poly(originX / scaleX, originY / scaleY, vertex)) {
+        // Origin is inside the polygon; return distance 0
+        return 0;
+    }
+
+    // Initialize minimum distance to Infinity
+    let minDistance = Infinity;
+
+    // Iterate over each edge of the polygon
+    for (let i = 0; i < vertex.length; ++i) {
+        // Current vertex (scaled)
+        const ix = vertices[i].x * scaleX;
+        const iy = vertices[i].y * scaleY;
+
+        // Next vertex (wrap around using modulo)
+        j = (i + 1) % vertexCount;
+        const jx = vertices[j].x * scaleX;
+        const jy = vertices[j].y * scaleY;
+
+        // Edge vector (from i to j)
+        const edgeDX = jx - ix;
+        const edgeDY = jy - iy;
+
+        // Compute the denominator of the parametric equations
+        const denominator = directionX * edgeDY - directionY * edgeDX;
+
+        // Avoid division by very small values to maintain numerical stability
+        if (Math.abs(denominator) < 1e-14) {
+            // Ray and edge are parallel; skip this edge
+            continue;
+        }
+
+        // Compute the parameters along the ray (t) and along the edge (u)
+        const dx = ix - originX;
+        const dy = iy - originY;
+
+        const t = (edgeDX * dy - edgeDY * dx) / denominator;
+        const u = (directionX * dy - directionY * dx) / denominator;
+
+        // t: time to intersection along the ray
+        // u: position along this edge of the intersection (from 0 to 1)
+
+        // Check if intersection occurs along the positive ray direction and on the edge segment
+        if ((t >= 0) && (u >= 0) && (u <= 1) && (t < minDistance)) {
+            minDistance = t;
+        }
+    }
+
+    // Return the minimum distance found, or Infinity if no intersection
+    return minDistance;
+}
+
+
+
 function ray_intersect(ray, obj) {
     let hitObj = undefined;
     if (Array.isArray(obj)) {
@@ -6512,15 +6756,42 @@ function ray_intersect(ray, obj) {
             const testX = (dX >= 0) && ($Math.abs(originY + directionY * dX) < radY);
             const testY = (dY >= 0) && ($Math.abs(originX + directionX * dY) < radX);
 
-            if (testX) {
-                if (dX < ray.length) {
-                    ray.length = dX;
+            if (obj.shape === 'rect') {
+                if (testX) {
+                    if (dX < ray.length) {
+                        // Shorten the ray to the hit point
+                        ray.length = dX;
+                        hitObj = obj;
+                    }
+                } else if (testY && (dY < ray.length)) {
+                    // Shorten the ray to the hit point
+                    ray.length = dY;
                     hitObj = obj;
                 }
-            } else if (testY && (dY < ray.length)) {
-                ray.length = dY;
-                hitObj = obj;
-            }
+            } else { // Polygon
+                if (! is_array(obj.shape)) { $error('Entity/region shape must be disk, rect, or a polygon'); }
+                
+                if ((testX && (dX < ray.length)) ||
+                    (! testX && (testY && (dY < ray.length)))) {
+                    // The ray conservatively hits the bounding box. Now test the
+                    // actual polygon for an intersection.
+                    //
+                    // We have ray with origin (originX, originY) in direction
+                    // (directionX, directionY) that has been rotated and translated
+                    // into the polygon's space but NOT scaled. The ray direction is not
+                    // a unit vector. The ray origin may already be inside the polygon.
+                    // We are testing for intersection against convex polygon obj.shape, 
+                    // where each vertex of the polygon must be scaled by (scaleX, scaleY). 
+
+                    const hitPolyTime = $ray_intersect_poly(originX, originY, directionX, directionY, obj.shape, scaleX, scaleY);
+                    if (hitPolyTime < ray.length) {
+                        // shorten the ray to the hit
+                        ray.length = hitPolyTime;
+                        hitObj = obj;
+                    }
+
+                } // bounding box
+            } 
         }
     }
 
@@ -6532,17 +6803,101 @@ function ray_intersect(ray, obj) {
     return hitObj;
 }
 
+
+function entity_projected_length(entity, vector, recurse = true) {
+    let result = 0;
+    
+    if (recurse && entity.child_array && entity.child_array.length > 0) {
+        for (let child of entity.child_array) {
+            result += entity_projected_length(child, vector);
+        }
+    }
+
+    // Transform the vector into the rotational frame of the entity
+    const C = $Math.cos(entity.angle);
+    const S = $Math.sin(entity.angle) * -rotation_sign();
+    vector = {x: C * vector.x + S * vector.y, y: C * vector.y - S * vector.x};
+
+    const scaleX = entity.scale !== undefined ? entity.scale.x : 1;
+    const scaleY = entity.scale !== undefined ? entity.scale.y : 1;
+    
+    if (entity.size === undefined) {
+        // Do nothing
+        
+    } else if (entity.shape === 'disk') {
+        // Projected length of a disk is the diameter
+        result += $Math.abs(scaleX * entity.size.x);
+    } else if (entity.shape === 'rect') {
+        // Project each edge
+        result += $Math.abs(scaleX * entity.size.x * vector.x) + $Math.abs(scaleY * entity.size.x * vector.y);
+    } else if (is_array(entity.shape)) {
+        // Project each front face (or back face, it doesn't
+        // matter). It would be more efficient to take the vector into
+        // the scaled entity frame, but this implementation is easier
+        // to maintain because it is more straightforward.
+
+        const poly = entity.shape;
+        let prevX = scaleX * poly[poly.length - 1].x;
+        let prevY = scaleY * poly[poly.length - 1].y;
+        for (let i = 0; i < poly.length; ++i) {
+            const curr = poly[i];
+            const currX = scaleX * curr.x;
+            const currY = scaleY * curr.y;
+
+            const edgeX = currX - prevX;
+            const edgeY = currY - prevY;
+
+            // edge dot perp(vector)
+            if (edgeY * vector.x - edgeX * vector.y > 0) {
+                result += $Math.abs(edgeX * vector.x) + $Math.abs(edgeY * vector.y);
+            }
+
+            prevX = currX;
+            prevY = currY;
+        }
+            
+    } else {
+        $error('Unsupported shape: "' + shape + '"');
+    }
+
+    return result;   
+}
+
  
-function entity_area(entity) {
+function entity_area(entity, recurse = true) {
+    let area = 0;
+    
+    if (recurse && entity.child_array && entity.child_array.length > 0) {
+        for (let child of entity.child_array) {
+            area += entity_area(child);
+        }
+    }
+
     const scaleX = entity.scale !== undefined ? entity.scale.x : 1;
     const scaleY = entity.scale !== undefined ? entity.scale.y : 1;
 
     if (entity.size === undefined) {
-        return 0;
+        return area;
     } else if (entity.shape === 'disk') {
-        return $Math.abs($Math.PI * 0.25 * scaleX * scaleY * entity.size.x * entity.size.y);
+        return area + $Math.abs($Math.PI * 0.25 * scaleX * scaleY * entity.size.x * entity.size.y);
+    } else if (entity.shape === 'rect') {
+        return area + $Math.abs(scaleX * scaleY * entity.size.x * entity.size.y);
     } else {
-        return $Math.abs(scaleX * scaleY * entity.size.x * entity.size.y);
+        if (! is_array(entity.shape)) { $error('entity.shape must be rect, disk, or an array of points'); }
+
+        // Walk around the triangle fan, ignoring signs and 
+        // factoring out the 0.5 per triangle
+        let polyArea = 0;
+        for (let i = 1; i < entity.shape.length - 1; ++i) {
+            const A = entity.shape[0];
+            const B = entity.shape[i];
+            const C = entity.shape[i + 1];
+
+            // triangle area = 1/2 (C - A) x (B - A) 
+            polyArea += (C.x - A.x) * (B.y - A.y) - (C.y - A.y) * (B.x - A.x);
+        }
+
+        return area + scaleX * scaleY * 0.5 * $Math.abs(polyArea);
     }
 }
 
@@ -6646,24 +7001,82 @@ function random_within_region(region, recurse, rng) {
         switch (region.shape) {
         case 'disk':
             P = random_within_circle(rng);
+            P.x *= 0.5 * region.size.x; P.y *= 0.5 * region.size.y;
             break;
             
         case 'rect':
             P = random_within_square(rng);
+            P.x *= 0.5 * region.size.x; P.y *= 0.5 * region.size.y;
             break;
             
         case 'point':
             return xy(region.pos);
 
         default:
-            $error('Illegal shape: ' + region.shape);
+            if (is_array(region.shape)) {
+                P = $random_within_poly(region.shape, rng);
+            } else {
+                $error('Illegal shape: ' + region.shape);
+            }
         }
 
-        P.x *= 0.5 * region.size.x; P.y *= 0.5 * region.size.y;
         return transform_es_to_ws(region, P);
 
     } // recurse
 }
+
+
+// Function to compute the area of a triangle
+function $triangle_area(A, B, C) {
+    return Math.abs(A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)) * 0.5;
+}
+
+
+function random_within_tri(A, B, C, rng = random) {
+    const r1 = rng(0, 1);
+    const r2 = rng(0, 1);
+    const sqrtR1 = Math.sqrt(r1);
+
+    const x = (1 - sqrtR1) * A.x + (sqrtR1 * (1 - r2)) * B.x + (sqrtR1 * r2) * C.x;
+    const y = (1 - sqrtR1) * A.y + (sqrtR1 * (1 - r2)) * B.y + (sqrtR1 * r2) * C.y;
+
+    return {x: x, y: y};
+}
+
+
+// Function to generate a random point in a convex polygon
+function $random_within_poly(poly, rng = random) {
+    // Compute the areas of all the triangles formed by the vertices and the first vertex
+    const areas = [];
+    let totalArea = 0;
+
+    for (let i = 1; i < poly.length - 1; ++i) {
+        const area = $triangle_area(poly[0], poly[i], poly[i + 1]);
+        areas.push(area);
+        totalArea += area;
+    }
+
+    // Choose a triangle randomly proportional to its area
+    const targetArea = rng(0, totalArea);
+    let accumulatedArea = 0;
+    let chosenTriangleIndex = 0;
+
+    for (let i = 0; i < areas.length; ++i) {
+        accumulatedArea += areas[i];
+        if (accumulatedArea >= targetArea) {
+            chosenTriangleIndex = i;
+            break;
+        }
+    }
+
+    const A = poly[0];
+    const B = poly[chosenTriangleIndex + 1];
+    const C = poly[chosenTriangleIndex + 2];
+
+    // Generate a random point within the chosen triangle
+    return random_within_tri(A, B, C, rng);
+}
+
 
 function $distanceSquared2D(u, v) { return $square(u.x - v.x) + $square(u.y - v.y); }
 

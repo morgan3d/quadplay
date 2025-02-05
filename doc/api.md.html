@@ -574,15 +574,18 @@ Random Values
   See also `random_gaussian()`, `random_truncated_gaussian2D()`.
 
 `random_on_circle(rng default random)`
-: Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
-  Useful for random directions.
+: Returns a uniformly distributed `xy()` on the perimeter of the
+  circle with center `(0, 0)` with radius 1.  Useful for random
+  directions.
 
 `random_on_square(rng default random)`
-: Uniformly distributed `xy()` on the _perimeter_ of a square from `(-1, -1)` to `(1, 1)`.
+: Uniformly distributed `xy()` on the _perimeter_ of a square from
+  `(-1, -1)` to `(1, 1)`.
 
 `random_within_circle(rng default random)`
-: Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
-  random offsets within a circle. See also `random_on_circle()`
+: Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` 
+  with radius 1. Useful for random offsets within a circle. See
+  also `random_on_circle()`.
 
 `random_within_region(region, recurse default true, rng default random)`
 : Random world space 2D point generated within uniformly within the
@@ -599,7 +602,11 @@ Random Values
 `random_within_square(rng default random)`
 : Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is,
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
-  Analogous to `randomDisk()`.
+  See also `random_within_circle()`.
+
+`random_within_tri(A, B, C, rng default random)`
+: Returns a uniformly distributed `xy()` point within triangle ABC, including potentially
+  on the border.
 
 `random_truncated_gaussian2D(mean, stddev, radius, rng default random)`
 : Returns a Gaussian distributed random point within `radius`
@@ -2290,13 +2297,23 @@ built-in properties in the future: `density` and `friction`.
   `entity_add_child()` is called for each element of this array and
   `entity_update_children()` is automatically invoked after the new entity
   is constructed.
+  
+  If `entity.shape` is a polygon, then the following will occur when the entity 
+  is initialized: 
+    - The polygon vertices will be adjusted so that the center of mass is at (0, 0)
+      in entity space
+    - The pivot will move so that the sprite remains aligned with the original
+      polygon specification
+    - `entity.size` will be recomputed as the tightest centered bounding box
+      on the polygon
 
 
 The basic entity properties and defaults are:
 
 `entity.angle default 0deg`
-: The world space angle from the x-axis to y-axis in radians. See
-  `draw_sprite()`. Defaults to 0. See also `entity.angle_in_parent`
+: The world space angle from the x-axis to y-axis in radians. Angles in <quadplay/>
+  always increase counterclockwise regardless of the up direction. 
+  Defaults to 0deg. See also `draw_sprite()`, `entity.angle_in_parent`,
   and `entity.orient_with_parent`.
 
 `entity.name default "entity"`
@@ -2307,14 +2324,15 @@ The basic entity properties and defaults are:
 : A world space value added to `entity.pos` by `draw_entity()` for placing
   the sprite. Useful for causing the drawn position to temporarily drift from the
   simulated position for effects like shake or blowback after a hit.
-  Defaults to `xy(0, 0)`. _Does not affect bounds for `overlaps()`, physics, or ray
-  intersection._ See also `entity.pivot`.
+  Defaults to `xy(0, 0)`. 
+  _Does not affect bounds for `overlaps()`, physics, or ray intersection._
+  See also `entity.pivot`.
 
 `entity.opacity default 100%`
 : Visibility on the interval 0 to 1. Defaults to 1.
 
 `entity.pivot`
-: Point on the sprite that is mapped to the center of the entity.
+: Entity space point on the sprite that is mapped to the center of the entity.
   Defaults to the pivot from the intial sprite, or `xy(0, 0)` if there
   was no sprite. If you change the `entity.sprite`, then you may want
   to also change the `entity.pivot` at the same time. See also
@@ -2334,18 +2352,28 @@ The basic entity properties and defaults are:
   either axis.
 
 `entity.shape default "rect"`
-: A string that is `"disk"` or `"rect"`. Defaults to `"rect"`. A
-  `"disk"` entity must have scale that is the same in x and y.
+: May be:
+   - `"rect"`
+   - `"disk"`
+   - An array of `xy()` entity-space vertices forming a convex polygon with
+     center of mass at the entity's origin
+  
+  A `"disk"` entity must have `entity.scale` that is the same in x and y.
+  Polygons are slower for many routines.
+  
+  A polygon must still lie within
+  the `entity.size` but is not affected by it directly. For best results,
+  make the size a tight bounding box and keep the center of mass of
+  the polygon at the entity-space origin. Note that `make_entity()` automatically
+  enforces this.
 
 `entity.size`
-: The draw-space `xy()` size of the width and height of the bounding
-  box of the entire object in its own reference frame. The
-  rendered/collision size is `entity.size * |entity.scale|`.  If
+: The _entity space_ `xy()` size of the width and height of the bounding
+  box of the entire object, oriented in its own reference frame. The
+  _world space_ rendered/collision size is `entity.size * |entity.scale|`.  If
   `entity.shape == "disk"`, then the `x` and `y` properties must have the
-  same value. If not specified, size defaults to the sprite's size.
-  The size is in entity space. It does not factor in the scale. Use
-  `entity.size * |entity.scale|` for the rendered and collision size
-  of the entity.
+  same value. If not specified, size defaults to the sprite's size in
+  in entity space. 
 
 `entity.sprite default nil`
 : A sprite from a sprite sheet. Can be `nil`.
@@ -2355,7 +2383,7 @@ The basic entity properties and defaults are:
   if there is a sprite). See `draw_sprite()` for details. Defaults to `nil`.
 
 `entity.z`
-: z-order position (a number). Defaults to zero, unless `entity.pos`
+: z-order position (a number) in world space. Defaults to zero, unless `entity.pos`
   is an `xyz()` value, in which case this is left as `nil` so that the
   `entity.pos.z` value can override. Setting both `entity.pos.z` and
   `entity.z` allows separating the z-order for rendering.
@@ -2617,7 +2645,7 @@ The hierarchy properties are:
 
 `entity.scale_in_parent`
 : `xy()` scale relative to the parent axes for flipping
-  the child if `scaleWithParent` is true, otherwise ignored.
+  the child if `orient_with_parent` is true, otherwise ignored.
 
 `entity.z_in_parent`
 : Scalar z value relative to the parent. There is no way to opt out of this property being
@@ -2636,38 +2664,95 @@ techniques.
 Also see the Intersections section for computing your own collisions and
 intersections.
 
-`entity_apply_force(entity, world_force, world_pos default entity.pos)`
-: Apply world-space `world_force` to `entity` at world-space position `world_pos`,
+`entity_apply_fluid_force(entity, ws_fluid_vel, ρ default 1, A default entity_projected_length(entity, perp(direction(ws_fluid_vel))), c_d default 0.4, es_pos default xy(0, 0), label default "")`
+: Applies force $\vec{F_\mathrm{d}}$ $= \frac{1}{2} \rho ~ ||\Delta \vec{v}||^2 ~ \dfrac{\Delta \vec{v}}{||\Delta \vec{v}||} ~ c_\mathrm{d} ~ A$
+  $= \left(\frac{1}{2} \rho ~ c_\mathrm{d} ~ A ~ ||\Delta \vec{v}||\right) ~ \Delta \vec{v}$,
+  where $\Delta \vec{v}$ is the difference in velocity between the location `es_pos` on the entity
+  and the `ws_fluid_vel`, and:
+
+  - `ρ`: Density of the fluid, using the same units as `entity.density`.
+     For reference, if the default density 1 of an entity corresponds to solid wood
+     in your units system, then water also has density 1, air has density 0.0013,
+     and lava has density 3.
+  - `ws_fluid_vel`: World-space velocity of the fluid exerting the force, or velocity of the
+     fluid through a propellor.
+  - `A`: Cross-sectional length. In 2D this is technically the number of edge pixels exposed
+     to the fluid, however most games are simulating a 3D object represented in 2D, so
+     this is an arbitrary constant.
+  - `c_d`: Drag coefficient of the entity, based on its shape and surface roughness. Typically between zero and 1.
+     For some real-world objects: car ≈ 0.3, truck ≈ 0.6, parachute ≈ 1.4, airfoil ≈ 0.05.
+  - `es_pos`: Entity-space position at which the force is exerted. For a propeller moving fluid,
+    this would be the location of the propeller on the entity. For an object partly
+    immersed in flowing fluid, this is the center of the immersed part. Defaults to the
+    center of mass to exert no torque.
+  - `label`: Title shown on the force when physics debugging is enabled
+
+  Ignores the `entity.spin` except for the movement of `es_point`;
+  does not integrate varying drag forces over the entire object.
+
+  See also the `entity.drag` constant that coarsely simulates energy
+  loss to a surrounding static medium.
+
+  Ensure that a transformation with the same `rotation_sign()`
+  as the transformation that will be used when `physics_simulate()` or
+  `entity_simulate()` is called is in effect so that torques
+  and angular velocities are interpreted with the same sign conventions.
+
+
+`entity_apply_force(entity, ws_force, es_pos default xy(0, 0), label default "")`
+: Apply world-space `ws_force` to `entity` at entity-space position `es_pos`,
   updating both `entity.force` and `entity.torque`. To apply
   a force at the center of mass, you can also directly add to `entity.force`.
   To apply a torque without a net force at the center of mass, directly
   add to `entity.torque`.
 
   Does not support entities with children or pivots.
+  
+  Ensure that a transformation with the same `rotation_sign()` as the
+  transformation that will be used when `physics_simulate()` or
+  `entity_simulate()` is called is in effect so that torques and
+  angular velocities are interpreted with the same sign conventions.
 
-`entity_apply_impulse(entity, world_impulse, world_pos default entity.pos)`
-: Apply world-space `world_impulse` (mass * velocity) to `entity` at world-space position `world_pos`,
-  updating both `entity.vel` and `entity.spin`. To apply
-  a velocity change at the center of mass, you can also directly add to `entity.vel`.
-  To apply angular velicty without a net linear velocity impulse at the center of mass, directly
-  add to `entity.spin`.
+
+`entity_apply_impulse(entity, ws_impulse, es_pos default xy(0, 0))`
+: Apply world-space `ws_impulse` (mass * velocity) to `entity` at
+  entity-space position `es_pos`, updating both `entity.vel` and
+  `entity.spin`. To apply a velocity change at the center of mass, you
+  can also directly add to `entity.vel`.  To apply angular velicty
+  without a net linear velocity impulse at the center of mass,
+  directly add to `entity.spin`.
 
   Does not support entities with children or pivots.
 
-`entity_area(e)`
+  Ensure that a transformation with the same `rotation_sign()`
+  as the transformation that will be used when `physics_simulate()` or
+  `entity_simulate()` is called is in effect so that torques
+  and angular velocities are interpreted with the same sign conventions.
+
+
+`entity_area(e, recurse default true)`
 : Returns the world space area of `e`, which must have `shape`
   and `size` properties and may have a `scale` property.
+  
+  If `recurse` is true and there is a child array, then all of the
+  children's areas are summed as well, however the overlap between
+  children and between children and parent is not discounted, so some
+  area may be double counted.
+  
+  See also `entity_mass()`, `entity_projected_length()`, and
+  `random_within_region()`.
+
 
 `entity_inertia(entity)`
-: Scalar inertia tensor about the center of mass. Equal to
-  `entity_mass(entity) * magnitude(entity.scale * entity.size)² / 12`
-  when `shape` is `"rect"` and `⅛ entity_mass(entity) *
-  (entity.scale.x * entity.size.x)²` when `entity.shape == "disk"`.
+: 2D scalar inertia tensor about the center of mass.
   Has units of mass * pixels^2.
 
-`entity_mass(entity)`
+
+`entity_mass(entity, recurse default true)`
 : Scalar mass equal to `entity_area()` times the `entity.density` `default 1`.
+  If `recurse` is true, adds the mass of children.
   Returns generic mass units.
+
 
 `entity_move(entity, pos default entity.pos, angle default entity.angle)`
 : Instantaneously moves an entity to this position and angle _as if it had
@@ -2678,15 +2763,32 @@ intersections.
   For example, use this function for implementing moving platforms,
   scripted set-piece animations, and elevators.
 
+
+`entity_projected_length(entity, axis, recurse default false)`
+: Computes the length of the region/entity (disk, rect, or poly)
+  projected onto the world-space axis of `xy()` vector `axis`.  If
+  `axis` is normalized, this would be the length of the shadow the
+  entity casts onto the line containing the vector under a distant
+  overhead light. This is the 2D equivalent of cross-sectional area 
+  in 3D.
+
+  If there is a child array and `recurse` is true, then all of the children's projected
+  lengths are summed as well, however the overlap between children and
+  between children and parent is not discounted, so some length may be
+  double counted.
+  
+  See also `entity_area()`.
+
+
 `entity_simulate(entity, t default 1, region default nil, border_behavior default "clamp")`
 : Modifies
   `vel *= 1 - drag; spin *= 1 - drag`.  Then,
   integrates `force/mass` into `vel` into `pos` and `torque/inertia` into `spin` into
   `angle`. Then, resets `force` and `torque` to zero and
-  invokes `entityUpdateChilren()`.
+  invokes `entity_update_children()`.
   
   Finally, if `region` is specified, wraps or clamps the `pos` to that
-  region. The only region shape currently supported is a finite
+  region. The only `region` shape currently supported is a finite
   unrotated, unscaled `"rect"`. The `border_behavior` can be
   `"clamp"` or `"loop"`.
   
@@ -2706,6 +2808,17 @@ intersections.
   already using `physics_simulate()` and the entity is in the
   physics object. Doing so will double-simulate the object.
   
+  Torques and angular velocities are interpreted under the
+  `rotation_sign()` at the time that `entity_simulate()`
+  is invoked, so ensure that when forces and torques are set
+  the sign is the same.
+
+
+`entity_point_vel(entity, es_pos)`
+: Returns the world-space linear velocity of the entity-space point at `es_pos`
+  due to `entity.vel` and `entity.spin`. Uses the current
+  transformation for determining the direction of spin.
+
 
 `make_contact_group()`
 : Creates a unique value for an `entity.contact_group`.
@@ -3012,11 +3125,15 @@ to start colliding with each other.
 
   Unlike `entity_simulate()`, `physics_simulate()` does not simulate z
   velocity or force, however, it preserves those values if they are
-  specified using an `xyz()` `pos`, `vel`, and `force()`.
+  specified using an `xyz()` for `pos`, `vel`, and `force`.
 
   Do not call `entity_simulate()` on objects that are in the
   physics world or they will be double simulated.
   
+  Torques and angular velocities are interpreted under the
+  `rotation_sign()` at the time that `physics_simulate()`
+  is invoked, so ensure that when forces and torques are set
+  the sign is the same.
 
 
 Graphics
@@ -3215,10 +3332,9 @@ to efficiently disable that portion of rendering.
 
 The `nil` value is transparent.
 
-
-Borders are drawn inside shape coordinate boundaries and on top of fills, so a transparent
-border is identical to a border that is the same color as the fill. Shapes include their
-endpoints and borders.
+Borders are drawn inside shape coordinate boundaries and on top of
+fills, so a transparent border is identical to a border that is the
+same color as the fill. Shapes include their endpoints and borders.
 
 
 ### Drawing

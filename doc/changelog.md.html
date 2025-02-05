@@ -6,7 +6,7 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
-2025 January TBD
+2025 February TBD
 ===================================
 - Added `convex_hull()`
 - Added `linstep()`
@@ -17,24 +17,41 @@ of [<quadplay/>](manual.md.html).
 - Added support compressing PNGs on macOS with ImageOptim and on Windows with PNGGauntlet
 - Added support for Visual Studio 2022 and Krita on Windows
 - Added external editor support for .md, .html, .txt documents
+- Regions and entities may now have `entity.shape` as a convex polygon specified
+  as an array of `xy()` values. Updated `entity.shape`, `entity.size`, `make_entity()`, `ray_intersect()`
+  `draw_bounds()`, `random_within_region()`, `entity_area()`, `entity_intertia()`,
+  `entity_mass()` to support this implementation.
+- Added `entity_apply_fluid_force()`
 - Added `sounds/shoot-14.sound.json`
 - Added `device_control("get_analog_triggers", ...)` support for directly reading analog
   triggers on game controllers that have analog triggers
-- added `device_control("rumble", ...)` support for game controllers that have haptics
+- Added `device_control("rumble", ...)` support for game controllers that have haptics
+- Added `random_within_tri()`
+- Added `entity_projected_length()`
+- Added `entity_point_vel()`
+- Changed `entity_apply_force()` and `entity_apply_impulse()` to specify the position at 
+  which they act in entity space
+- Sleeping physics objects now maintain contacts
 - Made `unparse()` pretty-print output by recognizing common objects such as `xy()` and 
   common conventions such as angles and fractions
 - Sprite editor now shows the current pixel position and pixel value
+- Enabling the Tools / Show Physics menu option now also visualizes forces (experimental)
+- Enabling the Tools / Show Entity Bounds menu option now also shows entity names
 - Explicit zoom slider for sprite editor
 - Fixed `sequence()` `begin_callback` and `end_callback` not running if `callback` was not
   also specified
 - Fixed external application launching on Windows
+- Fixed `physics_simulate()` to call `entity_update_children()` as previously specified
+- Fixed negated torques in `entity_apply_force()`
 - Rewrote the coordinate systems section of the manual and added
   a coordinate system example program
 - Reorganized the manual to document spritesheet properties and group
   sprite functions
 - Reduced help system loading time significantly by only loading the quadplay API
   and not the full manual
+- Renamed `scripts/particle.pyxl` to `scripts/particle_lib.pyxl`
 - Upgraded to ace.js 1.37.1
+- Upgraded to matter.js 0.20.0
 
 
 2025 January 1

@@ -5,7 +5,7 @@
     "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
     "packages": [],
     "scripts": [
-        "quad://scripts/particle.pyxl",
+        "quad://scripts/particle_lib.pyxl",
         "quad://scripts/platformer_lib.pyxl"
     ],
     "modes": [

@@ -10,6 +10,7 @@ function entity_inertia(entity, mass) {
     // Inertia tensor about the center (https://en.wikipedia.org/wiki/List_of_moments_of_inertia)
     // rect: 1/12 * m * (w^2 + h^2)
     // disk: m * (w/2)^2
+    // polygon: m/6 * (sum ||P_(i+1) x P_i|| * (P_i dot P_i + P_i dot P_(i+1) + P_(i+1) dot P_(i+1))) / (sum ||P_(i+1) x P_i||)
     if (mass === undefined) { mass = entity_mass(entity); }
 
     if (mass === 0) { $error('entity.mass == 0 while computing moment of inertia'); }
@@ -20,14 +21,44 @@ function entity_inertia(entity, mass) {
     
     if (entity.shape === 'rect') {
         return mass * ($square(entity.size.x * scaleX) + $square(entity.size.y * scaleY)) * (1 / 12);
-    } else {
+    } else if (entity.shape === 'disk'){
         return mass * $square(entity.size.x * scaleX * 0.5);
+    } else {
+        // Polygon case. Assume the polygon is centered at the object space origin.
+        const numerator = 0;
+        const denominator = 0;
+        const scaleX2 = scaleX * scaleX;
+        const scaleY2 = scaleY * scaleY;
+        for (let i = 0; i < entity.shape.length; ++i) {
+            // P_i
+            const A = entity.shape[i];
+
+            // P_(i+1)
+            const B = entity.shape[(i + 1) % entity.shape.length];
+
+            // ||P_(i+1) x P_i||
+            const k = Math.abs(A.x * B.y - A.y * B.x) * scaleX * scaleY;
+
+            // k * (P_i dot P_i + P_i dot P_(i+1) + P_(i+1) dot P_(i+1))) 
+            numerator += k * (A.x * A.x * scaleX2 + A.y * A.y * scaleY2  +  A.x * B.x * scaleX2 + A.y * B.y * scaleY2 +  B.x * B.x * scaleX2 + B.y * B.y * scaleY2);
+            denominator += k;
+        }
+
+        return (mass * numerator) / (6 * denominator);
     }
 }
 
 
-function entity_mass(entity) {
-    return entity_area(entity) * ((entity.density !== undefined) ? entity.density : 1);
+function entity_mass(entity, recurse = true) {
+    let m = entity_area(entity, false) * ((entity.density !== undefined) ? entity.density : 1);
+    
+    if (recurse && entity.child_array && entity.child_array.length > 0) {
+        for (let child of entity.child_array) {
+            m += entity_mass(child);
+        }
+    }
+    
+    return m;
 }
 
 
@@ -95,17 +126,66 @@ function entity_simulate(entity, dt, region, border_behavior) {
 }
 
 
-function entity_apply_force(entity, worldForce, worldPos) {
-    worldPos = worldPos || entity.pos;
+function entity_apply_force(entity, worldForce, es_pos, label = "") {
+    const worldPos = es_pos ? transform_es_to_ws(entity, es_pos) : entity.pos;
     entity.force.x += worldForce.x;
     entity.force.y += worldForce.y;
     const offsetX = worldPos.x - entity.pos.x;
     const offsetY = worldPos.y - entity.pos.y;
-    entity.torque += -rotation_sign() * (offsetX * worldForce.y - offsetY * worldForce.x);
+    entity.torque += rotation_sign() * (offsetX * worldForce.y - offsetY * worldForce.x);
+
+    if ($showPhysicsEnabled && entity.$body) {
+        entity.$physicsVisualization.force_array.push({label: label, pos: xy(worldPos), force: xy(worldForce)});
+    }
 }
 
 
-function entity_apply_impulse(entity, worldImpulse, worldPos) {
+function entity_point_vel(entity, es_pos) {
+    const ws_point_vel = {x: entity.vel.x, y: entity.vel.y};
+
+    const ws_pos = transform_es_to_ws(entity, es_pos);
+
+    if (entity.spin !== 0 && (es_pos.x !== 0 || es_pos.y !== 0)) {
+        // Apply the spin velocity perpendicular to the offset vector.
+        // This is perp(delta)/||delta|| * ||delta|| * entity.spin * sign, so the
+        // lengths cancel and we can expand out the perp.
+        const s = rotation_sign() * entity.spin;
+        ws_point_vel.x -= (ws_pos.y - entity.pos.y) * s;
+        ws_point_vel.y += (ws_pos.x - entity.pos.x) * s;
+    }
+
+    return ws_point_vel;
+}
+
+
+function entity_apply_fluid_force(entity, ws_fluid_vel, fluid_density, A, c_d, es_pos, debug_caption = "") {
+    if (fluid_density === undefined) { fluid_density = 1; }
+    if (A === undefined) { A = entity_projected_length(entity, perp(direction(ws_fluid_vel))); }
+    if (c_d === undefined) { c_d = 0.3; }
+    if (es_pos === undefined) { es_pos = {x: 0, y: 0}; }
+
+    if (is_NaN(A)) { $error('NaN area A in entity_apply_fluid_force()'); }
+
+    const ws_point_vel = entity_point_vel(entity, es_pos)
+
+    const delta_vel = {x: ws_fluid_vel.x - ws_point_vel.x,
+                       y: ws_fluid_vel.y - ws_point_vel.y};
+
+    // https://en.wikipedia.org/wiki/Drag_equation
+    //
+    // F_d = 0.5 * fluid_density * magnitude(delta_vel)^2 * direction(delta_vel) * A * c_d
+    // F_d = magnitude(delta_vel) * delta_vel * 0.5 * fluid_density * A * c_d
+
+    const k = A * c_d * 0.5 * magnitude(delta_vel);
+    const F_d = {x: delta_vel.x * k, y: delta_vel.y * k};
+
+    entity_apply_force(entity, F_d, es_pos, debug_caption);
+}
+
+
+function entity_apply_impulse(entity, worldImpulse, es_pos) {
+    const worldPos = es_pos ? transform_es_to_ws(entity, es_pos) : entity.pos;
+
     worldPos = worldPos || entity.pos;
     const invMass = 1 / entity_mass(entity);
     entity.vel.x += worldImpulse.x * invMass;
@@ -129,11 +209,10 @@ function entity_move(entity, pos, angle) {
       
     if (angle !== undefined) {
         // Rotate the short way
-        entity.spin = loop(angle - entity.angle, -PI, $Math.PI);
+        entity.spin = loop(angle - entity.angle, -$Math.PI, $Math.PI);
         entity.angle = angle;
     }
 }
-
 
 
 function make_contact_group() {
@@ -154,20 +233,20 @@ var $PHYSICS_MASS_INV_SCALE = Math.pow(2,  10);
 var $physicsContextIndex = 0;
 
 function $physicsUpdateContact(physics, contact, pair) {
-    const activeContacts = pair.activeContacts;
+    const contacts = pair.contacts;
     
     contact.normal.x = pair.collision.normal.x;
     contact.normal.y = pair.collision.normal.y;
-    contact.point0.x = activeContacts[0].vertex.x;
-    contact.point0.y = activeContacts[0].vertex.y;
+    contact.point0.x = contacts[0].vertex.x;
+    contact.point0.y = contacts[0].vertex.y;
 
     // For debugging contacts
     // $console.log(" update: ", contact.point0.x);
     
-    if (activeContacts.length > 1) {
+    if (contacts.length > 1 && contacts[1].vertex) {
         if (! contact.point1) { contact.point1 = {}; }
-        contact.point1.x = activeContacts[1].vertex.x;
-        contact.point1.y = activeContacts[1].vertex.y;
+        contact.point1.x = contacts[1].vertex.x;
+        contact.point1.y = contacts[1].vertex.y;
     } else {
         contact.point1 = undefined;
     }
@@ -237,7 +316,7 @@ function make_physics(options) {
         const pairs = event.pairs;
         for (let i = 0; i < pairs.length; ++i) {
             const pair = pairs[i];
-            const activeContacts = pair.activeContacts;
+            const contacts = pair.contacts;
 
             // Create the map entries if they do not already exist
             let mapA = physics.$entityContactMap.get(pair.bodyA);
@@ -256,8 +335,8 @@ function make_physics(options) {
                     entityA: pair.bodyA.entity,
                     entityB: pair.bodyB.entity,
                     normal:  {x: pair.collision.normal.x, y: pair.collision.normal.y},
-                    point0:  {x: activeContacts[0].vertex.x, y: activeContacts[0].vertex.y},
-                    point1:  (activeContacts.length === 1) ? undefined : {x: activeContacts[1].vertex.x, y: activeContacts[1].vertex.y},
+                    point0:  {x: contacts[0].vertex.x, y: contacts[0].vertex.y},
+                    point1:  (contacts.length === 1 || ! contacts[1].vertex) ? undefined : {x: contacts[1].vertex.x, y: contacts[1].vertex.y},
                     depth:   pair.collision.depth
                 }
 
@@ -354,6 +433,9 @@ function physics_add_entity(physics, entity) {
 
     push(physics.$entityArray, entity);
     const engine = physics.$engine;
+
+    // Create or reset
+    entity.$physicsVisualization = {force_array: []};
    
     const params = {isStatic: entity.density === Infinity};
 
@@ -367,7 +449,31 @@ function physics_add_entity(physics, entity) {
         break;
 
     default:
-        $error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
+        if (is_array(entity.shape)) {
+            // Polygon
+            const vertex_array = [];
+            for (const v of entity.shape) {
+                vertex_array.push({x: v.x * entity.scale.x, y: v.y * entity.scale.y});
+            }
+            entity.$body = $Physics.Bodies.fromVertices(entity.pos.x, entity.pos.y, [vertex_array]);
+
+            /*
+              Note from Matter.js docs:
+              
+              "The resulting vertices are reorientated about their
+              centre of mass, and offset such that body.position
+              corresponds to this point.  The resulting offset may
+              be found if needed by subtracting body.bounds from the
+              original input bounds. To later move the centre of
+              mass see Body.setCentre."
+
+              entity.shape polygons are defined to have the center of
+              mass at the origin to conform to this.              
+            */
+
+        } else {
+            $error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
+        }
     }
 
     entity.$body.collisionFilter.group = -entity.contact_group;
@@ -601,6 +707,10 @@ function physics_simulate(physics, stepFrames) {
      
     physics.$newContactArray = [];
 
+    if ($showPhysicsEnabled) {
+        draw_physics(physics);
+    }
+
     const bodies = $Physics.Composite.allBodies(engine.world);
     for (let b = 0; b < bodies.length; ++b) {
         const body = bodies[b];
@@ -647,9 +757,13 @@ function physics_simulate(physics, stepFrames) {
    
     for (let b = 0; b < bodies.length; ++b) {
         const body = bodies[b];
-        // Some bodies are created internally within the physics system
-        // and have no corresponding entity.
-        if (body.entity) { $entityUpdateFromBody(body.entity); }
+        // Some bodies are created internally within the physics
+        // system and have no corresponding entity. For the others,
+        // update the quadplay variables from the matter.js variables.
+        if (body.entity) {
+            $entityUpdateFromBody(body.entity);
+            entity_update_children(body.entity);
+        }
     }
 
     // Remove old contacts that were never reestablished.
@@ -674,10 +788,6 @@ function physics_simulate(physics, stepFrames) {
             const mapB = physics.$entityContactMap.get(bodyB);
             if (mapB) { mapB.delete(bodyA); }
         }
-    }
-
-    if ($showPhysicsEnabled) {
-        draw_physics(physics);
     }
 
     // Fire event handlers for new contacts
@@ -1168,21 +1278,25 @@ function physics_attach(physics, type, param) {
     
     return Object.freeze(attachment);
 }
-      
-      
+
+
 function draw_physics(physics) {
-    const showSecrets = false;
-    const awakeColor   = rgb(0.10, 1.0, 0.5);
-    const sleepColor   = rgb(0.05, 0.6, 0.3);
-    const staticColor  = gray(0.8);
-    const contactColor = rgb(1, 0.93, 0);
-    const sensorColor      = rgb(0.3, 0.7, 1);
+    const showSecrets     = false;
+    const awakeColor      = rgb(0.10, 1.0, 0.5);
+    const sleepColor      = rgb(0.05, 0.6, 0.3);
+    const staticColor     = gray(0.8);
+    const contactColor    = rgb(1, 0.93, 0);
+    const sensorColor     = rgb(0.3, 0.7, 1);
     const newContactColor = rgb(1, 0, 0);
     const constraintColor = rgb(0.7, 0.5, 1);
-    const secretColor  = rgb(1, 0, 0);
-    const zOffset = 0.01;
+    const secretColor     = rgb(1, 0, 0);
+    const zOffset         = 0.01;
 
-    const engine       = physics.$engine;
+    const netForceColor   = {r: 1.0, g: 1.0, b: 0.0};
+    const forceColor      = {r: 0.9, g: 0.9, b: 0.9};
+    const shadowColor     = {r: 0.0, g: 0.0, b: 0.0, a: 0.5};
+    
+    const engine          = physics.$engine;
     
     const bodies = $Physics.Composite.allBodies(engine.world);
     for (let b = 0; b < bodies.length; ++b) {
@@ -1195,8 +1309,9 @@ function draw_physics(physics) {
                 (body.isStatic ? staticColor :
                  (body.isSleeping ? sleepColor :
                   awakeColor))));
-        
+
         const z = body.entity ? body.entity.z + zOffset : 100;
+
         for (let p = 0; p < body.parts.length; ++p) {
             const part = body.parts[p];
             const C = $Math.cos(part.angle);
@@ -1222,8 +1337,36 @@ function draw_physics(physics) {
             const axis = xy(r * C, r * S);
             draw_line($objectSub(part.position, axis), $objectAdd(part.position, axis), color, z);
             let temp = axis.x; axis.x = -axis.y; axis.y = temp;
-            draw_line($objectSub(part.position, axis), $objectAdd(part.position, axis), color, z);
+            draw_line($objectSub(part.position, axis), $objectAdd(part.position, axis), color, z);          
         }
+
+        if (body.entity) {
+            // Visualize individual forces and then erase the debugging data
+            const scale = 1 / $zoom(z);
+            // TODO: compute a good scale by looking at all forces in recent history
+            const forceScale = 700 * scale;
+            const torqueScale = 0.2;
+
+            for (let vis of body.entity.$physicsVisualization.force_array) {                
+                // Skip zero forces
+                if ($Math.hypot(vis.force.x, vis.force.y) < 0.0001) { continue; }
+
+                $debug_draw_arrow(vis.pos, vis.force, "F", vis.label, forceColor, shadowColor, z, forceScale);
+                
+            } // for each force
+
+            body.entity.$physicsVisualization.force_array.length = 0;
+
+            // Visualize net force and torque
+            if (XY_MAGNITUDE(body.entity.force) > 0.00001) { 
+                $debug_draw_arrow(body.entity.pos, body.entity.force, "F", "NET", netForceColor, shadowColor, z, forceScale);
+            }
+            
+            if ($Math.abs(body.entity.torque) > 0.00001) {
+                $debug_draw_arrow_arc(body.entity.pos, body.entity.angle, body.entity.angle + body.entity.torque * torqueScale, "τ", "NET", netForceColor, shadowColor, z, 0.5 * max_component($objectMul(body.entity.size, body.entity.scale)));
+            }
+        } // if entity
+        
     } // bodies
 
     const weldTri = [xy(0, 5), xy(4.330127018922194, -2.5), xy(-4.330127018922194, -2.5)];
