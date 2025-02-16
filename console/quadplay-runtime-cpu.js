@@ -6839,6 +6839,7 @@ function entity_projected_length(entity, vector, recurse = true) {
         const poly = entity.shape;
         let prevX = scaleX * poly[poly.length - 1].x;
         let prevY = scaleY * poly[poly.length - 1].y;
+        console.log('---------------------------');
         for (let i = 0; i < poly.length; ++i) {
             const curr = poly[i];
             const currX = scaleX * curr.x;
@@ -6847,10 +6848,11 @@ function entity_projected_length(entity, vector, recurse = true) {
             const edgeX = currX - prevX;
             const edgeY = currY - prevY;
 
-            // edge dot perp(vector)
-            if (edgeY * vector.x - edgeX * vector.y > 0) {
-                result += $Math.abs(edgeX * vector.x) + $Math.abs(edgeY * vector.y);
-            }
+            console.log(edgeX, edgeY, $Math.max(edgeX * vector.x + edgeY * vector.y, 0));
+            // edge dot perp(vector). Only consider the positive
+            // projected lengths; half of the projected length will be
+            // on the negative side
+            result += $Math.max(edgeX * vector.x + edgeY * vector.y, 0);
 
             prevX = currX;
             prevY = currY;

@@ -1228,7 +1228,7 @@ function pyxlToJS(src, noYield, internalMode) {
     // Numbers ending in degrees. Does not distinguish variables ending
     // in a number from standalone number tokens. Process AFTER implicit multiplication so that the inserted
     // parentheses do not disable multiplication
-    src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])°/g, '($1 * .017453292519943295)');
+    src = src.replace(/(\d+|\d+\.\d*|\d*\.\d+|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])°/g, '($1 * .017453292519943295)');
 
     // Replace fractions after implicit multiplication, so that the parentheses do not 
     // confuse it. Do this AFTER degrees and percentages, so that we can have fractional ones

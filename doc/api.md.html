@@ -3021,6 +3021,12 @@ to start colliding with each other.
   in the physics system until `physics_remove_entity()` is called.
   Use the `draw_physics()` command or IDE button to debug physics objects
   that correspond to entities which are no longer being drawn.
+  
+  For efficiency, the `entity.size` and `entity.shape` properties are
+  locked at the time that the entity is added to the physics
+  context. If you need to change these properties, remove the entity
+  from the physics context, change them, and then add it back. Other
+  properties may be changed freely every frame.
 
 `physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide default ∅, ...})`
 : Attaches two entities to each other or `entityB` to the
