@@ -1,7 +1,7 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-let θ  = xy(-15°, -10°)
+let θ  = xy(-15°, +40°)
 let Δθ = xy(0°, 0°)
 
 
@@ -14,6 +14,13 @@ transformed_array.extrapolate = "loop"
 for v in mesh.vertex_array:
     v *= 0.052
     push(transformed_array, xyz(0, 0, 0))
+
+
+/* Transform src by mat, project to 2D,
+   and return in dst.xyz. */
+def transform_3D(mat, src, dst):
+    MAT3x3_MATMUL_XYZ(mat, src, dst)
+    XY_MUL(dst, 1.002^dst.z, dst)
 
 
 frame

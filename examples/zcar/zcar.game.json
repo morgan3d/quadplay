@@ -6,7 +6,7 @@
     "packages": [],
     "scripts": [
         "quad-car.pyxl",
-        "transformations.pyxl"
+        "quad://scripts/mat3x3_lib.pyxl"
     ],
     "modes": [
         "Play"
