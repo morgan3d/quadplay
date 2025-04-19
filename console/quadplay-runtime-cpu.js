@@ -6035,7 +6035,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     let scaleX = 1, scaleY = 1;
     if ((scale !== 0) && (typeof scale === 'number')) {
         scaleX = scaleY = scale;
-    } if (scale && scale.x && scale.y) {
+    } else if (scale && scale.x && scale.y) {
         scaleX = scale.x;
         scaleY = scale.y;
     }

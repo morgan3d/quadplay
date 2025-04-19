@@ -47,7 +47,10 @@ function updateProgramDocumentation() {
                 // mdSource += `## ${scriptName} API\n`;
             }
         }
-        
+
+        // Remove Windows newlines
+        pyxlCode = pyxlCode.replaceAll('\r', '');
+
         // Maps names to entries
         const publicTable = {};
         const privateTable = {};
@@ -62,7 +65,7 @@ function updateProgramDocumentation() {
             const api = proto.replace(/\(.*$/, '');
 
             documentationProgramAPIOverloads[api] =
-                    (documentationBuiltInAPIOverloads[api] || 0) + 1;
+                    (documentationProgramAPIOverloads[api] || 0) + 1;
 
             //console.log('Found', api);
             let doc = (match[1] || '').trim();
@@ -108,9 +111,14 @@ body {left:8px}
 <!-- Markdeep: --><script src="${docPath}markdeep.min.js" charset="utf-8"></script>`;
 
     const iframe = document.getElementById('programAPI');
+
+    // Don't trigger update if it isn't changing!
     if (mdSource !== iframe.srcdoc) {
-        // Don't trigger update if it isn't changing!
+        const oldPos = iframe.contentWindow.scrollY;
         iframe.srcdoc = mdSource;
+        setTimeout(function () {
+            iframe.contentWindow.scrollTo(0, oldPos);
+        }, 250);
     }
 }
 
@@ -130,7 +138,12 @@ if (useIDE) {
         // as a separate iframe load below. The browser should cache
         // the html, however.
         LoadManager.fetchOne({}, quadplayAPIURL, 'text', null, function (text) {
+            console.log("Parsing quadplay API for help system");
             // Look for function call definitions in the manual
+            
+            // Replace windows newlines
+            text = text.replaceAll('\r', '');
+
             const matchIterator = text.matchAll(/`([A-Za-z_][A-Za-z0-9_]*)\(.*\)`[ \t]*\n:/g);
             for (let match of matchIterator) {
                 const api = match[1];
@@ -220,7 +233,6 @@ function showDocumentation(api, type) {
         if (numOverloads) {
             const iframe = document.getElementById(source.iframeName);
             const hash = `apiDefinition-${api}-fcn`;
-
             if (iframe.contentWindow.location.hash !== hash) {
                 iframe.contentWindow.location.hash = `apiDefinition-${api}-fcn`;
                 document.getElementById('manualTab').checked = true;
