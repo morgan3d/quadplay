@@ -106,15 +106,18 @@ def lint_game(game_name=None, license_audit=False, verbose=False):
     if not game_name:
         game_name = os.path.basename(os.getcwd())
         if verbose:
-            print("detected game: {}".format(game_name))
+            print(f"detected game: {game_name}")
 
     if game_name.endswith(".game.json"):
         game_json_path = game_name
     else:
-        game_json_path = "{}.game.json".format(game_name)
+        game_json_path = f"{game_name}.game.json"
 
     if not os.path.exists(game_json_path):
-        raise RuntimeError("No such game.json: {}".format(game_json_path))
+        raise RuntimeError(
+            f"No such game.json: {game_json_path}.  Linter expects to run in "
+            "the same directory as the game.json for the project to lint."
+        )
 
     with open(game_json_path, encoding="utf-8", errors="replace") as fi:
         game_data = json.loads(fi.read())
@@ -143,7 +146,7 @@ def lint_game(game_name=None, license_audit=False, verbose=False):
 
     # unused things
     for bucket in KEYS_TO_APPEAR_IN_FILES:
-        for ind, key in enumerate(game_data[bucket].keys()):
+        for _, key in enumerate(game_data[bucket].keys()):
             if key not in all_text:
                 report.setdefault(
                     "unused_stuff",

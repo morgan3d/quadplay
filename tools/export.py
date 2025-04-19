@@ -135,6 +135,8 @@ def export(args):
       # by python when tempdir goes out of scope at the end of export()
       tempdir = tempfile.TemporaryDirectory()
       out_path = tempdir.name
+   else:
+       tempdir = None
    
    # Will be read from the JSON file
    game_title = ''
