@@ -1544,7 +1544,13 @@ function updateTodoList() {
 
 
 /** Lines and characters are 1-based. Silently ignored if the 
-    url does not correspond to a script or mode in the project.  */
+    url does not correspond to a script or mode in the project.  
+    
+    - `url`: The URL of the file to load
+    - `line`: The line number to go to (1-based)
+    - `character`: The character position to go to (1-based, defaults to 1)
+    - `highlight`: Whether to highlight the line (optional, defaults to false)
+    */
 function editorGotoFileLine(url, line, character, highlight) {
     if (character === undefined) { character = 1; }
 

@@ -1,5 +1,7 @@
 "use strict";
-/** Called from visualizeModes(). Attempts to resolve intersections if
+/** Called from visualizeModes(). 
+ 
+    Attempts to resolve intersections if
     these arrays of points cross each other. Treats them as polylines
     for simpler intersection determination even though we actually
     render using quadratic beziers. These could be subdivided if more
@@ -58,7 +60,35 @@ function linesIntersect(A, C, B, D) {
     return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
 }
 
+/** Convert a source location (url and line number) to a mode graph edge ID */
+function sourceLocationToModeGraphEdgeId(url, lineNumber) {
+    return (!url) ?
+        'mode_graph_edge_start' :
+        `mode_graph_edge_${url.replace(/[^A-Za-z0-9_\-\.]/g, '_')}_${lineNumber}`;
+}
 
+/** Convert a mode name to a mode graph mode ID */
+function modeNameToModeGraphModeId(modeName) {
+    return `mode_graph_mode_${modeName.replace(/[^A-Za-z0-9_\-\.]/g, '_')}`;
+}
+
+/** Generates an SVG visualization of the game's mode graph.
+
+Key assumptions:
+- gameSource.modes contains all game modes with their names and URLs
+- gameSource.json.start_mode is set to a valid mode name
+- fileContents contains the source code for all modes
+- dagre library is loaded
+
+Global state dependencies:
+- Reads: gameSource, fileContents
+- Writes: modeEditor.innerHTML
+- May call: setErrorStatus() if start mode is missing or invalid mode references found
+
+The visualization uses a color scheme based on node position in the graph,
+with special handling for the 'Play' mode node. Edge colors are inherited
+from their source nodes.
+*/
 function visualizeModes(modeEditor) {
     // dagre API: https://github.com/dagrejs/graphlib/wiki/API-Reference#graph-api
     
@@ -70,7 +100,7 @@ function visualizeModes(modeEditor) {
             return '#fff';
         }
         
-        const x = Math.min(1, Math.max(0, 1.5 * node.x / graph._label.width - 0.25));
+        const x = Math.min(1, Math.max(0, 1.6 * node.x / graph._label.width - 0.27));
         const y = Math.min(1, Math.max(0, 1.5 * node.y / graph._label.height - 0.25));
 
         // Use a Red-Cyan-Yellow color wheel
@@ -135,47 +165,78 @@ function visualizeModes(modeEditor) {
         const code = fileContents[mode.url];
 
         const edgeArray = nodeTable[name].edgeArray;
-        for (let match = setModeRegexp.exec(code); match; match = setModeRegexp.exec(code)) {
+        for (let match = setModeRegexp.exec(code), lineNumber = 1, lastIndex = 0; 
+            match;
+            match = setModeRegexp.exec(code)) {
+            
+            // Count newlines between last match and current match so that we can assign a line number
+            lineNumber += (code.slice(lastIndex, match.index).match(/\n/g) || []).length;
+            lastIndex = match.index;
+
             const to = nodeTable[match[2]];
             if (to) {
-                edgeArray.push({to:to, label:match[3], type:match[1]});
+                edgeArray.push({to: to, label: match[3], type: match[1], url: mode.url, lineNumber: lineNumber});
             } else {
                 setErrorStatus(mode.url + ': set_mode to nonexistent mode ' + match[2]);
                 return;
             }
         } // for each set_mode statement
 
+        // Don't bother using efficient line number 
         for (let match = reset_gameRegexp.exec(code); match; match = reset_gameRegexp.exec(code)) {
-            edgeArray.push({to:startNode, label:match[1], type:'reset_game'});
+            edgeArray.push({to: startNode, label: match[1], type: 'reset_game', url: mode.url, lineNumber: code.substring(0, match.index).split('\n').length});
         } // for each set_mode statement
     } // for each mode
 
     //////////////////////////////////////////////////////////////////////////////////////
     // Convert to the layout API
     const graph = new dagre.graphlib.Graph({directed:true, multigraph:true});
-    const nodeWidth = 112, nodeHeight = 28;
-    graph.setGraph({rankdir: 'LR'});
+    const nodeWidth = 120, nodeHeight = 28;
+    // https://github.com/dagrejs/dagre/wiki#configuring-the-layout
+    graph.setGraph({rankdir: 'TB', ranksep: 70});
     graph.setDefaultEdgeLabel(function() { return {}; });
+
+    // Add the $START node
+    graph.setNode('$START', {
+        label: '$START',
+        width: nodeWidth,
+        height: nodeHeight,
+        isStart: true
+    });
 
     let edgeId = 0;
     for (let n = 0; n < nodeArray.length; ++n) {
         const node = nodeArray[n];
         // Make the play node a little larger than the others
-        const s = node.label === 'Play' ? 1.3 : 1;
+        const scale = (node.label === 'Play') ? 1.3 : 1.0;
         graph.setNode(node.name,
                       {label:    node.label,
-                       width:    s * nodeWidth,
-                       height:   s * nodeHeight,
-                       isStart:  node.isStart});
+                       width:    scale * nodeWidth,
+                       height:   scale * nodeHeight,
+                       isStart:  node.isStart,
+                       mode:     gameSource.modes.find(mode => mode.name === node.label)});
+
+        // Add edge from $START to the start mode
+        if (node.isStart) {
+            graph.setEdge('$START', node.name,
+                {label: '',
+                 width: 20,
+                 height: 10,
+                 labelpos: 'c'
+                }, 'edge' + edgeId);
+            ++edgeId;
+        }
 
         for (let e = 0; e < node.edgeArray.length; ++e) {
             const edge = node.edgeArray[e];
             graph.setEdge(node.name, edge.to.name,
                           {label:     edge.label,
-                           width:     edge.label ? edge.label.length * 3.5 : 0,
-                           height:    8,
-                           labelpos: 'c',
-                           bidir:    (edge.type === 'push_mode')
+                           width:     edge.label ? edge.label.length * 5 : 0,
+                           height:    10,
+                           labelpos:  'c',
+                           bidir:     (edge.type === 'push_mode'),
+                           url:       edge.url,
+                           lineNumber:edge.lineNumber
                           }, 'edge' + edgeId);
             ++edgeId;
         }
@@ -192,6 +253,20 @@ function visualizeModes(modeEditor) {
 <feDropShadow dx="0" dy="0" stdDeviation="1" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
 <feDropShadow dx="0" dy="0" stdDeviation="1" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
 <feDropShadow dx="0" dy="0" stdDeviation="2" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
+</filter>
+
+<filter id="whiteglow" filterUnits="userSpaceOnUse" x="-50%" y="-50%" width="200%" height="200%">
+  <feFlood flood-color="white" flood-opacity="5" result="white"/>
+  <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur"/>
+  <feComposite in="white" in2="blur" operator="in" result="whiteBlur"/>
+  <feComposite in="SourceGraphic" in2="whiteBlur" operator="over"/>
+</filter>
+
+<filter id="whiteglow-edge" filterUnits="userSpaceOnUse" x="-50%" y="-50%" width="200%" height="200%">
+  <feFlood flood-color="white" flood-opacity="5" result="white"/>
+  <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+  <feComposite in="white" in2="blur" operator="in" result="whiteBlur"/>
+  <feComposite in="SourceGraphic" in2="whiteBlur" operator="over"/>
 </filter>
 </defs>`
 
@@ -217,9 +292,13 @@ function visualizeModes(modeEditor) {
     let i = 0;
     graph.edges().forEach(function(e) {
         const edge = graph.edge(e);
-
-        // Inherit color from the start node
-        edge.color = nodeToHTMLColor(graph.node(e.v));
+        svg += `<g class="edge" id="${sourceLocationToModeGraphEdgeId(edge.url, edge.lineNumber)}"`;
+        if (edge.url) {
+            svg += ` onclick="editorGotoFileLine('${edge.url}', ${edge.lineNumber})"`;
+        }
+        svg += '>';
+        // Inherit color from the start node, or use gray for start edge
+        edge.color = (! edge.url) ? '#888' : nodeToHTMLColor(graph.node(e.v));
         edge.endColor = nodeToHTMLColor(graph.node(e.w));
         const points = edge.points;
         
@@ -263,7 +342,7 @@ function visualizeModes(modeEditor) {
   </defs>`;
         }
 
-        svg += `<path class="edge" stroke="${edge.bidir ? 'url(#gradient' + i + ')' : edge.color}" marker-end="url(#arrowhead${i})" `;
+        svg += `<path class="edgeLine" stroke="${edge.bidir ? 'url(#gradient' + i + ')' : edge.color}" marker-end="url(#arrowhead${i})" `;
         if (tooSmall) {
             svg += 'style="filter:none" ';
         }
@@ -297,29 +376,73 @@ function visualizeModes(modeEditor) {
         }
 
         svg += '"/>';
+
+        if (edge.label) { svg += `<text class="edgeLabel" x="${edge.x}" y="${edge.y}" fill="${edge.color}">${escapeHTMLEntities(edge.label)}</text>`; }
+        svg += '</g>';
+
         ++i;
     });
 
-    // Labels on top of edges
-    graph.edges().forEach(function(e) {
-        const edge = graph.edge(e);
-        if (edge.label) { svg += `<text class="edgeLabel" x="${edge.x}" y="${edge.y}" fill="${edge.color}">${escapeHTMLEntities(edge.label)}</text>`; }
-    });
 
     // Nodes on top of everything
     graph.nodes().forEach(function(v) {
         const node = graph.node(v);
         // enlarge the nodes to account for rounded rect
         node.width += 8; node.height += 8;
-        
-        svg += `<rect x="${node.x - node.width / 2}" y="${node.y - node.height / 2}" width="${node.width}" height="${node.height}" rx="16" ry="16" fill="${nodeToHTMLColor(node)}"class="node"/>`;
-        if (node.isStart) {
-            // Highlight the start node
-            svg += `<rect x="${node.x - node.width / 2 + 2}" y="${node.y - node.height / 2 + 2}" width="${node.width - 4}" height="${node.height - 4}" fill="none" rx="14" ry="14" stroke="#302b2b"/>`;
+
+        // Group elements comprising the visual node
+        svg += `<g class="node" id="${modeNameToModeGraphModeId(node.label)}">`;
+
+        if (node.label === '$START') {
+            // Simple gray circle for start node, sized to match node height
+            svg += `<circle cx="${node.x}" cy="${node.y}" r="${nodeHeight / 2}" fill="#888"/>`;
+        } else {
+            svg += `<rect x="${node.x - node.width / 2}" y="${node.y - node.height / 2}" width="${node.width}" height="${node.height}" rx="16" ry="16" fill="${nodeToHTMLColor(node)}" onclick="onProjectSelect(undefined, 'mode', gameSource.modes[${gameSource.modes.findIndex(mode => mode.name === node.mode.name)}]);"/>`;
+
+            // Ring for inner border
+            svg += `<rect class="border" x="${node.x - node.width / 2 + 2}" y="${node.y - node.height / 2 + 2}" width="${node.width - 4}" height="${node.height - 4}" fill="none" rx="14" ry="14" stroke="none"/>`;
+            svg += `<text class="nodeLabel" x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">${node.label}</text>`;
         }
-        svg += `<text class="nodeLabel" x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">${node.label}</text>`;
+        svg += '</g>';
     });
 
     svg += '</svg>';
     modeEditor.innerHTML = svg;
+}
+
+/* Callback from the runtime when $gameMode is changed.
+
+   - mode: the new mode
+   - url: the line of quadplay source that triggered the change
+   - line: the line of quadplay source that triggered the change
+  */
+function $updateIDEModeGraph(mode, url, lineNumber, reason) {
+    // Remove highlight from all elements
+    const modeGraph = document.querySelector('.modeGraph');
+    if (modeGraph) {
+        modeGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+    } else {
+        if (useIDE) {console.log('Error: could not find mode graph when using the IDE'); }
+        // The mode graph is not open, so do nothing
+        return;
+    }
+
+    const modeId = modeNameToModeGraphModeId(mode.$name);
+    const currentModeNode = document.getElementById(modeId);
+    currentModeNode.classList.add('highlight');
+
+    // Highlight either the edge that triggered the mode change or the start edge
+    const edgeId = sourceLocationToModeGraphEdgeId(url, lineNumber);
+    const lastEdge = document.getElementById(edgeId);
+    if (lastEdge) {
+        lastEdge.classList.add('highlight');
+    } else if (!url) {
+        // If no url, try to highlight the start edge
+        const startEdge = document.getElementById('mode_graph_edge_start');
+        if (startEdge) {
+            startEdge.classList.add('highlight');
+        }
+    } else {
+        console.log('ERROR: mode change not found at ' + url + ':' + lineNumber);
+    }
 }

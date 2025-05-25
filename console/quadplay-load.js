@@ -2643,12 +2643,12 @@ function parseCSV(strData, trim) {
 /** Used by both constants and assets to load and parse a CSV file.
     Stores the result into outputObject[outputField] and then 
     invokes callback() if it is specified.
-
 */
 function loadCSV(csvURL, definition, outputObject, outputField, callback) {
+    // Should the output be a flat array?
     const arrayOutput = definition.type === 'array';
     
-    console.assert(definition.type === 'csv' || arrayOutput);
+    console.assert(definition.type === 'table' || definition.type === 'csv' || arrayOutput);
     console.assert(outputObject);
     
     loadManager.fetch(csvURL, 'text', null, function (csv) {

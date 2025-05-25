@@ -63,6 +63,14 @@ var $feature_custom_resolution = false;
 var $gameMode = undefined, $prevMode = undefined;
 var $numBootAnimationFrames = 120;
 
+/* Abstracts underlying changes to the mode, used for
+   tools and debugging. Called from set_mode, push_mode,
+   pop_mode, reset_game.  */
+function $setGameMode(newMode, url, line, reason) {
+    $gameMode = newMode;
+    $updateIDEModeGraph(newMode, url, line, reason);
+}
+
 // Modes from pop_mode. Does not contain $gameMode
 var $modeStack = [], $prevModeStack = [];
 
@@ -8611,7 +8619,7 @@ function $unparseContainer(
   `hint` is for styling. It is usually the name of the variable being
   unparsed
 
-  `specialStructs` = true causes xy(), angle: fields, and other common
+  `specialStructs` = true causes xy(), angle: fields, and other
   values to pretty print instead of showing as generic objects
 
   `html_out` = true generates expansion HTML and escapes HTML in strings.
@@ -10169,9 +10177,9 @@ function get_previous_mode() {
 }
 
 
-var $lastBecause = ''
-function because(reason) {
-    $lastBecause = reason;
+var $lastBecause = {reason: '', location: undefined}
+function because(reason, location) {
+    $lastBecause = {reason: reason, location: location};
 }
 
 function push_mode(mode, ...args) {
@@ -10186,7 +10194,8 @@ function push_mode(mode, ...args) {
     mode_frames = -1;
     $skipGraphics = false;
     $prevMode = $gameMode;
-    $gameMode = mode;
+
+    $setGameMode(mode, $lastBecause.location?.url, $lastBecause.location?.line_number, $lastBecause);
     
     $previousModeGraphicsCommandList = $previousGraphicsCommandList;
 
@@ -10195,7 +10204,7 @@ function push_mode(mode, ...args) {
     $previousGraphicsCommandList = [];
 
     if (mode.$name[0] !== '$') {
-        $systemPrint('Pushing into mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+        $systemPrint('Pushing into mode ' + mode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : ''));
     }
 
     // Run the enter callback on the new mode
@@ -10208,19 +10217,19 @@ function push_mode(mode, ...args) {
 
 
 function quit_game() {
-    $systemPrint('Quitting the game' + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    $systemPrint('Quitting the game' + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : ''));
     throw {quit_game:1};
 }
 
 
 function launch_game(url) {
-    $systemPrint('Launching ' + url + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    $systemPrint('Launching ' + url + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : ''));
     throw {launch_game:url};
 }
 
 
 function reset_game() {
-    $systemPrint('Resetting the game' + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    $systemPrint('Resetting the game' + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : ''));
     throw {reset_game:1};
 }
 
@@ -10240,7 +10249,8 @@ function pop_mode(...args) {
     // Pop the stacks
     $previousGraphicsCommandList = $previousModeGraphicsCommandList;
     $previousModeGraphicsCommandList = $previousModeGraphicsCommandListStack.pop();
-    $gameMode = $modeStack.pop();
+
+    $setGameMode($modeStack.pop(), $lastBecause.location?.url, $lastBecause.location?.line_number, $lastBecause);
     mode_frames = $mode_framesStack.pop();
     $skipGraphics = false;
 
@@ -10251,7 +10261,7 @@ function pop_mode(...args) {
     $graphicsCommandList = [];
     
     if ($gameMode.$name[0] !== '$') {
-        $systemPrint('Popping back to mode ' + $gameMode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+        $systemPrint('Popping back to mode ' + $gameMode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : ''));
     }
 
     // Run the pop_mode event on $gameMode if it exists
@@ -10278,7 +10288,7 @@ function set_mode(mode, ...args) {
 
     // Set up the new mode
     $prevMode = $gameMode;
-    $gameMode = mode;
+    $setGameMode(mode, $lastBecause.location?.url, $lastBecause.location?.line_number, $lastBecause);
 
     // Loop nesting is irrelvant, since we're about to leave
     // that scope permanently.
@@ -10298,7 +10308,7 @@ function set_mode(mode, ...args) {
     $previousGraphicsCommandList = [];
 
     if (mode.$name[0] !== '$') {
-        $systemPrint('Entering mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+        $systemPrint('Entering mode ' + mode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : ''));
     }
     
     // Run the enter callback on the new mode

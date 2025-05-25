@@ -27,7 +27,7 @@
 
       const isQuadserver = getQueryString('quadserver') === '1';
 
-      function makeButton(label, title, onclick, id) {
+      function makeButton(label, id, title, onclick) {
          document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></div>');
       }
     
@@ -238,11 +238,8 @@
         &nbsp;&nbsp;&nbsp;
 
         <span class="IDEOnly">
-            <!--
-            <button onclick="startHosting()">TEST</button>
-            -->
             <script>
-              makeButton('<div class="buttonIcon" style="background-image: url(\'icons/button-reload.png\')"></div>', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
+              makeButton('<div class="buttonIcon"></div>', 'restartButton', `Reload and Play (^R)`, 'onRestartButton');
               makeRadio('<div class="buttonIcon"></div>', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'stepButton', false, 'title="Step (F10)"', 'controls');
@@ -295,21 +292,27 @@
           <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc" class="pixelate"></canvas></div>
           <div id="spriteEditor">
             <div id="spriteEditorToolbar" class="toolbar">
-              <div id="spriteEditorInfo" class="unselectable" style="font-family: monospace">
+              <div style="position: absolute; left: 0px; top: 19px; width: 100%">
+                <span style="font-size: 14px; font-weight: bold; vertical-align: middle; position: relative; top: -1px" class="unselectable">
+                  −&nbsp;<input type="range" min="1" max="100" value="50" style="width: 80px; vertical-align: middle" id="spriteEditorZoomSlider" oninput="onSpriteEditorZoomSliderChange()" onchange="onSpriteEditorZoomSliderChange()">&nbsp;+
+                </span>
+                <span style="margin-left:20px" onclick="onSpriteEditorViewChange()">
+                  <input type="radio" name="spriteEditorView" id="spriteEditorViewPNG" checked="true" style="margin-right:0">
+                  <label for="spriteEditorViewPNG">PNG</label>
+                  <input type="radio" name="spriteEditorView" id="spriteEditorViewSpriteSheet" style="margin-right:0">
+                  <label id="spriteEditorViewSpriteSheetLabel" for="spriteEditorViewSpriteSheet">Sprite Sheet</label>
+                </span>
+              </div>
+            </div>
+              <div id="spriteEditorInfo" class="unselectable" style="font-family: monospace; bottom: 0px; left: 0px; right: 0px; height: 38px; position: absolute; border-top: 1px solid #888;">
                 <div id="spriteEditorInfoName" style="display: inline-block; width: 200px"></div>
                 <div id="spriteEditorInfoAnimationName" style="display: inline-block; width: 200px"></div>
                 <div id="spriteEditorInfoFrames" style="display: inline-block; width: 100px"></div>
                 <div id="spriteEditorInfoXY" style="display: inline-block; width: 100px"></div>
                 <div id="spriteEditorInfoRGBA" style="display: inline-block; width: 100px"></div>
               </div>
-              <div style="position: absolute; left: 0px; top: 19px; width: 100%">
-                <span style="font-size: 14px; font-weight: bold; vertical-align: middle; position: relative; top: -1px" class="unselectable">
-                  −&nbsp;<input type="range" min="1" max="100" value="50" style="width: 80px; vertical-align: middle" id="spriteEditorZoomSlider" oninput="onSpriteEditorZoomSliderChange()" onchange="onSpriteEditorZoomSliderChange()">&nbsp;+
-                </span>
-              </div>
-            </div>
             <div id="spriteEditorCanvasScrollPane" class="force-show-scrollbars checker-background">
-              <div id="spriteEditorCanvas" class="pixelate" style="position: absolute; top: 0; left: 0; transform-origin: top left;"></div>
+              <canvas id="spriteEditorCanvas" class="pixelate" style="position: absolute; top: 0; left: 0; transform-origin: top left;"></canvas>
               <div id="spriteEditorHighlight">
                 <div id="spriteEditorPivot" class="unselectable">☩</div>
               </div>
@@ -328,12 +331,12 @@
         
         <div id="codeToolbar" class="toolbar">
           <script>
-            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
-            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
-            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
+            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorUndo', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton');
+            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton');
+            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
           </script>
           <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>
@@ -1124,6 +1127,7 @@
   <script defer src="quadplay-edit-code.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-game.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>
+  <script defer src="quadplay-edit-sprite.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-constant.js?" charset="utf-8"></script>
   <script defer src="quadplay-help.js?" charset="utf-8"></script>
   <script defer src="quadplay-debug.js?" charset="utf-8"></script>

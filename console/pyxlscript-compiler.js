@@ -1060,12 +1060,12 @@ function pyxlToJS(src, noYield, internalMode) {
                 while ((callBeginPos >= 0) && /[ΔA-Za-z_0-9αβγΔδζηθιλμρσϕφχψτωΩ]/.test(line[callBeginPos])) { --callBeginPos; }
                 ++callBeginPos;
 
-                lineArray[i] = line = line.substring(0, callBeginPos) + '(because(' + line.substring(reasonBeginPos, reasonEndPos + 1) + '),' +
+                lineArray[i] = line = line.substring(0, callBeginPos) + '(because(' + line.substring(reasonBeginPos, reasonEndPos + 1) + ', SOURCE_LOCATION),' +
                     line.substring(callBeginPos, callEndPos + 1) + ')' + line.substring(reasonEndPos + 1);
             }
 
             // Insert BECAUSE for state changes or ASSERTs that do not use them already
-            line = lineArray[i] = line.replace(/(^|[^,])((?:set_mode|push_mode|pop_mode|launch_game|reset_game|quit_game)[ ]*\()/g, '$1because("");$2');
+            line = lineArray[i] = line.replace(/(^|[^,])((?:set_mode|push_mode|pop_mode|launch_game|reset_game|quit_game)[ ]*\()/g, '$1because("", SOURCE_LOCATION);$2');
 
             // Look for mismatched if/then/else (conservative test, misses some)
             const ifCount = countRegexOccurences(line, /\bif\b/g);
