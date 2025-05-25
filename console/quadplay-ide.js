@@ -891,6 +891,12 @@ function onStopButton(inReset, preserveNetwork) {
         saveIDEState();
     }
 
+    // Remove highlight from all nodes in the mode diagram
+    const modeGraph = document.querySelector('.modeGraph');
+    if (modeGraph) {
+        modeGraph.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+    }
+
     // Destroy the virtual GPU
     if (QRuntime.$GPU) { QRuntime.$GPU.terminate(); }
     usePointerLock = false;
