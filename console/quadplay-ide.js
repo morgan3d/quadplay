@@ -4710,18 +4710,20 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
 
             if (callback) { callback(); }
 
-            if (! loadFast && editableProject && serverConfig.hasGit) {                          
-                // See if this project is in git
-                serverGitCommand('status .', function (text, code) {
-                    if (code === 0) {
-                        gameSource.versionControl = 'git';
+            if (editableProject && serverConfig.hasGit) {
+                if (! loadFast) {                          
+                    // See if this project is in git
+                    serverGitCommand('status .', function (text, code) {
+                        if (code === 0) {
+                            gameSource.versionControl = 'git';
+                            document.getElementById('versionControl').style.visibility = 'visible';
+                        }
+                    });
+                } else {
+                    gameSource.versionControl = oldVersionControl;
+                    if (oldVersionControl === 'git') {
                         document.getElementById('versionControl').style.visibility = 'visible';
                     }
-                });
-            } else {
-                gameSource.versionControl = oldVersionControl;
-                if (oldVersionControl === 'git') {
-                    document.getElementById('versionControl').style.visibility = 'visible';
                 }
             }
 
