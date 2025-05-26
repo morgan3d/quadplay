@@ -253,7 +253,7 @@ div#header {
 
 /** Do not change this selector without changing quadplay-ide.js setColorScheme() */
 a, #header a, .menu a {
-    color: #e61b9d !important;
+    color: var(--theme-color, #e61b9d) !important;
     text-decoration: none;
 }
 
@@ -660,6 +660,13 @@ div.debugOverride.disabled {
     cursor:           pointer;
 }
 
+.button label {
+    cursor: pointer;
+}
+
+.button input {
+    cursor: pointer;
+}
 
 .unselectable {
     touch-action: none;
@@ -1822,9 +1829,8 @@ tabbox > label.ide:hover {
 }
 
 tabbox > input:checked + label.ide {
-    color: #0af;
-    border: 1px solid #888;
-    border-top: 2px solid #0af;
+    color: var(--theme-color, #0af);
+    border-top: 2px solid var(--theme-color, #0af);
     border-bottom: 1px solid #302b2b;
     background:    #302b2b;
 }
@@ -2059,4 +2065,14 @@ button.license {
 .terminalCommand {
     font-weight: bold;
     color: #a569bd;
+}
+
+.button img {
+    pointer-events: none;
+}
+
+.button.disabled,
+.button.disabled label,
+.button.disabled input {
+    cursor: default;
 }

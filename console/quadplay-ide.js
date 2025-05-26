@@ -368,6 +368,9 @@ function setColorScheme(scheme) {
         break;
     }
     
+    // Set the theme color CSS variable
+    document.documentElement.style.setProperty('--theme-color', hrefColor);
+    
     // Find the relevant rules and remove them
     for (let i = 0; i < stylesheet.cssRules.length; ++i) {
         const rule = stylesheet.cssRules[i];
@@ -494,11 +497,16 @@ function requestFullScreen() {
         if (body.requestFullscreen) {
             body.requestFullscreen().catch(ignoreException);
         } else if (body.webkitRequestFullscreen) {
-            body.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT).catch(ignoreException);
+            // On MacOS Chromium browsers, we need to use ALLOW_KEYBOARD_INPUT to ensure button interactions work
+            if (isApple && (isChrome || isEdge)) {
+                body.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT).catch(ignoreException);
+            } else {
+                body.webkitRequestFullscreen().catch(ignoreException);
+            }
         } else if (body.mozRequestFullScreen) {
-            body.mozRequestFullScreen().catch(ignoreException);;
+            body.mozRequestFullScreen().catch(ignoreException);
         } else if (body.msRequestFullscreen) {
-            body.msRequestFullscreen().catch(ignoreException);;
+            body.msRequestFullscreen().catch(ignoreException);
         }
     } catch (e) {
         ignoreException(e);

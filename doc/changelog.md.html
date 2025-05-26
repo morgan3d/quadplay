@@ -13,6 +13,8 @@ of [<quadplay/>](manual.md.html).
 - Rotated the Mode diagram in the IDE to run vertically
 - The Mode diagram blocks and arrows are now hyperlinked back to the relevant code
 - The active mode is now highlighted in the Mode diagram
+- Debugger tabs now match the IDE's color theme instead of using a fixed blue color
+- Fixed buttons in the top right of the IDE not functioning in fullscreen mode on MacOS using Chromium browsers
 
 2025 April 19
 ===================================
@@ -53,7 +55,7 @@ of [<quadplay/>](manual.md.html).
 - Fixed negated torques in `entity_apply_force()`
 - Fixed parsing of degrees with decimal points
 - Fixed help system for quadplay API on Windows (newline issue)
-- Rewrote the coordinate systems section of the manual and added
+- Rewritten the coordinate systems section of the manual and added
   a coordinate system example program
 - Reorganized the manual to document spritesheet properties and group
   sprite functions
@@ -1378,7 +1380,7 @@ of [<quadplay/>](manual.md.html).
 - `gamepad_array[]` elements now print as their name instead of properties
 - Increased the contrast of the text in ghost mode
 - Reordered quick links on the top of the manual
-- Rewrote the Project File section of the manual to clarify the asset vs. constant distinction
+- Rewritten the Project File section of the manual to clarify the asset vs. constant distinction
 - Increased the contrast on the sprite editor info data
 - The Import Asset dialog will now automatically default to a useful variable name
 - The Import Asset dialog can now import raw PNG, TMX, and MP3 files
@@ -2026,7 +2028,7 @@ of [<quadplay/>](manual.md.html).
 
 - Redesigned profiler output in the "Stats" IDE tab to show
   game logic, physics, and graphics time separately
-- Rewrote framerate scaling to maintain the best possible motion
+- Rewritten framerate scaling to maintain the best possible motion
   appearance independent of framerate
 - Optimized memory management for physics attachments by reference
   counting and weak pointers

@@ -32,7 +32,7 @@
       }
     
       function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {
-         document.write('<div id="' + id + 'Container" class="button ' + (disabled?'disabled':'')+ '" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="(event.target.enabled !== false) ? onRadio() : (event.target.checked = false)" autocomplete="off" value="1" ' + (selected ? 'checked' : '') + (disabled?' disabled':'') + '><span class="label">' + labelHTML + '</span></label></div>');
+         document.write('<div id="' + id + 'Container" class="button ' + (disabled?'disabled':'')+ '" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="event.preventDefault(); event.stopPropagation(); if (event.target.enabled !== false) { onRadio(); } else { event.target.checked = false; }" autocomplete="off" value="1" ' + (selected ? 'checked' : '') + (disabled?' disabled':'') + '><span class="label">' + labelHTML + '</span></label></div>');
       }
 
       function makeToggle(labelHTML, style, title, id) {
