@@ -3,6 +3,8 @@
 
 /* 
    The profiler manages both data displayed to the user and the graphics rate scaling.
+   Because of this, it is not labelled as part of the IDE explicitly and it is needed
+   even when running games without the IDE.
 */
 
 // Because browser timers are low precision (even performance.now is

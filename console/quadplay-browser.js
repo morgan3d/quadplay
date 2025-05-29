@@ -2015,7 +2015,7 @@ function onMouseUpOrMove(event) {
 }
 
 
-/* quadplay-host is loaded before quadplay-ide, so we put this initialization in a callback. */
+/* quadplay-host is loaded before quadplay.js, so we put this initialization in a callback. */
 function initializeBrowserEmulator() {
     // Prevent hitches for touch event handling on Android Chrome
     // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Improving_scrolling_performance_with_passive_listeners

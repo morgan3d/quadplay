@@ -165,12 +165,16 @@ def export(args):
        else: os.makedirs(out_path, exist_ok = True)
    
    if not args.noquad:
-       
+      # Files and directories in console/ that are not needed for exported games
+      # because they are part of the IDE only
+      ignore_files = ['launcher', 'templates', 'ace', 'lib/qrcode.min.js', 'lib/dagre.min.js',
+                      'quadplay-ide-asset.js', 'quadplay-ide-code.js', 'quadplay-ide-constant.js',
+                      'quadplay-ide-sprite.js', 'quadplay-ide-mode-diagram.js', 'quadplay-vs.js']
+
       # Recursively copy everything from 'console/' to out_path
       # Do this before copying individual dependencies because
       # shutil.copytree can't take the dirs_exist_ok=True parameter
       # until Python 3.8 and the dependencies create the console dir
-      ignore_files = ['launcher', 'templates', 'ace', 'lib/qrcode.min.js', 'lib/dagre.min.js']
       if args.dry_run:
          print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
          for f in ignore_files:

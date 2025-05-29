@@ -251,7 +251,7 @@ div#header {
     visibility: hidden;
 }
 
-/** Do not change this selector without changing quadplay-ide.js setColorScheme() */
+/** Do not change this selector without changing quadplay.js setColorScheme() */
 a, #header a, .menu a {
     color: var(--theme-color, #e61b9d) !important;
     text-decoration: none;
@@ -1711,7 +1711,7 @@ canvas#screenOverlay {
     top: 0px;
 
     /* These times have to be kept in sync with showPopupMessage()'s
-       setTimeout value in quadplay-ide.js */
+       setTimeout value in quadplay.js */
     animation: messagefadein 0.5s, messagefadeout 0.5s 3.5s;
 }
 
