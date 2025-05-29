@@ -92,6 +92,81 @@ from their source nodes.
 function visualizeModes(modeEditor) {
     // dagre API: https://github.com/dagrejs/graphlib/wiki/API-Reference#graph-api
     
+    /* Computes and stores the maximum X and Y distances from the center of mass,
+    and the maximum normalized Euclidean distance of all mode nodes.
+    Excludes the $START node from calculations. Results are stored on the nodeToHTMLColor function. */
+    function computeGraphLayoutBounds() {
+        let sumX = 0, sumY = 0;
+        let nodeCount = 0;
+        
+        // First pass: compute center of mass
+        graph.nodes().forEach(function(v) {
+            const node = graph.node(v);
+            // The start node is always gray and should not be included in the metrics
+            if (node.label === '$START') { return; }
+
+            sumX += node.x;
+            sumY += node.y;
+            ++nodeCount;
+        });
+        
+        const centerX = sumX / nodeCount;
+        const centerY = sumY / nodeCount;
+        
+        // Second pass: compute max X and Y distances
+        let maxXDistance = 0;
+        let maxYDistance = 0;
+        graph.nodes().forEach(function(v) {
+            const node = graph.node(v);
+            // Skip the start node
+            if (node.label === '$START') { return; }
+            
+            const dx = Math.abs(node.x - centerX);
+            const dy = Math.abs(node.y - centerY);
+            maxXDistance = Math.max(maxXDistance, dx);
+            maxYDistance = Math.max(maxYDistance, dy);
+        });
+        
+        // Third pass: compute max normalized Euclidean distance
+        let maxNormalizedDistance = 0;
+        graph.nodes().forEach(function(v) {
+            const node = graph.node(v);
+            // Skip the start node
+            if (node.label === '$START') { return; }
+            
+            const dx = (node.x - centerX) / maxXDistance;
+            const dy = (node.y - centerY) / maxYDistance;
+            maxNormalizedDistance = Math.max(maxNormalizedDistance, Math.hypot(dx, dy));
+        });
+        
+        // Fourth pass: compute clockwise ordering of nodes
+        const nodes = [];
+        graph.nodes().forEach(function(v) {
+            const node = graph.node(v);
+            // Skip the start node
+            if (node.label === '$START') { return; }
+            
+            // Compute angle relative to center of mass, ensuring it's non-negative
+            const angle = Math.atan2(node.y - centerY, node.x - centerX) + 2 * Math.PI;
+            nodes.push({node: node, angle: angle});
+        });
+        
+        // Sort nodes by angle clockwise
+        nodes.sort((a, b) => (a.angle - b.angle));
+        
+        // Assign color order
+        nodes.forEach((item, index) => {
+            item.node.colorOrder = index;
+        });
+        
+        // Store as properties on the nodeToHTMLColor function
+        nodeToHTMLColor.centerOfMass = {x: centerX, y: centerY};
+        nodeToHTMLColor.maxXDistance = maxXDistance;
+        nodeToHTMLColor.maxYDistance = maxYDistance;
+        nodeToHTMLColor.maxNormalizedDistance = maxNormalizedDistance;
+        nodeToHTMLColor.numNodes = nodeCount;
+    }
+    
     function nodeToHTMLColor(node) {
         if (node.label === 'Play') {
             // Force the Play node to white. It is almost always near
@@ -100,32 +175,35 @@ function visualizeModes(modeEditor) {
             return '#fff';
         }
         
-        const x = Math.min(1, Math.max(0, 1.6 * node.x / graph._label.width - 0.27));
-        const y = Math.min(1, Math.max(0, 1.5 * node.y / graph._label.height - 0.25));
+        if (node.label === '$START') {
+            // $START is a virtual node inserted for graph visualization
+            // that connects to the game's actual starting mode
+            return '#888';
+        }
 
-        // Use a Red-Cyan-Yellow color wheel
-        let r = Math.max(Math.sqrt(1 - x), Math.max(2 * y - 0.8, 0));
-        let g = Math.max(Math.sqrt((x * 0.95 + 0.05) * y), 0.6 * Math.pow(Math.max(2 * (1 - y) - 1, 0), 2));
-        let b = Math.sqrt((x * 0.95 + 0.05) * Math.sqrt(1.1 - y));
+        // Compute hue based on node's clockwise ordering
+        const hue = (270 + 360 * node.colorOrder / nodeToHTMLColor.numNodes) % 360;
 
-        // Boost around the green primary
-        g += 0.5 * x * Math.max(0, (1 - Math.abs(y - 0.6) * 2));
+        // Compute normalized distance from center of mass
+        const dx = (node.x - nodeToHTMLColor.centerOfMass.x) / nodeToHTMLColor.maxXDistance;
+        const dy = (node.y - nodeToHTMLColor.centerOfMass.y) / nodeToHTMLColor.maxYDistance;
+        const distance = Math.hypot(dx, dy) / nodeToHTMLColor.maxNormalizedDistance;
+
+        // Compute saturation from distance
+        let saturation = distance * 0.5 + 0.1;
         
-        // Maximize value
-        const m = Math.max(r, g, b);
-        r /= m; g /= m; b /= m;
-
-        // Decrease saturation
-        const s = 0.65;
-        // Code to decrease saturation radially, no longer needed now that
-        // we special-case the "Play" mode:
-        //  s = Math.min(1, Math.pow(Math.hypot(x - 0.5, y - 0.5), 2) * 1.7);
-
-        // Reduce saturation and convert to [0, 255]
-        r = Math.round((r * s + (1 - s)) * 255);
-        g = Math.round((g * s + (1 - s)) * 255);
-        b = Math.round((b * s + (1 - s)) * 255);
-        return `rgb(${r}, ${g}, ${b})`;
+        // Decrease saturation for purple-blue colors
+        const purpleness = Math.pow(1 - Math.max(0, Math.min(1, Math.abs((hue - 290) / 60))), 1.5);
+        saturation *= (1 - 0.55 * purpleness);
+        
+        // Convert HSV to RGB using QRuntime function
+        const rgb = QRuntime.artist_hsv_to_rgb({
+            h: hue / 360,
+            s: saturation,
+            v: 1
+        });
+        
+        return `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
     }
     
     // Get nodes
@@ -244,6 +322,9 @@ function visualizeModes(modeEditor) {
     
     // Compute layout on the mode graph
     dagre.layout(graph);
+
+
+    computeGraphLayoutBounds();
 
     // Render the mode graph to SVG
     let svg = `<svg class="modeGraph" width=${graph._label.width + 40} height=${graph._label.height + 60} viewbox="-20 -30 ${graph._label.width + 40} ${graph._label.height + 100}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">`;
