@@ -1079,60 +1079,91 @@
   </script>
   
   <!-- Third-party code. The scripts not needed at load or launch time are 
-       marked as async to speed loading.
+       marked as async to speed loading. Others are marked defer.
    -->
   <script async src="lib/gif.js"></script>
+  
   <script>
     {
-    function loadScript(url) {
-        document.write('<script defer src="' + url + '"><' + '/script>');
-    }
-    // Save bandwidth (~600 kB) and do not load the editor if not in IDE mode
-    if (useIDE) {
-        // Editor
-        loadScript('ace/ace.js');
+        /**
+           - `ide`: if true if this file is required for the IDE.
+             If false, that file can then be ignored. Eliminating
+             files from exported games saves about 600 kB of total
+             size and multiple files towards itch.io's file count limit.
+        
+           - `lazyLoad`: true if not needed immediately at load/startup
+             time which then loads with `async`. Otherwise load with `defer`.
+        */     
+        function loadScript(url, ide, lazyLoad, type) {
+            if (! ide || useIDE) {
+                return `<script ${lazyLoad ? 'async' : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
+            }
+        }
 
-        // Mode graph
-        loadScript('lib/dagre.min.js');
-    }
-    // QR code generator
-    loadScript('lib/qrcode.min.js');
+        // Scripts, in order of issuing the load. Do not reorder. These can be a raw
+        // URL or an object with the arguments for loadScript.
+        const scriptArray = [
+            // Editor
+            'ace/ace.js',
+
+            // Mode graph library
+            'lib/dagre.min.js',
+
+            // QR code generator
+            {url: 'lib/qrcode.min.js', ide: true, lazyLoad: true},
+
+            // YAML parsing
+            'lib/js-yaml.min.js',
+
+            // Compiler
+            'lib/vectorify.js',
+
+            // Physics engine
+            'lib/decomp.min.js',
+            'lib/matter.min.js',
+            'matter-extensions.js',
+
+            // Network
+            {url: 'lib/peerjs.min.js', lazyLoad: true},
+
+            // Parsing
+            'WorkJSON.js',
+            'LoadManager.js',
+            'filters.js',
+
+            // quadplay✜ implementation
+            // Force reload, as these change often
+            {url: 'os/dependencies.py?', type: 'text/javascript'},
+            'version.js?',
+            'pyxlscript-compiler.js?',
+            'quadplay-browser.js?',
+            'quadplay-font.js?',
+            'quadplay-load.js?',
+            'quadplay-profiler.js?',
+            'quadplay-ide-code.js?',
+            'quadplay-ide-game.js?',
+            'quadplay-ide-asset.js?',
+            'quadplay-ide-sprite.js?',
+            'quadplay-ide-constant.js?',
+            'quadplay-ide-mode-diagram.js?',
+            'quadplay-help.js?',
+            'quadplay-debug.js?',
+            'quadplay-network.js?',
+            'quadplay-midi.js?',
+            'quadplay-vcs.js?',
+            'quadplay.js?'
+        ];
+
+        let s = '';
+        for (let file of scriptArray) {
+            if (file.url) {
+                s += loadScript(file.url, file.ide, file.lazyLoad, file.type);
+            } else {
+                s += loadScript(file);
+            }
+        }
+
+        document.write(s);
   }
   </script>
-  <script defer src="lib/js-yaml.min.js"></script>
-  <!-- compiler -->
-  <script defer src="lib/vectorify.js" charset="utf-8"></script>
-  <!-- physics -->
-  <script defer src="lib/decomp.min.js"></script>
-  <script defer src="lib/matter.min.js"></script>
-  <script defer src="matter-extensions.js"></script>
-  <!-- network -->
-  <script async src="lib/peerjs.min.js"></script>
-  <!-- parsing -->
-  <script defer src="WorkJSON.js"></script>
-  <script defer src="LoadManager.js"></script>
-  <script defer src="filters.js"></script>
-
-  
-  <!-- quadplay✜ implementation -->
-  <!-- force reload, as these change often -->
-  <script defer src="os/dependencies.py?" charset="utf-8" type="text/javascript"></script>
-  <script defer src="version.js?" charset="utf-8"></script>
-  <script defer src="pyxlscript-compiler.js?" charset="utf-8"></script>
-  <script defer src="quadplay-browser.js?" charset="utf-8"></script>
-  <script defer src="quadplay-font.js?" charset="utf-8"></script>
-  <script defer src="quadplay-load.js?" charset="utf-8"></script>
-  <script defer src="quadplay-profiler.js?" charset="utf-8"></script>
-  <script defer src="quadplay-mode.js?" charset="utf-8"></script>
-  <script defer src="quadplay-edit-code.js?" charset="utf-8"></script>
-  <script defer src="quadplay-edit-game.js?" charset="utf-8"></script>
-  <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>
-  <script defer src="quadplay-edit-sprite.js?" charset="utf-8"></script>
-  <script defer src="quadplay-edit-constant.js?" charset="utf-8"></script>
-  <script defer src="quadplay-help.js?" charset="utf-8"></script>
-  <script defer src="quadplay-debug.js?" charset="utf-8"></script>
-  <script defer src="quadplay-network.js?" charset="utf-8"></script>
-  <script defer src="quadplay-midi.js?" charset="utf-8"></script>
-  <script defer src="quadplay-vcs.js?" charset="utf-8"></script>
-  <script defer src="quadplay-ide.js?" charset="utf-8"></script>
 </html>
