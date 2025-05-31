@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself.
-const deployed = false;
+const deployed = true;
 
 // If true, use a WebWorker thread for the virtual GPU. This variable
 // appears in the CPU runtime as well.
