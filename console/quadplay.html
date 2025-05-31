@@ -18,6 +18,8 @@
     <script>
       performance.mark('Loading quadplay.html');
       
+      const useIDE = (getQueryString('IDE') === '1') || false;
+      
       /* Returns null if the query is not specified */
       function getQueryString(field) {
          const reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
@@ -53,7 +55,6 @@
     const isMobile = window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 1);
     const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
-    const useIDE = (getQueryString('IDE') === '1') || false;
     const nativeapp = (getQueryString('nativeapp') === '1') || false;
 
     // Keyboard prompts for modifers
@@ -173,8 +174,8 @@
       <!-- Copy menu is only visible when the game is local to discourage cloning others' games -->
       <div id="copyMenu" style="display: none"><a onclick="onCopyGameClick()">Copy Game…</a></div>
       <hr>
-      <!-- <div><a onclick="onExportClick()">Export</a></div>
-      <hr> -->
+      <div><a id="exportMenu" onclick="onExportClick()">Export Game…</a></div>
+      <hr>
       <label title="Stop the game at failed assert() statements"><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>assert()</code> as error</label>
       <br/><label title="Stop the game at all todo() statements"><input id="todoEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>todo()</code> as error</label>
       <br/><label title="Visualize debugging bounds on draw_entity() calls"><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
@@ -199,7 +200,7 @@
     <div id="header" class="unselectable">
       <div style="position: absolute; left: 8px; top: 3px">
         <span class="IDEOnly">
-          <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
+          <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Game</a>
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
         </span>
         <a style="cursor:pointer" onclick="onMenuButton(event)" id="consoleMenuButton">Console</a>
@@ -1047,8 +1048,25 @@
 
     <div id="customContextMenu" style="visibility:hidden; z-index: 20; position: fixed"></div>
 
+    <div id="exportDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 400px">
+        <center>
+          <span class="title">Export Game</span>
+          <p style="text-align:left; margin: 20px 0px">
+            Exporting your game will make it able to run without the quadplay IDE and quadplay server, in any context where static HTML can run.
+          </p>
+          <p style="text-align:left">
+            <label><input type="radio" name="exportTarget" value="standalone" checked> Standalone website</label><br>
+            <label><input type="radio" name="exportTarget" value="itchio"> itch.io browser game</label><br>
+            <label><input type="radio" name="exportTarget" value="github"> GitHub-hosted website</label>
+          </p>
+          <button type="button" onclick="hideExportDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" onclick="onExportDialogOK()">OK</button>
+        </center>
+      </div>
+    </div>
   </body>
-  
+
   <div id="hiddenQRCode" style="z-index: -100; visibility: hidden; display: none; "></div>
   <iframe name="QRuntime" style="visibility:hidden"> </iframe>
 
@@ -1081,7 +1099,6 @@
   <!-- Third-party code. The scripts not needed at load or launch time are 
        marked as async to speed loading. Others are marked defer.
    -->
-  <script async src="lib/gif.js"></script>
   
   <script>
     {
@@ -1096,21 +1113,26 @@
         */     
         function loadScript(url, ide, lazyLoad, type) {
             if (! ide || useIDE) {
-                return `<script ${lazyLoad ? 'async' : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
+              return `<script ${lazyLoad ? 'async' : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
+            } else {
+              return '';
             }
         }
 
         // Scripts, in order of issuing the load. Do not reorder. These can be a raw
         // URL or an object with the arguments for loadScript.
         const scriptArray = [
+            {url: 'lib/gif.js', lazyLoad: true},
+
             // Editor
-            'ace/ace.js',
+            {url: 'ace/ace.js', ide: true},
 
             // Mode graph library
             'lib/dagre.min.js',
 
-            // QR code generator
-            {url: 'lib/qrcode.min.js', ide: true, lazyLoad: true},
+            // QR code generator. This is needed for networking
+            // even when not in the IDE
+            {url: 'lib/qrcode.min.js', lazyLoad: true},
 
             // YAML parsing
             'lib/js-yaml.min.js',
@@ -1140,17 +1162,17 @@
             'quadplay-font.js?',
             'quadplay-load.js?',
             'quadplay-profiler.js?',
-            'quadplay-ide-code.js?',
-            'quadplay-ide-game.js?',
-            'quadplay-ide-asset.js?',
-            'quadplay-ide-sprite.js?',
-            'quadplay-ide-constant.js?',
-            'quadplay-ide-mode-diagram.js?',
-            'quadplay-ide-help.js?',
-            'quadplay-ide-debug.js?',
+            {url: 'quadplay-ide-code.js?', ide: true},
+            {url: 'quadplay-ide-game.js?', ide: true},
+            {url: 'quadplay-ide-asset.js?', ide: true},
+            {url: 'quadplay-ide-sprite.js?', ide: true},
+            {url: 'quadplay-ide-constant.js?', ide: true},
+            {url: 'quadplay-ide-mode-diagram.js?', ide: true},
+            {url: 'quadplay-ide-help.js?', ide: true},
+            {url: 'quadplay-ide-debug.js?', ide: true},
+            {url: 'quadplay-ide-vcs.js?', ide: true},
             'quadplay-network.js?',
             'quadplay-midi.js?',
-            'quadplay-ide-vcs.js?',
             'quadplay.js?'
         ];
 

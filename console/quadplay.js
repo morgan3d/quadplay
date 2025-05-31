@@ -2,11 +2,20 @@
 "use strict";
 
 // Set to false when working on quadplay itself.
-const deployed = true;
+const deployed = false;
 
 // If true, use a WebWorker thread for the virtual GPU. This variable
 // appears in the CPU runtime as well.
 const $THREADED_GPU = true;
+
+// Set to true to allow editing of quad://example/ files when developing quadplay
+const ALLOW_EDITING_EXAMPLES = ! deployed;
+
+// Set to true to automatically reload on switching
+// to the browser when the game is stopped.
+const AUTO_RELOAD_ON_FOCUS = deployed;
+
+const launcherURL = 'quad://console/launcher';
 
 /* The containing web page that quadplay is embedded within, or
    quadplay's iframe if running cross-origin */
@@ -27,14 +36,6 @@ const page = (function () {
     }
 })();
 
-// Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = ! deployed;
-
-// Set to true to automatically reload on switching
-// to the browser when the game is stopped.
-const AUTO_RELOAD_ON_FOCUS = deployed;
-
-const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
 // for security purposes
@@ -124,6 +125,27 @@ function getGamePath() {
 
 function makeURLRelativeToGame(filename) {
     return getGamePath() + filename;
+}
+
+
+/* Print only the filename base when it is the same as the game base */
+function shortURL(url) {
+    const gamePath = gameSource.jsonURL.replace(/\/[^/]+\.game\.json$/, '/');
+    if (url.startsWith(gamePath)) {
+        return url.substring(gamePath.length);
+    } else {
+        return url;
+    }
+}
+
+/* True if a URL does not match the current server */
+function isRemote(url) {
+    return ! url.startsWith(location.origin + '/');
+}
+
+/** Returns the path to the quadplay root from location.origin */
+function getQuadPath() {
+    return location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -943,7 +965,7 @@ function wake() {
         // Unless told not to, check for update on waking since
         // sleeping disables update checks. This is for the case of
         // someone waking up their console specfically to upgrade it
-        if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
+        if ((getQueryString('update') && getQueryString('update') !== '0') && useIDE && isQuadserver && getQueryString('kiosk') !== 1) {
             checkForUpdate();
         }
     }
@@ -1067,7 +1089,11 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                     return;
                 }
                 setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message, {line_number: e.lineNumber, url: e.url});
-                editorGotoFileLine(e.url, e.lineNumber, undefined, true);
+                if (useIDE) {
+                    editorGotoFileLine(e.url, e.lineNumber, undefined, true);
+                } else {
+                    alert('Error in game at ' + e.url + ':' + e.lineNumber + ':  ' + e.message);
+                }
             }
             
             if (compiledProgram) {
@@ -1116,9 +1142,11 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
     
 
     if (emulatorMode === 'stop') {
-        // Erase the table
-        debugWatchTable = {};
-        updateDebugWatchDisplay();
+        if (useIDE) {
+            // Erase the table
+            debugWatchTable = {};
+            updateDebugWatchDisplay();
+        }
 
         // Reload the program
         if (loadManager && loadManager.status !== 'complete' && loadManager.status !== 'failure') {
@@ -1651,7 +1679,9 @@ function restartProgram(numBootAnimationFrames) {
             lastAnimationRequest = setTimeout(mainLoopStep, 0);
             emulatorKeyboardInput.focus({preventScroll: true});
             updateDebugger(true);
-            firstPrintOrWatch = true;            
+            if (useIDE) {
+                firstPrintOrWatch = true;
+            }            
         } catch (e) {
             // "Link"-time or run-time on a script error
             onError(e);
@@ -1692,7 +1722,11 @@ function onError(e) {
             }
         }
     }
-    editorGotoFileLine(e.url, e.lineNumber, undefined, true);
+    if (useIDE) {
+        editorGotoFileLine(e.url, e.lineNumber, undefined, true);
+    } else {
+        alert('Error in game at ' + e.url + ':' + e.lineNumber + ':  ' + e.message);
+    }
 }
 
 
@@ -2144,7 +2178,7 @@ let soundEditorCurrentSound = null;
 
 /** UI callback for a project tree control element is clicked. Sometimes
     also directly called by debugging tools to force a display to load in
-    the IDE. 
+    the IDE. Requires useIDE = true
 
     For the overview Mode and Constants page, the object is undefined.
 
@@ -2158,10 +2192,11 @@ let soundEditorCurrentSound = null;
     - `object` is the underlying gameSource child to modify
  */
 function onProjectSelect(target, type, object) {
+    console.assert(useIDE);
     // Don't do anything if the game hasn't loaded yet. Any
     // editor is likely to crash at this point with undefined
     // children.
-    if (! gameSource || ! gameSource.json) { return; }
+    if (! gameSource || ! gameSource.json || ! useIDE) { return; }
     
     // Hide all editors
     const editorFrame = document.getElementById('editorFrame');
@@ -2468,13 +2503,15 @@ function visualizeConstant(value, indent) {
     return s;
 }
 
+/* Requires useIDE = true */
 function onOpenFolder(filename) {
     postToServer({command: 'open', app: '<finder>', file: filename});
 }
 
-
+/* Create the editor for the game.json. This function requires useIDE = true */
 function visualizeGame(gameEditor, url, game) {
     console.assert(url, 'undefined url');
+    console.assert(useIDE);
 
     const disabled = editableProject ? '' : 'disabled';
     let s = '';
@@ -2690,8 +2727,9 @@ function visualizeMap(map) {
 
 
 
-/** Creates the left-hand project listing from the gameSource */
+/** Creates the left-hand project listing from the gameSource. Requires useIDE = true */
 function createProjectWindow(gameSource) {
+    console.assert(useIDE);
     let s = '';
     {
         const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
@@ -3632,7 +3670,7 @@ function updateDebugger(showHTML) {
     }
     
     // console.log(QRuntime.game_frames, debugWatchEnabled.checked, emulatorMode, debugWatchTable.changed);
-    if ((QRuntime.game_frames === 0 || debugWatchEnabled.checked) && ((emulatorMode === 'play') || debugWatchTable.changed)) {
+    if (useIDE && (QRuntime.game_frames === 0 || debugWatchEnabled.checked) && ((emulatorMode === 'play') || debugWatchTable.changed)) {
         updateDebugWatchDisplay();
     }
 
@@ -3661,15 +3699,13 @@ function updateDebugger(showHTML) {
 }
 
 
-/* Print only the filename base when it is the same as the game base */
-function shortURL(url) {
-    const gamePath = gameSource.jsonURL.replace(/\/[^/]+\.game\.json$/, '/');
-    if (url.startsWith(gamePath)) {
-        return url.substring(gamePath.length);
-    } else {
-        return url;
+// Injected as assert in QRuntime
+function assert(x, m) {
+    if (! x) {
+        throw new Error(m || "Assertion failed");
     }
 }
+
 
 
 /** When true, the system is waiting for a refresh to occur and mainLoopStep should yield
@@ -3711,8 +3747,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.$showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked && useIDE;
         QRuntime.$showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked && useIDE;
         QRuntime.$onScreenHUDEnabled = document.getElementById('onScreenHUDEnabled').checked && useIDE;
-        QRuntime.$debug_watch        = debug_watch;
-        QRuntime.$debug_print        = debug_print;
+        QRuntime.$debug_watch        = useIDE ? debug_watch : function () {};
+        QRuntime.$debug_print        = useIDE ? debug_print : function () {};
         QRuntime.assert              = assert;
         QRuntime.$parse              = $parse;
         QRuntime.$submitFrame        = submitFrame;
@@ -4575,7 +4611,7 @@ function appendToBootScreen(msg) {
 function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
     const oldVersionControl = gameSource && gameSource.versionControl;
     
-    if (url !== gameURL) {
+    if ((url !== gameURL) && useIDE) {
         // A new game is being loaded. Throw away the editor sessions.
         removeAllCodeEditorSessions();
     }
@@ -4634,18 +4670,24 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
-            if (useIDE) {
-                updateTodoList();
-                updateProgramDocumentation();
-            }
             page.document.title = gameSource.extendedJSON.title;
+            const exportMenu = document.getElementById('exportMenu');
+            if (isQuadserver && editableProject) {
+                exportMenu.removeAttribute('disabled');
+            } else {
+                exportMenu.setAttribute('disabled', '');
+            }
+
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
             setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y, false);
-            createProjectWindow(gameSource);
-            const resourcePane = document.getElementById('resourcePane');
+            if (useIDE) {
+                updateTodoList();
+                updateProgramDocumentation();
+                createProjectWindow(gameSource);
+                const resourcePane = document.getElementById('resourcePane');
 
-            let s = `
+                let s = `
 <br/><center><b style="color:#888; font-family:quadplay; font-size: 125%">Resource Limits</b></center>
 <hr>
 <br/>
@@ -4659,52 +4701,53 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
 <tr><td>Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${resourceStats.maxSpritesheetHeight <= 1024 ? 'OK' : Math.round(resourceStats.maxSpritesheetHeight*100/1024) + '%'})</td></tr>
 </table>`;
 
-            {
-                const summary = `${resourceStats.sourceStatements} statements, ${resourceStats.sounds} sounds, ${Math.round(resourceStats.spritePixels / 1000)}k pixels`;
-                s += `<button style="margin-top: 5px; font-size: 80%" onclick="window.top.navigator.clipboard.writeText('${summary}')">Copy Summary</button>`;
-            }
-
-            const resourceArray = [
-                {name: 'Code Memory',   prop: 'sourceStatements', units: 'Statements', scale:1, suffix:''},
-                {name: 'Sprite Memory', prop: 'spritePixels',     units: 'Pixels', scale: 1/1024, suffix: 'k'}//,
-                // {name: 'Sound Memory',  prop: 'soundKilobytes',       units: 'Bytes', scale: 1, suffix:'kB'}
-            ];
-
-            for (const resource of resourceArray) {
-                s += `<br/><center><b style="color:#888; font-family:quadplay; font-size: 125%">${resource.name}</b></center><hr><br/>`;
-                const entryArray = Object.entries(resourceStats[resource.prop + 'ByURL']);
-                
-                // Sort by length
-                entryArray.sort(function (a, b) { return b[1] - a[1]; });
-                
-                s += `<table width=100%><tr><th style="text-align:left">File</th><th width=120 colspan=2>${resource.units}</th></tr>\n`;
-                for (const entry of entryArray) {
-                    s += `<tr><td>${entry[0].replace(/^.*\//, '')}</td><td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=30px></td></tr>\n`;
+                {
+                    const summary = `${resourceStats.sourceStatements} statements, ${resourceStats.sounds} sounds, ${Math.round(resourceStats.spritePixels / 1000)}k pixels`;
+                    s += `<button style="margin-top: 5px; font-size: 80%" onclick="window.top.navigator.clipboard.writeText('${summary}')">Copy Summary</button>`;
                 }
-                s += '</table>';
-            }
 
-            resourcePane.innerHTML = s;
-            
-            document.getElementById('restartButtonContainer').enabled =
-                document.getElementById('slowButton').enabled =
-                document.getElementById('stepButton').enabled =
-                document.getElementById('playButton').enabled = true;
-            
-            const modeEditor = document.getElementById('modeEditor');
-            const spriteEditor = document.getElementById('spriteEditor');
+                const resourceArray = [
+                    {name: 'Code Memory',   prop: 'sourceStatements', units: 'Statements', scale:1, suffix:''},
+                    {name: 'Sprite Memory', prop: 'spritePixels',     units: 'Pixels', scale: 1/1024, suffix: 'k'}//,
+                    // {name: 'Sound Memory',  prop: 'soundKilobytes',       units: 'Bytes', scale: 1, suffix:'kB'}
+                ];
 
-            if (modeEditor.style.visibility === 'visible') {
-                // Update the mode diagram if it is visible
-                visualizeModes(modeEditor);
-            } else if (spriteEditor.style.visibility === 'visible') {
-                // Update the sprite editor
-                const assetName = spriteEditor.selectedAssetName;
-                onProjectSelect(document.getElementById(`projectAsset_${assetName}`), 'asset', gameSource.assets[assetName]);
-            }
-            
-            if (! noUpdateCode) {
-                updateAllCodeEditorSessions();
+                for (const resource of resourceArray) {
+                    s += `<br/><center><b style="color:#888; font-family:quadplay; font-size: 125%">${resource.name}</b></center><hr><br/>`;
+                    const entryArray = Object.entries(resourceStats[resource.prop + 'ByURL']);
+                    
+                    // Sort by length
+                    entryArray.sort(function (a, b) { return b[1] - a[1]; });
+                    
+                    s += `<table width=100%><tr><th style="text-align:left">File</th><th width=120 colspan=2>${resource.units}</th></tr>\n`;
+                    for (const entry of entryArray) {
+                        s += `<tr><td>${entry[0].replace(/^.*\//, '')}</td><td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=30px></td></tr>\n`;
+                    }
+                    s += '</table>';
+                }
+
+                resourcePane.innerHTML = s;
+                
+                document.getElementById('restartButtonContainer').enabled =
+                    document.getElementById('slowButton').enabled =
+                    document.getElementById('stepButton').enabled =
+                    document.getElementById('playButton').enabled = true;
+                
+                const modeEditor = document.getElementById('modeEditor');
+                const spriteEditor = document.getElementById('spriteEditor');
+
+                if (modeEditor.style.visibility === 'visible') {
+                    // Update the mode diagram if it is visible
+                    visualizeModes(modeEditor);
+                } else if (spriteEditor.style.visibility === 'visible') {
+                    // Update the sprite editor
+                    const assetName = spriteEditor.selectedAssetName;
+                    onProjectSelect(document.getElementById(`projectAsset_${assetName}`), 'asset', gameSource.assets[assetName]);
+                }
+                
+                if (! noUpdateCode) {
+                    updateAllCodeEditorSessions();
+                }
             }
             hideWaitDialog();
 
@@ -4728,7 +4771,9 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
             }
 
         }, function (e) {
-            updateAllCodeEditorSessions();
+            if (useIDE) {
+                updateAllCodeEditorSessions();
+            }
             document.getElementById('restartButtonContainer').enabled =
                 document.getElementById('slowButton').enabled =
                 document.getElementById('stepButton').enabled =
@@ -4976,8 +5021,9 @@ function onUpdateClick(installedVersionText, latestVersionText) {
         doUpdate);
 }
 
-
+/* Requires useIDE = true */
 function doUpdate() {
+    console.assert(useIDE);
     onStopButton();
     // Display a downloading window
     document.getElementById('updateDialog').classList.remove('hidden');
@@ -5275,9 +5321,11 @@ setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT, false);
 reloadRuntime();
 
 // Get the configuration if running on a quadplay server
-LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
-    serverConfig = json;
-});
+if (isQuadserver) {
+    LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
+        serverConfig = json;
+    });
+}
 
 // As early as possible, make the browser aware that we want gamepads
 navigator.getGamepads();

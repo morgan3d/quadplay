@@ -68,6 +68,7 @@ var $numBootAnimationFrames = 120;
    pop_mode, reset_game.  */
 function $setGameMode(newMode, url, line, reason) {
     $gameMode = newMode;
+    // $updateIDEModeGraph is safe to call even when IDE files aren't loaded - it checks for useIDE internally
     $updateIDEModeGraph(newMode, url, line, reason);
 }
 
@@ -7221,7 +7222,7 @@ var overlaps = (function() {
 
             // Trivial axis-aligned test against a rectangle
             return ($Math.abs(B.pos.x - A.pos.x) * 2 <= $Math.abs(A.size.x * A.scale.x) &&
-                    $Math.abs(B.pos.y - A.pos.y) * 2 <= $Math.abs(A.size.y * A.scale.y));
+                    $Math.abs(B.pos.y - A.pos.y) * 2 <= $Math.abs(A.size.y * A.scale.x));
     
         } else if (B.shape === 'disk') {
             // Box A vs. Disk B 

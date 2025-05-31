@@ -500,6 +500,14 @@ b.projectTitle.remote:before {
     cursor: pointer;
 }
 
+/* Disabled menu items */
+.dropdown a[disabled] {
+    color: #888 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+
 /*****************************************************/
 
 .modal {

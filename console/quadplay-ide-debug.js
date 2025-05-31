@@ -100,14 +100,6 @@ function debug_print(location, expression, ...args) {
 }
 
 
-// Injected as assert in QRuntime
-function assert(x, m) {
-    if (! x) {
-        throw new Error(m || "Assertion failed");
-    }
-}
-
-
 /* Callback for the nested pretty printer when the tree control is expanded */
 function onExpanderClick(event) {
     event.stopPropagation();

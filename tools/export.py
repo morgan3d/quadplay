@@ -19,7 +19,7 @@ def get_game_dependency_list(args, game_path):
    title = 'Game'
    
    def callback(filename):
-      depends.append(os.path.join(os.path.dirname(args.gamepath), filename))
+      depends.append(os.path.join(os.path.dirname(game_path), filename))
       
    def title_callback(t):
       nonlocal title
@@ -56,15 +56,22 @@ def write_text_file(filename, contents):
 
 # Source code for the index.html page when making a standalone program
 def generate_standalone(args, out_path, game_path, game_title):
+   # Get the favicon path and copy it
+   favicon_path, is_game_icon, favicon_size = get_favicon_path(args, game_path)
+   favicon_rel_path = copy_favicon(args, out_path, favicon_path, is_game_icon)
+   
    htmlSource = f"""
 <!DOCTYPE html>
 <html>
   <head>
     <title>{game_title}</title>
     <meta charset="utf-8">
-    <link rel="icon" href="console/favicon.ico">
-    <link rel="icon" type="image/png" sizes="64x64" href="console/favicon-64x64.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="console/favicon-32x32.png">
+    <link rel="icon" href="{favicon_rel_path}">
+    <link rel="icon" type="image/png" sizes="{favicon_size}x{favicon_size}" href="{favicon_rel_path}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   </head>
   <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
     <iframe src="console/quadplay.html?fastReload=1&game={game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="gamepad; fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>
@@ -79,15 +86,22 @@ def generate_standalone(args, out_path, game_path, game_title):
    
    
 def generate_remote(args, out_path, game_path, game_title):
+   # Get the favicon path and copy it
+   favicon_path, is_game_icon, favicon_size = get_favicon_path(args, game_path)
+   favicon_rel_path = copy_favicon(args, out_path, favicon_path, is_game_icon)
+   
    htmlSource = f"""
 <!DOCTYPE html>
 <html>
   <head>
     <title>{game_title}</title>
     <meta charset="utf-8"/>
-    <link rel="icon" href="https://morgan3d.github.io/quadplay/console/favicon.ico">
-    <link rel="icon" type="image/png" sizes="64x64" href="https://morgan3d.github.io/quadplay/console/favicon-64x64.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://morgan3d.github.io/quadplay/console/favicon-32x32.png">
+    <link rel="icon" href="{favicon_rel_path}">
+    <link rel="icon" type="image/png" sizes="{favicon_size}x{favicon_size}" href="{favicon_rel_path}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   </head>
   <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
     <script>
@@ -106,20 +120,18 @@ def generate_remote(args, out_path, game_path, game_title):
 
    
 def export(args):
+   game_path = None
+
    if args.game:
-      args.gamepath = os.path.abspath(args.game)
-   elif args.gamepath:
-      # Deprecated version 
-      args.gamepath = os.path.abspath(args.gamepath)
+      game_path = os.path.abspath(args.game)
    else:
-      args.gamepath = os.getcwd()
+      game_path = os.getcwd()
       
    # Handle the case where the argument does not end
    # in .game.json because it is a path
-   if not args.gamepath.endswith('.game.json'):
-      args.gamepath = os.path.join(args.gamepath, os.path.basename(os.path.join(args.gamepath, '')[:-1]) + '.game.json')
+   if not game_path.endswith('.game.json'):
+      game_path = os.path.join(game_path, os.path.basename(os.path.join(game_path, '')[:-1]) + '.game.json')
 
-   game_path = args.gamepath
 
    if not os.path.isfile(game_path):
       print('ERROR: ' + game_path + ' not found.\nChange directory to your game directory or use the -g argument.')
@@ -244,11 +256,42 @@ def export(args):
   
       
 
+def get_favicon_path(args, game_path):
+    """Returns the path to the favicon to use, whether it's from the game or console, and its size."""
+    base_path = os.path.dirname(game_path)
+    
+    # Check for label128.png first
+    label128 = os.path.join(base_path, 'label128.png')
+    if os.path.exists(label128):
+        return label128, True, 128
+        
+    # Then check for label64.png
+    label64 = os.path.join(base_path, 'label64.png')
+    if os.path.exists(label64):
+        return label64, True, 64
+        
+    # Default to console favicon
+    return os.path.join(args.quadpath, 'console/icons/favicon-120x120.png'), False, 120
+
+def copy_favicon(args, out_path, favicon_path, is_game_icon):
+    """Copies the favicon to the output directory and returns the relative path."""
+    if is_game_icon:
+        # For game icons, copy to the root of the output directory
+        dst = os.path.join(out_path, 'favicon.png')
+        if not args.dry_run:
+            shutil.copy2(favicon_path, dst)
+        return 'favicon.png'
+    else:
+        # For console icons, copy to the console directory
+        dst = os.path.join(out_path, 'console/icons/favicon-120x120.png')
+        if not args.dry_run:
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(favicon_path, dst)
+        return 'console/icons/favicon-120x120.png'
 
 if __name__== '__main__':
    parser = argparse.ArgumentParser(description='Export a distributable static HTML game from a game.json game file named on the command line.\n\n', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
    parser.add_argument('game', action='store', default='./', nargs='?', help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename.')
-   parser.add_argument('-g', '--gamepath', help='obsolete argument. Specify the game as a positional argument instead')
    parser.add_argument('-o', '--outpath', help='output to this directory instead of a zipfile. Relative to the current directory.')
    parser.add_argument('-z', '--zipfile', help='name of the zipfile, relative to the current directory. Defaults to the game name if unspecified.')
    parser.add_argument('--noquad', action='store_true', default=False, help='reduce the export size by making referencing the public quadplay distribution instead of embedding it.')

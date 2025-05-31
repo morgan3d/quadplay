@@ -17,6 +17,7 @@
 #
 #    "update":        Update quadplay via git pull or downloading from github, depending on how it was installed
 #
+#    "export_game":   Export the specified game to a zip file
 #
 #  - GET commands:
 #
@@ -63,7 +64,7 @@
 # --git-dir (dir)
 # --work-tree (dir)
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request, types, tempfile, stat
 
 quadplay_origin = 'git clone' if os.path.isdir(os.path.join(os.path.dirname(__file__), '../.git')) else 'downloaded release'
 if quadplay_origin == 'git clone' and os.path.exists(os.path.join(os.path.dirname(__file__), '../_dev')):
@@ -580,13 +581,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             filename = canonicalize_filepath(object['file'])
                    
             if app == '<finder>':
-                if isMacOS:
-                    cmd = 'open -R "' + filename + '"'
-                elif isWindows:
-                    cmd = 'start "" "' + os.path.dirname(filename) + '"'
-                if cmd != '':
-                    maybe_print(cmd)
-                    os.system(cmd)
+                show_file_in_filesystem(filename)
             elif isMacOS:
                 cmd = 'open -a "' + app + '" "' + filename + '"'
                 maybe_print(cmd)
@@ -660,6 +655,57 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 maybe_print('Update already in progress.')
                 response_obj = 'Update already in progress.'
             
+        elif command == 'export_game':
+            target = object.get('target', 'standalone')
+            
+            # Get the game path from the request
+            game_path = object.get('game_path', '')
+            if not game_path:
+                response_obj = {'error': 'No game path provided'}
+                code = 400
+            else:
+                # Translate web path to filesystem path
+                game_path = self.translate_path(game_path)
+                
+                if not os.path.exists(game_path):
+                    response_obj = {'error': f'Game file not found: {game_path}'}
+                    code = 404
+                else:
+                    try:
+                        # Set up export arguments
+                        args = types.SimpleNamespace()
+                        args.game = game_path 
+                        args.quadpath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                        args.noquad = False
+                        args.force = True
+                        args.dry_run = False
+                        args.outpath = None
+                        
+                        # Set zipfile to be in the same directory as the game.json
+                        game_dir = os.path.dirname(game_path)
+                        args.zipfile = os.path.join(game_dir, os.path.basename(game_path).replace('.game.json', '.zip'))
+                        
+                        # Import and run the quadplay export function
+                        from export import export
+                        export(args)
+                        
+                        # Show the zipfile in the file browser
+                        show_file_in_filesystem(args.zipfile)
+                        
+                        # Set success response
+                        response_obj = {'status': 'success'}
+                        code = 200
+                        
+                    except Exception as e:
+                        response_obj = {'error': str(e)}
+                        code = 500
+
+            response = json.dumps(response_obj, separators = (',', ':'));
+            self.send_response(code)
+            self.send_header('Content-type', 'text/json')
+            self.send_header('Content-length', len(response))
+            self.end_headers()
+            self.wfile.write(response.encode('utf8'))
 
         response = json.dumps(response_obj, separators = (',', ':'));
         self.send_response(code)
@@ -1422,3 +1468,16 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+def show_file_in_filesystem(filepath):
+    """Show a file in the system's file explorer.
+    
+    Args:
+        filepath (str): Absolute path to the file to show
+    """
+    if sys.platform == 'darwin':  # macOS
+        subprocess.run(['open', '-R', filepath])
+    elif sys.platform == 'win32':  # Windows
+        subprocess.run(['explorer', '/select,', filepath])
+    else:  # Linux
+        subprocess.run(['xdg-open', os.path.dirname(filepath)])

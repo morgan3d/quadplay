@@ -510,20 +510,22 @@ function $updateIDEModeGraph(mode, url, lineNumber, reason) {
 
     const modeId = modeNameToModeGraphModeId(mode.$name);
     const currentModeNode = document.getElementById(modeId);
-    currentModeNode.classList.add('highlight');
+    // May not exist if in a system menu
+    if (currentModeNode) {
+        currentModeNode.classList.add('highlight');
+    }
 
-    // Highlight either the edge that triggered the mode change or the start edge
+    // Highlight either the edge that triggered the mode change or the start edge.
+    // If we're in a systen menu, there may be no transition
     const edgeId = sourceLocationToModeGraphEdgeId(url, lineNumber);
     const lastEdge = document.getElementById(edgeId);
     if (lastEdge) {
         lastEdge.classList.add('highlight');
-    } else if (!url) {
+    } else if (! url) {
         // If no url, try to highlight the start edge
         const startEdge = document.getElementById('mode_graph_edge_start');
         if (startEdge) {
             startEdge.classList.add('highlight');
         }
-    } else {
-        console.log('ERROR: mode change not found at ' + url + ':' + lineNumber);
     }
 }

@@ -65,7 +65,7 @@ debugger, and profiler.
 
 **Software Features**
 
-- [Export](#deployinggames) to your own website, itch.io, or github pages
+- [Export](#deployinggames) to your own website, itch.io, or github
 - Games run on web, mobile, desktop, tablet, Jetson Nano, Raspberry Pi 4/400
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
@@ -4380,8 +4380,9 @@ or play for free if you choose.
 
 The steps are:
 
-1. On Windows, run `py -3 path-to-quadplay\tools\export.py` inside the directory containing
-   your `game.json` file. On macOS and Linux, use `path-to-quadplay/tools/export.py`.
+1. Select Game &gt; Export... from the menu in the IDE to produce a zipfile. 
+   _You can also run the command line script `tools/export.py`_
+   
 2. [Click here](https://itch.io/game/new target="_blank") and in the tab that opens, enter the following settings:
   - Title: _your game name_
   - Project URL: _your game name_
@@ -4393,8 +4394,10 @@ The steps are:
         - Orientation: Landscape
      - Automatically start on page load
   - Visibility & Access: Public
-3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
-4. Check "This file will be played in the browser"
+
+  3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
+
+  4. Check "This file will be played in the browser"
 
 To update your game or upgrade the underlying <quadplay/> distribution,
 repeat the process of creating the zipfile and then upload it as a
@@ -4402,14 +4405,41 @@ replacement for the original file.
 
 ![](itch.png style="image-rendering:none" width=50%)
 
+
 GitHub
 ------------------------------------------------------------------------------------
 
+### Using GitHub as a web host
+
+1. Create a repository
+  1. Go to https://github.com and sign in
+  2. Click the + icon in the top right corner and select New repository
+  3. Select Public (GitHub requires a public repository for free hosting)
+  4. Click Create repository.
+2. Configure GitHub Pages:
+  1. Click on the Settings tab.
+  2. In the left sidebar, click on Pages.
+  3. Under "Build and deployment" for "Source", select Deploy from a branch.
+  4. For "Branch", choose your primary branch (usually main or master) and ensure the folder is set to / (root).
+  5. Click Save.
+3. Export your game via Game &gt; Export... from the menu in the IDE. 
+4. Upload your game.
+  1. Extract the contents of the zipfile that you just produced
+  2. In your web browser, go to the Code tab of your repository on GitHub
+  3. Click on Add file, then select Upload files from the dropdown menu
+  4. Upload the contents of the zipfile (not the zipfile itself)
+  5. Click the green Commit changes button
+  6. In a few minutes, your site will appear at the URL `https://yourusername.github.io/yourreponame/` (note that this is github.<b>io</b>, not <b>github.com</b>)
+
+If you are experienced with another git GUI tool or the git command line, you can of course
+use those tools instead of the web interface to git. In that case, you may prefer to automate
+the export process using the command line <quadplay/> `tools/export.py` script as well.
+
+
 ### Combined develop and deployment repo
 
-This is the easiest method to deploy your game. It also allows you to
-continuously update the game as well as gain the benefit of
-improvements to <quadplay/> itself continuously.
+Use this method develop your game directly in a git repo and have it continuously
+shared online from the main branch of your repo. *It does not require exporting.*
 
 Store your game in a git repository on [github.com](https://github.com), or in
 a subdirectory of a GitHub repository.  Do not fork quadplay into the repo
@@ -4434,47 +4464,26 @@ in the root of your repo with the contents:
 People visiting the URL `https://USER.github.io/REPO` will then be redirected to the correct page.
 
 
-### Separate repos
-
-To keep your development repository private or just separate from the deployment one,
-create a second repository on GitHub.
-
-Clone both to your local machine and at the command line, enter the _development_ repo
-and run: 
-
-`````````````````````````````````````````````````````````````
-# macOS and Linux:
-tools/export.py -o ../PUBLIC_REPO path/to/game
-
-# Windows:
-py -3 tools\export.py -o ..\PUBLIC_REPO path\to\game
-`````````````````````````````````````````````````````````````
-
-You can then add and commit the public repo. If you want your game to be standalone
-and not depend on the quadplay repo at runtime, just add the `--standalone` argument.
-This will generate an `index.html` file as well as copying all dependencies.
-
-
-
-
 Web Server
 ------------------------------------------------------------------------------------
 
+### Standalone
 You can host your game using only your own files on any web server that supports
 [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), or as a copy
 of all of <quadplay/> on _any_ web server, regardless of whether it supports CORS.
 
 To deploy your game on a web server with CORS named `myserver.com` in the `mygame`
-directory, run just upload your own game files to the server. The URL for your game is:
+directory, just use Game &gt; Export... from the IDE and upload the _contents_ of the
+generated zipfile to your server.
+
+Your URL will be just https://myserver.com/mygame for the directory containing
+the `index.html` file.
+
+### Minimal
+If you wish to only host the source files for your game and not all of quadplay,
+then you can do so. The URL for your game is:
 
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
-
-To deploy a complete package that is independent of the current
-version of <quadplay/>, run `tools/export.py -o path/to/output path/to/game` on
-macOS or Linus and `py -3 tools\export.py -o path\to\output path\to\game` on Windows.
-Then, upload your files from the output directory. 
-
-Your URL will be just https://myserver.com/mygame.
 
 
 Phones
@@ -4680,9 +4689,9 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay-ide-constant.js`](../console/quadplay-ide-constant.js)
 - [`quadplay-ide-vcs.js`](../console/quadplay-ide-vcs.js)
 - [`quadplay-ide-help.js`](../console/quadplay-ide-help.js)
+- [`quadplay-ide-debug.js`](../console/quadplay-ide-debug.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
-- [`quadplay-ide-debug.js`](../console/quadplay-ide-debug.js)
 - [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 
 and excludes the built-in PyxlScript examples, games, and content described below.

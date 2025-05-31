@@ -1,5 +1,6 @@
 "use strict";
 // Parts of the IDE that are for editing source and JSON files using ace.js
+// This file is only loaded when useIDE = true
 
 // How long to wait for new input before saving, to avoid
 // constant disk churn
@@ -12,15 +13,6 @@ const ASSET_EDITOR_SAVE_DELAY_SECONDS = 2.5;
 // Maps filenames to editor sessions. Cleared when a project is loaded
 const codeEditorSessionMap = new Map();
 
-/* True if a URL does not match the current server */
-function isRemote(url) {
-    return ! url.startsWith(location.origin + '/');
-}
-
-/** Returns the path to the quadplay root from location.origin */
-function getQuadPath() {
-    return location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
-}
 
 /* Reference count for outstanding saves to all files. Used to disable reload
    temporarily while a save is pending. */

@@ -47,7 +47,7 @@ if game_frames == 0:
         play_sound(alarm_sound, true, 0%, +100%, ∅, ∅, 60%, true),
         play_sound(alarm_sound, true, 0%, -100%, ∅, ∅, 100%, true)]
     
-set_post_effects({bloom: if bloom then 40% else 0%, motion_blur: 62%})
+set_post_effects({bloom: if bloom then 45% else 0%, motion_blur: 42%})
 
 animate_choice = choice
 

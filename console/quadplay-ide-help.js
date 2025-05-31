@@ -125,8 +125,11 @@ body {left:8px}
 
 ////////////////////////////////////////////////////////////////////////
 
-// Install doc tooltips handler when quadplay is in edit mode
+// Install doc tooltips handler when quadplay is in edit mode. This has to run
+// after the IDE is loaded, so schedule it to run after the initial load.
 if (useIDE) {
+    setTimeout(
+    function () {
     const aceEditor = ace.edit('ace');
 
     // Initialize the documentation viewer
@@ -175,6 +178,7 @@ if (useIDE) {
 
             maybeShowDocumentationForToken(token);
         }});
+    });
 }
 
 

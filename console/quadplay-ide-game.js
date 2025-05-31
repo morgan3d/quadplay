@@ -195,10 +195,58 @@ function serverSaveDebugJSON(callback) {
     serverWriteFile(debugFilename, 'utf8', debugContents, callback);
 }
 
+/******************************************************************/
+
+// Exporting
 
 function onExportClick() {
-    // TODO
+    document.getElementById('exportDialog').classList.remove('hidden');
 }
+
+function hideExportDialog() {
+    document.getElementById('exportDialog').classList.add('hidden');
+}
+
+function onExportDialogOK() {
+    const target = document.querySelector('input[name="exportTarget"]:checked').value;
+    hideExportDialog();
+    
+    // Open manual section in new tab based on target before starting export
+    const manualSection = {
+        'standalone': '#deployinggames/webserver',
+        'itchio': '#deployinggames/itch.io',
+        'github': '#deployinggames/github'
+    }[target];
+    window.open('../doc/manual.md.html' + manualSection, '_blank');
+    
+    // Show wait dialog
+    showWaitDialog('Exporting game...');
+    
+    // Send export request to server
+    postToServer(
+        {
+            command: 'export_game',
+            target: target,
+            game_path: urlToLocalWebPath(gameSource.jsonURL)
+        },
+        function(response, code) {
+            // Success - hide wait dialog
+            hideWaitDialog();
+        },
+        function(response, code) {
+            // Failure - show error and hide wait dialog
+            hideWaitDialog();
+            try {
+                const errorObj = JSON.parse(response);
+                alert('Failed to export game: ' + (errorObj.error || 'Unknown error'));
+            } catch (e) {
+                alert('Failed to export game: ' + response);
+            }
+        }
+    );
+}
+
+/***************************************************************/
 
 function makeGame(srcURL) {
     if (! isQuadserver) {
