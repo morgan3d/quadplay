@@ -43,7 +43,11 @@
         "iceFriction":        {"type": "number",   "value": "1.7%"},
         "cornerRadius":       {"type": "number",   "value": "10"},
         "creaseRadius":       {"type": "number",   "value": "25"},
-        "puckColor":          {"type": "rgb",      "value": "#e70"},
+        "puckColor":          {"type": "rgb",      "value": {
+            "r": 0.9333,
+            "g": 0.4667,
+            "b": 0.0
+          }},
         "framesAfterGoal":    {"type": "number",   "value": "240"},
         "ruleText":           {"type": "string",   "value": "Three periods\nTwo players per team\n\nⓐ: shoot, ⓑ: pass, ⓓ: celebrate\nⓟ: pause\n\nNo shots inside the crease\nBlocking is harder in the crease"}
     },

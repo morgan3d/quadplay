@@ -564,7 +564,18 @@ function setKeyboardMappingMode(type) {
 
 
 function setUIMode(d, noFullscreen) {
-    if (! useIDE && (d === 'IDE' || d === 'WideIDE' || d === 'Ghost' || d === 'Editor' || d === 'Test')) {
+
+    const uiModeTable = {
+        'IDE'      : { button: 'IDEUIButton',      ide: true  },
+        'WideIDE'  : { button: 'wideIDEUIButton',  ide: true  },
+        'Emulator' : { button: 'emulatorUIButton', ide: false },
+        'Test'     : { button: 'testUIButton',     ide: true  },
+        'Maximal'  : { button: 'maximalUIButton',  ide: false },
+        'Windowed' : { button: 'windowedUIButton', ide: false, bodyClass: 'MaximalUI' },
+        'Editor'   : { button: 'editorUIButton',   ide: true  },
+        'Ghost'    : { button: 'ghostUIButton',    ide: true  }};
+
+    if (! useIDE && uiModeTable[d].ide) {
         // When in dedicated play, no-IDE mode and the UI was
         // previously set to UI, fall back to the emulator.
         d = 'Emulator';
@@ -573,25 +584,23 @@ function setUIMode(d, noFullscreen) {
     uiMode = d;
     const body = document.getElementsByTagName('body')[0];
 
-    // Set the CSS class
-    body.classList.remove('MaximalUI');
-    body.classList.remove('EmulatorUI');
-    body.classList.remove('IDEUI');
-    body.classList.remove('WideIDEUI');
-    body.classList.remove('EditorUI');
-    body.classList.remove('GhostUI');
-    body.classList.remove('TestUI');
-    body.classList.add((uiMode === 'Windowed' ? 'Maximal' : uiMode) + 'UI');
+    if (! uiModeTable[uiMode]) {
+        console.log(`setUIMode() called with illegal ui mode: '${uiMode}'`);        
+    }
 
-    // Check the appropriate radio button
-    document.getElementById({'IDE'      : 'IDEUIButton',
-                             'WideIDE'  : 'wideIDEUIButton',
-                             'Emulator' : 'emulatorUIButton',
-                             'Test'     : 'testUIButton',
-                             'Maximal'  : 'maximalUIButton',
-                             'Windowed' : 'windowedUIButton',
-                             'Editor'   : 'editorUIButton',
-                             'Ghost'    : 'ghostUIButton'}[uiMode] || 'maximalUIButton').checked = 1;
+    // Remove all UI mode classes
+    for (const key of Object.keys(uiModeTable)) {
+        if (key !== 'Windowed') {
+            body.classList.remove(key + 'UI');
+        }
+    }
+
+    // Set the CSS class, using any specific overrides from the table
+    body.classList.add(uiModeTable[uiMode].bodyClass || (uiMode + 'UI'));
+
+    // Check the appropriate radio button, defaulting to maximalUI if some illegal value was passed.
+    // This should do nothing if the GUI invoked the function and should update the UI if it was programmatically invoked.
+    document.getElementById(uiModeTable[uiMode].button || 'maximalUIButton').checked = 1;
 
     if (((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) && ! noFullscreen && ! document.fullscreenElement) {
         requestFullScreen();
@@ -601,8 +610,7 @@ function setUIMode(d, noFullscreen) {
         // Undo fullscreen
         try {
             document.exitFullscreen();
-        } catch {
-        }
+        } catch { }
     }
 
     // Need to wait for layout to update before the onResize handler
@@ -610,7 +618,7 @@ function setUIMode(d, noFullscreen) {
     setTimeout(onResize, 100);
 
     // Reset keyboard focus
-    emulatorKeyboardInput.focus({preventScroll:true});
+    emulatorKeyboardInput.focus({preventScroll: true});
 
     // Ace doesn't notice CSS changes. This explicit resize is needed
     // to ensure that the editor can fully scroll horizontally
@@ -2998,36 +3006,36 @@ function onToggle(button) {
 
 
 /** Called by the IDE radio buttons */
-function onRadio() {
+function onRadio(id) {
     // Controls
-    if (pressed('play')) {
+    if ((id === 'playButton')) {
         onPlayButton();
-    } else if (pressed('slow') && ((emulatorMode !== 'play') || (targetFramerate !== SLOW_FRAMERATE))) {
+    } else if ((id === 'slowButton') && ((emulatorMode !== 'play') || (targetFramerate !== SLOW_FRAMERATE))) {
         onSlowButton();
-    } else if (pressed('pause') && (emulatorMode === 'play')) {
+    } else if ((id === 'pauseButton') && (emulatorMode === 'play')) {
         onPauseButton();
-    } else if (pressed('stop') && (emulatorMode !== 'stop')) {
+    } else if ((id === 'stopButton') && (emulatorMode !== 'stop')) {
         onStopButton();
-    } else if (pressed('step') && (emulatorMode !== 'step')) {
+    } else if ((id === 'stepButton') && (emulatorMode !== 'step')) {
         onStepButton();
     }
 
     // UI Layout
-    if (pressed('emulatorUI') && (uiMode !== 'Emulator')) {
+    if ((id === 'emulatorUIButton') && (uiMode !== 'Emulator')) {
         setUIMode('Emulator');
-    } else if (pressed('testUI') && (uiMode !== 'Test')) {
+    } else if ((id === 'testUIButton') && (uiMode !== 'Test')) {
         setUIMode('Test');
-    } else if (pressed('IDEUI') && (uiMode !== 'IDE')) {
+    } else if ((id === 'IDEUIButton') && (uiMode !== 'IDE')) {
         setUIMode('IDE');
-    } else if (pressed('wideIDEUI') && (uiMode !== 'WideIDE')) {
+    } else if ((id === 'wideIDEUIButton') && (uiMode !== 'WideIDE')) {
         setUIMode('WideIDE');
-    } else if (pressed('maximalUI') && (uiMode !== 'Maximal')) {
+    } else if ((id === 'maximalUIButton') && (uiMode !== 'Maximal')) {
         setUIMode('Maximal');
-    } else if (! isMobile && pressed('windowedUI') && (uiMode !== 'Windowed')) {
+    } else if (! isMobile && (id === 'windowedUIButton') && (uiMode !== 'Windowed')) {
         setUIMode('Windowed');
-    } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
+    } else if ((id === 'editorUIButton') && (uiMode !== 'Editor')) {
         setUIMode('Editor');
-    } else if (pressed('ghostUI') && (uiMode !== 'Ghost')) {
+    } else if ((id === 'ghostUIButton') && (uiMode !== 'Ghost')) {
         setUIMode('Ghost');
     }
 

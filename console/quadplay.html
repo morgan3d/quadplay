@@ -34,7 +34,7 @@
       }
     
       function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {
-         document.write('<div id="' + id + 'Container" class="button ' + (disabled?'disabled':'')+ '" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="event.preventDefault(); event.stopPropagation(); if (event.target.enabled !== false) { onRadio(); } else { event.target.checked = false; }" autocomplete="off" value="1" ' + (selected ? 'checked' : '') + (disabled?' disabled':'') + '><span class="label">' + labelHTML + '</span></label></div>');
+         document.write(`<div id="${id}Container" class="button ${disabled ? 'disabled' : ''}" ${attribs || ''}><label><input type="radio" name="${groupID}" id="${id}" onclick="event.stopPropagation(); if (event.target.enabled !== false) { onRadio('${id}'); } else { event.target.checked = false; }" autocomplete="off" value="1" ${selected ? 'checked' : ''}${disabled ? ' disabled' : ''}><span class="label">${labelHTML}</span></label></div>`);
       }
 
       function makeToggle(labelHTML, style, title, id) {
@@ -252,17 +252,17 @@
         &nbsp;&nbsp;&nbsp;
         
         <script>
-          if (! isMobile) {
-              // Can't exit fullscreen on mobile!
-              makeRadio('<img src="icons/ui-windowed.png" width=26 style="position:relative; top:-2px">', 'windowedUIButton', false, 'title="Windowed"',  'ui');
-          }
-          makeRadio('<img src="icons/ui-fullscreen.png" width=26 style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"',  'ui');
+          // Can't exit fullscreen on mobile
+          if (! isMobile) { makeRadio('<img src="icons/ui-windowed.png" width=26 style="position:relative; top:-2px">', 'windowedUIButton', false, 'title="Windowed"', 'ui'); }
+
+          makeRadio('<img src="icons/ui-fullscreen.png" width=26 style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"', 'ui');
+
           if (isMobile) { document.write(`<div style="display: inline-block; width: 8px"></div>`); }
+
           makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'icons/ui-touchscreen.png' : 'icons/ui-touchscreen-fullscreen.png'}" width=26 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
-          if (isMobile) {
-              // Move the buttons away from the corner, which may be curved on mobile
-              document.write(`<div style="display: inline-block; width: 40px"></div>`);
-          }
+
+          // Move the buttons away from the corner, which may be curved on mobile
+          if (isMobile) { document.write(`<div style="display: inline-block; width: 40px"></div>`); }
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
