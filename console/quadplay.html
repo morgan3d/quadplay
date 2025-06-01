@@ -30,7 +30,8 @@
       const isQuadserver = getQueryString('quadserver') === '1';
 
       function makeButton(label, id, title, onclick) {
-         document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></div>');
+        // type=button is needed to make chromium not think this is a password stealer
+         document.write(`<div ${id ? 'id="' + id + 'Container" ' : ''} class="button" ${id ? 'id="' + id + 'Container" ' : ''}><label><input type="button" ${id ? 'id="' + id + '" ' : ''} onmousedown="event.stopPropagation()" onclick="if (event.target.parentElement.parentElement.enabled !== false) ${onclick || ''}" autocomplete="off" title="${title || label}"><span class="label" ${id ? 'id="' + id + 'Label"' : ''}>${label}</span></label></div>`);
       }
     
       function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {
@@ -39,7 +40,7 @@
 
       function makeToggle(labelHTML, style, title, id) {
          id = id || title.toLowerCase();
-         document.write('<div class="button" title="' + title + '" style="' + (style || '') + '" onmousedown="event.stopPropagation()"><label><input id="' + id + 'Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">' + labelHTML + '</span></label></div>');
+         document.write(`<div class="button" title="${title}" style="${style || ''}" onmousedown="event.stopPropagation()"><label><input id="${id}Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">${labelHTML}</span></label></div>`);
       }
 
     // When embedded into a binary app, Safari changes its userAgent string.
@@ -65,15 +66,21 @@
     function writeCloseOption() {
         // Firefox can't close a window by itself
         if (! isFirefox) {
-            document.write(`<hr><div><a onclick="closeClient()">${isApple ? 'Quit' : 'Exit'} quadplay✜</a></div>`);
+            document.write(`<hr><div><a onclick="closeClient()">${isApple ? 'Quit' : 'Exit'}</a></div>`);
         }
+    }
+
+    function generateVolumeControl() {
+      document.write(`<div id="volumeControl" style="display:inline-block" class="${useIDE ? 'IDEOnly' : 'noIDE'}"><label for="volumeSlider" style="padding-left: 6px; position: relative; top: 1px;"><img src="icons/ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; margin-top:-2px; top: 3px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()"></div>`);
     }
     </script>
 
   </head>
 
   <!-- Default to the most conservative UI. The real version will be set on load -->
-  <body id="body" class="MaximalUI kiosk">
+  <script>
+    document.write(`<body id="body" class="${useIDE ? 'IDE' : ''} MaximalUI kiosk">`);
+  </script>
     <video id="guestVideo" playsinline autoplay oncontextmenu="event.preventDefault()" onmousedown="window.focus()"> </video>
     <audio id="guestAudio" autoplay style="visibility: hidden"></audio>
     <div id="guestVideoCover"> </div>
@@ -116,15 +123,17 @@
       </div>
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
-      <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="icons/ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()">
-      <br/><label><input id="autoSleepCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onAutoSleepClick(event)" autocomplete="off">Sleep when inactive</label>
-      <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onBackgroundPauseClick(event)" autocomplete="off">Pause in background</label>
+      <script>
+        if (useIDE) { generateVolumeControl(); }
+      </script>
+      <br class="IDEOnly"/>
+      <label><input id="autoPauseCheckbox" type="checkbox" title="Sleep the game when not in focus or not recently interacted (unless hosting)" onclick="onAutoPauseCheckbox(event)" autocomplete="off"><span id="autoPauseLabel"><span class="IDEOnly">Pause</span><span class="noIDE">Sleep</span> when inactive</span></label>
       <hr>
       <label><input name="keyboardType" id="NormalKeyboardRadio" type="radio" title="Normal quadplay keyboard mapping for P1 and P2" onclick="event.stopPropagation() || setKeyboardMappingMode('Normal')" autocomplete="off" checked="1">Normal Keyboard</label>
       <br/><label><input name="keyboardType" id="MiniPACKeyboardRadio" type="radio" title="Use the Ultimarc Mini PAC mapping for an arcade installation that sends keyboard commands. Only P1 has a Pause button." onclick="event.stopPropagation() || setKeyboardMappingMode('MiniPAC')" autocomplete="off">Ultimarc Mini PAC</label>
       <br/><label><input name="keyboardType" id="MAMEKeyboardRadio" type="radio" title="Use the MAME mapping for controllers that send keyboard commands. P3 and P4 only have partial support in MAME." onclick="event.stopPropagation() || setKeyboardMappingMode('MAME')" autocomplete="off">MAME Default</label>
       <hr>
-      <table style="margin: 0; padding: 0; border-collapse:collapse">
+      <table style="margin: 0; padding: 0; border-collapse:collapse" class="IDEOnly">
         <tr valign="top">
           <td>
             <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
@@ -144,7 +153,7 @@
           </td>
         </tr>
       </table>
-      <hr>
+      <hr class="IDEOnly">
       <div class="IDEOnly"><a onclick="setIDEEnable(0)">Hide Dev Tools (IDE)</a></div>
       <script>
         if (isQuadserver) {
@@ -160,9 +169,9 @@
         }
       </script>
       <!-- <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>-->
-      <div>
+      <!-- <div>
         <a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a>
-      </div>
+      </div> -->
 
       <script>if (! useIDE) { writeCloseOption(); }</script>
 
@@ -203,30 +212,43 @@
           <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Game</a>
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
         </span>
-        <a style="cursor:pointer" onclick="onMenuButton(event)" id="consoleMenuButton">Console</a>
-        <span class="noIDE">
-          &nbsp;&nbsp; &middot; &nbsp;&nbsp;
-          <a onclick="window.open('controls.html', '', 'width=400,height=500')">Controls</a>
-        </span>
+
+        <script>
+          document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="consoleMenuButton">${useIDE ? 'Console' : 'quadplay✜'}</a>`);
+        </script>
+        
         <span class="IDEOnly">        
-          &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a href="../doc/manual.md.html" target="_blank">Manual</a>
-        </span>
-        <span class="noMobile" id="recordingControls">
-          &nbsp;&nbsp; &middot; &nbsp;&nbsp;
-          <a style="cursor:pointer" onclick="downloadScreenshot()">PNG(F6)</a>
-          &nbsp;&nbsp; &middot; &nbsp;&nbsp;
-          <a style="cursor:pointer" onclick="toggleGIFRecording()">GIF(F8)</a>
+            &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a href="../doc/manual.md.html" target="_blank">Manual</a>
+            <span id="recordingControls">
+              &nbsp;&nbsp; &middot; &nbsp;&nbsp;
+              <a style="cursor:pointer" onclick="downloadScreenshot()">PNG(F6)</a>
+              &nbsp;&nbsp; &middot; &nbsp;&nbsp;
+              <a style="cursor:pointer" onclick="toggleGIFRecording()">GIF(F8)</a>
+          </span>
         </span>
         <span id="recording" class="blink hidden" style="margin-left: 10px; color:#F00">RECORDING</span>
         <!-- <span id="adblockWarning"></span> -->
       </div>
-
+ 
+      <!-- Right side toolbar -->
       <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px; font-size: 10px">
+
+        <script>
+          if (! useIDE) { 
+            makeButton('<div class="buttonIcon"></div>', 'systemMenuButton', 'System Menu (P)', "onSystemMenuButton('system')");
+
+            document.write('&nbsp;&nbsp;&nbsp;');
+
+            generateVolumeControl(); 
+            document.write('&nbsp;&nbsp;&nbsp;');
+          }
+        </script>
+
         <div style="width:24px; margin-top: -4px; display: inline-block; padding-left: 10px" onclick="showGamepads()">
-          <div class="midiAbsent" id="midiIcon0" title="Connect a USB MIDI input device" style="display:block"></div>
-          <div class="midiAbsent" id="midiIcon1" title="Connect a USB MIDI output device"></div>
+          <div class="midiAbsent" id="midiIcon0" title="Connect a USB MIDI device" style="display:block"></div>
+          <div class="midiAbsent" id="midiIcon1" title="Connect a USB MIDI device"></div>
         </div>
-        <div style="display:inline-block; padding-left: 1px;" onclick="showGamepads()">
+        <div style="display:inline-block; padding-left: 1px;" onclick="useIDE ? showGamepads() : onSystemMenuButton('controls')">
           <div style="width:48px; margin-top: -4px">
             <div class="controllerAbsent" id="controllerIcon0" title="Connect a game controller and press a button on it"></div>
             <div class="controllerAbsent" id="controllerIcon1" title="Connect a game controller and press a button on it"></div>
@@ -240,7 +262,7 @@
 
         <span class="IDEOnly">
             <script>
-              makeButton('<div class="buttonIcon"></div>', 'restartButton', `Reload and Play (^R)`, 'onRestartButton');
+              makeButton('<div class="buttonIcon"></div>', 'restartButton', `Reload and Play (^R)`, 'onRestartButton(event)');
               makeRadio('<div class="buttonIcon"></div>', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'stepButton', false, 'title="Step (F10)"', 'controls');
@@ -332,12 +354,12 @@
         
         <div id="codeToolbar" class="toolbar">
           <script>
-            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorUndo', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton');
-            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton');
-            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
+            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorUndo', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton(event)');
+            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton(event)');
+            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton(event)');
+            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton(event)');
+            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton(event)');
+            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton(event)');
           </script>
           <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>
@@ -1113,7 +1135,8 @@
         */     
         function loadScript(url, ide, lazyLoad, type) {
             if (! ide || useIDE) {
-              return `<script ${lazyLoad ? 'async' : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
+              // Not currently using async because of race condition concerns
+              return `<script ${lazyLoad ? '' : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
             } else {
               return '';
             }
@@ -1128,7 +1151,7 @@
             {url: 'ace/ace.js', ide: true},
 
             // Mode graph library
-            'lib/dagre.min.js',
+            {url: 'lib/dagre.min.js', lazyLoad: true, ide: true},
 
             // QR code generator. This is needed for networking
             // even when not in the IDE
@@ -1137,31 +1160,39 @@
             // YAML parsing
             'lib/js-yaml.min.js',
 
-            // Compiler
-            'lib/vectorify.js',
+            // JSON parsing
+            'WorkJSON.js',
 
-            // Physics engine
-            'lib/decomp.min.js',
+            // Compiler dependency
+            {url: 'lib/vectorify.js', lazyLoad: true},
+            
+            // Physics library
+            //
+            // Cannot lazy load lib/matter.min.js because matter-extensions.js needs to run
+            // after matter.min.js is loaded since it mutates it
+            {url: 'lib/decomp.min.js', lazyLoad: true},
             'lib/matter.min.js',
             'matter-extensions.js',
 
             // Network
             {url: 'lib/peerjs.min.js', lazyLoad: true},
 
-            // Parsing
-            'WorkJSON.js',
             'LoadManager.js',
             'filters.js',
 
-            // quadplay✜ implementation
-            // Force reload, as these change often
+            // Everything below here is the quadplay✜ implementation.
+            // Force reload, as these change often.
+
             {url: 'os/dependencies.py?', type: 'text/javascript'},
             'version.js?',
             'pyxlscript-compiler.js?',
             'quadplay-browser.js?',
             'quadplay-font.js?',
             'quadplay-load.js?',
+
+            // Needed for frame scaling, so not limited to IDE mode
             'quadplay-profiler.js?',
+
             {url: 'quadplay-ide-code.js?', ide: true},
             {url: 'quadplay-ide-game.js?', ide: true},
             {url: 'quadplay-ide-asset.js?', ide: true},
@@ -1171,6 +1202,7 @@
             {url: 'quadplay-ide-help.js?', ide: true},
             {url: 'quadplay-ide-debug.js?', ide: true},
             {url: 'quadplay-ide-vcs.js?', ide: true},
+            {url: 'quadplay-ide.js?', ide: true},
             'quadplay-network.js?',
             'quadplay-midi.js?',
             'quadplay.js?'

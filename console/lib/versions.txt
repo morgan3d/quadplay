@@ -1,8 +1,8 @@
-peer.js          1.4.7         https://peerjs.com/
-matter.js        0.20.0        http://brm.io/matter-js/
-gif.js           0.2.0         https://github.com/jnordberg/gif.js
-qrcode.js        2018          https://github.com/KeeeX/qrcodejs fork of https://github.com/davidshimjs/qrcodejs
-js-yaml.min.js   4.1.0         https://github.com/nodeca/js-yaml
-dagre.min.js
-decomp.min.js
-../ace/ace.js    1.37.1        https://github.com/ajaxorg/ace-builds/
+peer.js          1.4.7         Network          https://peerjs.com/
+gif.js           0.2.0         GIF recording    https://github.com/jnordberg/gif.js
+qrcode.js        2018          QRCode gen       https://github.com/KeeeX/qrcodejs fork of https://github.com/davidshimjs/qrcodejs
+js-yaml.min.js   4.1.0         YAML parsing     https://github.com/nodeca/js-yaml
+dagre.min.js     2023          Mode graph gen   https://github.com/dagrejs/dagre
+decomp.min.js    2017          Polygon decomp for physics. Not maintained https://github.com/schteppe/poly-decomp.js/
+matter.js        0.20.0        Physics          http://brm.io/matter-js/
+../ace/ace.js    1.37.1        Code editor      https://github.com/ajaxorg/ace-builds/

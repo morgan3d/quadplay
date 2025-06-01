@@ -1,11 +1,15 @@
-/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License 
+
+   Editor for the game.json settings.
+ */
+
+"use strict";
 
 function onProjectLicensePreset(license) {
     const projectLicense = document.getElementById('projectLicense');
     projectLicense.value = licenseTable[license];
     onProjectMetadataChanged();
 }
-
 
 function onProjectMetadataChanged(projectLicense) {
     const t = document.getElementById('projectTitle').value.trim();

@@ -234,9 +234,12 @@ div#header {
     color:#ccc;
     text-align: center;
     padding-top: 3px;
-    border-bottom: 1px solid #888;
     overflow: hidden;
     white-space: nowrap;
+}
+
+.IDE div#header {
+    border-bottom: 1px solid #888;
 }
 
 .kiosk #header {
@@ -252,8 +255,13 @@ div#header {
 }
 
 /** Do not change this selector without changing quadplay.js setColorScheme() */
-a, #header a, .menu a {
+body.IDE a, body.IDE #header a, body.IDE .menu a {
     color: var(--theme-color, #e61b9d) !important;
+    text-decoration: none;
+}
+
+body:not(.IDE) a, body:not(.IDE) #header a, body:not(.IDE) .menu a {
+    color: #EEE !important;
     text-decoration: none;
 }
 
@@ -652,7 +660,7 @@ div.debugOverride.disabled {
 
 /* Hide the actual input control */
 .button input {
-    display:          none;
+    display: none;
 }
 
 .button {
@@ -676,21 +684,14 @@ div.debugOverride.disabled {
     cursor: pointer;
 }
 
-.unselectable {
-    touch-action: none;
-    /* Disable text selection */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+.button img {
+    pointer-events: none;
+}
 
-    /* Stop iOS from making the entire canvas gray when tapped */
-    -webkit-tap-highlight-color: transparent;
-
-    /* Prevent magnifying glass */
-    -webkit-touch-callout: none;
+.button.disabled,
+.button.disabled label,
+.button.disabled input {
+    cursor: default;
 }
 
 .button label span.label, .button span.label {
@@ -733,6 +734,10 @@ div.debugOverride.disabled {
     width:32px; height:16px    
 }
 
+#systemMenuButtonContainer .buttonIcon {
+    background-image: url('icons/button-system.png');
+}
+
 #restartButtonContainer .buttonIcon {
     background-image: url('icons/button-reload.png');
 }
@@ -757,11 +762,27 @@ div.debugOverride.disabled {
     background-image: url('icons/button-play.png');
 }
 
-/* Invert the icon color from black to white when selected on a button */
-.button:active img, .button input:checked + span.label img,
-.button:active div.buttonIcon, .button input:checked + span.label div.buttonIcon {
-    filter: invert(100%);
+
+/*****************************************************************/
+/* Standalone game toolbar button styling */
+body:not(.IDE) .button span.label {
+    background: transparent;
+    border: 1px solid var(--no-ide-button-color, #EEE);
+    box-shadow: none;
 }
+
+body:not(.IDE) .button:active span.label,
+body:not(.IDE) .button input:checked ~ span.label {
+    background: var(--no-ide-button-color, #EEE);
+}
+
+body:not(.IDE) .button:not(:active) input:not(:checked) + span.label *,
+body.IDE .button:active input + span.label *,
+body.IDE .button input:checked + span.label * {
+    filter: invert(1) brightness(0.93);
+}
+
+/******************************************************************/
 
 div.disabled span.label, div.disabled:active span.label {
     background:       #BBB;
@@ -1766,7 +1787,17 @@ canvas#screenOverlay {
     height: 7px;
     padding-top: 2px;
 }
+/*******************************************************************/
 
+/* Align in the menu with checkboxes */
+#volumeControl.IDEOnly {
+    margin-left: 0px;
+}
+
+#volumeControl.noIDE {
+    top:-6px;
+    position: relative;
+}
 /*******************************************************************/
 
 .controllerPresent, .controllerAbsent, .midiPresent, .midiAbsent {

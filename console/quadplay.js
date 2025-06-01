@@ -53,11 +53,9 @@ let serverConfig = {};
 // but it may still be present in older versions.
 const hasBrowserScaleBug = isSafari;
 
-// Can the game sleep when idle to save power?
-let autoSleepEnabled =
-    ((getQueryString('kiosk') === '1') ||
-     (localStorage.getItem('autoSleepEnabled') !== 'false')) &&
-    (getQueryString('nosleep') !== '1');
+
+// Can the game pause/sleep when idle to save power?
+let autoPauseEnabled = (localStorage.getItem('autoPauseEnabled') === 'true');
 
 
 const noop = ()=>{};
@@ -75,11 +73,11 @@ let allow_bloom = true;
     // Safari doesn't have a monospace font for console output, so only
     // show the ASCII-art banner on other platforms
     const banner = isSafari ? [''] : `
-                                  ╷       ╷                                   
-            ╭───╮ ╷   ╷  ───╮ ╭── │ ╭───╮ │   ───╮ ╷   ╷   ▒▒                 
-            │   │ │   │ ╭── │ │   │ │   │ │  ╭── │ │   │ ▒▒  ▒▒               
-            ╰── │ ╰───┘ ╰───╯ ╰───╯ │ ──╯ ╰─ ╰───╯ ╰── │   ▒▒                 
-                ╵                   ╵                ──╯                      `.split('\n');
+                              ╷       ╷                                   
+        ╭───╮ ╷   ╷  ───╮ ╭── │ ╭───╮ │   ───╮ ╷   ╷   ▒▒                 
+        │   │ │   │ ╭── │ │   │ │   │ │  ╭── │ │   │ ▒▒  ▒▒               
+        ╰── │ ╰───┘ ╰───╯ ╰───╯ │ ──╯ ╰─ ╰───╯ ╰── │   ▒▒                 
+            ╵                   ╵                ──╯                      `.split('\n');
     const style = [];
     for (let i = 0; i < banner.length; ++i) {
         banner[i] = '%c' + banner[i];
@@ -544,17 +542,6 @@ function requestFullScreen() {
 
 let backgroundPauseEnabled = true;
 
-function onBackgroundPauseClick(event) {
-    event.stopPropagation();
-    backgroundPauseEnabled = document.getElementById('backgroundPauseCheckbox').checked;
-    saveIDEState();
-}
-
-function onAutoSleepClick(event) {
-    event.stopPropagation();
-    autoSleepEnabled = document.getElementById('autoSleepCheckbox').checked;
-    localStorage.setItem('autoSleepEnabled', autoSleepEnabled);
-}
 
 function setKeyboardMappingMode(type) {
     keyboardMappingMode = type;
@@ -620,14 +607,17 @@ function setUIMode(d, noFullscreen) {
     // Reset keyboard focus
     emulatorKeyboardInput.focus({preventScroll: true});
 
-    // Ace doesn't notice CSS changes. This explicit resize is needed
-    // to ensure that the editor can fully scroll horizontally
-    // in 'wide' mode
-    if (useIDE) { setTimeout(function() { aceEditor.resize(); }); }
+    if (useIDE) { 
+        // Ace doesn't notice CSS changes. This explicit resize is needed
+        // to ensure that the editor can fully scroll horizontally
+        // in 'wide' mode
+        setTimeout(function() { aceEditor.resize(); });
 
-    // Force a debugger update so that the stats are correct
-    // when switching back to it
-    updateDebugger();
+        // Force a debugger update so that the stats are correct
+        // when switching back to it
+        updateDebugger();
+    }
+
 }
 
 
@@ -959,9 +949,16 @@ function onSlowButton() {
 }
 
 
+function onAutoPauseCheckbox(event) {
+    event.stopPropagation();
+    autoPauseEnabled = document.getElementById('autoPauseCheckbox').checked;
+    localStorage.setItem('autoPauseEnabled', autoPauseEnabled.toString());
+    saveIDEState();
+}
+
 function wake() {
     // Wake if asleep (we might be in pause mode because we're a guest, too)
-    if (autoSleepEnabled && (emulatorMode === 'pause') && (document.getElementById('sleep').style.visibility === 'visible')) {
+    if (autoPauseEnabled && (emulatorMode === 'pause') && (document.getElementById('sleep').style.visibility === 'visible')) {
         document.getElementById('sleep').style.visibility = 'hidden';
         onPlayButton();
         
@@ -1085,7 +1082,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
 
             try {
                 compiledProgram = compile(gameSource, fileContents, false);
-                setErrorStatus('');
+                if (useIDE) { setErrorStatus(''); }
             } catch (e) {
                 e.message = e.message.replace(/^line \d+: /i, '');
                 if (e.message === 'Unexpected token :') {
@@ -1096,8 +1093,8 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                     console.log(e);
                     return;
                 }
-                setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message, {line_number: e.lineNumber, url: e.url});
                 if (useIDE) {
+                    setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message, {line_number: e.lineNumber, url: e.url});
                     editorGotoFileLine(e.url, e.lineNumber, undefined, true);
                 } else {
                     alert('Error in game at ' + e.url + ':' + e.lineNumber + ':  ' + e.message);
@@ -1662,6 +1659,36 @@ for (const name in controlSchemeTable) {
 }
 
 
+
+
+/* Optional location = { line_number, url, fcn } used for creating hyperlinks and displaying output */
+function setErrorStatus(e, location) {
+    e = escapeHTMLEntities(e);
+
+    if (location) {
+        if (location.line_number !== undefined) {
+            e = `${location.fcn ? location.fcn + ' at ' : ''}<a style="font-family: Arial; cursor:pointer">${shortURL(location.url)}:${location.line_number}</a>: ${e}`;
+        } else if (location.url) {
+            e = `${location.fcn ? location.fcn + ' at ' : ''}${shortURL(location.url)}: ${e}`;
+        } else if (location.fcn) {
+            e = location.fcn + ': ' + e;
+        }
+    }
+    
+
+    if (useIDE) {
+        error.innerHTML = e;
+        if (e !== '') {
+            $outputAppend(`\n<span style="color:#f55">${e}<span>\n`, location, location !== undefined);
+            document.getElementById('outputTab').checked = true;
+        }
+    } else if (e !== '') {
+        alert(e);
+        console.log(e.innerHTML);
+    }
+}
+
+
 /** Called by reset_game() as well as the play and reload buttons to
     reset all game state and load the game.  */
 function restartProgram(numBootAnimationFrames) {
@@ -1686,8 +1713,8 @@ function restartProgram(numBootAnimationFrames) {
             QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
             lastAnimationRequest = setTimeout(mainLoopStep, 0);
             emulatorKeyboardInput.focus({preventScroll: true});
-            updateDebugger(true);
             if (useIDE) {
+                updateDebugger(true);
                 firstPrintOrWatch = true;
             }            
         } catch (e) {
@@ -1904,6 +1931,20 @@ function onPauseButton() {
     }
 }
 
+/**Shows the system menu or controls menu.
+  -  `why`:
+    - 'system': Shows the main system menu with options like resume, credits, controllers, etc.
+    - 'controls': Shows the system menu and immediately pushes to the controls menu */
+function onSystemMenuButton(why) {
+    assert(!useIDE);
+    if (QRuntime) {
+        QRuntime.$goToSystemMenu = why;
+    }
+
+    // Put the focus back on the emulator
+    emulatorKeyboardInput.focus({preventScroll:true});
+}
+
 // Changed by device_control, always resets on program start
 let usePointerLock = false;
 
@@ -2108,8 +2149,7 @@ function saveIDEState() {
 
     const options = {
         'uiMode': uiMode,
-        'backgroundPauseEnabled': backgroundPauseEnabled,
-        'autoSleepEnabled': autoSleepEnabled,
+        'autoPauseEnabled': autoPauseEnabled,
         'colorScheme': colorScheme,
         'volumeLevel': '' + volumeLevel,
         'gamepadOrderMap': gamepadOrderMap.join(''),
@@ -2182,192 +2222,6 @@ function showGamepads() {
 }
 
 
-let soundEditorCurrentSound = null;
-
-/** UI callback for a project tree control element is clicked. Sometimes
-    also directly called by debugging tools to force a display to load in
-    the IDE. Requires useIDE = true
-
-    For the overview Mode and Constants page, the object is undefined.
-
-    - `target` is the Project HTML hierarchy element for the . 
-      It can often be obtained from the name, for example: 
-      document.getElementById('projectAsset_${assetName}').
-      If not defined by the caller, it will be discovered
-    
-    - `type` is one of: 'asset', 'constant', 'mode', 'script', 'doc'
-    
-    - `object` is the underlying gameSource child to modify
- */
-function onProjectSelect(target, type, object) {
-    console.assert(useIDE);
-    // Don't do anything if the game hasn't loaded yet. Any
-    // editor is likely to crash at this point with undefined
-    // children.
-    if (! gameSource || ! gameSource.json || ! useIDE) { return; }
-    
-    // Hide all editors
-    const editorFrame = document.getElementById('editorFrame');
-    for (let i = 0; i < editorFrame.children.length; ++i) {
-        editorFrame.children[i].style.visibility = 'hidden';
-    }
-    
-    const gameEditor    = document.getElementById('gameEditor');
-    const modeEditor    = document.getElementById('modeEditor');
-    const codePlusFrame = document.getElementById('codePlusFrame');
-
-    // Hide the viewers within the content pane for the code editor
-    const editorContentFrame = document.getElementById('editorContentFrame');
-    for (let i = 0; i < editorContentFrame.children.length; ++i) {
-        editorContentFrame.children[i].style.visibility = 'hidden';
-    }
-
-    const codeEditor     = document.getElementById('codeEditor');
-    const spriteEditor   = document.getElementById('spriteEditor');
-    const soundEditor    = document.getElementById('soundEditor');
-    const mapEditor      = document.getElementById('mapEditor');
-    const docEditor      = document.getElementById('docEditor');
-
-    document.getElementById('spriteEditorHighlight').style.visibility =
-        document.getElementById('spriteEditorPivot').style.visibility = 'hidden';
-    
-    let list = document.getElementsByClassName('selectedProjectElement');
-    for (let i = 0; i < list.length; ++i) {
-        list[i].classList.remove('selectedProjectElement');
-    }
-
-    if ((type === 'mode') && (object === undefined)) {
-        // Select the mode diagram itself
-        target.classList.add('selectedProjectElement');
-        // Skip visualization if game is running and useIDE is true since the mode diagram
-        // was already created during game restart to highlight the active mode for debugging
-        if (!(useIDE && QRuntime && QRuntime.$gameMode)) {
-            visualizeModes(modeEditor);
-        }
-        modeEditor.style.visibility = 'visible';
-        return;
-    }
-
-    document.getElementById('codeEditorDivider').style.visibility = 'unset';    
-    if (type === 'doc') {
-        // Documents
-        target.classList.add('selectedProjectElement');
-        showGameDoc(object);
-        docEditor.style.visibility = 'visible';
-        codePlusFrame.style.visibility = 'visible';
-
-        codePlusFrame.style.gridTemplateRows = `auto 0px 0px 1fr`;
-        
-        if (object.endsWith('.md') ||
-            object.endsWith('.html') ||
-            object.endsWith('.txt')) {
-
-            // Show the editor after loading the content
-            if (fileContents[object] !== undefined) {
-                setCodeEditorDividerFromLocalStorage();
-                setCodeEditorSession(object);
-            } else {
-                // Load and set the contents
-                LoadManager.fetchOne({forceReload: true}, object, 'text', null, function (doc) {
-                    fileContents[object] = doc;
-                    setCodeEditorDividerFromLocalStorage();
-                    setCodeEditorSession(object);
-                });
-            }
-        }
-        return;
-    }
-
-    if (! target && type === 'mode' && object) {
-        target = document.getElementById('ModeItem_' + object.name);
-    }
-
-    if (type === 'game') {
-        if (target) { target.classList.add('selectedProjectElement'); }
-        visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
-        gameEditor.style.visibility = 'visible';
-        codePlusFrame.style.visibility = 'visible';
-        setCodeEditorDividerFromLocalStorage();
-        setCodeEditorSession(gameSource.jsonURL);
-        return;
-    }
-
-    // Find the parent .li
-    while (target && (target.tagName !== 'LI')) {
-        target = target.parentNode;
-    }
-
-    if (target) {
-        target.classList.add('selectedProjectElement');
-    }
-
-    switch (type) {
-    case 'constant':
-        // object may be undefined
-        showConstantEditor(object);
-        break;
-        
-    case 'mode':
-    case 'script':
-        {
-            // See if there is already an open editor session, and create one if it
-            // doesn't exist
-            const url = (type === 'mode') ? object.url : object;
-            setCodeEditorSession(url);
-            // Show the code editor and hide the content pane
-            codePlusFrame.style.visibility = 'visible';
-            codePlusFrame.style.gridTemplateRows = '0px 0px auto 1fr';
-            document.getElementById('codeEditorDivider').style.visibility = 'hidden';
-        }
-        break;
-        
-    case 'asset':
-        console.assert(object);
-        const url = object.$url || object.src;
-        // Find the underlying gameSource.asset key for this asset so
-        // that we can fetch it again if needed
-        let assetName;
-        for (const k in gameSource.assets) {
-            const asset = gameSource.assets[k];
-            if (asset === object) {
-                assetName = k;
-                break;
-            } else if (asset.spritesheet && asset.spritesheet === object) {
-                // Spritesheet on a map
-                assetName = asset.$name + '.spritesheet';
-                break;
-            }
-        }
-        console.assert(assetName, 'Could not find asset name for ' + object);
-        setCodeEditorSession(object.$jsonURL, assetName);
-
-        // Show the code editor and the content pane
-        codePlusFrame.style.visibility = 'visible';
-        setCodeEditorDividerFromLocalStorage();
-        const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
-        const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
-        const spriteEditorPivot = document.getElementById('spriteEditorPivot');
-        const spriteEditorInfo = document.getElementById('spriteEditorInfo');
-        spriteEditorHighlight.style.visibility = 'hidden';
-        spriteEditorPivot.style.visibility = 'hidden';
-        spriteEditorCanvas.onmousemove = spriteEditorCanvas.onmousedown = undefined;
-        spriteEditorAsset = object;
-        spriteEditorAssetName = assetName;
-
-        if (/\.png$/i.test(url)) {
-            showPNGEditor(object, assetName);
-        } else if (/\.mp3$/i.test(url)) {
-            soundEditor.style.visibility = 'visible';
-            soundEditorCurrentSound = object;
-            document.querySelector('#soundEditor audio').src = object.$url;
-        } else if (/\.tmx$/i.test(url)) {
-            visualizeMap(object);
-            mapEditor.style.visibility = 'visible';
-        }
-        break;
-    }
-}
-
 
 // Callback for iframe reloading
 function setIFrameScroll(iframe, x, y) {
@@ -2377,510 +2231,11 @@ function setIFrameScroll(iframe, x, y) {
 }
 
 
-function setEditorTitle(url) {
-    const editorTitle = document.getElementById('editorTitle');
-    editorTitle.innerHTML = url.replace(/^.*\//, '').replace(/[<>&]/g, '');
-    editorTitle.title = url;
-}
-
-
-/* Updates the preview pane of the doc editor. If useFileContents is true,
-   use fileContents[url] when not undefined instead of actually reloading. */
-function showGameDoc(url, useFileContents) {
-    const docEditor = document.getElementById('docEditor');
-    setEditorTitle(url);
-
-    const preserveScroll = (docEditor.lastURL === url);
-    docEditor.lastURL = url;
-
-    const srcdoc = useFileContents ? fileContents[url] : undefined;
-
-    // Store old scroll position
-    let oldScrollX = 0, oldScrollY = 0;
-    {
-        const element = document.getElementById('doc');
-        if (element) {
-            if (element.contentWindow) {
-                // Only works when the document is on the same domain
-                const doc = element.contentWindow.document;
-                const html = doc.getElementsByTagName('html')[0];
-                oldScrollX = Math.max(html.scrollLeft, doc.body.scrollLeft);
-                oldScrollY = Math.max(html.scrollTop, doc.body.scrollTop);
-            } else {
-                oldScrollX = element.scrollLeft;
-                oldScrollY = element.scrollTop;
-            }
-        }
-    }
-    
-    // Strip anything sketchy that looks like an HTML attack from the URL
-    console.assert(url !== undefined);
-    url = url.replace(/['" ><]/g, '');
-
-    docEditor.innerHTML = `<iframe id="doc" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" border=0 width=125% height=125%></iframe>`;
-    if (url.endsWith('.html')) {
-        // Includes the .md.html case
-        
-        if (srcdoc !== undefined && false) {
-            // TODO: Why would we want this case? It causes problems with reloads
-            
-            // Already loaded content.
-            // Add a base tag to HTML documents so that relative URLs are parsed correctly
-            const baseTag = `<base href="${urlDir(url)}">`;
-            document.getElementById('doc').srcdoc = (baseTag + srcdoc).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-        } else {
-            // Load from the file
-            document.getElementById('doc').src = url;
-        }
-    } else if (url.endsWith('.md')) {
-        const baseTag = `<base href="${urlDir(url)}">`;
-
-        // Trick out .md files using Markdeep
-        
-        function markdeepify(text) {
-            const markdeepURL = makeURLAbsolute('', 'quad://doc/markdeep.min.js');
-            text = baseTag + text;
-            // Escape quotes to avoid ending the srcdoc prematurely
-            return `${text.replace(/"/g, '&quot;')}
-                <style>
-body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif}
-
-.md a, .md div.title, contents, .md .tocHeader, 
-.md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6, 
-.md .shortTOC, .md .mediumTOC, .md .longTOC {
-    color: inherit;
-    font-family: inherit;
-}
-.md .title, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6 {
-margin-top: 0; padding-top: 0
-}
-.md h2 { border-bottom: 2px solid }
-.md div.title { font-size: 40px }
-.md .afterTitles { height: 0; padding-top: 0; padding-bottom: 0 }
-</style>\n
-
-<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;            
-        }
-
-        if (srcdoc !== undefined && false) {
-            document.getElementById('doc').srcdoc = markdeepify(srcdoc);
-        } else {
-            LoadManager.fetchOne({
-                errorCallback: function () { console.log('Error while loading', url); },
-                forceReload: true}, url, 'text', null,  function (text) {
-                    document.getElementById('doc').srcdoc = markdeepify(srcdoc);
-                });
-        }
-    } else {
-        // Treat as text file
-        docEditor.innerHTML = `<object id="doc" width="125%" height="125%" type="text/plain" data="${url}?" border="0"> </object>`;
-    }
-}
 
 function escapeHTMLEntities(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-
-function visualizeConstant(value, indent) {
-    let s = '';
-    const keys = Object.keys(value);
-    for (let i = 0; i < keys.length; ++i) {
-        let k = keys[i];
-        let v = Array.isArray(value) ? value[i] : value[k];
-        k = escapeHTMLEntities(k);
-        if (Array.isArray(v) || typeof v === 'object') {
-            s += `<tr valign=top><td>${indent}${k}:</td><td></td><td><i>${Array.isArray(v) ? 'array' : 'object'}</i></td></tr>\n` + visualizeConstant(v, indent + '&nbsp;&nbsp;&nbsp;&nbsp;');
-        } else {
-            v = QRuntime.unparse(v);
-            s += `<tr valign=top><td>${indent}${k}:</td><td></td><td>`;
-
-            if (v.indexOf('\n') !== -1 && v[0] === '"' && v[v.length - 1] === '"') {
-                // Multiline string. Remove the quotes and format multiline
-                v = escapeHTMLEntities(v.substring(1, v.length - 1));
-                s += `<table style="border-collapse:collapse; margin: -2px 0"><tr><td style="vertical-align:top"><code>&quot;</code></td><td><pre style="margin: 0 0">${v}</pre></td><td style="vertical-align:bottom"><code>&quot;</code></td></tr></table>`;
-            } else {
-                v = escapeHTMLEntities(v);
-                s += `<code>${v}</code>`
-            }
-            s += '</td></tr>\n';
-
-        }
-    }
-    
-    return s;
-}
-
-/* Requires useIDE = true */
-function onOpenFolder(filename) {
-    postToServer({command: 'open', app: '<finder>', file: filename});
-}
-
-/* Create the editor for the game.json. This function requires useIDE = true */
-function visualizeGame(gameEditor, url, game) {
-    console.assert(url, 'undefined url');
-    console.assert(useIDE);
-
-    const disabled = editableProject ? '' : 'disabled';
-    let s = '';
-
-    if (! editableProject) {
-        // Why isn't this project editable?
-        const reasons = [];
-
-        if (! locallyHosted()) {
-            reasons.push('is hosted on a remote server');
-        } else if (! isQuadserver) {
-            reasons.push('is not running locally with the <code>quadplay</code> script');
-        }
-
-        if (! useIDE) {
-            reasons.push('was launched without the IDE');
-        }
-
-        // Is built-in
-        if (isBuiltIn(gameURL)) {
-            reasons.push('is a built-in example');
-        }
-        
-        s += '<i>This project is locked because it';
-        if (reasons.length > 1) {
-            // Many reasons
-            s += '<ol>\n';
-            for (let i = 0; i < reasons.length; ++i) {
-                s += '<li>' + reasons[i] + '</li>\n';
-            }
-            s += '<ol>\n';
-        } else {
-            // One reason
-            s += ' ' + reasons[0] + '.';
-        }
-        s += '</i><br><br>\n';
-    }
-
-    s += '<table>\n';
-    s += '<tr valign="top"><td>Path</td><td colspan=3>' + url + '</td></tr>\n';
-
-    if (editableProject) {
-        const filename = serverConfig.rootPath + urlToLocalWebPath(url);
-        // The second regexp removes the leading slash on windows
-        let path = filename.replace(/\/[^.\/\\]+?\.game\.json$/, '').replace(/^\/([a-zA-Z]:\/)/, '$1');
-        if (path.length > 0 && path[path.length - 1] !== '/') { path += '/'; }
-        s += `<tr valign="top"><td>Folder</td><td colspan=3><a onclick="onOpenFolder('${path}')" style="cursor:pointer">${path}</a></td></tr>\n`;
-    }
-    
-    s += `<tr valign="top"><td width="110px">Title</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${(game.title || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>Developer</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${(game.developer || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>Copyright</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${(game.copyright || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>License</td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectLicense" onchange="onProjectMetadataChanged(this)">${game.license}</textarea>`;
-    if (editableProject) {
-        // License defaults
-        s += '<br><button class="license" onclick="onProjectLicensePreset(\'All\')">All Rights Reserved</button><button class="license" onclick="onProjectLicensePreset(\'GPL\')">GPL 3</button><button onclick="onProjectLicensePreset(\'BSD\')" class="license">BSD</button><button class="license" onclick="onProjectLicensePreset(\'MIT\')">MIT</button><button onclick="onProjectLicensePreset(\'CC0\')" class="license">Public Domain</button>';
-    }
-    s += '</td></tr>\n';
-
-    s+= '<tr><td>&nbsp;</td></tr>\n';
-    if (editableProject) {
-        s += '<tr valign="top"><td>Start&nbsp;Mode</td><td colspan=3><select id="projectstartmodedropdown" style="width:390px" onchange="onProjectInitialModeChange(this.value)">\n';
-        for (let i = 0; i < gameSource.modes.length; ++i) {
-            const mode = gameSource.modes[i];
-            if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
-                s += `<option value=${mode.name} ${mode.name === gameSource.json.start_mode ? 'selected' : ''}>${mode.name}</option>\n`;
-            }
-        }
-        s += '</select></td></tr>\n';
-
-        const overrideInitialMode = gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
-        s += `<tr valign="top"><td></td><td><label><input id="projectdebugstartmodeoverridecheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
-        for (let i = 0; i < gameSource.modes.length; ++i) {
-            const mode = gameSource.modes[i];
-            if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
-                s += `<option value=${mode.name} ${(gameSource.debug.json && (mode.name === gameSource.debug.json.start_mode)) ? 'selected' : ''}>${mode.name}</option>\n`;
-            }
-        }
-        s += '</select></td></tr>\n';
-        
-        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select id="projectscreensizedropdown" style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
-        for (let i = 0; i < allowedScreenSizes.length; ++i) {
-            const W = allowedScreenSizes[i].x, H = allowedScreenSizes[i].y;
-            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.extendedJSON.screen_size.x && H === gameSource.extendedJSON.screen_size.y ? "selected" : ""}>${W} × ${H}${W === 384 && H === 224 ? ' ✜' : ''}</option>`;
-        }
-        s += `</select></td></tr>\n`;
-    } else {
-        // The disabled select box is too hard to read, so revert to a text box when not editable
-        for (let i = 0; i < gameSource.modes.length; ++i) {
-            const mode = gameSource.modes[i];
-            if (! mode.name.startsWith('quad://console/os/_') && (mode.name === gameSource.json.start_mode)) {
-                s += `<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${mode.name.replace(/\*/g, '')}"></td></tr>\n`;
-                break;
-            }
-        }
-        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input id="projectscreensizetextbox" type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
-    }
-    s += `<tr valign="top"><td></td><td colspan=3><label><input id="projectyupcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
-
-    s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>I/O</td><td colspan=4><label><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label>  <label><input id="projectmidicheckbox" type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)" style="margin-left: 50px" tooltip="Does this game send MIDI sysex messages?">MIDI Sysex Output</label></td></tr>\n`;
-    s += '<tr><td>&nbsp;</td></tr>\n';
-    
-    s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged(this)" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
-    s += '<tr valign="top"><td>Features</td><td colspan=3>';
-    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements'];
-    for (let f = 0; f < boolFields.length; ++f) {
-        const name = boolFields[f];
-        const field = name.replace(/ /g,'').toLowerCase();
-        s += `<label><input ${disabled} type="checkbox" id="project${capitalize(field)}" onchange="onProjectMetadataChanged(this)" ${game[field] ? 'checked' : ''}>${name}</label> `;
-    }
-    s += '</td></tr>\n';
-    s += `<tr><td></td><td><input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMaxPlayers" value=${game.max_players || 1}></input> Players</td></tr>\n`;
-    s += '<tr><td>&nbsp;</td></tr>\n';
-
-    s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;
-    if (editableProject) {
-        const overrideTag = gameSource.debug.json && gameSource.debug.json.screenshot_tag_enabled;
-        s += `<tr><td></td><td><label><input id="projectscreenshottag" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideTag ? 'checked' : ''} onchange="onDebugScreenshotTagOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2><input type="text" autocomplete="false" style="width:198px" ${overrideTag ? '' : 'disabled'} ${disabled} onchange="onProjectMetadataChanged()" id="debugScreenshotTag" value="${(game.debug && game.debug.json && game.debug.json.screenshot_tag !== undefined) ? game.debug.json.screenshot_tag.replace(/"/g, '\\"') : ''}"></td></tr>`;
-    }
-    s += '<tr><td>&nbsp;</td></tr>\n';
-        
-    
-    const baseURL = url.replace(/\/[^\/]*$/, '');
-    s += '<tr valign="top">';
-    s += '<td>Label&nbsp;Icons</td><td style="text-align:left">128px&nbsp;&times;&nbsp;128px<br><img alt="label128.png" src="' + baseURL + '/label128.png?" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td>';
-    s += '<td></td><td style="text-align:left">64px&nbsp;&times;&nbsp;64px<br><img alt="label64.png" src="' + baseURL + '/label64.png?" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
-    s += '</tr>\n<tr><td></td><td colspan=3><i>Press Shift+F6 in game to capture <code>label64.png</code> and <code>label128.png</code> templates. Press shift+f8 to capture the <code>preview.png</code> animation.</i></td></tr><tr><td><br/><br/></td></tr>\n';
-    s += '</table>';
-    gameEditor.innerHTML = s;
-}
-
-
-function visualizeMap(map) {
-    const width  = map.length;
-    const height = map[0].length;
-    const depth  = map.layer.length;
-
-    // Scale to fit on screen
-    const maxDim = Math.max(width * map.sprite_size.x, height * map.sprite_size.y);
-    const reduce = (maxDim > 4096) ? 4 : (maxDim > 2048) ? 3 : (maxDim > 1024) ? 2 : 1;
-
-    // Size of destination tiles
-    const dstTileX = Math.max(1, Math.floor(map.sprite_size.x / reduce));
-    const dstTileY = Math.max(1, Math.floor(map.sprite_size.y / reduce));
-
-    const canvas  = document.getElementById('mapDisplayCanvas');
-    canvas.width  = width  * dstTileX;
-    canvas.height = height * dstTileY;
-    const mapCtx  = canvas.getContext('2d');
-
-    const dstImageData = mapCtx.createImageData(width * dstTileX, height * dstTileY);
-    const dstData = new Uint32Array(dstImageData.data.buffer);
-    for (let mapZ = 0; mapZ < depth; ++mapZ) {
-        const z = map.zScale < 0 ? depth - mapZ - 1 : mapZ;
-        for (let mapY = 0; mapY < height; ++mapY) {
-            const y = map.$flipYOnLoad ? height - mapY - 1 : mapY;
-            for (let mapX = 0; mapX < width; ++mapX) {
-                const sprite = map.layer[z][mapX][y];
-                if (sprite) {
-                    const srcData = sprite.$spritesheet.$uint16Data;
-                    const xShift = (sprite.scale.x === -1) ? (sprite.size.x - 1) : 0;
-                    const yShift = (sprite.scale.y === -1) ? (sprite.size.y - 1) : 0;
-                    const xReduce = reduce * sprite.scale.x;
-                    const yReduce = reduce * sprite.scale.y;
-                    for (let y = 0; y < dstTileY; ++y) {
-                        for (let x = 0; x < dstTileX; ++x) {
-                            const srcOffset = (sprite.$x + x * xReduce + xShift) + (sprite.$y + y * yReduce + yShift) * srcData.width;
-                            const dstOffset = (x + mapX * dstTileX) + (y + mapY * dstTileY) * dstImageData.width;
-                            const srcValue = srcData[srcOffset];
-                            if ((srcValue >>> 12) > 7) { // Alpha test
-                                dstData[dstOffset] =
-                                    0xff000000 +
-                                    (((srcValue & 0xf00) + ((srcValue & 0xf00) << 4)) << 8) +
-                                    (((srcValue & 0xf0) + ((srcValue & 0xf0) << 4)) << 4) +
-                                    (srcValue & 0xf) + ((srcValue & 0xf) << 4);
-                            }
-                        } // x
-                    } // y
-                } // sprite
-            } // x
-        } // y
-    } // z
-
-    // Draw dotted grid lines
-    for (let mapX = 0; mapX < width; ++mapX) {
-        const x = mapX * dstTileX;
-        for (let y = 0; y < dstImageData.height; ++y) {
-            dstData[x + y * dstImageData.width] = (y & 1) ? 0xffcccccc : 0xff777777
-        }
-    }
-
-    for (let mapY = 0; mapY < height; ++mapY) {
-        const y = mapY * dstTileY;
-        for (let x = 0; x < dstImageData.width; ++x) {
-            dstData[x + y * dstImageData.width] = (x & 1) ? 0xffcccccc : 0xff777777
-        }
-    }
-
-    mapCtx.putImageData(dstImageData, 0, 0);
-}
-
-{
-    const text = document.getElementById('newModeName');
-    text.onkeydown = function (event) {
-        if (event.keyCode === 13) {
-            onNewModeCreate();
-        } else if (event.keyCode === 27) {
-            hideNewModeDialog();
-        }
-    }
-}
-
-
-
-/** Creates the left-hand project listing from the gameSource. Requires useIDE = true */
-function createProjectWindow(gameSource) {
-    console.assert(useIDE);
-    let s = '';
-    {
-        const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
-        s += `<b title="${gameSource.extendedJSON.title} (${gameSource.jsonURL})" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${badge}">${gameSource.extendedJSON.title}</b>`;
-    }
-
-    s += '<div style="border-left: 1px solid #ccc; margin-left: 4px; padding-top: 5px; padding-bottom: 9px; margin-bottom: -7px"><div style="margin:0; margin-left: -2px; padding:0">';
-
-    s += '— <i>Scripts</i>\n';
-    s += '<ul class="scripts">';
-    for (let i = 0; i < gameSource.scripts.length; ++i) {
-        const script = gameSource.scripts[i];
-        if (! /\/console\/(os|launcher)\/_[A-Za-z0-9_]+\.pyxl$/.test(script)) {
-            const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
-            const contextMenu = editableProject ? `oncontextmenu="showScriptContextMenu('${script}')" ` : '';
-            s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script).replace('.pyxl', '')}</li>\n`;
-        }
-    }
-    if (editableProject) {
-        s += '<li class="clickable import" onclick="showImportScriptDialog()"><i>Import existing script…</i></li>';
-        s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>Create new script…</i></li>';
-    }
-    s += '</ul>';
-    
-    s += '— <i class="clickable" onclick="onProjectSelect(event.target, \'mode\', undefined)" title="View mode diagram">Modes</i>\n';
-    s += '<ul class="modes">';
-    for (let i = 0; i < gameSource.modes.length; ++i) {
-        const mode = gameSource.modes[i];
-        // Hide system modes
-        if (/^.*\/_|^_|^\$/.test(mode.name)) { continue; }
-        const badge = isBuiltIn(mode.url) ? 'builtin' : (isRemote(mode.url) ? 'remote' : '');
-        const contextMenu = editableProject ? `oncontextmenu="showModeContextMenu(gameSource.modes[${i}])"` : '';
-        s += `<li ${contextMenu} class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}${mode.name === gameSource.json.start_mode ? '*' : ''}</code></li>\n`;
-    }
-    if (editableProject) {
-        s += '<li class="clickable import" onclick="showImportModeDialog()"><i>Import existing mode…</i></li>';
-        s += '<li class="clickable new" onclick="showNewModeDialog()"><i>Create new mode…</i></li>';
-    }
-    s += '</ul>';
-
-    s += '— <i>Docs</i>\n';
-    s += '<ul class="docs">';
-    {
-        for (let i = 0; i < gameSource.docs.length; ++i) {
-            const doc = gameSource.docs[i];
-            const badge = isBuiltIn(doc) ? 'builtin' : (isRemote(doc) ? 'remote' : '');
-            const contextMenu = editableProject ? `oncontextmenu="showDocContextMenu('${doc}')" ` : '';
-            s += `<li class="clickable ${badge}" ${contextMenu} id="DocItem_${doc}" onclick="onProjectSelect(event.target, 'doc', '${doc}')" title="${doc}"><code>${doc.replace(/^.*\//, '')}</code></li>\n`;
-        }
-    }
-    if (editableProject) {
-        s += '<li class="clickable import" onclick="showImportDocDialog()"><i>Import existing doc…</i></li>';
-        s += '<li class="clickable new" onclick="showNewDocDialog()"><i>Create new doc…</i></li>';
-    }
-    s += '</ul>';
-    
-    s += '— <i class="clickable" onclick="onProjectSelect(event.target, \'constant\', undefined)" title="View all constants">Constants</i>\n';
-    s += '<ul class="constants">';
-    {
-        const keys = Object.keys(gameSource.extendedJSON.constants || {});
-        keys.sort();
-        const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
-        for (let i = 0; i < keys.length; ++i) {
-            const c = keys[i];
-            const v = gameSource.constants[c];
-            const json = gameSource.extendedJSON.constants[c];
-            let tooltip = (json.description || '').replace(/"/g, '\\"');
-            if (tooltip.length > 0) { tooltip = ': ' + tooltip; }
-            
-            const cssclass =
-                  (v === undefined || v === null) ? 'nil' :
-                  (json.type === 'table') ? 'table' :
-                  (json.type === 'xy' || json.type === 'xz') ? 'vec2D' :
-                  (json.type === 'xyz') ? 'vec3D' :
-                  (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv') ? 'color' :
-                  (json.type === 'reference') ? 'reference' :
-                  (json.type === 'distribution') ? 'distribution' :
-                  Array.isArray(v) ? 'array' :
-                  (typeof v);
-
-            const contextMenu = editableProject ? `oncontextmenu="showConstantContextMenu('${c}')"` : '';
-
-            // Add and then pad with enough space to extend into the hidden scrollbar area
-            s += `<li ${contextMenu} class="clickable ${badge} ${cssclass}" title="${c}${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>\n`;
-        }
-    }
-    if (editableProject) {
-        s += '<li class="clickable new" onclick="showNewConstantDialog()"><i>New constant…</i></li>';
-    }
-    s += '</ul>';
-
-    s += '</div></div>';
-
-    s += '<div style="margin-left: 3px; position: relative; top: -2px">— <i>Assets</i>\n';
-
-    // Leave a lot of space at the bottom for the git buttons
-    s += '<ul class="assets" style="margin-bottom: 36px">';
-    {
-        const keys = Object.keys(gameSource.assets);
-        keys.sort();
-        for (let i = 0; i < keys.length; ++i) {
-            const assetName = keys[i];
-
-            // Hide system assets
-            if (assetName[0] === '$') { continue; }
-
-            const asset = gameSource.assets[assetName];
-            let type = asset.$jsonURL.match(/\.([^.]+)\.json$/i);
-            if (type) { type = type[1].toLowerCase(); }
-
-            const badge = isBuiltIn(asset.$jsonURL) ? 'builtin' : (isRemote(asset.$jsonURL) ? 'remote' : '');
-                
-            const contextMenu = editableProject ? `oncontextmenu="showAssetContextMenu('${assetName}')"` : '';
-            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${assetName} (${asset.$jsonURL})"><code>${assetName}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>`;
-
-            if (type === 'map') {
-                for (let k in asset.spritesheet_table) {
-                    const badge = isBuiltIn(asset.spritesheet_table[k].$jsonURL) ? 'builtin' : (isRemote(asset.spritesheet_table[k].$jsonURL) ? 'remote' : '');
-                    s += `<ul><li id="projectAsset_${assetName}.${k}" onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${k} (${asset.spritesheet_table[k].$jsonURL})"><code>${k}</code></li></ul>\n`;
-                }
-            }
-        } // for each asset
-    }
-    
-    if (editableProject) {
-        s += '<li class="clickable import" onclick="showImportAssetDialog()"><i>Import existing asset…</i></li>';
-        s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>Create new asset…</i></li>';
-    }
-    s += '</ul>';
-    s += '</div>'
-
-    let versionControl = '';
-    if (editableProject && serverConfig.hasGit) {
-        // Will be hidden and shown elsewhere
-        versionControl += `<div id="versionControl" style="visibility: hidden"><button style="width: 100%" title="Sync your local files with the git server" onclick="runPendingSaveCallbacksImmediately(); setTimeout(onGitSync);">Sync Git</button></div>`;
-    }
-    
-    // Build the project list for the IDE
-    const projectElement = document.getElementById('project');
-
-    // Hide the scrollbars
-    projectElement.innerHTML = `<div class="hideScrollBars" style="top: 0px; bottom: 40px; position: absolute; ${versionControl !== '' ? 'bottom: 40px' : ''}">` + s + '</div>' + versionControl;
-}
 
 
 function makeGoodFilename(text) {
@@ -2995,7 +2350,7 @@ function setControlEnable(ctrl, e) {
     }
 }
 
-/** Called by the IDE toggle buttons */
+/** Called by the ui mode frame toggle buttons */
 function onToggle(button) {
     const win = document.getElementById(button.id.replace('Button', 'Window'));
     if (win) {
@@ -3005,7 +2360,7 @@ function onToggle(button) {
 }
 
 
-/** Called by the IDE radio buttons */
+/** Called by the ui mode frame radio buttons */
 function onRadio(id) {
     // Controls
     if ((id === 'playButton')) {
@@ -3195,251 +2550,18 @@ function hideOpenGameDialog() {
 
 /**********************************************************************************/
 
-/* Optional location = { line_number, url, fcn } used for creating hyperlinks and displaying output */
-function setErrorStatus(e, location) {
-    e = escapeHTMLEntities(e);
-
-    if (location) {
-        if (location.line_number !== undefined) {
-            e = `${location.fcn ? location.fcn + ' at ' : ''}<a style="font-family: Arial; cursor:pointer">${shortURL(location.url)}:${location.line_number}</a>: ${e}`;
-        } else if (location.url) {
-            e = `${location.fcn ? location.fcn + ' at ' : ''}${shortURL(location.url)}: ${e}`;
-        } else if (location.fcn) {
-            e = location.fcn + ': ' + e;
-        }
-    }
-    
-    error.innerHTML = e;
-    if (e !== '') {
-        $outputAppend(`\n<span style="color:#f55">${e}<span>\n`, location, location !== undefined);
-        document.getElementById('outputTab').checked = true;
-    }
-}
-
-
 setControlEnable('pause', false);
 let coroutine = null;
 let emwaFrameTime = 0;
-const debugFrameRateDisplay = document.getElementById('debugFrameRateDisplay');
-const debugGraphicsFPS = document.getElementById('debugGraphicsFPS');
-const debugActualFrameRateDisplay = document.getElementById('debugActualFrameRateDisplay');
-const debugFramePeriodDisplay = document.getElementById('debugFramePeriodDisplay');
-const debugDrawCallsDisplay = document.getElementById('debugDrawCallsDisplay');
-const debugModeDisplay = document.getElementById('debugModeDisplay');
-const debugPreviousModeDisplay = document.getElementById('debugPreviousModeDisplay');
-const debugModeFramesDisplay = document.getElementById('debugModeFramesDisplay');
-const debugGameFramesDisplay = document.getElementById('debugGameFramesDisplay');
-const outputPane = document.getElementById('outputPane');
-const outputDisplayPane = document.getElementById('outputDisplayPane');
-
-
-/** 
-    Given a JavaScript runtime error, compute the corresponding PyxlScript error by
-    parsing the @ pragmas in the compiledProgram code.
- */
-function jsToPSError(error) {
-    function functionName(str) {
-        
-        // Remove @ suffixes from post-2021 Safari
-        if (str.endsWith('@')) { str = str.substring(0, str.length - 1); }
-
-        str = str.trim();
-
-        if (str === 'anonymous' || str === 'eval') { str = '?'; }
-        if (str !== '' && str !== '?') { str += '()'; }
-        
-        return str;
-    }
-
-    let lineNumber = error.lineNumber;
-    let resultFcn = '?';
-    let resultStack = [];
-
-    const lineArray = compiledProgram.split('\n');
-    
-    // Find the first place in the user program that the problem
-    // occurred.
-    if (error.stack) {
-        const stack = error.stack.split('\n');
-        if (stack.length > 0) {
-            if (isSafari) {
-                // Safari doesn't give line numbers inside generated
-                // code except for the top of the stack.
-                for (let i = 0; i < stack.length; ++i) {
-                    if (stack[i].indexOf('quadplay-runtime-') === -1) {
-                        // This is the beginning of the user call stack
-                        lineNumber = QRuntime.$currentLineNumber + 2;
-
-                        let first = true;
-                        while ((i < stack.length) &&
-                               stack[i] !== '' &&
-                               stack[i] !== 'anonymous' &&
-                               stack[i].indexOf('[native') === -1) {
-
-                            if (stack[i].indexOf('quadplay_main_loop') !== -1) {
-                                resultStack.push({fcn: 'frame event'});
-                                break; // while
-                            } else if (first) {
-                                resultFcn = functionName(stack[i]);
-                                first = false;
-                            } else {
-                                resultStack.push({fcn: functionName(stack[i])});
-                            }
-                            ++i;
-                        }
-                        break;
-                    }
-                }
-            } else { // not Safari
-
-                // Entry 0 in the "stack" is actually the error message on Chromium
-                // browsers, so remove it
-                if (isEdge || isChrome) { stack.shift(); }
-
-                // Search for the first user-space error
-                for (let i = 0; i < stack.length; ++i) {
-                    const match = stack[i].match(/(?:Function|<anonymous>):(\d+):/);
-
-                    if (match) {
-                        // Found a user-space error
-                        lineNumber = parseInt(match[1]);
-
-                        // Parse the function name
-                        resultFcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
-                        resultFcn = resultFcn ? functionName(resultFcn[1]) : '?';
-
-                        // Read from here until the bottom of the user stack
-                        ++i;
-                        while (i < stack.length) {
-                            const match = stack[i].match(/(?:Function|<anonymous>):(\d+):/);
-                            if (! match) { break; }
-
-                            // Parse the function name
-                            let fcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
-                            fcn = fcn ? fcn[1] : '?';
-                            let done = false;
-
-                            if (fcn === 'anonymous') {
-                                fcn = '?';
-                                done = true;
-                            } else if (stack[i].indexOf('quadplay_main_loop') !== -1) {
-                                fcn = 'frame event';
-                                done = true;
-                            } else if (fcn === 'eval') {
-                                break;
-                            } else {
-                                fcn = functionName(fcn);
-                            }
-
-                            // Convert line numbers
-                            const stackEntry = jsToPyxlLineNumber(parseInt(match[1]), lineArray);
-
-                            resultStack.push({url: stackEntry.url, lineNumber: stackEntry.lineNumber, fcn: fcn});
-                            if (done) { break; }
-                            ++i;
-                        }
-                        
-                        break;
-                    }
-                } // for stack frame
-            } // if Safari
-        } // if the stack trace is non-empty
-    } // if there is a stack trace
-
-    if (! lineNumber && error.lineNumber) {
-        // Safari
-        lineNumber = error.lineNumber + 1;
-    }
-    
-    if (! lineNumber && error.stack) {
-        // Chrome
-        const match = error.stack.match(/Function|<anonymous>:(\d+)/);
-        if (match) {
-            lineNumber = clamp(1, parseInt(match[1]), programNumLines);
-        }
-    }
-
-    if ((error.stack &&
-        (error.stack.indexOf('<anonymous>') === -1) &&
-         (error.stack.indexOf('Function') === -1) &&
-         (error.stack.indexOf('quadplay-runtime-') !== -1)) ||
-        ! lineNumber) {
-        return {url:'(?)', lineNumber: '(?)', message: '' + error, stack: resultStack, fcn: resultFcn};
-    }
-
-    const result = jsToPyxlLineNumber(lineNumber, lineArray);
-
-    
-    // Modify event names to include the mode
-    if (resultFcn[0] === '$') {
-        resultFcn = shortURL(result.url).replace(/\..*/, '.') + resultFcn.substring(1);
-    }
-
-    return {
-        url: result.url,
-        lineNumber: result.lineNumber,
-        fcn: resultFcn,
-        message: error.message.replace(/\bundefined\b/g, 'nil').replace(/&&/g, 'and').replace(/\|\|/g, 'or').replace(/===/g, '==').replace(/!==/g, '!='),
-        stack: resultStack
-    };
-}
-
-
-/* Returns {url: string, lineNumber: number}. Used for translating error messages. */
-function jsToPyxlLineNumber(lineNumber, lineArray) {
-    // If the line array was not precomputed
-    lineArray = lineArray || compiledProgram.split('\n');
-
-    // Look backwards from error.lineNumber for '/*@"'
-    let urlLineIndex, urlCharIndex = -1;
-
-    for (urlLineIndex = Math.min(Math.max(0, lineNumber - 1), lineArray.length - 1); (urlLineIndex >= 0) && (urlCharIndex === -1); --urlLineIndex) {
-        urlCharIndex = lineArray[urlLineIndex].indexOf('/*ට"');
-    }
-
-    // Always overshoots by one
-    ++urlLineIndex;
-
-    const result = parseCompilerLineDirective(lineArray[urlLineIndex]);
-
-    return {url: result.url, lineNumber: lineNumber - urlLineIndex - 3 + result.lineNumber};
-}
-
-
-function updateTimeDisplay(time, name) {
-    const td = document.getElementById('debug' + name + 'TimeDisplay');
-    const tp = document.getElementById('debug' + name + 'PercentDisplay');
-
-    if (time >= 16.667) {
-        // Overtime
-        td.style.color = tp.style.color = '#f30';
-    } else if (time >= 15.5) {
-        // Warning
-        td.style.color = tp.style.color = '#fe4';
-    } else {
-        td.style.color = tp.style.color = 'unset';
-    }
-
-    td.innerHTML = '' + time.toFixed(1) + '&#8239;ms';
-    tp.innerHTML = '(' + Math.round(time * 6) + '%)';
-}
 
 
 function goToLauncher() {
     onStopButton(false, true);
-    console.log('Loading to go to the launcher.');
     loadGameIntoIDE(launcherURL, function () {
         onResize();
         // Prevent the boot animation
         onPlayButton(false, true);
     }, true);
-}
-
-
-function onCopyPerformanceSummary() {
-    let summary = `Framerate ${debugFrameRateDisplay.textContent} ${debugFramePeriodDisplay.textContent}; `;
-    summary += `${debugFrameTimeDisplay.textContent} Total = ${debugCPUTimeDisplay.textContent} CPU + ${debugGPUTimeDisplay.textContent} GPU + ${debugPPUTimeDisplay.textContent} Phys + ${debugBrowserTimeDisplay.textContent} ${browserName}`;
-    navigator.clipboard.writeText(summary);
 }
 
 
@@ -3455,8 +2577,8 @@ function resetTouchInput() {
 function mainLoopStep() {
     // Keep the callback chain going
     if (emulatorMode === 'play') {
-        if (autoSleepEnabled && (Date.now() - lastInteractionTime > IDLE_PAUSE_TIME_MILLISECONDS)) {
-            sleep();
+        if (autoPauseEnabled && (Date.now() - lastInteractionTime > IDLE_PAUSE_TIME_MILLISECONDS)) {
+            onInactive();
             return;
         }
         
@@ -3613,107 +2735,12 @@ function mainLoopStep() {
 }
 
 
-// Used when the on-screen profiler is enabled
-const onScreenHUDDisplay = {time: {frame:0, logic:0, physics:0, graphics:0, gpu: 0, browser:0, refresh:0}};
-
-function updateDebugger(showHTML) {
-    const frame = profiler.smoothFrameTime.get();
-    const logic = profiler.smoothLogicTime.get();
-    const physics = profiler.smoothPhysicsTime.get();
-
-    // Show the time that GPU graphics is actually taking
-    // per frame it processes, with no scaling.
-    const gpu = profiler.smoothGPUTime.get();
-    
-    // Show the time that CPU graphics *would* be taking if
-    // it wasn't for the frame rate scaler
-    const graphics = profiler.smoothGraphicsTime.get() * QRuntime.$graphicsPeriod;
-    const compute = logic + physics + graphics;
-    const browser = Math.max(0, frame - compute);
-    
-    // Use 18 instead of 16.67 ms as the cutoff for displaying
-    // overhead because there are sometimes very slight roundoffs
-    // due to the timer callback being inexact.
-    
-    onScreenHUDDisplay.time.frame = (frame > 18) ? frame : compute;
-    onScreenHUDDisplay.time.browser = (frame > 17.2) ? browser : 0;
-    onScreenHUDDisplay.time.logic = logic;
-    onScreenHUDDisplay.time.physics = physics;
-    onScreenHUDDisplay.time.graphics = graphics;
-    onScreenHUDDisplay.time.gpu = gpu;
-    onScreenHUDDisplay.time.refresh = Math.round(60 / QRuntime.$graphicsPeriod);
-
-    if (! showHTML) {
-        // Only update the on-screen profiler values
-        return;
-    }
-    
-    updateTimeDisplay(onScreenHUDDisplay.time.frame, 'Frame');
-    updateTimeDisplay(onScreenHUDDisplay.time.browser, 'Browser');
-    updateTimeDisplay(logic, 'Logic');
-    updateTimeDisplay(physics, 'Physics');
-    updateTimeDisplay(graphics, 'Gfx');
-
-    if ($THREADED_GPU) { updateTimeDisplay(gpu, 'GPU'); }
-
-    if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
-
-    let color = 'unset';
-    if (QRuntime.$graphicsPeriod === 2) {
-        color = '#fe4';
-    } else if (QRuntime.$graphicsPeriod > 2) {
-        color = '#f30';
-    }
-
-    debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
-    const fps = '' + Math.round(60 / QRuntime.$graphicsPeriod);
-    debugFrameRateDisplay.innerHTML = fps + '&#8239;Hz';
-    debugGraphicsFPS.innerHTML = fps;
-    debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime.$graphicsPeriod - 1]) + '×)';
-    
-    // Only display if the graphics period has just ended, otherwise the display would
-    // be zero most of the time
-    if (window.QRuntime && QRuntime.$previousGraphicsCommandList) {
-        debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;
-    }
-    
-    // console.log(QRuntime.game_frames, debugWatchEnabled.checked, emulatorMode, debugWatchTable.changed);
-    if (useIDE && (QRuntime.game_frames === 0 || debugWatchEnabled.checked) && ((emulatorMode === 'play') || debugWatchTable.changed)) {
-        updateDebugWatchDisplay();
-    }
-
-    if (QRuntime.$gameMode) {
-        if (QRuntime.$modeStack.length) {
-            let s = '';
-            for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
-                s += QRuntime.$modeStack[i].$name + ' → ';
-            }
-            debugModeDisplay.innerHTML = s + QRuntime.$gameMode.$name;
-        } else {
-            debugModeDisplay.innerHTML = QRuntime.$gameMode.$name;
-        }
-    } else {
-        debugModeDisplay.innerHTML = '∅';
-    }
-    
-    if (QRuntime.$prevMode) {
-        debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode.$name;
-    } else {
-        debugPreviousModeDisplay.innerHTML = '∅';
-    }
-    
-    debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
-    debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
-}
-
-
 // Injected as assert in QRuntime
 function assert(x, m) {
     if (! x) {
         throw new Error(m || "Assertion failed");
     }
 }
-
 
 
 /** When true, the system is waiting for a refresh to occur and mainLoopStep should yield
@@ -3768,7 +2795,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$Physics            = Matter;
         QRuntime.$updateHostCodeCopyRuntimeDialogVisiblity = updateHostCodeCopyRuntimeDialogVisiblity;
         QRuntime.$fontMap            = fontMap;
-        QRuntime.$onScreenHUDDisplay = onScreenHUDDisplay;
+        QRuntime.$onScreenHUDDisplay = useIDE ? onScreenHUDDisplay : undefined;
 
         QRuntime.$pauseAllSounds     = pauseAllSounds;
         QRuntime.$resumeAllSounds    = resumeAllSounds;
@@ -4569,21 +3596,29 @@ function computeQRCode(url) {
     return computeQRCode.cache[url];
 }
 computeQRCode.cache = {};
-computeQRCode.qrcode = new QRCode('hiddenQRCode', {correctLevel: QRCode.CorrectLevel.H, width:128, height:128});
-// computeQRCode('http://192.168.1.69:8000/Projects/quadplay-dev/console/quadplay.html?game=/Projects/quadplay-dev/examples/private_view/');
+
+let qrcode;
+
+// Delay until after load to prevent a race condition of loading the QR code library script
+setTimeout(function () {
+    computeQRCode.qrcode = new QRCode('hiddenQRCode', {correctLevel: QRCode.CorrectLevel.H, width:128, height:128});
+    // computeQRCode('http://192.168.1.69:8000/Projects/quadplay-dev/console/quadplay.html?game=/Projects/quadplay-dev/examples/private_view/');
+
+    qrcode = 
+        useIDE &&
+        new QRCode('serverQRCode',
+            {width:  256,
+            height: 256,
+            colorDark: "rgba(0,0,0,0)",
+            colorLight: "#eee",
+            correctLevel: QRCode.CorrectLevel.H
+            });});
 
 setTimeout(updateControllerIcons, 100);
 
-const qrcode = useIDE && new QRCode('serverQRCode',
-                                    {width:  256,
-                                     height: 256,
-                                     colorDark: "rgba(0,0,0,0)",
-                                     colorLight: "#eee",
-                                     correctLevel: QRCode.CorrectLevel.H
-                                    });
 
 const BOOT_INFO = `<span style="color:#ec5588">quadplay✜ ${version}</span>
-<span style="color:#937ab7">© 2019-2024 Morgan McGuire</span>
+<span style="color:#937ab7">© 2019-2025 Morgan McGuire</span>
 <span style="color:#5ea9d8">Licensed under LGPL 3.0</span>
 <span style="color:#859ca6">https://casual-effects.com</span>
 
@@ -4615,6 +3650,8 @@ function appendToBootScreen(msg) {
     If noUpdateCode is true, do not update code editors. This is used to
     prevent cursor jump when that file is itself being further updated
     by typing in the editor.
+
+    This "loads the game". It does not depend on useIDE and is poorly named.
 */
 function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
     const oldVersionControl = gameSource && gameSource.versionControl;
@@ -4622,6 +3659,7 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
     if ((url !== gameURL) && useIDE) {
         // A new game is being loaded. Throw away the editor sessions.
         removeAllCodeEditorSessions();
+        setErrorStatus('');
     }
     
     if (emulatorMode !== 'stop') { onStopButton(false, true); }
@@ -4642,6 +3680,13 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
 
     const copyMenu = document.getElementById('copyMenu');
     copyMenu.style.display = (isQuadserver && locallyHosted(gameURL)) ? 'block' : 'none';
+    
+    // Update checkbox state
+    const checkbox = document.getElementById('autoPauseCheckbox');
+    if (checkbox) {
+        checkbox.checked = autoPauseEnabled || false;
+        document.getElementById('autoPauseLabel').textContent = useIDE ? 'Pause when inactive' : 'Sleep when inactive';
+    }
     
     // Let the boot screen show before appending in the following code
     const loadFunction = function() {
@@ -4867,8 +3912,7 @@ function showPopupMessage(msgHTML) {
         function () { element.classList.remove('show'); },
         
         // This timeout value has to be slightly less than the sum of the times
-        // in the quadplay.css #popupMessage.show animation
-        // property
+        // in the quadplay.css #popupMessage.show animation property
         4000);
 }
 
@@ -4926,11 +3970,22 @@ document.addEventListener('mousedown', function (event) {
 
 // Pause when losing focus if currently playing...prevents quadplay from
 // eating resources in the background during development.
-window.addEventListener('blur', function () {
-    if (backgroundPauseEnabled && useIDE && ! isHosting && ! isGuesting) {
-        onPauseButton();
+window.addEventListener('blur', onInactive, false);
+
+function onInactive() {
+    // Don't do anything if already sleeping/paused or if auto-pause is disabled
+    if (!autoPauseEnabled || isHosting || isGuesting || 
+        emulatorMode === 'pause' || 
+        document.getElementById('sleep').style.visibility === 'visible') {
+        return;
     }
-}, false);
+    
+    if (useIDE) {
+        onPauseButton();
+    } else {
+        sleep();
+    }
+}
 
 
 window.addEventListener('focus', function() {
@@ -5019,106 +4074,6 @@ function onConfirmButtonClick(ok) {
     }
 }
 
-
-function onUpdateClick(installedVersionText, latestVersionText) {
-    onStopButton();
-
-    showConfirmDialog(
-        'Update',
-        'Update from quadplay✜ version ' + installedVersionText + ' to version ' + latestVersionText + '?',
-        doUpdate);
-}
-
-/* Requires useIDE = true */
-function doUpdate() {
-    console.assert(useIDE);
-    onStopButton();
-    // Display a downloading window
-    document.getElementById('updateDialog').classList.remove('hidden');
-
-    // Tell the server to update (it will choose the right mechanism)
-    postToServer({command: 'update'})
-
-    // Start polling for when the server finishes updating
-    const checker = setInterval(function () {
-        const progressURL = location.origin + getQuadPath() + 'console/_update_progress.json';
-
-        fetch(progressURL).
-            then(response => response.json()).
-            then(json => {
-                if (json.done) {
-                    clearInterval(checker);
-                    if (json.restartServer) {
-                        postToServer({command: 'quit'});
-
-                        showAlertDialog(
-                            'Update',
-                            'Update complete. quadplay✜ needs to be restarted after this update.',
-                            function () {
-                                window.close();
-                                location = 'about:blank';
-                            },
-                            noop,
-                            'Restart');
-                    } else {
-                        showAlertDialog('Update', 'Update complete!', function () {
-                            // Refresh, also forcing clean reload on Firefox
-                            location.reload(true);
-                        });
-                    }
-                }
-            });
-    }, 1000);
-}
-
-
-/* Checks for an update. Called on startup and once an hour (if not sleeping) when 
-   update= is set */
-function checkForUpdate() {
-    if (getQueryString('update') === 'dev') {
-        return;
-    }
-    
-    // Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh'
-    // string and returns it as a single integer for version comparisons,
-    // as well as the human-readable version string.
-    function parseVersionJS(text) {
-        try {
-            text = text.match(/^ *const *version *= *['"]([0-9.]+)['"] *;/)[1];
-            const match = text.split('.').map(x => parseInt(x, 10));
-
-            // Months and years have varying length. That doesn't matter.  We
-            // don't need a linear time number. We need one that monotonically
-            // increases. Think of this as parsing a number with an irregular
-            // base per digit.
-            return {value: ((match[0] * 12 + match[1]) * 32 + match[2]) * 24 + match[3],
-                    text: text};
-        } catch {
-            return {value: 0, text: text};
-        }
-    }
-
-    fetch('https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js').then(response => response.text()).then(function (text) {
-        const latestVersion = parseVersionJS(text);
-        const installedVersion = parseVersionJS(`const version = '${version}';\n`);
-
-        if (latestVersion.value > installedVersion.value) {
-            console.log(`There is a newer version of quadplay✜ available online:\n  installed = ${installedVersion.text}\n  newest    = ${latestVersion.text}`);
-            
-            // Replace the recording controls with an update button
-            const menuElement = document.getElementById('recordingControls');
-            menuElement.innerHTML =
-                '&nbsp;&nbsp; &middot; &nbsp;&nbsp;' +
-                `<a style="cursor:pointer; padding-right:4px; padding-left:4px; border-radius: 3px; border: 1px solid" title="Update quadplay✜ to version ${latestVersion.text}" onclick="onUpdateClick('${installedVersion.text}', '${latestVersion.text}')">` +
-                'Update <span style="font-size: 140%; vertical-align: top; position: relative; top: -4px">⚙</span></a>';
-            
-        } else if (latestVersion.value === installedVersion.value) {
-            console.log('You are running the latest version of quadplay✜');
-        } else if (latestVersion.text.indexOf('404') !== -1) {
-            console.log(`You are running a prerelease version of quadplay✜:\n  installed      = ${installedVersion.text}\n  latest release = ${latestVersion.text}`);
-        }
-    });
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5245,8 +4200,8 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 }
 
 
-document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnabled || false;
-document.getElementById('autoSleepCheckbox').checked = autoSleepEnabled || false;
+// Load state
+autoPauseEnabled = (localStorage.getItem('autoPauseEnabled') !== 'false');
 
 if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
@@ -5315,7 +4270,9 @@ const quitAction = (function() {
 initializeBrowserEmulator();
 setErrorStatus('');
 setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
-setColorScheme(localStorage.getItem('colorScheme') || 'dots');
+
+// When not in the IDE, force the dots color scheme
+setColorScheme(useIDE ? (localStorage.getItem('colorScheme') || 'dots') : 'dots');
 {
     let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');
     for (let i = 0; i < tmp.length; ++i) {
@@ -5363,6 +4320,54 @@ if (nativeapp && isQuadserver) {
 }
 
 
+/* Checks for an update. Called on startup and once an hour (if not sleeping) when 
+   update= is set. Used for IDE and standalone kiosk mode */
+function checkForUpdate() {
+    if (getQueryString('update') === 'dev') {
+        return;
+    }
+    
+    // Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh'
+    // string and returns it as a single integer for version comparisons,
+    // as well as the human-readable version string.
+    function parseVersionJS(text) {
+        try {
+            text = text.match(/^ *const *version *= *['"]([0-9.]+)['"] *;/)[1];
+            const match = text.split('.').map(x => parseInt(x, 10));
+
+            // Months and years have varying length. That doesn't matter.  We
+            // don't need a linear time number. We need one that monotonically
+            // increases. Think of this as parsing a number with an irregular
+            // base per digit.
+            return {value: ((match[0] * 12 + match[1]) * 32 + match[2]) * 24 + match[3],
+                    text: text};
+        } catch {
+            return {value: 0, text: text};
+        }
+    }
+
+    fetch('https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js').then(response => response.text()).then(function (text) {
+        const latestVersion = parseVersionJS(text);
+        const installedVersion = parseVersionJS(`const version = '${version}';\n`);
+
+        if (latestVersion.value > installedVersion.value) {
+            console.log(`There is a newer version of quadplay✜ available online:\n  installed = ${installedVersion.text}\n  newest    = ${latestVersion.text}`);
+            
+            // Replace the recording controls with an update button
+            const menuElement = document.getElementById('recordingControls');
+            menuElement.innerHTML =
+                '&nbsp;&nbsp; &middot; &nbsp;&nbsp;' +
+                `<a style="cursor:pointer; padding-right:4px; padding-left:4px; border-radius: 3px; border: 1px solid" title="Update quadplay✜ to version ${latestVersion.text}" onclick="onUpdateClick('${installedVersion.text}', '${latestVersion.text}')">` +
+                'Update <span style="font-size: 140%; vertical-align: top; position: relative; top: -4px">⚙</span></a>';
+            
+        } else if (latestVersion.value === installedVersion.value) {
+            console.log('You are running the latest version of quadplay✜');
+        } else if (latestVersion.text.indexOf('404') !== -1) {
+            console.log(`You are running a prerelease version of quadplay✜:\n  installed      = ${installedVersion.text}\n  latest release = ${latestVersion.text}`);
+        }
+    });
+}
+
 
 if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
     // Check for updates a few seconds after start, and then every
@@ -5378,3 +4383,4 @@ if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserv
         }, REGULAR_PERIOD);
     }, INITIAL_DELAY);
 }
+

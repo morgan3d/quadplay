@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- python -*-
 
-import argparse, sys, os, types, shutil, tempfile, stat, workjson
+import argparse, sys, os, types, shutil, tempfile, stat, workjson, fnmatch
 from quaddepend import quaddepend, depend_asset
 
 # This implementation needs f-strings from Python 3.6
@@ -179,9 +179,22 @@ def export(args):
    if not args.noquad:
       # Files and directories in console/ that are not needed for exported games
       # because they are part of the IDE only
-      ignore_files = ['launcher', 'templates', 'ace', 'lib/qrcode.min.js', 'lib/dagre.min.js',
-                      'quadplay-ide-asset.js', 'quadplay-ide-code.js', 'quadplay-ide-constant.js',
-                      'quadplay-ide-sprite.js', 'quadplay-ide-mode-diagram.js', 'quadplay-vs.js']
+      ignore_files = ['launcher', 'templates',
+                      'ace', 'lib/dagre.min.js',
+                      'quadplay-ide*.js', 'quadplay-vcs.js',
+                      'wraps/carbon.png', 'wraps/oak.jpg', 'wraps/strips.png', 'wraps/walnut_burl.jpg']
+
+      def custom_ignore(dir, files):
+          # First get the standard ignore patterns
+          standard_ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__')(dir, files)
+          # Then check against our custom patterns
+          result = set()
+          for f in files:
+              full_path = os.path.join(dir, f)
+              rel_path = os.path.relpath(full_path, os.path.join(args.quadpath, 'console'))
+              if any(fnmatch.fnmatch(rel_path, pattern) for pattern in ignore_files):
+                  result.add(f)
+          return result.union(standard_ignore)
 
       # Recursively copy everything from 'console/' to out_path
       # Do this before copying individual dependencies because
@@ -194,7 +207,7 @@ def export(args):
       else:             
           shutil.copytree(os.path.join(args.quadpath, 'console'),
                           os.path.join(out_path, 'console'),
-                          ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', *ignore_files))
+                          ignore = custom_ignore)
       
       generate_standalone(args, out_path, out_url, game_title)
    else:

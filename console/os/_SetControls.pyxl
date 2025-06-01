@@ -138,14 +138,14 @@ for view at view_index in VIEW_ARRAY:
     // "Press P when done"
     if VIEW_SIZE.x == 64:
        const text = "Push " + gamepad.prompt["(p)"] + " when done"
-       draw_text({font: controlsFont, text: text, pos: xy(VIEW_SIZE.x / 2, VIEW_SIZE.y - 4), color: #023, x_align: "center", y_align: "center"})
+       draw_text({font: controlsFont, text: text, pos: xy(VIEW_SIZE.x / 2, VIEW_SIZE.y - 4), color: #011, x_align: "center", y_align: "center"})
     else:
        const text = "Press " + gamepad.prompt["(p)"] + " when done"
        const W = text_width(controlsFont, text)
-       draw_line(xy(0.5 VIEW_SIZE.x - 1, 0), xy(0.5 VIEW_SIZE.x - 1, VIEW_SIZE.y), #023)
-       draw_line(xy(0, 0.5 VIEW_SIZE.y), xy(0.5 VIEW_SIZE.x - 55% W, 0.5 VIEW_SIZE.y), #023)
-       draw_line(xy(0.5 VIEW_SIZE.x + 55% W, 0.5 VIEW_SIZE.y), xy(VIEW_SIZE.x, 0.5 VIEW_SIZE.y), #023)
-       draw_text({font: controlsFont, text: text, pos: 0.5 VIEW_SIZE + xy(0, 0), color: #023, outline: window_background_color, x_align: "center", y_align: "center"})
+       draw_line(xy(0.5 VIEW_SIZE.x - 1, 0), xy(0.5 VIEW_SIZE.x - 1, VIEW_SIZE.y), #011)
+       draw_line(xy(0, 0.5 VIEW_SIZE.y), xy(0.5 VIEW_SIZE.x - 55% W, 0.5 VIEW_SIZE.y), #011)
+       draw_line(xy(0.5 VIEW_SIZE.x + 55% W, 0.5 VIEW_SIZE.y), xy(VIEW_SIZE.x, 0.5 VIEW_SIZE.y), #011)
+       draw_text({font: controlsFont, text: text, pos: 0.5 VIEW_SIZE + xy(0, 0), color: #011, outline: window_background_color, x_align: "center", y_align: "center"})
     
        
     for p < 4:

@@ -50,7 +50,7 @@ def game_credits():
 
 
       
-enter
+enter(why)
 ────────────────────────────────────────────────────────────────────────
 $pauseAllSounds()
 choice_index = 0
@@ -103,6 +103,8 @@ line_height = round(110% font.line_height)
 if VIEW_ARRAY[0].size.y <= 64: ++line_height
 
 for c in choice_array: max_choice_width = max(max_choice_width, text_width(font, c.text))
+
+if why == "controls": set_controls()
 
 
 leave

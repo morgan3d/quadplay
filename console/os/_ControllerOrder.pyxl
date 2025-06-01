@@ -78,7 +78,7 @@ def draw(view):
                     draw_sprite({
                         sprite: $controllerSpritesheet22.Xbox,
                         pos: xy(x, view.size.y - 29),
-                        override_color: #023,
+                        override_color: #011,
                         z: 0.1,
                         scale: 80%
                     })
@@ -143,7 +143,7 @@ def draw(view):
         const pos = view.size / 2 + xy(0, (if view.size.y == 64 then 3 else (-font.line_height - 3)))
             
         local:
-            const color = #023
+            const color = #011
             const scale = (if view.size.y >= 180 then 2 else 1)
             const height = 3 font.line_height * scale + 2
             const width = 4 font.line_height * scale
@@ -189,7 +189,7 @@ def draw(view):
         (if view.size.x > 64 then "/ડ/⧉" else "") + "/ҕ\n" +
         "Reset all: ⓟ" + (if view.size.x > 64 then "/Ơ/☰" else "") + "/ﯼ",
         pos: xy(view.size.x / 2, 1),
-        color: #023,
+        color: #011,
         x_align: "center", y_align: "top"
     })
     

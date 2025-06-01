@@ -1,4 +1,4 @@
-/* Extensions to matter.js added for quadplay */
+/* Extensions to matter.js added for quadplay.  */
 
 // Extend collisionFilter so that it may contain a 'body' field and
 // may contain an 'excludedBodies' WeakMap of bodies. If present,

@@ -50,6 +50,9 @@ var $console = console;
 var $Math = Math;
 var $performance = performance;
 
+// Used by games without the IDE to trigger the system menu as if P was pressed
+var $goToSystemMenu = false;
+
 // If non-nil and matches the current mode, then the Copy Host
 // Code/Copy Host URL buttons are displayed. See also start_hosting()
 var $showCopyButtonsMode = undefined;
@@ -10386,7 +10389,7 @@ function $show() {
     // frame rate and pruning graphics.  Use mode_frames instead of
     // game_frames to ensure that frame 0 is always rendered for a mode.
     if (mode_frames % $graphicsPeriod === 0) {
-        if ($onScreenHUDEnabled) {
+        if ($onScreenHUDEnabled && $onScreenHUDDisplay) {
             // Submit diagnostics HUD as additional graphics calls
             $onScreenDrawBarGraph('Frame:', $onScreenHUDDisplay.time.frame, 0xFA5F, 0);
             $onScreenDrawBarGraph('  60fps Logic:', $onScreenHUDDisplay.time.logic, 0xFFA0, 1);

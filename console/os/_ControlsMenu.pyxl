@@ -58,7 +58,7 @@ if VIEW_ARRAY[0].size.y == 64:
     // At low resolution, ask which controller to set
     choice_array = ["P1 Buttons", "P2 Buttons", "P3 Buttons", "P4 Buttons", "Gamepad Order"]
 else:
-    choice_array = ["Button Labels", "Gamepad Order"]
+    choice_array = ["Controller Type", "Controller Order"]
 
 if manage_tabs:
     // In the launcher, show other options
