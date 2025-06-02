@@ -406,9 +406,15 @@ function setColorScheme(scheme) {
     localStorage.setItem('colorScheme', colorScheme);
 }
 
-/* Used for the welcome element's event handlers to efficiently know
-   whether to trigger onWelcomeTouch() */
-let onWelcomeScreen = ! useIDE;
+/*
+   True until the user has passed the welcome screen challenge (waived in the IDE).
+   This challenge is required to force the user to perform an interaction (mouse,
+   key, or touch event) before proceeding. Many browsers block programmatic
+   audio context activation and focus changes until a user gesture occurs.
+   By requiring this challenge, we ensure the user triggers an event that allows
+   us to enable the audio context and set focus reliably.
+*/
+let welcomeScreenChallenge = ! useIDE;
 
 /* 
    Force users in auto-play modes to interact in order to enable the
@@ -416,9 +422,10 @@ let onWelcomeScreen = ! useIDE;
    the small full-screen button).
  */
 function onWelcomeTouch(hasTouchScreen) {
+    console.log('onWelcomeTouch');
     hasTouchScreen = hasTouchScreen || isMobile;
    
-    onWelcomeScreen = false;
+    welcomeScreenChallenge = false;
     const welcome = document.getElementById('welcome');
     welcome.style.zIndex = -100;
     welcome.style.visibility = 'hidden';
@@ -460,14 +467,54 @@ function onWelcomeTouch(hasTouchScreen) {
         pauseMessage.style.zIndex = 120;
         pauseMessage.style.visibility = 'visible';
         pauseMessage.style.opacity = 1;
-        setTimeout(function () {
+
+        // Track if we've already handled the skip
+        let skipHandled = false;
+        const startTime = Date.now();
+
+        // Function to hide message and continue
+        const hideMessage = function() {
+            if (skipHandled) return;
+            skipHandled = true;
+            
+            // Clean up event listeners
+            document.removeEventListener('keydown', keyHandler, {capture: true});
+            document.removeEventListener('mousedown', pointerHandler, {capture: true});
+            document.removeEventListener('touchstart', pointerHandler, {capture: true});
+            
+            // Start fade out
             pauseMessage.style.opacity = 0;
             setTimeout(function() {
                 pauseMessage.style.visibility = 'hidden';
                 pauseMessage.style.zIndex = 0;
                 onPlayButton(undefined, undefined, undefined, callback);
             }, 200);
-        }, 3000);
+        };
+
+        // Handle keyboard input
+        const keyHandler = function(event) {
+            if (Date.now() - startTime < 200) return;
+            hideMessage();
+            event.stopPropagation();
+        };
+
+        // Handle mouse/touch input
+        const pointerHandler = function(event) {
+            if (Date.now() - startTime < 200) return;
+            // Only handle primary button clicks and touches
+            if (event.type === 'mousedown' && event.button !== 0) return;
+            hideMessage();
+            event.stopPropagation();
+        };
+
+        // Add event listeners with capture
+        const options = {capture: true};
+        document.addEventListener('keydown', keyHandler, options);
+        document.addEventListener('mousedown', pointerHandler, options);
+        document.addEventListener('touchstart', pointerHandler, options);
+
+        // Auto-hide after 3 seconds
+        setTimeout(hideMessage, 3000);
     } else {
         onPlayButton(undefined, undefined, undefined, callback);
     }
@@ -1979,7 +2026,7 @@ function onDocumentKeyUp(event) {
 
 
 function onDocumentKeyDown(event) {
-    if (onWelcomeScreen) {
+    if (welcomeScreenChallenge) {
         onWelcomeTouch();
         event.preventDefault();
         return;
@@ -3853,9 +3900,9 @@ let gamepadButtonPressedWhilePageLoading = false;
 window.addEventListener("gamepadconnected", function(e) {
     // Runs when the first gamepad button is pressed or when a
     // second gamepad connects.
-    if (onWelcomeScreen) {
+    if (welcomeScreenChallenge) {
         if (document.getElementById('pageLoadingScreen')) {
-            // Delay starting until load completes
+            // Delay starting the welcome until load completes
             gamepadButtonPressedWhilePageLoading = true;
         } else {
             onWelcomeTouch();
@@ -3973,10 +4020,15 @@ document.addEventListener('mousedown', function (event) {
 window.addEventListener('blur', onInactive, false);
 
 function onInactive() {
+    // Block auto-pause while the welcome screen challenge is active
+    if (welcomeScreenChallenge) {
+        return;
+    }
+
     // Don't do anything if already sleeping/paused or if auto-pause is disabled
     if (!autoPauseEnabled || isHosting || isGuesting || 
-        emulatorMode === 'pause' || 
-        document.getElementById('sleep').style.visibility === 'visible') {
+        (emulatorMode === 'pause') || 
+        (document.getElementById('sleep').style.visibility === 'visible')) {
         return;
     }
     

@@ -446,7 +446,7 @@ b.projectTitle.remote:before {
 
 /*****************************************************/
 
-#welcome, #sleep, #pageLoadingScreen {
+#welcome, #sleep, #welcomeScreen {
     z-index: 101;
     visibility: hidden;
     position: absolute;

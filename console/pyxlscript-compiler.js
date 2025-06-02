@@ -1711,9 +1711,19 @@ function $play_reset_animation() {
 
    let frame = mode_frames;
 
+   // Check for user input to skip animation
+   if (any_button_press() || touch.a) {
+       $start_program();
+       return;
+   }
+
    // flash at start
    if (frame < fadeLen) {
-      set_background(gray(max(0, 0.75 - frame / (fadeLen - 1))));
+      if (${useIDE}) {
+         set_background(gray(max(0, 0.75 - frame / (fadeLen - 1))));
+      } else {
+         set_background(gray(0));
+      }
       return;
    }
    frame -= fadeLen;

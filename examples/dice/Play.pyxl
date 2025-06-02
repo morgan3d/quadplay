@@ -153,12 +153,12 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 if SINGLE_SET:
-    // Matching blue
+    // Matching purple gem
     for s in [4, 6, 8, 10, 12, 20]:
         // Tweak sizes across the set
         const size = if s == 20 then 26 else (if s == 8 then 22 else 24)
         
-        dice_add_die(if s == 20 then dice else tray, s, xy(0, 0), size, suchet_9_font, ∅, ∅, #14F, #740)
+        dice_add_die(if s == 20 then dice else tray, s, xy(0, 0), size, suchet_9_font, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, true)
 
     // Percentile
     dice_add_die(tray, 10, xy(0, 0), 20, font8, "0123456789", ∅, 20%, ∅, #444)
@@ -198,6 +198,6 @@ preserving_transform:
     
     // Highlight selected die
     if selected_die and dice_roll_time(dice) ≤ 0:
-        draw_disk(selected_die.pos, 58% selected_die.size.x, ∅, #FF0)
+        draw_disk(selected_die.pos, 58% selected_die.size.x, ∅, #FF0, 100)
     
     
