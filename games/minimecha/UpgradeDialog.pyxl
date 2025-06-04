@@ -2,11 +2,13 @@ UpgradeDialog
 ════════════════════════════════════════════════════════════════════════
 
 let gui
+
+// Upgrade from this game piece…
 let piece_before
+
+// …to this one
 let piece_after
 
-/* Invoked with the dialog return value */
-let callback
 const SHADOW = #777
     
 
@@ -32,10 +34,9 @@ def dialog_draw_option(text, x):
 
 
 
-enter(gui_in, piece, callback_in)
+enter(gui_in, piece)
 ────────────────────────────────────────────────────────────────────────
 gui = gui_in
-callback = callback_in
 
 assert(piece.type == lowercase(piece.type), "Passed an already promoted piece to UpgradeDialog")
 piece_before = piece
@@ -93,11 +94,10 @@ else:
     dialog_draw_option(replace("(a) Yes", gui.gamepad.prompt), +60)
 
 
-// Prevent accidental button double tap
+// Prevent accidental button double tap by waiting a few frames before
+// accepting input
 if mode_frames > 10:
     if gui.gamepad.aa:
-        callback(true)
-        pop_mode()
+        pop_mode(true)
     else if gui.gamepad.bb and not forced:
-        callback(false)
-        pop_mode()
+        pop_mode(false)

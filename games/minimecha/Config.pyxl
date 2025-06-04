@@ -47,6 +47,7 @@ let high_score
 enter(in_is_single_player)
 ────────────────────────────────────────────────────────────────────────
 
+
 // Only change state if not coming from a previous game
 if get_previous_mode() ≠ EndGame:
     is_single_player = in_is_single_player

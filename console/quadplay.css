@@ -133,7 +133,7 @@ html {
     height: 100%;
 }
 
-#pauseMessage {
+#introControlsScreen {
     position: absolute;
     left: 12.5%;
     top: 34.75%;
@@ -446,7 +446,7 @@ b.projectTitle.remote:before {
 
 /*****************************************************/
 
-#welcome, #sleep, #welcomeScreen {
+#appWelcomeOverlay, #sleepOverlay {
     z-index: 101;
     visibility: hidden;
     position: absolute;
@@ -667,6 +667,7 @@ div.debugOverride.disabled {
     display:          inline-block;
     margin-right:     1px;
     margin-left:      3px;
+    margin-top: -1px;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select:  none;
@@ -806,7 +807,7 @@ div.disabled span.label, div.disabled:active span.label {
 /*****************************************************/
 
 /* Holds the editors */
-#editorFrame {
+#editorPane {
     overflow:         hidden;
     position:         absolute;
     left:             196px;
@@ -831,7 +832,7 @@ div.disabled span.label, div.disabled:active span.label {
 
 /** Wide IDE shows the project view on large screens */
 @media screen and (max-device-width: 3600px) {
-    .WideIDEUI #editorFrame {
+    .WideIDEUI #editorPane {
         /* Reserve space for the rollout */
         left: 5px;    
     }
@@ -862,13 +863,13 @@ div.disabled span.label, div.disabled:active span.label {
 }
 
 
-.WideIDEUI #editorFrame {
+.WideIDEUI #editorPane {
     /* Sized for large screens */
     right: 769px;
 }
 
 
-.EditorUI #editorFrame, .GhostUI #editorFrame {
+.EditorUI #editorPane, .GhostUI #editorPane {
     right: 0px;
 }
 
@@ -1053,6 +1054,13 @@ code, .code {
     border-left: none;
 }
 
+.unselectable {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;    
+}
+
 /* When in the TestUI *and* the screen is wide, adjust the debugger
    layout to also show the constant editor. */
 @media screen and (min-width: 640px) {
@@ -1067,7 +1075,7 @@ code, .code {
         display: none;
     }
 
-    .TestUI #editorFrame {
+    .TestUI #editorPane {
         display: unset;
         visibility: visible;
         left: 0px;
@@ -1417,7 +1425,7 @@ code, .code {
 }
 
 
-.emulator, div#emulatorFrame {
+.emulator, div#emulatorPane {
     position:         absolute;
     right:            0px;
     top:              25px;
@@ -1426,9 +1434,10 @@ code, .code {
     margin-top: -1px;
     padding: 1px 1px 3px 1px;
     overflow: hidden;
+    background: #331c2a;
 }
 
-.GhostUI .emulator, .GhostUI div#emulatorFrame, .MaximalUI .emulator, .MaximalUI div#emulatorFrame {
+.GhostUI .emulator, .GhostUI div#emulatorPane, .MaximalUI .emulator, .MaximalUI div#emulatorPane {
     padding: 0px;
     margin-top: 0px;
 }
@@ -1446,20 +1455,20 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     display: none;
 }
 
-#emulatorFrame {
+#emulatorPane {
     background: #331c2a;
     border-left: 1px solid #888;
     border-right: none;
     border-top: none;
 }
 
-.GhostUI #emulatorFrame {
+.GhostUI #emulatorPane {
     background: none;
     border: none;
     padding: 0px;
 }
 
-.WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
+.WideIDEUI .emulator, .WideIDEUI div#emulatorPane {
     width: 769px;
     height: 486px;
 }
@@ -1468,7 +1477,7 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     left: -5px;
 }
 
-.EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage, .EditorUI .screenBorder canvas {
+.EditorUI div.emulator, .EditorUI div#emulatorPane, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #introControlsScreen, .EditorUI .screenBorder canvas {
     visibility: hidden !important;
 }
 
@@ -1708,7 +1717,7 @@ canvas#screenOverlay {
     text-align: right;
 }
 
-#controlPane table td + td, #controlPane table th + th {
+#controlView table td + td, #controlView table th + th {
     border-left: 1px solid #888;
     padding: 1px 4px;
 }
@@ -1874,21 +1883,21 @@ tabbox > input:checked + label.ide {
     background:    #302b2b;
 }
 
-tabbox #performanceTab:checked ~ #performancePane,
-tabbox #controlTab:checked ~ #controlPane,
-tabbox #todoTab:checked ~ #todoPane,
-tabbox #manualTab:checked ~ #manualPane,
-tabbox #outputTab:checked ~ #outputPane,
-tabbox #watchTab:checked ~ #watchPane,
-tabbox #serverTab:checked ~ #serverPane {
+tabbox #performanceTab:checked ~ #performanceView,
+tabbox #todoTab:checked ~ #todoView,
+tabbox #controlTab:checked ~ #controlView,
+tabbox #manualTab:checked ~ #manualView,
+tabbox #outputTab:checked ~ #outputView,
+tabbox #watchTab:checked ~ #watchView,
+tabbox #serverTab:checked ~ #serverView {
     display: block;
 }
 
-#manualPane {
+#manualView {
     padding: unset;
 }
 
-#manualPane iframe {
+#manualView iframe {
     border: none;
 }
 
@@ -1995,11 +2004,11 @@ svg.modeGraph .highlight.node > .border {
 
 /** Wide IDE is 1.5x instead of 2x on smaller screens */
 @media screen and (max-device-width: 1600px) {
-    .WideIDEUI #editorFrame {
+    .WideIDEUI #editorPane {
         right: 578px;
     }
 
-    .WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
+    .WideIDEUI .emulator, .WideIDEUI div#emulatorPane {
         width: 576px;
         height: 380px;
     }

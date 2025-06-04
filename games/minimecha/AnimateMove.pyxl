@@ -1,6 +1,9 @@
 AnimateMove
 ════════════════════════════════════════════════════════════════════════
 
+// Function set by enter that can be invoked to end the animation
+let animation_done
+
 /* Common across all simple attacks */
 def end_attack(data):
     data.attack_audio = stop_audio(data.attack_audio)
@@ -33,8 +36,13 @@ def remove_piece(data)
         global_game.player_array[piece.player_index].hand_array[piece.hand_index] = EMPTY_SPACE
       
 
+pop_mode(result) from UpgradeDialog
+────────────────────────────────────────────────────────────────────────
+animation_done(result)
 
-/* If promote_after is ∅ and the move can promote, then player is asked */
+
+/* If promote_after is ∅ and the move can promote, then
+player is asked if they want to promote the piece via the UpgradeDialog. */
 enter(gui, piece, end_board_pos, promote_after)
 ────────────────────────────────────────────────────────────────────────
 
@@ -109,16 +117,11 @@ def show_upgrade_dialog():
         // Pushing another mode while inside a sequence/frame hook will prevent the sequence from
         // advancing, so test to prevent getting stuck.
         offer_promote = false
-        
-        // Return value from the upgrade dialog
-        def upgrade_callback(result):
-            promote = result
-            
-        push_mode(UpgradeDialog, gui, piece, upgrade_callback) because "move_can_promote() and not AI"
-        
+        push_mode(UpgradeDialog, gui, piece) because "move_can_promote() and not AI"
         
 
-def animation_done():
+
+def _animation_done(promote):
     // Put the target_piece and piece back in the board where it started to commit
     // the move properly in the abstract game
     if target_piece ≠ EMPTY_SPACE:
@@ -150,6 +153,8 @@ def animation_done():
         // Return to the game
         pop_mode() because "Animation complete"
 
+// Make this function globally callable so that enter..from can access it
+animation_done = _animation_done
 
 ///////////////////////////////////////////////////
 // Build the animation   
@@ -266,7 +271,10 @@ else if spline.frames:
             piece:              piece}})
 
 
-push(animation_array, show_upgrade_dialog, animation_done)
+def end_sequence():
+    animation_done(promote)
+    
+push(animation_array, show_upgrade_dialog, end_sequence)
 
 sequence(…animation_array)
 

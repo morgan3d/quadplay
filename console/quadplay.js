@@ -73,11 +73,11 @@ let allow_bloom = true;
     // Safari doesn't have a monospace font for console output, so only
     // show the ASCII-art banner on other platforms
     const banner = isSafari ? [''] : `
-                              ╷       ╷                                   
-        ╭───╮ ╷   ╷  ───╮ ╭── │ ╭───╮ │   ───╮ ╷   ╷   ▒▒                 
-        │   │ │   │ ╭── │ │   │ │   │ │  ╭── │ │   │ ▒▒  ▒▒               
-        ╰── │ ╰───┘ ╰───╯ ╰───╯ │ ──╯ ╰─ ╰───╯ ╰── │   ▒▒                 
-            ╵                   ╵                ──╯                      `.split('\n');
+                      ╷       ╷                                   
+╭───╮ ╷   ╷  ───╮ ╭── │ ╭───╮ │   ───╮ ╷   ╷   ▒▒                 
+│   │ │   │ ╭── │ │   │ │   │ │  ╭── │ │   │ ▒▒  ▒▒               
+╰── │ ╰───┘ ╰───╯ ╰───╯ │ ──╯ ╰─ ╰───╯ ╰── │   ▒▒                 
+    ╵                   ╵                ──╯       `.split('\n');
     const style = [];
     for (let i = 0; i < banner.length; ++i) {
         banner[i] = '%c' + banner[i];
@@ -279,7 +279,7 @@ function setCodeEditorFontSize(f) {
 const DISABLED_GAMEPAD = 9;
 let gamepadOrderMap = [0, 1, 2, 3];
 function setGamepadOrderMap(map) {
-    const pane = document.getElementById('gamepadIndexPane');
+    const pane = document.getElementById('gamepadIndexView');
 
     if (map[0] === DISABLED_GAMEPAD &&
         map[1] === DISABLED_GAMEPAD &&
@@ -421,15 +421,14 @@ let welcomeScreenChallenge = ! useIDE;
    audio engine and full-screen on mobile (where it is harder to hit
    the small full-screen button).
  */
-function onWelcomeTouch(hasTouchScreen) {
-    console.log('onWelcomeTouch');
+function onAppWelcomeTouch(hasTouchScreen) {
     hasTouchScreen = hasTouchScreen || isMobile;
-   
+    
     welcomeScreenChallenge = false;
-    const welcome = document.getElementById('welcome');
-    welcome.style.zIndex = -100;
-    welcome.style.visibility = 'hidden';
-    welcome.style.display = 'none';
+    const appWelcomeOverlay = document.getElementById('appWelcomeOverlay');
+    appWelcomeOverlay.style.zIndex = -100;
+    appWelcomeOverlay.style.visibility = 'hidden';
+    appWelcomeOverlay.style.display = 'none';
 
     unlockAudio();
     
@@ -463,10 +462,10 @@ function onWelcomeTouch(hasTouchScreen) {
     if (showPause) {
         // Show the pause message before loading when running a
         // standalone game (not in IDE, not loading the launcher)
-        const pauseMessage = document.getElementById('pauseMessage');
-        pauseMessage.style.zIndex = 120;
-        pauseMessage.style.visibility = 'visible';
-        pauseMessage.style.opacity = 1;
+        const introControlsScreen = document.getElementById('introControlsScreen');
+        introControlsScreen.style.zIndex = 120;
+        introControlsScreen.style.visibility = 'visible';
+        introControlsScreen.style.opacity = 1;
 
         // Track if we've already handled the skip
         let skipHandled = false;
@@ -483,10 +482,10 @@ function onWelcomeTouch(hasTouchScreen) {
             document.removeEventListener('touchstart', pointerHandler, {capture: true});
             
             // Start fade out
-            pauseMessage.style.opacity = 0;
+            introControlsScreen.style.opacity = 0;
             setTimeout(function() {
-                pauseMessage.style.visibility = 'hidden';
-                pauseMessage.style.zIndex = 0;
+                introControlsScreen.style.visibility = 'hidden';
+                introControlsScreen.style.zIndex = 0;
                 onPlayButton(undefined, undefined, undefined, callback);
             }, 200);
         };
@@ -664,10 +663,9 @@ function setUIMode(d, noFullscreen) {
         // when switching back to it
         updateDebugger();
     }
-
 }
 
-
+/* Choose the most appropriate layout for the aspect ratio and scaling factor. */
 function onResize() {
     const body         = document.getElementsByTagName('body')[0];
     const background   = document.getElementsByClassName('emulatorBackground')[0];
@@ -682,16 +680,17 @@ function onResize() {
         body.classList.add(screen.orientation.type);
     }
     
+    // Portrait orientation: prefer gameboy layout
     const gbMode = window.matchMedia('(orientation: portrait)').matches;
 
     let windowWidth = window.innerWidth, windowHeight = window.innerHeight;
 
     let scale = 1;
 
-    const editorFrame = document.getElementById('editorFrame');
+    const editorPane = document.getElementById('editorPane');
     if (uiMode !== 'Test') {
         // Undo the setting from Test mode
-        editorFrame.style.top = '0px';
+        editorPane.style.top = '0px';
     }
     
     switch (uiMode) {
@@ -753,14 +752,16 @@ function onResize() {
                 scale = Math.max(0, Math.min((window.innerHeight - useScreenBorder * 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
             }
             
-            if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
-                // Round to nearest even multiple of the actual pixel size for small screens to
-                // keep per-pixel accuracy
+            // Round to nearest even multiple of the actual pixel size for small emulator screens to
+            // keep per-pixel accuracy. Disable this if the physical screen is not very large, 
+            // e.g., on a phone, where limiting scaling to integers would make it ridiculously small with large margins
+            if ((window.screen.width > 500 && window.screen.height > 500) &&
+                (scale * window.devicePixelRatio <= 2.5) && 
+                (scale * window.devicePixelRatio > 1)) {
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
 
             // Amount to shift vertically to center the screen
-            //const delta = (windowHeight - Math.max(windowHeight + 30, 90 + SCREEN_HEIGHT * scale)) / 2;
             let delta = 0;
             if (! gbMode) {
                 // Resize the background to bound the screen more tightly.
@@ -768,7 +769,8 @@ function onResize() {
                 // stay near the edges of the screen horizontally to make
                 // them reachable on mobile. In gbMode, the emulator fills
                 // the screen and this is not needed.
-                const height = Math.min(windowHeight - 27, Math.round(SCREEN_HEIGHT * scale + 19));
+                const MIN_LANDSCAPE_HEIGHT = 300;
+                const height = Math.min(windowHeight - 27, Math.max(MIN_LANDSCAPE_HEIGHT, Math.round(SCREEN_HEIGHT * scale + 19)));
                 delta = Math.ceil(height / 2);
                 background.style.top = Math.round((windowHeight - height) / 2 - 17) + 'px';
                 background.style.height = height + 'px';
@@ -820,7 +822,7 @@ function onResize() {
                 // Put the top of the debugger at the bottom of the emulator
                 const top = Math.round(S * scale * screenBorder.offsetHeight) + 'px';
                 document.getElementById('debugger').style.top = top;
-                editorFrame.style.top = top;
+                editorPane.style.top = top;
                 
                 screenBorder.style.transformOrigin = 'center top';
             } else {
@@ -1005,8 +1007,8 @@ function onAutoPauseCheckbox(event) {
 
 function wake() {
     // Wake if asleep (we might be in pause mode because we're a guest, too)
-    if (autoPauseEnabled && (emulatorMode === 'pause') && (document.getElementById('sleep').style.visibility === 'visible')) {
-        document.getElementById('sleep').style.visibility = 'hidden';
+    if (autoPauseEnabled && (emulatorMode === 'pause') && (document.getElementById('sleepOverlay').style.visibility === 'visible')) {
+        document.getElementById('sleepOverlay').style.visibility = 'hidden';
         onPlayButton();
         
         // The set focus doesn't work without this delay for some reason
@@ -1024,7 +1026,9 @@ function wake() {
 }
 
 
-/* Invoked via setTimeout to poll for gamepad input while sleeping*/
+/* Invoked via setTimeout to poll for gamepad input while sleeping.
+   Triggers the next sleepPollCallback if there has been no input
+   and still not in play mode.*/
 function sleepPollCallback() {
     if (emulatorMode !== 'play') {
         // Still paused
@@ -1053,7 +1057,7 @@ function sleepPollCallback() {
 /* sleep.pollHandler is the gamepad polling event while sleeping */
 function sleep() {
     console.log('Sleeping due to inactivity...');
-    document.getElementById('sleep').style.visibility = 'visible';
+    document.getElementById('sleepOverlay').style.visibility = 'visible';
     onPauseButton();
     // Begin gamepad polling
     sleepPollCallback();
@@ -1730,8 +1734,9 @@ function setErrorStatus(e, location) {
             document.getElementById('outputTab').checked = true;
         }
     } else if (e !== '') {
+        e = e.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<');
         alert(e);
-        console.log(e.innerHTML);
+        console.log(e);
     }
 }
 
@@ -1757,7 +1762,7 @@ function restartProgram(numBootAnimationFrames) {
         // that it sees those variables.
         try {
             coroutine = QRuntime.$makeCoroutine(compiledProgram);
-            QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
+            QRuntime.$numBootAnimationFrames = numBootAnimationFrames;
             lastAnimationRequest = setTimeout(mainLoopStep, 0);
             emulatorKeyboardInput.focus({preventScroll: true});
             if (useIDE) {
@@ -2027,7 +2032,7 @@ function onDocumentKeyUp(event) {
 
 function onDocumentKeyDown(event) {
     if (welcomeScreenChallenge) {
-        onWelcomeTouch();
+        onAppWelcomeTouch();
         event.preventDefault();
         return;
     }
@@ -2650,6 +2655,7 @@ function mainLoopStep() {
         if (interval !== lastAnimationInterval) {
             // New interval
             clearInterval(lastAnimationRequest);
+            console.log(`setInterval(..., ${interval})`);
             lastAnimationRequest = setInterval(mainLoopStep, interval);
             lastAnimationInterval = interval;
         }
@@ -3896,16 +3902,16 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // See also more event handlers for the emulator in quadplay-host.js
 
-let gamepadButtonPressedWhilePageLoading = false;
+let gamepadButtonPressedWhileAppLoading = false;
 window.addEventListener("gamepadconnected", function(e) {
     // Runs when the first gamepad button is pressed or when a
     // second gamepad connects.
     if (welcomeScreenChallenge) {
-        if (document.getElementById('pageLoadingScreen')) {
+        if (document.getElementById('appLoadingOverlay')) {
             // Delay starting the welcome until load completes
-            gamepadButtonPressedWhilePageLoading = true;
+            gamepadButtonPressedWhileAppLoading = true;
         } else {
-            onWelcomeTouch();
+            onAppWelcomeTouch();
         }
     }
     updateControllerIcons();
@@ -4028,7 +4034,20 @@ function onInactive() {
     // Don't do anything if already sleeping/paused or if auto-pause is disabled
     if (!autoPauseEnabled || isHosting || isGuesting || 
         (emulatorMode === 'pause') || 
-        (document.getElementById('sleep').style.visibility === 'visible')) {
+        (document.getElementById('sleepOverlay').style.visibility === 'visible')) {
+        return;
+    }
+    
+    // Don't sleep while the intro controls screen is visible to avoid interfering with its animation
+    // or during the first 60 frames of gameplay
+    if ((document.getElementById('introControlsScreen').style.visibility === 'visible') || 
+        ((QRuntime !== undefined) && (QRuntime.game_frames < 60))) {
+        // Update last interaction time to prevent sleep.
+        // This is necessary because the browser's sleep detection is based on a timeout since
+        // user interaction. We need to re-set the timer when it expires during this lockout
+        // period, otherwise it will immediately trigger when the game starts...on a black screen,
+        // which will look like a crash to the user.
+        updateLastInteractionTime();
         return;
     }
     
@@ -4219,25 +4238,25 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 
     console.log('Loading because of initial page load.');
     loadGameIntoIDE(url, function () {
-        const pageLoadingScreen = document.getElementById('pageLoadingScreen');
-        if (pageLoadingScreen) {
+        const appLoadingOverlay = document.getElementById('appLoadingOverlay');
+        if (appLoadingOverlay) {
             if (! useIDE) {
                 // Done loading outside of the IDE.  Now show the
-                // welcome screen. The pageLoadingScreen prevented
+                // welcome screen. The appLoadingOverlay prevented
                 // players from launching the game before loading
                 // completed. The welcome screen forces an interaction
                 // to lift browser restrictions.
-                document.getElementById('welcome').style.visibility = 'visible';
+                document.getElementById('appWelcomeOverlay').style.visibility = 'visible';
                 
-                if (gamepadButtonPressedWhilePageLoading) {
+                if (gamepadButtonPressedWhileAppLoading) {
                     // Immediately push the welcome button if the player already
                     // pressed a gamepad button
-                    onWelcomeTouch();
+                    onAppWelcomeTouch();
                 }
             }
             
             // Remove the loading screen permanently now that page loading has completed
-            pageLoadingScreen.remove();
+            appLoadingOverlay.remove();
         }
 
         if (useIDE) {
@@ -4429,7 +4448,7 @@ if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserv
     setTimeout(function () {
         checkForUpdate();
         setInterval(function () {
-            if (document.getElementById('sleep').style.visibility !== 'visible') {
+            if (document.getElementById('sleepOverlay').style.visibility !== 'visible') {
                 checkForUpdate();
             }
         }, REGULAR_PERIOD);

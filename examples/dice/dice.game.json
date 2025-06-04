@@ -1,7 +1,7 @@
 {
     "title": "Dice",
     "developer": "CasualEffects",
-    "copyright": "©2024 Morgan McGuire",
+    "copyright": "©2024-2025 Morgan McGuire",
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
@@ -27,7 +27,8 @@
         "dice_table_sound": "quad://sounds/hit-11.sound.json",
         "suchet_9_font": "quad://fonts/suchet-9.font.json",
         "suchet_12_font": "quad://fonts/suchet-12.font.json",
-        "font8": "quad://fonts/deja-8.font.json"
+        "font8": "quad://fonts/deja-8.font.json",
+        "dragon_background_sprite": "dragon.sprite.json"
     },
     "version": 1,
     "min_players": 1,
@@ -45,22 +46,22 @@
             "value": {
                 "r": {
                     "type": "number",
-                    "value": "39%"
+                    "value": "3%"
                 },
                 "g": {
                     "type": "number",
-                    "value": "24%"
+                    "value": "38%"
                 },
                 "b": {
                     "type": "number",
-                    "value": "18%"
+                    "value": "38%"
                 }
             }
         },
         "SINGLE_SET": {
             "description": "If true, show a single set of dice",
             "type": "boolean",
-            "value": false
+            "value": true
         },
         "DIE_BRIGHT": {
             "type": "rgb",

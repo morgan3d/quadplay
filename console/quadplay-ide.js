@@ -29,9 +29,9 @@
         if (! gameSource || ! gameSource.json || ! useIDE) { return; }
         
         // Hide all editors
-        const editorFrame = document.getElementById('editorFrame');
-        for (let i = 0; i < editorFrame.children.length; ++i) {
-            editorFrame.children[i].style.visibility = 'hidden';
+        const editorPane = document.getElementById('editorPane');
+        for (let i = 0; i < editorPane.children.length; ++i) {
+            editorPane.children[i].style.visibility = 'hidden';
         }
         
         const gameEditor    = document.getElementById('gameEditor');

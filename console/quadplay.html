@@ -77,6 +77,38 @@
 
   </head>
 
+  <!-- There are several divs used to block input, force input, or cover for different 
+       loading processes that appear as artificial screens. For the loading process these appear in this order:
+
+       1. appLoadingOverlay: Blocks interaction during initial load for exported games until the 
+          rest of the app is loaded.  Shows a loading spinner and prevents user input via 
+          event.stopPropagation(). Removed by a loadGameIntoIDE() callback.
+       2. bootScreen: Shows file loading progress during game boot. Uses monospace font with pre-formatted 
+          text display. Controlled by showBootScreen(), hideBootScreen(), and appendToBootScreen() 
+          functions. Styled with a dark background and light text. 
+       3. appWelcomeOverlay: Forces user interaction before game start to enable audio context and 
+          fullscreen on mobile. Handled by onAppWelcomeTouch() which unlocks audio and sets up initial 
+          game state. Made visible by a loadGameIntoIDE() callback.
+       4. introControlsScreen: Shows instructions for reaching pause and controls during emulator boot 
+          for exported games. Appears as an image overlay with fade in/out animation controlled by _Message.pyxl.
+       5. sleepOverlay: Blocks interaction when quadplay is sleeping due to inactivity or out of focus. 
+          Controlled by onInteraction(). See also sleepPollCallback().
+
+       Other related elements of interest are:
+
+       - emulatorPane: Container for the emulator view in IDE mode. Handles layout and styling of the game display area.
+       - emulator: Main game display container with virtual controls. Contains screen canvases and handles input focus via emulatorKeyboardInput.
+
+       - waitDialog: Modal dialog for blocking user interaction during async operations. Used by showWaitDialog() and hideWaitDialog() functions in support of other GUIs.
+
+       Because there are multiple levels of virtual display and framing, the following naming conventions are used in this program:
+       
+       - pane:   Resizable GUI layout region that can hold a view
+       - view:   The exchangable contents of a view. A specific way of looking at or interacting with content that can be placed in a pane
+       - screen:  Element that visually appears to be part of the emulator's virtual display
+       - overlay: Modal element that captures or blocks input for various special operations of loading or sleeping, but is not a dialog
+       - dialog:  Modal traditional GUI window    -->
+
   <!-- Default to the most conservative UI. The real version will be set on load -->
   <script>
     document.write(`<body id="body" class="${useIDE ? 'IDE' : ''} MaximalUI kiosk">`);
@@ -84,7 +116,7 @@
     <video id="guestVideo" playsinline autoplay oncontextmenu="event.preventDefault()" onmousedown="window.focus()"> </video>
     <audio id="guestAudio" autoplay style="visibility: hidden"></audio>
     <div id="guestVideoCover"> </div>
-    <div id="welcome" class="noIDE" onmousedown="window.onWelcomeTouch && onWelcomeTouch()" ontouchstart="onWelcomeTouch(true)">
+    <div id="appWelcomeOverlay" class="noIDE" onmousedown="window.onAppWelcomeTouch && onAppWelcomeTouch()" ontouchstart="onAppWelcomeTouch(true)">
       <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7)">
         <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
           <div style="position: absolute; top: -150px; text-align: center; font-size: 26px; font-weight: 100; line-height: 130%; width: 100%; text-shadow: 1px 3px 7px #000">
@@ -101,14 +133,14 @@
     </div>
 
     <!-- Blocks interaction during initial load for exported games, before 'welcome' is visible -->
-    <div id="pageLoadingScreen" onmousedown="event.stopPropagation()" onkeydown="event.stopPropagation()" ontouchstart="event.stopPropagation()" style="background:none; z-index: 102; visibility: visible">
+    <div id="appLoadingOverlay" onmousedown="event.stopPropagation()" onkeydown="event.stopPropagation()" ontouchstart="event.stopPropagation()" style="background:none; z-index: 102; visibility: visible">
       <div style="color: #fff; width: 100%; height: 19px; position: absolute; background: rgba(0, 8, 16, 0.85); text-align: center; color: #fff; padding-top: 4px; font-family: quadplay">
         LOADING <div class="spin" style="display:inline-block">✜</div>
       </div>
     </div>
 
     <!-- Blocks interaction when quadplay is sleeping -->
-    <div id="sleep" class="noIDE" onmousedown="wake()" ontouchstart="wake()" onkeydown="wake()">
+    <div id="sleepOverlay" class="noIDE" onmousedown="wake()" ontouchstart="wake()" onkeydown="wake()">
       <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7)">
         <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
           <div style="position: absolute; top: -150px; text-align: center; font-size: 26px; font-weight: 100; line-height: 130%; width: 100%; text-shadow: 1px 3px 7px #000">
@@ -161,8 +193,6 @@
         }
       </script>
       <div><a onclick="enterKioskMode()">Enter Kiosk</a></div>
-      <hr>
-      <div class="IDEOnly"><a onclick="window.open('controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
       <script>
         if (! isQuadserver) {
             document.write('<div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>');
@@ -245,10 +275,10 @@
         </script>
 
         <div style="width:24px; margin-top: -4px; display: inline-block; padding-left: 10px" onclick="showGamepads()">
-          <div class="midiAbsent" id="midiIcon0" title="Connect a USB MIDI device" style="display:block"></div>
+          <div class="midiAbsent" id="midiIcon0" title="Connect a USB MIDI device" style="display:block; margin-bottom: -1px"></div>
           <div class="midiAbsent" id="midiIcon1" title="Connect a USB MIDI device"></div>
         </div>
-        <div style="display:inline-block; padding-left: 1px;" onclick="useIDE ? showGamepads() : onSystemMenuButton('controls')">
+        <div style="display:inline-block; position: relative; padding-left: 1px; top: 1px" onclick="useIDE ? showGamepads() : onSystemMenuButton('controls')">
           <div style="width:48px; margin-top: -4px">
             <div class="controllerAbsent" id="controllerIcon0" title="Connect a game controller and press a button on it"></div>
             <div class="controllerAbsent" id="controllerIcon1" title="Connect a game controller and press a button on it"></div>
@@ -286,7 +316,7 @@
           // Move the buttons away from the corner, which may be curved on mobile
           if (isMobile) { document.write(`<div style="display: inline-block; width: 40px"></div>`); }
         </script>
-        <span class="IDEOnly" style="margin-left:-3px">
+        <span class="IDEOnly" style="margin-left:-3px;">
         <script>
           makeRadio('<img src="icons/ui-test.png"     width=26 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
           makeRadio('<img src="icons/ui-debug.png"    width=26 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
@@ -302,9 +332,9 @@
     <div id="realBody" style="position: absolute; top: 23px; left: 0px; right: 1px; bottom: 16px">
     <div class="project ide unselectable idePart" id="project"> </div>
 
-    <div id="emulatorFrame" class="ide idePart"> </div>
+    <div id="emulatorPane" class="ide idePart"> </div>
 
-    <div id="editorFrame" class="ide idePart">
+    <div id="editorPane" class="ide idePart">
       <div id="modeEditor" style="position:absolute; top:0px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; right: 0; bottom: 0; overflow: scroll; padding: 10px; visibility:hidden"></div>
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
@@ -391,9 +421,9 @@
       <input id="serverTab" type="radio" name="tabs">
       <label for="serverTab" class="ide unselectable">Mobile</label>
 
-      <pane id="todoPane" class="ide" style="overflow-y:auto;overflow-x:hidden"></pane>
+      <pane id="todoView" class="ide" style="overflow-y:auto;overflow-x:hidden"></pane>
 
-      <pane id="performancePane" class="ide" style="overflow-y:auto;overflow-x:hidden">
+      <pane id="performanceView" class="ide" style="overflow-y:auto;overflow-x:hidden">
         <center><b style="color:#888; font-family:quadplay; font-size: 125%">Runtime</b></center>
         <hr>
         <br/>
@@ -417,12 +447,12 @@
         <div id="resourcePane"></div>
       </pane>
 
-      <pane id="manualPane" class="ide" style="overflow-y:auto;overflow-x:hidden">
+      <pane id="manualView" class="ide" style="overflow-y:auto;overflow-x:hidden">
         <div style="border-bottom: 1px solid #CCC; padding-bottom: 1px">
-          <input id="manualPaneManual" type="radio" name="manualPaneRadio" checked onchange="onShowManual()"/>
-          <label for="manualPaneManual" style="margin-right:25px">Manual</label>
-          <input id="manualPaneProgramAPI" type="radio" name="manualPaneRadio" onchange="onShowProgramAPI()"/>
-          <label for="manualPaneProgramAPI">Game Documentation</label>
+          <input id="manualViewManual" type="radio" name="manualViewRadio" checked onchange="onShowManual()"/>
+          <label for="manualViewManual" style="margin-right:25px">Manual</label>
+          <input id="manualViewProgramAPI" type="radio" name="manualViewRadio" onchange="onShowProgramAPI()"/>
+          <label for="manualViewProgramAPI">Game Documentation</label>
         </div>
         <div style="position: absolute; top:21px; width:100%; bottom: 0; left: 0; right: 0">
           <iframe id="manual" style="position: absolute; top:0; width:100%; height: 100%; right: 0"></iframe>
@@ -432,9 +462,9 @@
 
       <!-- We can't hide just vertical scrollbars reliably on Chrome on Windows, but we can hide both scrollbars for
            these controls that don't have horizontal ones anyway -->
-      <style>#performancePane::-webkit-scrollbar, #todoPane::-webkit-scrollbar, #controlPane::-webkit-scrollbar { display: none; }</style>
-      <pane id="controlPane" class="ide" style="overflow-y:auto;overflow-x:hidden;text-align:center">
-        <div id="gamepadIndexPane" style="width:100%; box-sizing: border-box;">
+      <style>#performanceView::-webkit-scrollbar, #todoView::-webkit-scrollbar, #controlView::-webkit-scrollbar { display: none; }</style>
+      <pane id="controlView" class="ide" style="overflow-y:auto;overflow-x:hidden;text-align:center">
+        <div id="gamepadIndexView" style="width:100%; box-sizing: border-box;">
             
         </div>
         <br/>
@@ -462,7 +492,7 @@
           Keyboard, touch, mouse, and up to four console controllers or gamepads supported.
       </pane>
 
-      <pane id="outputPane" class="ide structPane" style="overflow:hidden; width:100%">
+      <pane id="outputView" class="ide structPane" style="overflow:hidden; width:100%">
         <div>
             <div style="position: absolute; top:1px; left:0; right:0; padding-left:5px; border-bottom: solid 1px #888; height:20px">
               <input type="checkbox" id="debugPrintEnabled" onclick="debugOptionClick(event)" checked/><label for="debugPrintEnabled"><code>debug_print()</code></label>
@@ -478,7 +508,7 @@
         </div>
       </pane>
 
-      <pane id="watchPane" class="ide structPane" style="overflow:hidden; width:100%">
+      <pane id="watchView" class="ide structPane" style="overflow:hidden; width:100%">
         <div class="hideScrollBars">
           <div style="position: absolute; top:1px; left:0; right:0; padding-left:5px; border-bottom: solid 1px #888; height:20px">
             <input type="checkbox" id="debugWatchEnabled" onclick="debugOptionClick(event)" checked/><label for="debugWatchEnabled">Enable <code>debug_watch()</code></label>
@@ -488,7 +518,7 @@
         </div>
       </pane>
 
-      <pane id="serverPane" class="ide" style="color:#999; overflow:hidden">
+      <pane id="serverView" class="ide" style="color:#999; overflow:hidden">
         <div class="hideScrollBars" style="text-align:center">
           <div id="serverURL">?.?.?.?</div>
           <style>
@@ -560,7 +590,7 @@
         
         <!-- Shows instructions for reaching pause and controls during boot. This is designed to look like
              it is rendered by quadplay but is really an image -->
-        <div id="pauseMessage" class="pixelate"></div>
+        <div id="introControlsScreen" class="pixelate"></div>
 
         <!-- Runtime popup dialogs that require user interaction for permissions (can't run off gamepad polling) -->
         <div id="hostCodeCopyRuntimeDialog" class="runtimeDialog" style="overflow: visible">
@@ -1132,11 +1162,14 @@
         
            - `lazyLoad`: true if not needed immediately at load/startup
              time which then loads with `async`. Otherwise load with `defer`.
-        */     
+            Defer scripts execute in the order that they are declared, but
+            after the page has completed, so they don't block loading and
+            can be loaded asynchronously.
+        */    
         function loadScript(url, ide, lazyLoad, type) {
             if (! ide || useIDE) {
               // Not currently using async because of race condition concerns
-              return `<script ${lazyLoad ? '' : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
+              return `<script ${lazyLoad ? (useIDE ? 'async' : 'defer') : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
             } else {
               return '';
             }

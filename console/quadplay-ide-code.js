@@ -1357,7 +1357,7 @@ function onCodeEditorGoToLineButton() {
     and gameSource.modes */
 function updateTodoList() {
     if (! useIDE) { return; }
-    const todoPane = document.getElementById('todoPane');
+    const todoView = document.getElementById('todoView');
 
     let result = '<table style="width: 100%">\n';
     let hasAnyTodo = false;
@@ -1531,7 +1531,7 @@ function updateTodoList() {
         result += 'Put <a href="../doc/manual.md.html#standardlibrary/debugging"><code>todo()</code></a> statements in your code to automatically generate this list.';
     }
 
-    todoPane.innerHTML = result;//`<div class="hideScrollBars" style="width: 97%">${result}</div>`;
+    todoView.innerHTML = result;//`<div class="hideScrollBars" style="width: 97%">${result}</div>`;
 }
 
 

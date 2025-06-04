@@ -252,7 +252,7 @@ def dice_add_die(
         draw: _dice_die_draw,
         dice: dice})
     
-    die_set_result_index(die, 0)
+    die_set_result_index(die, die.sides - 1)
         
     physics_add_entity(dice.physics, push(dice.die_array, die))
 

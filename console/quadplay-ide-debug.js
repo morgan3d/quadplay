@@ -17,7 +17,7 @@ const debugModeDisplay = document.getElementById('debugModeDisplay');
 const debugPreviousModeDisplay = document.getElementById('debugPreviousModeDisplay');
 const debugModeFramesDisplay = document.getElementById('debugModeFramesDisplay');
 const debugGameFramesDisplay = document.getElementById('debugGameFramesDisplay');
-const outputPane = document.getElementById('outputPane');
+const outputView = document.getElementById('outputView');
 const outputDisplayPane = document.getElementById('outputDisplayPane');
 
 

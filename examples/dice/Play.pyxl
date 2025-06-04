@@ -15,6 +15,7 @@ let selected_die = ∅
    has deselected everything */
 let last_selected_die = ∅
 
+
 /* Find closest die to `pos` in the set of dice specified. 
    If dir is ∅, consider all directions */
 def find_closest_die(pos, dir, …dice_array):
@@ -38,10 +39,10 @@ def find_closest_die(pos, dir, …dice_array):
     
 
 def process_ui():
-    let msg = "(b) or click to exchange dice"
+    let msg = "(b) or click to exchange dice\n\n[<][^][v][>] or mouse selection"
 
     if size(dice.die_array) > 0:
-        msg = "Press (a) to roll\n\n" + msg
+        msg = "Press (a) or click background to roll\n\n\n" + msg
     
     draw_text({
         font: font5, 
@@ -97,8 +98,7 @@ def process_ui():
             // Hide the selection visualization
             selected_die = ∅
             
-
-    if joy.aa and size(dice.die_array) > 0:
+    else if ((touch.aa and not selected_die and overlaps(touch.xy, dice)) or joy.aa) and size(dice.die_array) > 0:
         // Choose results and set up for the roll animation
         dice_prepare_roll(dice, true)
         
@@ -173,6 +173,7 @@ dice_set_initial_positions(tray, "grid")
 selected_die = dice.die_array[0]
 last_selected_die = selected_die
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
 // Shadow of walls
@@ -182,6 +183,7 @@ draw_corner_rect(xy(0, 8), xy(6, SCREEN_SIZE.y), #0003, ∅, 1)
 preserving_transform:
     set_transform(½ SCREEN_SIZE, xy(1, -1))
     set_background(BACKGROUND_COLOR)
+    draw_sprite({sprite: dragon_background_sprite, pos: dice.pos, opacity: 25%})
 
     // Draw the tray
     draw_rect(tray.pos, tray.size, TRAY_BACKGROUND_COLOR)
@@ -198,6 +200,6 @@ preserving_transform:
     
     // Highlight selected die
     if selected_die and dice_roll_time(dice) ≤ 0:
-        draw_disk(selected_die.pos, 58% selected_die.size.x, ∅, #FF0, 100)
+        draw_disk(selected_die.pos, 58% selected_die.size.x, ∅, #FF0, 1000)
     
     

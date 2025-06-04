@@ -215,7 +215,10 @@
         },
         "PLAYER_NAME": {
             "type": "array",
-            "value": ["Red", "Blue"]
+            "value": [
+                "Red",
+                "Blue"
+            ]
         },
         "PLAYER_COLOR": {
             "type": "array",

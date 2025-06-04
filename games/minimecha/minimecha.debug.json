@@ -43,6 +43,6 @@
             "enabled": false
         }
     },
-    "start_mode": "Play",
+    "start_mode": "Config",
     "start_mode_enabled": false
 }

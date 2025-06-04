@@ -248,14 +248,14 @@ function showDocumentation(api, type) {
 
 
 function onShowManual() {
-    document.getElementById('manualPaneManual').checked = true;
+    document.getElementById('manualViewManual').checked = true;
     document.getElementById('manual').style.visibility = 'visible';
     document.getElementById('programAPI').style.visibility = 'hidden';
 }
 
 
 function onShowProgramAPI() {
-    document.getElementById('manualPaneProgramAPI').checked = true;
+    document.getElementById('manualViewProgramAPI').checked = true;
     document.getElementById('manual').style.visibility = 'hidden';
     document.getElementById('programAPI').style.visibility = 'visible';
 }
