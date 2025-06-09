@@ -37,7 +37,7 @@
     "cooperative":  false,
     "competitive":  true,
     "achievements": false,
-    "highscores":   false,
+    "high_scores":   false,
     "description": "Rock-paper-scissors battle royale.",
 
     "constants":  {

@@ -47,7 +47,7 @@
     "cooperative": true,
     "competitive": false,
     "achievements": false,
-    "highscores": true,
+    "high_scores": true,
     "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records.",
     "constants": {
         "LAKE_COLOR": {

@@ -23,7 +23,7 @@
     "cooperative": true,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Physics example of a player helicoper that can lift another player's mech.",
     "constants": {
         "LIFT_RANGE": {

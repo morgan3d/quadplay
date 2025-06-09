@@ -20,7 +20,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of the device_control() multitouch extension",
     "constants": {},
     "screenshot_tag": "multitouch",

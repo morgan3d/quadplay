@@ -20,7 +20,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Demonstration of the MIDI output API for Novation Launchpad controllers",
     "constants": {
     },

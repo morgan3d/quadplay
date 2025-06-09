@@ -1554,7 +1554,7 @@ return $Object.freeze({$type:'mode', $enter:$enter, $frame:$frame, $pop_modeFrom
     compiledProgram += 'push_guest_menu_mode.$OnlineMenu = $OnlineMenu; ';
     compiledProgram += `
 function $start_program() {
-    $play_reset_animation.active = false;
+    $play_start_animation.active = false;
     mode_frames = game_frames = 0;
     try {
         set_mode(${start_mode});
@@ -1566,12 +1566,12 @@ function $start_program() {
     // Main loop
     compiledProgram += `// Main loop
 return function () {
-    if ($play_reset_animation.active) {
-        $play_reset_animation();
+    if ($play_start_animation.active) {
+        $play_start_animation();
 
         // Don't show on the last frame of the animation
         // because that would increment game_frames
-        if ($play_reset_animation.active) {
+        if ($play_start_animation.active) {
            $show();
         }
     } else {
@@ -1694,8 +1694,8 @@ draw_corner_rect({x: 0, y: 0}, SCREEN_SIZE, rgb(0,0,0), undefined, -1);
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Reset animation
-function $play_reset_animation() {
-   if ($numBootAnimationFrames <= 0) {       
+function $play_start_animation() {
+   if ($numStartAnimationFrames <= 0) {       
        $start_program();
        return; 
    }
@@ -1704,10 +1704,10 @@ function $play_reset_animation() {
    const fadeLen = 13;
 
    // Hold black at the end
-   const holdLen = $numBootAnimationFrames > 100 ? 47 : 8;
+   const holdLen = $numStartAnimationFrames > 100 ? 47 : 8;
 
    // Middle section of dots animation
-   const midLen = $numBootAnimationFrames - fadeLen - holdLen;
+   const midLen = $numStartAnimationFrames - fadeLen - holdLen;
 
    let frame = mode_frames;
 
@@ -1771,7 +1771,7 @@ function $play_reset_animation() {
    // Done! 
    $start_program();
 }
-$play_reset_animation.active = true;
+$play_start_animation.active = true;
 `;
 
 

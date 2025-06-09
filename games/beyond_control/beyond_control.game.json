@@ -82,7 +82,7 @@
     "cooperative": true,
     "competitive": true,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Program your broken robots to race through the ruins.",
     "constants": {
         "TITLE_SPARK_POS_ARRAY": {

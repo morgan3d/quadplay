@@ -23,7 +23,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": true,
+    "high_scores": true,
     "description": "Wiggling text title screen animation",
     "constants": {},
     "screenshot_tag": "textspheres",

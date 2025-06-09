@@ -72,7 +72,7 @@
     "description": "A game about words",
     "developer": "Stephan Steinbach",
     "docs": [],
-    "highscores": false,
+    "high_scores": false,
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "max_players": 1,
     "min_players": 1,

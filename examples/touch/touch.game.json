@@ -16,6 +16,6 @@
     "cooperative":  false,
     "competitive":  false,
     "achievements": false,
-    "highscores":   false,
+    "high_scores":   false,
     "description": "Shows how to use the touch input"
 }

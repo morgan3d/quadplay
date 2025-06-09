@@ -21,7 +21,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Perspective textured ground plane example",
     "constants": {
         "SKY_COLOR": {

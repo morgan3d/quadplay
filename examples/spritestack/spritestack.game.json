@@ -28,7 +28,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Little engine for Grand Theft Auto 2.5D rendering and physics of a 2D game using sprite stacking and camera perspective.",
     "constants": {
         "SHADOW_DIR": {

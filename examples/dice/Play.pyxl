@@ -15,6 +15,9 @@ let selected_die = ∅
    has deselected everything */
 let last_selected_die = ∅
 
+/* Number of times the dice have been rolled */
+let num_rolls = 0
+
 
 /* Find closest die to `pos` in the set of dice specified. 
    If dir is ∅, consider all directions */
@@ -39,19 +42,21 @@ def find_closest_die(pos, dir, …dice_array):
     
 
 def process_ui():
-    let msg = "(b) or click to exchange dice\n\n[<][^][v][>] or mouse selection"
-
-    if size(dice.die_array) > 0:
-        msg = "Press (a) or click background to roll\n\n\n" + msg
+    if num_rolls < 3:
+        let msg = "(b) or click to exchange dice\n\n[<][^][v][>] or mouse selection"
     
-    draw_text({
-        font: font5, 
-        text: replace(msg, joy.prompt),
-        pos: dice.pos,
-        color: #fffA,
-        outline: #000A,
-        shadow: #000A,
-        z: 100})
+        if size(dice.die_array) > 0:
+            msg = "Press (a) or click background to roll\n\n\n" + msg
+        
+        // Move up and down so that we don't obscure any particular die result
+        draw_text({
+            font: font5, 
+            text: replace(msg, joy.prompt),
+            pos: dice.pos + xy(0, oscillate(mode_frames / 5, -20, +20)),
+            color: #fffA,
+            outline: #000A,
+            shadow: #000A,
+            z: 100})
         
     // Change selected die on mouseover
     if touch.hover and touch.hover.x:
@@ -100,6 +105,7 @@ def process_ui():
             
     else if ((touch.aa and not selected_die and overlaps(touch.xy, dice)) or joy.aa) and size(dice.die_array) > 0:
         // Choose results and set up for the roll animation
+        ++num_rolls
         dice_prepare_roll(dice, true)
         
 
@@ -157,12 +163,11 @@ if SINGLE_SET:
     for s in [4, 6, 8, 10, 12, 20]:
         // Tweak sizes across the set
         const size = if s == 20 then 26 else (if s == 8 then 22 else 24)
-        
-        dice_add_die(if s == 20 then dice else tray, s, xy(0, 0), size, suchet_9_font, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, true)
+        dice_add_die(if s == 10 or s == 4 then tray else dice, s, ∅, size, suchet_9_font, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, true)
 
-    // Percentile
-    dice_add_die(tray, 10, xy(0, 0), 20, font8, "0123456789", ∅, 20%, ∅, #444)
-    dice_add_die(tray, 10, xy(0, 0), 20, font8, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], ∅, 20%, ∅, #444)
+    // Gold percentile
+    dice_add_die(dice, 10, ∅, 20, font8, "0123456789", ∅, 20%, ∅, #444)
+    dice_add_die(dice, 10, ∅, 20, font8, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], ∅, 20%, ∅, #444)
         
 else:
     make_demo_dice()  
@@ -193,7 +198,7 @@ preserving_transform:
     // Manage push to roll
     if dice_roll_time(dice) ≤ 0:
         process_ui()
-    
+
     // Draw and simulate
     dice_update(dice)
     dice_update(tray)

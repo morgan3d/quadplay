@@ -21,7 +21,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Asymmetric sprite scaling for animation of single sprites",
     "constants": {
         "text_color": {

@@ -11,7 +11,7 @@ function onProjectLicensePreset(license) {
     onProjectMetadataChanged();
 }
 
-function onProjectMetadataChanged(projectLicense) {
+function onProjectMetadataChanged() {
     const t = document.getElementById('projectTitle').value.trim();
     const titleChanged = t !== gameSource.json.title;
     gameSource.json.title = t;
@@ -22,11 +22,11 @@ function onProjectMetadataChanged(projectLicense) {
         gameSource.json[key] = document.getElementById('project' + capitalize(key)).value.trim();
     }
 
-    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements'];
+    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements', 'Skip Start Animation'];
     for (let f = 0; f < boolFields.length; ++f) {
         const name = boolFields[f];
-        const key = name.replace(/ /g,'').toLowerCase();
-        gameSource.json[key] = document.getElementById('project' + capitalize(key)).checked ? true : false;
+        const key = name.replace(/ /g, '_').toLowerCase();
+        gameSource.json[key] = document.getElementById('project_' + key).checked ? true : false;
     }
 
     const mn = parseInt(document.getElementById('projectMinPlayers').value);

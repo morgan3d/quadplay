@@ -75,7 +75,7 @@
     "cooperative": true,
     "competitive": true,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
     "constants": {
         "STORY_ARRAY": {

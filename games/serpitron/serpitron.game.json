@@ -48,7 +48,7 @@
     "cooperative":           false,
     "competitive":           true,
     "achievements":          false,
-    "highscores":            false,
+    "high_scores":            false,
     "description":           "Feed your serpent while avoiding obstacles...and itself. Rats, shotguns, blizzards, cities, pyramids, and more!",
 
     "constants":  {

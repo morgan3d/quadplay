@@ -178,7 +178,7 @@ if (! $THREADED_GPU) { document.getElementById('debugGPUTimeRow').style.display 
 // 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Windowed',
 // 'Maximal', 'Ghost'. See also setUIMode().
 let uiMode = 'IDE';
-const BOOT_ANIMATION = Object.freeze({
+const RESET_ANIMATION_LENGTH = Object.freeze({
     NONE:      0,
     SHORT:    32 + 13 + 8, // = 32 frames animation + 13 frames fade in + 8 frames hold black
     REGULAR: 220 + 13 + 47
@@ -443,7 +443,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
     let url = getQueryString('game');
     let other_host_code = getQueryString('host');
     
-    const showPause = (url || other_host_code) && ! useIDE;
+    const showPause = (url || other_host_code) && ! useIDE && ! gameSource.extendedJSON.skip_start_animation;
     
     url = url || launcherURL;
     // If the url doesn't have a prefix and doesn't begin with a slash,
@@ -486,7 +486,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
             setTimeout(function() {
                 introControlsScreen.style.visibility = 'hidden';
                 introControlsScreen.style.zIndex = 0;
-                onPlayButton(undefined, undefined, undefined, callback);
+                onPlayButton(undefined, ! useIDE && gameSource.extendedJSON.skip_start_animation ? true : undefined, undefined, callback);
             }, 200);
         };
 
@@ -515,7 +515,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
         // Auto-hide after 3 seconds
         setTimeout(hideMessage, 3000);
     } else {
-        onPlayButton(undefined, undefined, undefined, callback);
+        onPlayButton(undefined, ! useIDE && gameSource.extendedJSON.skip_start_animation ? true : undefined, undefined, callback);
     }
 
     /* Make sure the keyboard focus sticks */
@@ -1069,9 +1069,9 @@ let alreadyInPlayButtonAttempt = false;
 // Allows a framerate to be specified so that the slow button can re-use the logic.
 //
 // slow = run at slow framerate (used for *every* slow step as well)
-// isLaunchGame = "has this been triggered by QRuntime.launch_game()"
+// skipStartAnimation = Used when the game was exported with no sizzle or has been triggered by QRuntime.launch_game()
 // args = array of arguments to pass to the new program
-function onPlayButton(slow, isLaunchGame, args, callback) {
+function onPlayButton(slow, skipStartAnimation, args, callback) {
     if (isSafari && ! isMobile) { unlockAudio(); }
     emulatorKeyboardInput.focus({preventScroll:true});
 
@@ -1179,7 +1179,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                     visualizeModes(document.getElementById('modeEditor'));
                 }
                 
-                restartProgram(isLaunchGame ? BOOT_ANIMATION.NONE : useIDE ? BOOT_ANIMATION.SHORT : BOOT_ANIMATION.REGULAR);
+                restartProgram(skipStartAnimation ? RESET_ANIMATION_LENGTH.NONE : useIDE ? RESET_ANIMATION_LENGTH.SHORT : RESET_ANIMATION_LENGTH.REGULAR);
             } else {
                 programNumLines = 0;
                 onStopButton();
@@ -1207,7 +1207,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
         // Reload the program
         if (loadManager && loadManager.status !== 'complete' && loadManager.status !== 'failure') {
             console.log('Load already in progress...');
-        } else if (useIDE && ! isLaunchGame) {
+        } else if (useIDE && ! skipStartAnimation) {
             if (savesPending === 0) {
                 // Force a reload of the game
                 console.log('Reloading in case of external changes.')
@@ -1228,7 +1228,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                     alreadyInPlayButtonAttempt = true;
                     setTimeout(function () {
                         try {
-                            onPlayButton(slow, isLaunchGame, args);
+                            onPlayButton(slow, skipStartAnimation, args);
                         } finally {
                             alreadyInPlayButtonAttempt = false;
                         }
@@ -1743,7 +1743,7 @@ function setErrorStatus(e, location) {
 
 /** Called by reset_game() as well as the play and reload buttons to
     reset all game state and load the game.  */
-function restartProgram(numBootAnimationFrames) {
+function restartProgram(numStartAnimationFrames) {
     resetEmulatorKeyState();
 
     reloadRuntime(function () {
@@ -1762,7 +1762,7 @@ function restartProgram(numBootAnimationFrames) {
         // that it sees those variables.
         try {
             coroutine = QRuntime.$makeCoroutine(compiledProgram);
-            QRuntime.$numBootAnimationFrames = numBootAnimationFrames;
+            QRuntime.$numStartAnimationFrames = numStartAnimationFrames;
             lastAnimationRequest = setTimeout(mainLoopStep, 0);
             emulatorKeyboardInput.focus({preventScroll: true});
             if (useIDE) {
@@ -2655,7 +2655,7 @@ function mainLoopStep() {
         if (interval !== lastAnimationInterval) {
             // New interval
             clearInterval(lastAnimationRequest);
-            console.log(`setInterval(..., ${interval})`);
+            console.log(`setInterval(..., ${interval}), targetFramerate = ${targetFramerate}`);
             lastAnimationRequest = setInterval(mainLoopStep, interval);
             lastAnimationInterval = interval;
         }
@@ -2710,7 +2710,7 @@ function mainLoopStep() {
         if (e.reset_game === 1) {
             // Automatic
             onStopButton(true);
-            restartProgram(BOOT_ANIMATION.NONE);
+            restartProgram(RESET_ANIMATION_LENGTH.NONE);
             return;
         } else if (e.quit_game === 1) {
             if (useIDE) {

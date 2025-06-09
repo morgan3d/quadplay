@@ -15,6 +15,9 @@ of [<quadplay/>](manual.md.html).
 - Increased exported game loading speed by factoring more IDE code out of the emulator
 - Merged inactive pause and background pause and the sleep versions into a single setting
 - Fixed quadplay sleep problems during intro sequence for deployed games
+- Fixed `dice_set_initial_positions()` in `dice_lib.pyxl` failing with `NaN` results for narrow dice trays
+- Changed `highscores` to `high_scores` in the game.json specification to be consistent with other quadplay naming conventions
+- Added `skip_start_animation` option for exported games
 
 2025 May 31
 ===================================

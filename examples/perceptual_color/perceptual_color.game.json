@@ -18,7 +18,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Shows the difference between perceptual_lerp_color() and lerp().",
     "constants": {},
     "screen_size": {

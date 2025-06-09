@@ -62,7 +62,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "You are a stone skipping across a lake. One-button endless skipper.",
     "constants": {
         "DEBUG_ALWAYS_BOUNCE": {

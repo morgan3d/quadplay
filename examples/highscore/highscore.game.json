@@ -19,5 +19,5 @@
     "cooperative":  false,
     "competitive":  false,
     "achievements": false,
-    "highscores":   true
+    "high_scores":   true
 }

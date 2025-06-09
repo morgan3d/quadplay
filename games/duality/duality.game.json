@@ -40,7 +40,7 @@
     "cooperative": false,
     "competitive": true,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Dual-space duel, where each player is in the negative space of the other.",
     "constants": {
         "color_array": {

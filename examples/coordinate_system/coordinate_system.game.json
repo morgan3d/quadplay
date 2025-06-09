@@ -12,7 +12,7 @@
     "description": "Visualization of coordinate system options",
     "developer": "CasualEffects",
     "docs": [],
-    "highscores": false,
+    "high_scores": false,
     "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
     "max_players": 1,
     "min_players": 1,

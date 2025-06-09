@@ -20,7 +20,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller.",
     "constants": {},
     "screenshot_tag": "starrypad",

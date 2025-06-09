@@ -111,7 +111,7 @@
     "description": "Implementation of Craig Reynolds's flocking algorithm",
     "cooperative": false,
     "competitive": false,
-    "highscores": false,
+    "high_scores": false,
     "achievements": false,
     "min_players": 1,
     "max_players": 1

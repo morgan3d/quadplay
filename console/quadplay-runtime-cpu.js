@@ -64,7 +64,10 @@ var $feature_768x448 = false;
 var $feature_custom_resolution = false;
 
 var $gameMode = undefined, $prevMode = undefined;
-var $numBootAnimationFrames = 120;
+
+/* The quadplay sizzle intro, which is faster in the IDE and optionally
+   skippable in exported games */
+var $numStartAnimationFrames = 120;
 
 /* Abstracts underlying changes to the mode, used for
    tools and debugging. Called from set_mode, push_mode,

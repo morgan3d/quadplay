@@ -104,7 +104,7 @@
     "cooperative": true,
     "competitive": true,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Swapping puzzle game",
     "constants": {
         "text_color": {

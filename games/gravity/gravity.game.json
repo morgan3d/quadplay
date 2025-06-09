@@ -40,7 +40,7 @@
     "cooperative": false,
     "competitive": true,
     "achievements": false,
-    "highscores": true,
+    "high_scores": true,
     "description": "Orbital space dogfight.",
     "constants": {
         "AFTERGLOW": {

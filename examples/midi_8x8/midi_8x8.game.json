@@ -33,7 +33,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the TacTile 64 Jam",
     "constants": {
         "tempo": {

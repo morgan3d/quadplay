@@ -59,7 +59,7 @@ let _dice_geometry_cache = {}
  - `shadow_color`: `rgba()` color of the drop shadow 
  */
 def make_dice(
-    pos default SCREEN_SIZE / 2,
+    pos default ½ SCREEN_SIZE,
     size default SCREEN_SIZE,
     shadow_color default #0005,
     die_sound default ∅,
@@ -180,7 +180,7 @@ def dice_add_obstruction(dice, tracked_entity):
 def dice_add_die(
     dice,
     sides,
-    pos default random_within_region(dice),
+    pos default round(random_within_region(dice)),
     radius default 12,
     font default ∅,
     label_array default ∅,
@@ -190,7 +190,8 @@ def dice_add_die(
     label_color default #FFF,
     label_y_offset default 0,
     translucent default false):
-        
+    
+    assert(not isNaN(pos.x))
     ++dice_add_die.count
     
     // Dice with more sides should roll better, so decrease friction
@@ -252,6 +253,7 @@ def dice_add_die(
         draw: _dice_die_draw,
         dice: dice})
     
+    // Show the highest value by default
     die_set_result_index(die, die.sides - 1)
         
     physics_add_entity(dice.physics, push(dice.die_array, die))
@@ -684,8 +686,9 @@ def dice_set_initial_positions(dice, method default "random"):
         //   x_count² * aspect ≤ N
         //   x_count ≤ sqrt(N / aspect)
         
-        const x_count = ⌊sqrt(N / aspect)⌋
+        const x_count = max(⌊sqrt(N / aspect)⌋, 1)
         const y_count = ⌈N / x_count⌉
+        
         for die at i in dice.die_array:
             const x = i mod x_count
             const y = floor(i / x_count)
@@ -710,7 +713,7 @@ def _dice_preroll_simulate(dice):
     
     // Erase previous history, set initial velocity
     for die in dice.die_array:
-        die.vel = 5 random_on_circle()
+        die.vel = 7 random_on_circle()
         die.drag = die.base_drag
         remove_all(die.history)
     

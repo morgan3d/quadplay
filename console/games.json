@@ -11,8 +11,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/animation/",
@@ -31,8 +30,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/boids/",
@@ -44,8 +42,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/camera_shake/",
@@ -57,8 +54,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/cards/",
@@ -70,8 +66,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/change_res/",
@@ -83,8 +78,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/clouds/",
@@ -96,8 +90,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/color_wheel/",
@@ -109,8 +102,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/coordinate_system/",
@@ -122,8 +114,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/countdown/",
@@ -135,8 +126,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/dark_drive/",
@@ -148,8 +138,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/dice/",
@@ -161,8 +150,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/dual-stick/",
@@ -174,8 +162,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/dynamic_accel/",
@@ -187,8 +174,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/entity/",
@@ -200,8 +186,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/fluid/",
@@ -213,8 +198,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/fontpreview/",
@@ -233,8 +217,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/helloworld/",
@@ -252,8 +235,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/highscore/",
@@ -265,8 +247,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": true
+            "achievements": false
         },
         {
             "url": "quad://examples/input/",
@@ -285,8 +266,7 @@
             "max_players": 2,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/kart/",
@@ -298,8 +278,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/lift_team/",
@@ -311,8 +290,7 @@
             "max_players": 2,
             "cooperative": true,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/maze/",
@@ -324,8 +302,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/midi_8x8/",
@@ -337,8 +314,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/midi_fcb1010/",
@@ -350,8 +326,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/midi_launchpad/",
@@ -363,8 +338,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/midi_starrypad/",
@@ -376,8 +350,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/multitouch/",
@@ -389,8 +362,7 @@
             "max_players": 3,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/perceptual_color/",
@@ -402,8 +374,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/physics/",
@@ -415,8 +386,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/physics_arrow/",
@@ -428,8 +398,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/piano/",
@@ -441,8 +410,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/planetgen/",
@@ -454,8 +422,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": true,
-            "highscores": false
+            "achievements": true
         },
         {
             "url": "quad://examples/platformer/",
@@ -467,8 +434,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/private_view/",
@@ -480,8 +446,7 @@
             "max_players": 2,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/robot/",
@@ -500,8 +465,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/rpg/",
@@ -520,8 +484,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/speedstreet/",
@@ -533,8 +496,7 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/spritestack/",
@@ -546,8 +508,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/sproing/",
@@ -559,8 +520,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/starter/",
@@ -572,8 +532,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/text/",
@@ -592,8 +551,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": true
+            "achievements": false
         },
         {
             "url": "quad://examples/tic_tac_toe/",
@@ -605,8 +563,7 @@
             "max_players": 2,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/touch/",
@@ -618,8 +575,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/twin_analog/",
@@ -631,8 +587,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/vaporwave/",
@@ -651,8 +606,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/warlock3D/",
@@ -664,8 +618,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/word_game/",
@@ -677,8 +630,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/zcar/",
@@ -690,8 +642,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/zoom/",
@@ -703,8 +654,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://examples/zoom2D/",
@@ -716,8 +666,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         }
     ],
     "builtins": [
@@ -731,8 +680,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/beat_the_gobblins/",
@@ -744,8 +692,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": true
+            "achievements": false
         },
         {
             "url": "quad://games/beyond_control/",
@@ -757,8 +704,7 @@
             "max_players": 4,
             "cooperative": true,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/but_skunks/",
@@ -770,8 +716,7 @@
             "max_players": 2,
             "cooperative": true,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/doublesdepon/",
@@ -783,8 +728,7 @@
             "max_players": 4,
             "cooperative": true,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/drop_bloq/",
@@ -796,8 +740,7 @@
             "max_players": 2,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/duality/",
@@ -809,8 +752,7 @@
             "max_players": 2,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/firmament/",
@@ -822,8 +764,7 @@
             "max_players": 2,
             "cooperative": true,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/friendly_fishing/",
@@ -835,8 +776,7 @@
             "max_players": 4,
             "cooperative": true,
             "competitive": false,
-            "achievements": false,
-            "highscores": true
+            "achievements": false
         },
         {
             "url": "quad://games/gravity/",
@@ -848,8 +788,7 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": true
+            "achievements": false
         },
         {
             "url": "quad://games/hexflipper/",
@@ -861,8 +800,7 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/icetime/",
@@ -874,8 +812,7 @@
             "max_players": 4,
             "cooperative": true,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/minimecha/",
@@ -887,8 +824,7 @@
             "max_players": 2,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": true
+            "achievements": false
         },
         {
             "url": "quad://games/quadpaddle/",
@@ -900,8 +836,7 @@
             "max_players": 4,
             "cooperative": true,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/rescue_roguelike/",
@@ -913,8 +848,7 @@
             "max_players": 1,
             "cooperative": false,
             "competitive": false,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/rps/",
@@ -926,8 +860,7 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         },
         {
             "url": "quad://games/serpitron/",
@@ -939,8 +872,7 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
-            "achievements": false,
-            "highscores": false
+            "achievements": false
         }
     ]
 }

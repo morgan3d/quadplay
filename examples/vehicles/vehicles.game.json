@@ -25,7 +25,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of vehicle controls",
     "constants": {
         "CAR_MAX_FORWARD_SPEED": {

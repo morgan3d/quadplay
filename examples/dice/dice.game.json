@@ -36,7 +36,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "dual_dpad": false,
     "midi_sysex": false,
     "description": "Dice rolling example",
@@ -59,9 +59,9 @@
             }
         },
         "SINGLE_SET": {
-            "description": "If true, show a single set of dice",
+            "description": "If true, show a single set of dice. Used for the itch.io export https://morgan3d.itch.io/rpg-dice",
             "type": "boolean",
-            "value": true
+            "value": false
         },
         "DIE_BRIGHT": {
             "type": "rgb",
@@ -127,5 +127,6 @@
     "screen_size": {
         "x": 384,
         "y": 224
-    }
+    },
+    "skip_start_animation": true
 }

@@ -28,7 +28,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of using device_control() to access raw analog sticks",
     "constants": {
         "ACCELERATION": {

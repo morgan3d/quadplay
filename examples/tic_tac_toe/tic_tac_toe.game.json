@@ -27,7 +27,7 @@
     "cooperative": false,
     "competitive": true,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of supporting gamepad, touch, and mouse (hover) input on a grid and turn-based play.",
     "constants": {
         "BACKGROUND_COLOR": {

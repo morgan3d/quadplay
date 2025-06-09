@@ -52,7 +52,7 @@
     "cooperative": true,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Skunks. Why did it have to be skunks?",
     "credits": {
         "main": [

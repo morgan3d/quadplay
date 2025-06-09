@@ -15,6 +15,6 @@
     "cooperative":  false,
     "competitive":  false,
     "achievements": false,
-    "highscores":   false,
+    "high_scores":   false,
     "description": "Example of local_time() for time zone math"
 }

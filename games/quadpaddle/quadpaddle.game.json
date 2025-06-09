@@ -110,6 +110,6 @@
     "cooperative":  true,
     "competitive":  false,
     "achievements": false,
-    "highscores":   false
+    "high_scores":   false
 
 }

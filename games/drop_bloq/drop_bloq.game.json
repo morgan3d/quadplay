@@ -54,7 +54,7 @@
     "cooperative": false,
     "competitive": true,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Drop tiles and shift columns, 5 in a row to win. Plays best with an 8x8 MIDI device!",
     "constants": {
         "AI_COLOR": {

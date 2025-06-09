@@ -38,7 +38,7 @@
     "developer": "Ed Luong, Nick Porcino, Stephan Steinbach",
     "docs": [
     ],
-    "highscores": false,
+    "high_scores": false,
     "license": "MIT",
     "max_players": 1,
     "min_players": 1,

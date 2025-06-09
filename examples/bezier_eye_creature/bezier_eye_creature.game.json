@@ -24,7 +24,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Demo for the bezier rope library, including a spooky creature",
     "constants": {
         "CURRENT_MODE": {

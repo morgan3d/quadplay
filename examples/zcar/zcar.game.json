@@ -24,7 +24,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of simple 3D wireframe effect.",
     "constants": {
         "BACKGROUND_COLOR": {

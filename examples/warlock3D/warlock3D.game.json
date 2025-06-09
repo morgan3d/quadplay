@@ -31,7 +31,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "DOOM/Heretic/Wizardry style first person view with d-pad, dual d-pad, dual analog, and mouselook controls",
     "constants": {
         "DEBUG": {

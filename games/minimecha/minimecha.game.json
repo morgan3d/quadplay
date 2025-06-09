@@ -81,7 +81,7 @@
     "cooperative": false,
     "competitive": true,
     "achievements": false,
-    "highscores": true,
+    "high_scores": true,
     "description": "Turn based strategy game with tiny mechas.",
     "constants": {
         "MOVE_DATA": {

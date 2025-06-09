@@ -18,7 +18,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of noise functions and draw_point",
     "constants": {},
     "screen_size": {

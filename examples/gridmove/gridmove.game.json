@@ -20,7 +20,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "PAC-MAN style movement with smooth interpolation and anticipatory turns",
     "constants": {},
     "y_up": false

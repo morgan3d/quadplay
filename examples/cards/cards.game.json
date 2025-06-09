@@ -22,7 +22,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "description": "Example of using a standard playing card deck",
     "constants": {
     },

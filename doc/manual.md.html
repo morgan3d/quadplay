@@ -1754,7 +1754,7 @@ options. Project files should have the double extension `.game.json`.
   "cooperative":  false,
   "competitive":  false,
   "achievements": false,
-  "highscores":   false,
+  "high_scores":   false,
   "description":  "Description of your game in about 22 words.",
   
   // False by default. If true, P1's right analog stick can override P2's
@@ -1768,6 +1768,10 @@ options. Project files should have the double extension `.game.json`.
   // and requires elevated permissions from the web browser that will
   // be prompted for at start.
   "midi_sysex":   false,
+
+  // When exported to a standalone HTML game, skip the start animation
+  // for a faster load time.
+  "skip_start_animation": false,
 
   // Other global constants. You could define these in a global source code file
   // as well. The constants specified here have immutable *values*, not just immutable

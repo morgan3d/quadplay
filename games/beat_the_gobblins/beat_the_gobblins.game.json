@@ -232,7 +232,7 @@
     "description": "The evil Wizzard trapped you atop their tower and summoned hordes of Bombgobblins. Intense score chase action.",
     "developer": "Stephan Steinbach",
     "y_up": false,
-    "highscores": true,
+    "high_scores": true,
     "license": "code: MIT / Assets: Creative Commons Attribution 4.0 International",
     "max_players": 1,
     "min_players": 1,

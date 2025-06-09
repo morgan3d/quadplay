@@ -22,7 +22,7 @@
     "cooperative": false,
     "competitive": false,
     "achievements": false,
-    "highscores": false,
+    "high_scores": false,
     "dual_dpad": false,
     "midi_sysex": false,
     "description": "Description of your game in about 100 characters.",
