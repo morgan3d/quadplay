@@ -405,7 +405,7 @@ function visualizeGame(gameEditor, url, game) {
         }
         s += '</select></td></tr>\n';
 
-        s += `<tr valign="top"><td></td><td colspan=3><label title="In exported HTML games, skip the start animation that tells the user about controls and shows the quadplay logo"><input id="project_skip_start_animation" type="checkbox" autocomplete="false" style="margin-left:0" ${game.skip_start_animation ? 'checked' : ''} onchange="onProjectMetadataChanged()">Skip&nbsp;Start&nbsp;Animation (when exported)</label></td>\n`;
+        s += `<tr valign="top"><td></td><td colspan=3><label title="In exported HTML games, show the start animation that tells the user about controls and shows the quadplay logo"><input id="project_show_start_animation" type="checkbox" autocomplete="false" style="margin-left:0" ${game.show_start_animation !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Show&nbsp;Start&nbsp;Animation</label></td>\n`;
 
         const overrideInitialMode = gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
         s += `<tr valign="top"><td></td><td><label><input id="projectdebugstartmodeoverridecheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
@@ -438,6 +438,7 @@ function visualizeGame(gameEditor, url, game) {
 
     s += '<tr><td>&nbsp;</td></tr>\n';
     s += `<tr valign="top"><td>I/O</td><td colspan=4><label><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label>  <label><input id="projectmidicheckbox" type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)" style="margin-left: 50px" tooltip="Does this game send MIDI sysex messages?">MIDI Sysex Output</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td colspan=4><label><input id="project_mobile_touch_gamepad" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.mobile_touch_gamepad !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()" title="Enable a virtual gamepad on touch screens">Mobile Touch Gamepad</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged()" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
@@ -446,7 +447,7 @@ function visualizeGame(gameEditor, url, game) {
     for (let f = 0; f < boolFields.length; ++f) {
         const name = boolFields[f];
         const field = name.replace(/ /g,'_').toLowerCase();
-        s += `<label><input ${disabled} type="checkbox" id="project_${field}" onchange="onProjectMetadataChanged()" ${game[field] ? 'checked' : ''}>${name}</label> `;
+        s += `<label><input ${disabled} type="checkbox" id="project_${field}" onchange="onProjectMetadataChanged()" ${gameSource.json[field] ? 'checked' : ''}>${name}</label> `;
     }
     s += '</td></tr>\n';
     s += `<tr><td></td><td><input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged()" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged()" id="projectMaxPlayers" value=${game.max_players || 1}></input> Players</td></tr>\n`;

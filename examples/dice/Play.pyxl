@@ -199,7 +199,7 @@ preserving_transform:
     if dice_roll_time(dice) ≤ 0:
         process_ui()
 
-    // Draw and simulate
+    // Draw and simulate, clipping to the region (mostly clips shadow)
     dice_update(dice)
     dice_update(tray)
     

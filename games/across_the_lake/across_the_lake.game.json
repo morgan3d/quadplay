@@ -16,10 +16,14 @@
     ],
     "credits": {
         "main": [
-            "Stephan Steinbach", "game", 
-            "Morgan McGuire", "art", 
-            "Forrester Cole", "physics", 
-            "Steve LaVietes", "sound"
+            "Stephan Steinbach",
+            "game",
+            "Morgan McGuire",
+            "art",
+            "Forrester Cole",
+            "physics",
+            "Steve LaVietes",
+            "sound"
         ]
     },
     "start_mode": "Title",
@@ -93,5 +97,8 @@
     "screen_size": {
         "x": 384,
         "y": 224
-    }
+    },
+    "screenshot_tag": "Across the Lake",
+    "show_start_animation": true,
+    "mobile_touch_gamepad": false
 }

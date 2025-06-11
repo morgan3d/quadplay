@@ -432,7 +432,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
 
     unlockAudio();
     
-    if ((uiMode === 'Maximal' || uiMode === 'Windowed') && ! useIDE && hasTouchScreen) {
+    if ((uiMode === 'Maximal' || uiMode === 'Windowed') && ! useIDE && hasTouchScreen && gameSource.extendedJSON.mobile_touch_gamepad !== false) {
         // This device probably requires on-screen controls.
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
@@ -443,7 +443,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
     let url = getQueryString('game');
     let other_host_code = getQueryString('host');
     
-    const showPause = (url || other_host_code) && ! useIDE && ! gameSource.extendedJSON.skip_start_animation;
+    const showPause = (url || other_host_code) && ! useIDE && gameSource.extendedJSON.show_start_animation !== false;
     
     url = url || launcherURL;
     // If the url doesn't have a prefix and doesn't begin with a slash,
@@ -486,7 +486,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
             setTimeout(function() {
                 introControlsScreen.style.visibility = 'hidden';
                 introControlsScreen.style.zIndex = 0;
-                onPlayButton(undefined, ! useIDE && gameSource.extendedJSON.skip_start_animation ? true : undefined, undefined, callback);
+                onPlayButton(undefined, ! useIDE && gameSource.extendedJSON.show_start_animation === false ? true : undefined, undefined, callback);
             }, 200);
         };
 
@@ -515,7 +515,7 @@ function onAppWelcomeTouch(hasTouchScreen) {
         // Auto-hide after 3 seconds
         setTimeout(hideMessage, 3000);
     } else {
-        onPlayButton(undefined, ! useIDE && gameSource.extendedJSON.skip_start_animation ? true : undefined, undefined, callback);
+        onPlayButton(undefined, ! useIDE && gameSource.extendedJSON.show_start_animation === false ? true : undefined, undefined, callback);
     }
 
     /* Make sure the keyboard focus sticks */
@@ -548,8 +548,6 @@ function unlockAudio() {
     }
 }
 
-//document.addEventListener('fullscreenchange', function (event) {
-//});
 
 function requestFullScreen() {
     // Full-screen the UI. This can fail if not triggered by a user interaction.
@@ -4238,6 +4236,11 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 
     console.log('Loading because of initial page load.');
     loadGameIntoIDE(url, function () {
+        // Hide virtual controller if requested by the game
+        if (! useIDE && gameSource.extendedJSON.mobile_touch_gamepad === false) {
+            document.getElementById('emulatorUIButtonContainer').style.display = 'none';
+        }
+
         const appLoadingOverlay = document.getElementById('appLoadingOverlay');
         if (appLoadingOverlay) {
             if (! useIDE) {

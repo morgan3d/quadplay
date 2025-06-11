@@ -851,7 +851,12 @@ def _dice_draw(dice):
    
    
    
-def dice_update(dice):
+def dice_update(dice, no_clip)
+& preserving_transform:
+    
+    if not no_clip:
+        intersect_clip(transform_cs_to_ss(dice.pos + xy(-½, ½ up_y()) * dice.size), dice.size)
+
     _dice_replay_simulation(dice)
     _dice_draw(dice)
     
