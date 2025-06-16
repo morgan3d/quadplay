@@ -228,8 +228,8 @@ function showDocumentation(api, type) {
     if (noDocumentationTable[api]) { return; }
     
     const sources = [
-        {index: documentationProgramAPIOverloads, iframeName:'programAPI', callback: onShowProgramAPI},
-        {index: documentationBuiltInAPIOverloads, iframeName:'manual', callback: onShowManual},
+        {index: documentationProgramAPIOverloads, iframeName: 'programAPI', callback: onShowProgramAPI},
+        {index: documentationBuiltInAPIOverloads, iframeName: 'manual',     callback: onShowManual},
     ];
 
     for (let source of sources) {
@@ -238,8 +238,9 @@ function showDocumentation(api, type) {
             const iframe = document.getElementById(source.iframeName);
             const hash = `apiDefinition-${api}-fcn`;
             if (iframe.contentWindow.location.hash !== hash) {
+                // Found a match, go to it within the iframe and show that tab in the debugger
                 iframe.contentWindow.location.hash = `apiDefinition-${api}-fcn`;
-                document.getElementById('manualTab').checked = true;
+                document.getElementById('helpTab').checked = true;
                 source.callback();
             }
         }
@@ -248,14 +249,16 @@ function showDocumentation(api, type) {
 
 
 function onShowManual() {
-    document.getElementById('manualViewManual').checked = true;
+    document.getElementById('helpViewManual').checked = true;
+
     document.getElementById('manual').style.visibility = 'visible';
     document.getElementById('programAPI').style.visibility = 'hidden';
 }
 
 
 function onShowProgramAPI() {
-    document.getElementById('manualViewProgramAPI').checked = true;
+    document.getElementById('helpViewProgramAPI').checked = true;
+    
     document.getElementById('manual').style.visibility = 'hidden';
     document.getElementById('programAPI').style.visibility = 'visible';
 }

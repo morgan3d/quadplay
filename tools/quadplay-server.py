@@ -869,7 +869,6 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 # Fix slashes on windows
                 if isWindows: response_obj['source'] = [f.replace('\\', '/') for f in response_obj['source']]
                 
-                            
                 # Get additional raw files from the game directory and
                 # json assets from the quadplay directory.
                 for t in asset_type_array:
@@ -893,7 +892,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                     # Get the json files from the quadplay directory,
                     # sort, and append them to the list
-                    response_obj[t] += ['quad://' + f[len(quad_filepath):] for f in sorted(glob.glob(quad_filepath + t + 's/*.' + t + '.json'))]
+                    response_obj[t] += ['quad://' + f[len(quad_filepath):] for f in sorted(glob.glob(quad_filepath + t + ('s' if t != 'data' else '') + '/*.' + t + '.json'))]
                     
                     # Fix slashes on windows
                     if isWindows: response_obj[t] = [f.replace('\\', '/') for f in response_obj[t]]

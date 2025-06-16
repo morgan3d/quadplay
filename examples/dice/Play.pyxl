@@ -151,7 +151,7 @@ def make_demo_dice():
 
     // Matching purple set of gem dice
     for s in [4, 6, 8, 10, 12, 20]:
-        dice_add_die(dice, s, xy(0, 0), 14, font5, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, true)
+        dice_add_die(dice, s, xy(0, 0), 14, font5, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, ∅, true)
 
 
         
@@ -163,7 +163,7 @@ if SINGLE_SET:
     for s in [4, 6, 8, 10, 12, 20]:
         // Tweak sizes across the set
         const size = if s == 20 then 26 else (if s == 8 then 22 else 24)
-        dice_add_die(if s == 10 or s == 4 then tray else dice, s, ∅, size, suchet_9_font, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, true)
+        dice_add_die(if s == 10 or s == 4 then tray else dice, s, ∅, size, suchet_9_font, ∅, ∅, DIE_BRIGHT, DIE_DIM, ∅, ∅, ∅, true)
 
     // Gold percentile
     dice_add_die(dice, 10, ∅, 20, font8, "0123456789", ∅, 20%, ∅, #444)

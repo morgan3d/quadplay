@@ -337,16 +337,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         //////////////////////////////////////////////////////////////////////////////////////////////
 
-        // Fix legacy files that use a * to denote the start mode
-        if (! gameJSON.start_mode) {
-            for (let i = 0; i < gameJSON.modes.length; ++i) {
-                if (gameJSON.modes[i].indexOf('*') !== -1) {
-                    console.log('WARNING: Legacy start mode upgraded on load');
-                    gameJSON.start_mode = gameJSON.modes[i] = gameJSON.modes[i].replace('*', '');
-                }
-            }
-        }
-
         // Upgrade
         if (gameJSON.screenshot_tag === undefined) {
             gameJSON.screenshot_tag = gameJSON.title;
@@ -1018,8 +1008,8 @@ function loadData(name, json, jsonURL) {
 
     const forceReload = computeForceReloadFlag(dataURL);
 
-    // No caching for data.
-    const dataType = dataURL.split('.').pop().toLowerCase();
+    // The extension, which may include multiple periods
+    const dataType = dataURL.substring(dataURL.lastIndexOf('/') + 1).split('.').slice(1).join('.').toLowerCase();
 
     // We construct a holder for the value, so that something can be
     // returned immediately. data.value is the actual element. This is
@@ -1057,15 +1047,15 @@ function loadData(name, json, jsonURL) {
             Object.freeze(data.value);
             Object.freeze(data);
         }, loadFailureCallback, loadWarningCallback, forceReload);
-    } else if (dataType === 'csv') {
+    } else if (dataType === 'csv' || dataType === 'csv.zip') {
         // CSV
         loadCSV(dataURL, json, data, 'value', function () {
             data.value.$name = name;
             data.value.$type = 'data';
             deepFreeze(data.value);
         });
-    } else if (dataType === 'txt') {
-        // CSV
+    } else if (dataType === 'txt' || dataType === 'txt.zip') {
+        // TXT
         loadTXT(dataURL, json, data, 'value', function () {
             data.value.$name = name;
             data.value.$type = 'data';
@@ -1088,7 +1078,7 @@ function loadData(name, json, jsonURL) {
             deepFreeze(data.value);
         }, undefined, undefined, true);
     } else {
-        throw new Error(dataType + ' is not a valid data asset type.');
+        throw new Error(dataType + ' is not a valid data asset type');
     }
 
     return data;
@@ -1142,7 +1132,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
         if (callback) {
             // Warn the load manager that we are not done yet
-            ++loadManager.pendingRequests;
+            ++loadManager.pendingFetches;
             
             function runCallbackWhenLoaded() {
                 if (Object.isFrozen(spritesheet)) {
@@ -1760,7 +1750,7 @@ function loadSound(name, json, jsonURL) {
     onLoadFileStart(mp3URL);
     loadManager.fetch(mp3URL, 'arraybuffer', null, function (arraybuffer) {
         // LoadManager can't see the async decodeAudioData calls
-        ++loadManager.pendingRequests;
+        ++loadManager.pendingFetches;
 
         try {
             audioContext.decodeAudioData(
@@ -2100,9 +2090,10 @@ function addCodeToSourceStats(code, scriptURL) {
     try {
         compactMultilineLiterals(lineArray);
     } catch (e) {
-        // Error occured during compaction of multiline literals
+        // Error occured during compaction of multiline literals. This could just be
+        // incomplete/malformed source code--it is normal.
         e.url = scriptURL;
-        console.log(e);
+        // console.log(e);
     }
     code = lineArray.join('\n');
 
@@ -2555,6 +2546,8 @@ function transposeGrid(src) {
  via https://gist.github.com/Jezternz/c8e9fafc2c114e079829974e3764db75
 */
 function parseCSV(strData, trim) {
+    console.assert(! (strData instanceof Promise));
+
     // Trim trailing newline
     if (strData.endsWith('\n')) {
         strData = strData.slice(0, strData.length - 1);
@@ -2646,93 +2639,131 @@ function parseCSV(strData, trim) {
 */
 function loadCSV(csvURL, definition, outputObject, outputField, callback) {
     // Should the output be a flat array?
-    const arrayOutput = definition.type === 'array';
+    const flattenToArray = definition.type === 'array' || (definition.type === 'table' && definition.set_table === true);
     
-    console.assert(definition.type === 'table' || definition.type === 'csv' || arrayOutput);
+    console.assert(definition.type === 'table' || definition.type === 'csv' || flattenToArray);
     console.assert(outputObject);
     
-    loadManager.fetch(csvURL, 'text', null, function (csv) {
-        // Parse cells
-        let grid = parseCSV(csv, definition.trim !== false);
+    const isZip = csvURL.toLowerCase().endsWith('.zip');
+    loadManager.fetch(csvURL, 
+        isZip ? 'arraybuffer' : 'text',
+        isZip ? extractFromZip : null,
+        function (csv) {
+            console.assert(! (csv instanceof Promise));
 
-        // By parseCSV returns row-major data and tables in quadplay
-        // default to column major, so transpose the CSV parse
-        // oppositely to the transpose flag.
-        if (! definition.transpose) {
-            grid = transposeGrid(grid);
-        }
+            // Parse cells
+            let grid = parseCSV(csv, definition.trim !== false);
 
-        const row_type = arrayOutput ? 'array' : (definition.transpose ? definition.column_type : definition.row_type) || 'object';
-        const col_type = arrayOutput ? 'array' : (definition.transpose ? definition.row_type : definition.column_type) || 'object';
-
-        if (! arrayOutput && (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose))) {
-            // Remove the first row of each column
-            for (let x = 0; x < grid.length; ++x) {
-                grid[x].shift();
+            // By parseCSV returns row-major data and tables in quadplay
+            // default to column major, so transpose the CSV parse
+            // oppositely to the transpose flag.
+            if (! definition.transpose) {
+                grid = transposeGrid(grid);
             }
-        }
-        
-        if (! arrayOutput && (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose))) {
-            // Remove the first column
-            grid.shift();
-        }
-        
-        // Parse table
-        let data;
-        
-        if ((col_type === 'array') && (row_type === 'array')) {
-            // This is the data structure that we already have
-            // in memory
-            data = grid;
-        } else {
-            if (row_type === 'object') {
-                data = {};
-                if (col_type === 'object') {
-                    // Object of objects
-                    for (let c = 1; c < grid.length; ++c) {
-                        const dst = data[grid[c][0]] = {};
-                        const src = grid[c];
-                        for (let r = 1; r < grid[0].length; ++r) {
-                            dst[grid[0][r]] = src[r];
-                        }
-                    } // for each column (key)
-                    
-                } else { // row_type == 'array'
-                    
-                    // Object of arrays. The first row contains the object property names
-                    for (let c = 0; c < grid.length; ++c) {
-                        data[grid[c][0]] = grid[c].slice(1);
-                    } // for each column (key)
+
+            const row_type = flattenToArray ? 'array' : (definition.transpose ? definition.column_type : definition.row_type) || 'object';
+            const col_type = flattenToArray ? 'array' : (definition.transpose ? definition.row_type : definition.column_type) || 'object';
+
+            if (! flattenToArray && (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose))) {
+                // Remove the first row of each column
+                for (let x = 0; x < grid.length; ++x) {
+                    grid[x].shift();
                 }
+            }
+            
+            if (! flattenToArray && (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose))) {
+                // Remove the first column
+                grid.shift();
+            }
+            
+            // Parse table
+            let data;
+            
+            if ((col_type === 'array') && (row_type === 'array')) {
+                // This is the data structure that we already have
+                // in memory
+                data = grid;
             } else {
-                // Array of objects. The first column contains the object property names
-                data = new Array(grid.length - 1);
-                for (let c = 0; c < data.length; ++c) {
-                    const src = grid[c + 1];
-                    const dst = data[c] = {};
-                    for (let r = 0; r < src.length; ++r) {
-                        dst[grid[0][r]] = grid[c + 1][r];
-                    } // for row
-                } // for col
-            } // array of objects
-        }
-
-        if (definition.type === 'array') {
-            // Convert to a single flat array
-            const old = data;
-            data = new Array();
-            for (const a of old) {
-                for (const v of a) {
-                    data.push(v);
-                }
+                if (row_type === 'object') {
+                    data = {};
+                    if (col_type === 'object') {
+                        // Object of objects
+                        for (let c = 1; c < grid.length; ++c) {
+                            const dst = data[grid[c][0]] = {};
+                            const src = grid[c];
+                            for (let r = 1; r < grid[0].length; ++r) {
+                                dst[grid[0][r]] = src[r];
+                            }
+                        } // for each column (key)
+                        
+                    } else { // row_type == 'array'
+                        
+                        // Object of arrays. The first row contains the object property names
+                        for (let c = 0; c < grid.length; ++c) {
+                            data[grid[c][0]] = grid[c].slice(1);
+                        } // for each column (key)
+                    }
+                } else {
+                    // Array of objects. The first column contains the object property names
+                    data = new Array(grid.length - 1);
+                    for (let c = 0; c < data.length; ++c) {
+                        const src = grid[c + 1];
+                        const dst = data[c] = {};
+                        for (let r = 0; r < src.length; ++r) {
+                            dst[grid[0][r]] = grid[c + 1][r];
+                        } // for row
+                    } // for col
+                } // array of objects
             }
-        }
 
-        outputObject[outputField] = data;
-        if (callback) { callback(); }
-    });
+            if (flattenToArray) {
+                // Convert to a single flat array
+                const old = data;
+                if (definition.type === 'table') {
+                    console.assert(definition.set_table === true);
+                    // Now make a set-table
+                    data = {};
+                    for (const a of old) {
+                        for (const v of a) {
+                            data[v] = true;
+                        }
+                    }
+                } else {
+                    console.assert(definition.type === 'array');
+                    data = [];
+                    for (const a of old) {
+                        for (const v of a) {
+                            data.push(v);
+                        }
+                    }
+                } // is table
+            } // should flatten
+
+            outputObject[outputField] = data;
+            if (callback) { callback(); }
+        });
 }
 
+/** Extracts the text content of a file from a zip archive.
+    The file to extract is determined by removing '.zip' from the zip filename.
+    @param {ArrayBuffer} zipData - The zip file data
+    @param {string} zipUrl - The URL of the zip file
+    @returns {Promise<string>} The text content of the file
+*/
+async function extractFromZip(zipData, zipUrl) {
+    const zip = await JSZip.loadAsync(zipData);
+    
+    // Get the expected filename by removing .zip from the URL
+    const expectedName = zipUrl.split('/').pop().replace(/\.zip$/, '');
+    
+    const file = zip.files[expectedName];
+    if (! file) {
+        throw new Error(`Zip file does not contain expected file: ${expectedName}`);
+    }
+    
+    const result = await file.async('text');
+    return result;
+}
 
 /** Used by both constants and assets to load and parse a TXT file.
     Stores the result into outputObject[outputField] and then 
@@ -2740,9 +2771,13 @@ function loadCSV(csvURL, definition, outputObject, outputField, callback) {
  */
 function loadTXT(txtURL, definition, outputObject, outputField, callback) {
     console.assert(outputObject);
-    loadManager.fetch(txtURL, 'text', null, function (text) {
-        // Convert to unix newlines
-        outputObject[outputField] = text.replace(/\r/g, '');
-        if (callback) { callback(); }
-    });
+    const isZip = txtURL.toLowerCase().endsWith('.zip');
+    loadManager.fetch(txtURL, 
+        isZip ? 'arraybuffer' : 'text', 
+        isZip ? extractFromZip : null, 
+        function (text) {
+            // Convert to unix newlines
+            outputObject[outputField] = text.replace(/\r/g, '');
+            if (callback) { callback(); }
+        });
 }

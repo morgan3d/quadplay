@@ -33,7 +33,7 @@ function fetchAssetTable(callback) {
         if (gamePath.length > 0 && gamePath[0] === '/') {
             gamePath = gamePath.substring(1);
         }
-        
+
         for (const key in json) {
             const array = json[key];
             for (let i = 0; i < array.length; ++i) {

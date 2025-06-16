@@ -101,6 +101,7 @@ for (const font of [
 'broderick-14',
 'cruise-14',
 'cpc-14',
+'ivanhoe-bold-12',
 'ivanhoe-12',
 'suchet-12',
 'hauer-12',
@@ -310,7 +311,26 @@ From the Quadplay album by Abstraction:
 ![`quad://sounds/sparks-02.sound.json`](../sounds/sparks-02.mp3) ![`quad://sounds/sparks-03.sound.json`](../sounds/sparks-03.mp3)
 ![`quad://sounds/sparks-04.sound.json`](../sounds/sparks-04.mp3)
 
+Data
+====================================================================================
 
+## Word Lists
+
+`quad://data/english_all_table.json`
+:  All English language word-game words as an 
+   object mapping legal words to `true`.
+   This adds about 700 kB to a game download.
+
+`quad://data/english_all_array.json`
+:  All English language word-game words as an array of strings.
+   This adds about 700 kB to a game download.
+
+`quad://data/english_sensitive.json`
+: List of words that a game designer may not want a word game to generate by 
+  itself, even if it accepts these words. Words in the 
+  English language that may be particularly embarrasing, triggering, 
+  sensitive to different groups.
+  Rerpresented as an object mapping words in this set to `true`.
 
 <script>
 markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>

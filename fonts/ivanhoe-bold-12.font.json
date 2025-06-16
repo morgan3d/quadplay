@@ -1,0 +1,9 @@
+{
+    "url": "ivanhoe-bold-12.png",
+    "license": "by Morgan McGuire 2025, in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/",
+    "char_size":      {"x": 15, "y": 20},
+    "char_min_width": 0,
+    "letter_spacing": {"x": 2, "y": 4},
+    "baseline":      14,
+    "format": "20211015"
+}

@@ -310,6 +310,24 @@ function setGamepadOrderMap(map) {
 
 let colorScheme = 'dots';
 function setColorScheme(scheme) {
+    // Needed because QRuntime is not loaded yet when this is first called
+    function lerp(x, y, t) {
+        return {
+            r: x.r * (1 - t) + y.r * t,
+            g: x.g * (1 - t) + y.g * t,
+            b: x.b * (1 - t) + y.b * t};
+    }
+
+    function unparse_hex_color(c) {
+        function hex(v) {
+            v = Math.min(Math.max(Math.floor(v * 256), 0), 255) | 0;
+            return (v < 16 ? '0' : '') + v.toString(16);
+        }
+        
+        return '#' + hex(c.r) + hex(c.g) + hex(c.b) + (c.a !== undefined ? hex(c.a) : '');
+    }
+
+
     colorScheme = scheme;
     document.getElementById(scheme + 'ColorScheme').checked = 1;
     // Find the nano style sheet
@@ -323,73 +341,86 @@ function setColorScheme(scheme) {
     if (! stylesheet) { return; }
 
     // Default to dots scheme
-    let hrefColor = '#e61b9d';
+    let themeColor = '#e61b9d';
     let emulatorColor = "url('wrap-dots.png') 50% 50% / cover";
 
     switch (scheme) {
     case 'pink':
-        hrefColor = '#e61b9d';
+        themeColor = '#e61b9d';
         emulatorColor = '#ff4488';
         break;
 
     case 'black':
-        hrefColor = '#0af';
+        themeColor = '#0af';
         emulatorColor = '#090909';
         break;
         
     case 'white':
-        hrefColor = '#0af';
+        themeColor = '#0af';
         emulatorColor = '#D2C4D2';
         break;
 
     case 'orange':
-        hrefColor = '#ff7030';
+        themeColor = '#ff7030';
         emulatorColor = '#f04C12';
         break;
         
     case 'gold':
-        hrefColor = '#dca112';
+        themeColor = '#dca112';
         emulatorColor = '#b68216';
         break;
         
     case 'green':
-        hrefColor = '#47b52e';
+        themeColor = '#47b52e';
         emulatorColor = '#139613';
         break;
         
     case 'blue':
-        hrefColor = '#0af';
+        themeColor = '#0af';
         emulatorColor = '#1074b6';
         break;
 
     case 'dots':
-        hrefColor = '#e61b9d';
+        themeColor = '#e61b9d';
         emulatorColor = "url('wraps/dots.png') 50% 50% / cover";
         break;
         
     case 'stripes':
-        hrefColor = '#da0200';
+        themeColor = '#da0200';
         emulatorColor = "url('wraps/stripes.png') 50% 50% / cover";
         break;
 
     case 'wood':
-        hrefColor = '#cb7f49';
+        themeColor = '#cb7f49';
         emulatorColor = "url('wraps/oak.jpg') 50% 50% / cover";
         break;
 
     case 'walnut_burl':
-        hrefColor = '#cb7f49';
+        themeColor = '#cb7f49';
         emulatorColor = "url('wraps/walnut_burl.jpg') 50% 50% / cover";
         break;
 
     case 'carbon':
-        hrefColor = '#0af';
+        themeColor = '#0af';
         emulatorColor = "url('wraps/carbon.png') 50% 50% / cover";
         break;
     }
     
     // Set the theme color CSS variable
-    document.documentElement.style.setProperty('--theme-color', hrefColor);
+    document.documentElement.style.setProperty('--theme-color', themeColor);
+    
+    // Parse theme color into RGB components
+    themeColor = parseHexColor(themeColor.slice(1));
+    
+    // Compute gradient colors using lerp
+    const gradientColor0 = lerp(themeColor, {r: 0.7, g: 0.7, b: 0.7}, 0.0);
+    const gradientColor1 = lerp(themeColor, {r: 0.7, g: 0.7, b: 0.7}, 0.25);
+    const gradientColor2 = lerp(themeColor, {r: 1.0, g: 1.0, b: 1.0}, 0.75);
+
+    // Convert to hex and set CSS variables
+    document.documentElement.style.setProperty('--theme-gradient-0', unparse_hex_color(gradientColor0));
+    document.documentElement.style.setProperty('--theme-gradient-1', unparse_hex_color(gradientColor1));
+    document.documentElement.style.setProperty('--theme-gradient-2', unparse_hex_color(gradientColor2));
     
     // Find the relevant rules and remove them
     for (let i = 0; i < stylesheet.cssRules.length; ++i) {
@@ -401,7 +432,7 @@ function setColorScheme(scheme) {
         }
     }
     // Replacement rules
-    stylesheet.insertRule(`a, #header a, .menu a { color: ${hrefColor} !important; text-decoration: none; }`, 0);
+    stylesheet.insertRule(`a, #header a, .menu a { color: ${themeColor} !important; text-decoration: none; }`, 0);
     stylesheet.insertRule(`.emulator .emulatorBackground { background: ${emulatorColor}; ! important}`, 0);
     localStorage.setItem('colorScheme', colorScheme);
 }
@@ -2653,7 +2684,7 @@ function mainLoopStep() {
         if (interval !== lastAnimationInterval) {
             // New interval
             clearInterval(lastAnimationRequest);
-            console.log(`setInterval(..., ${interval}), targetFramerate = ${targetFramerate}`);
+            //console.log(`setInterval(..., ${interval}), targetFramerate = ${targetFramerate}`);
             lastAnimationRequest = setInterval(mainLoopStep, interval);
             lastAnimationInterval = interval;
         }

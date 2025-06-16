@@ -409,8 +409,8 @@
       <input id="watchTab" type="radio" name="tabs">
       <label for="watchTab" class="ide unselectable">Watch</label>
 
-      <input id="manualTab" type="radio" name="tabs">
-      <label for="manualTab" class="ide unselectable">Help</label>
+      <input id="helpTab" type="radio" name="tabs">
+      <label for="helpTab" class="ide unselectable">Help</label>
 
       <input id="todoTab" type="radio" name="tabs">
       <label for="todoTab" class="ide unselectable">To Do</label>
@@ -447,12 +447,12 @@
         <div id="resourcePane"></div>
       </pane>
 
-      <pane id="manualView" class="ide" style="overflow-y:auto;overflow-x:hidden">
+      <pane id="helpView" class="ide" style="overflow-y:auto;overflow-x:hidden">
         <div style="border-bottom: 1px solid #CCC; padding-bottom: 1px">
-          <input id="manualViewManual" type="radio" name="manualViewRadio" checked onchange="onShowManual()"/>
-          <label for="manualViewManual" style="margin-right:25px">Manual</label>
-          <input id="manualViewProgramAPI" type="radio" name="manualViewRadio" onchange="onShowProgramAPI()"/>
-          <label for="manualViewProgramAPI">Game Documentation</label>
+          <input id="helpViewManual" type="radio" name="helpViewRadio" checked onchange="onShowManual()"/>
+          <label for="helpViewManual" style="margin-right:25px">Manual</label>
+          <input id="helpViewProgramAPI" type="radio" name="helpViewRadio" onchange="onShowProgramAPI()"/>
+          <label for="helpViewProgramAPI">Game Documentation</label>
         </div>
         <div style="position: absolute; top:21px; width:100%; bottom: 0; left: 0; right: 0">
           <iframe id="manual" style="position: absolute; top:0; width:100%; height: 100%; right: 0"></iframe>
@@ -1155,7 +1155,7 @@
   <script>
     {
         /**
-           - `ide`: if true if this file is required for the IDE.
+           - `ideFile`: if true if this file is required for the IDE.
              If false, that file can then be ignored. Eliminating
              files from exported games saves about 600 kB of total
              size and multiple files towards itch.io's file count limit.
@@ -1164,12 +1164,12 @@
              time which then loads with `async`. Otherwise load with `defer`.
             Defer scripts execute in the order that they are declared, but
             after the page has completed, so they don't block loading and
-            can be loaded asynchronously.
+            can be loaded asynchronously. 
         */    
-        function loadScript(url, ide, lazyLoad, type) {
-            if (! ide || useIDE) {
+        function loadScript(url, ideFile, lazyLoad, type) {
+            if (! ideFile || useIDE) {
               // Not currently using async because of race condition concerns
-              return `<script ${lazyLoad ? (useIDE ? 'async' : 'defer') : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
+              return `<script ${lazyLoad ? (useIDE && false ? 'async' : 'defer') : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
             } else {
               return '';
             }
@@ -1189,6 +1189,9 @@
             // QR code generator. This is needed for networking
             // even when not in the IDE
             {url: 'lib/qrcode.min.js', lazyLoad: true},
+
+            // Zipfile parsing
+            'lib/jszip.min.js',
 
             // YAML parsing
             'lib/js-yaml.min.js',

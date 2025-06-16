@@ -61,7 +61,7 @@
         "SINGLE_SET": {
             "description": "If true, show a single set of dice. Used for the itch.io export https://morgan3d.itch.io/rpg-dice",
             "type": "boolean",
-            "value": true
+            "value": false
         },
         "DIE_BRIGHT": {
             "type": "rgb",

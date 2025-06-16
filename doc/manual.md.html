@@ -8,7 +8,7 @@
 
 <center>[*Quick Start*](#quickstart) 
 ∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/ai) ∙ [*Network*](#network))
-<br>[Assets](assets.md.html target=_blank) ([*Sprites*](assets.md.html#sprites target=_blank) ∙ [*Fonts*](assets.md.html#fonts target=_blank) ∙ [*Sounds*](assets.md.html#sounds target=_blank))
+<br>[Assets](assets.md.html target=_blank) ([*Sprites*](assets.md.html#sprites target=_blank) ∙ [*Fonts*](assets.md.html#fonts target=_blank) ∙ [*Sounds*](assets.md.html#sounds target=_blank) ∙ [*Data*](assets.md.html#data target=_blank))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
 ∙ [JSON Formats](#projectfiles) 
@@ -1952,22 +1952,27 @@ for controlling the IDE:
 - `scale`: Must be `"linear"` if specified
 - `format`: Values are shown in the IDE using `format_number(value, format)`
 
-### `table` Constants
+### CSV Constants
 
-A `table` entry in the game constants has additional properties:
+A `table` or `array` entry in the game constants that uses 
+a separate CSV file for the data has additional properties:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
 {
-  "type": "table",
+  "type": "table",              // or "array"
   "transpose": "false",         // Optional, default false
   "column_type": "object",      // Optional, default "object"
   "ignore_first_column": false, // Optional, default to false. Removes the source 1st column if true
   "row_type": "array",          // Optional, default "object"
   "ignore_first_row": false,    // Optional, default to false. Removes the source 1st row if true
   "url": "somefile.csv",        // Must use a "url" property, not "value". Must be a csv file.
-  "trim": true                  // If true, trim extra whitespace. Default is true
+  "trim": true,                 // If true, trim extra whitespace. Default is true
+  "set_table": false            // Only for "type":"table". If true, flatten the table as if an array, and then use the values in the array as keys of a new table that map to true
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If `type` is `"array"` then the table after being read is flattend in column-major order
+into an array.
 
 By default, tables are indexed in-game as `table[x][y]` a.k.a. `table[col][row]`.
 To use `table[y][x]` a.k.a. `table[row][col]` indexing, set `transpose == true`.
@@ -2586,11 +2591,17 @@ The data JSON descriptor looks like:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
-    // can be .png, .gif, .jpg, .csv, .txt, .json, or .yml
+    // url can be .png, .gif, .jpg, .csv, .txt, .json, or .yml
     "url": "heightfield.png",
     "license": "your license here",
     
-    // all of the table constant options for if URL is a CSV file
+    //////////////////////////////////////////////////////
+    // For a .csv:
+
+    // Can also be "type": "array" 
+    "type": "table"
+
+    // ...and all of the options for CSV table constants can be used as well
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -4750,6 +4761,9 @@ and [estraverse](https://github.com/estools/estraverse)
 license.
 
 [`dagre.js`](https://github.com/dagrejs/dagre) is (C) 2012-2014 Chris Pettitt, [MIT](https://github.com/dagrejs/dagre/blob/master/LICENSE) license.
+
+[`jszip`](https://stuk.github.io/jszip/) is Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso,
+used under the [MIT](https://github.com/Stuk/jszip/blob/main/LICENSE.markdown) license.
 
 The boot screen font used in the emulator is
 [https://int10h.org/oldschool-pc-fonts](PxPlus_AmstradPC1512-2y) copyright 2016

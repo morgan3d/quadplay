@@ -7,7 +7,6 @@ Requires quad://scripts/mat3x3_lib.pyxl
 
 ───────────────────────────────────────────────
 
-s
 Usage:
 
 `````````````````
@@ -176,6 +175,8 @@ def dice_add_obstruction(dice, tracked_entity):
     the value for each face (used by the program, not displayed). Defaults
     to the same as the `label_array`
  - `translucent`: gem dice effect
+ 
+ Can also be called as `dice_add_die(args)`,
  */
 def dice_add_die(
     dice,
@@ -184,13 +185,31 @@ def dice_add_die(
     radius default 12,
     font default ∅,
     label_array default ∅,
-    value_array default ∅,
+    value_array default label_array,
     bright_color default ∅,
     dim_color default ∅,
     label_color default #FFF,
     label_y_offset default 0,
+    label_outline default #0000,
     translucent default false):
-    
+        
+    if sides == ∅:
+        // args version
+        return dice_add_die(
+            dice.dice,
+            dice.sides,
+            dice.pos, 
+            dice.radius,
+            dice.font,
+            dice.label_array,
+            dice.value_array,
+            dice.bright_color, 
+            dice.dim_color,
+            dice.label_color,
+            dice.label_y_offset,
+            dice.label_outline,
+            dice.translucent)
+
     assert(not isNaN(pos.x))
     ++dice_add_die.count
     
@@ -213,6 +232,10 @@ def dice_add_die(
         bright_color = artist_hsv_to_rgb(hue, 100%, 75%)
         dim_color = artist_hsv_to_rgb(hue + 22%, 88%, 40%)
         
+    if dim_color == ∅:
+        const temp = hsv(bright_color)
+        dim_color = artist_hsv_to_rgb(temp.h + 22%, 88% temp.h, 60% temp.v)
+    
     const die = make_entity({
         // Entity base properties
         name: "d" + sides + "_" + dice_add_die.count,
@@ -234,6 +257,7 @@ def dice_add_die(
         result_index: sides - 1,
         label_font: font,
         label_color: rgb(label_color),
+        label_outline: rgba(label_outline),
         label_array: clone(label_array),
         value_array: clone(value_array),
         bright_color: rgb(bright_color),
@@ -384,6 +408,7 @@ def _dice_die_draw(die):
         die.label_color,
         die.label_font,
         die.label_y_offset,
+        die.label_outline,
         die.translucent)
         
 
@@ -414,6 +439,7 @@ def _dice_die_model_draw(
     label_color,
     label_font,
     label_y_offset,
+    label_outline,
     translucent)
 & preserving_transform:
     // Force Y=up, assumed by the orientation and shading code
@@ -488,10 +514,23 @@ def _dice_die_model_draw(
     def draw_label(N, label, centroid):
         const label_z = pos.z + 140% radius
         const underscore = (label == 6 or label == 9 or label == "6" or label == "9")
+
+        if label_outline.a > 0:
+            const color = label_outline * rgba(1, 1, 1, clamp(1.2 N.z - 0.2, 0, 1)⁵)
+            for i ≤ 0: 
+                draw_text({
+                    font: label_font, 
+                    text: label, 
+                    z: label_z,
+                    pos: centroid + xyz(0, 1, 0),
+                    outline: color,
+                    shadow: color,
+                    color: #0000})
+        
         if N.z > shaded_face_threshold: // Top face
-            const label_shadow_opacity = 23%
-            const label_highlight_opacity = 40%
-            
+            const label_shadow_opacity = 28%
+            const label_highlight_opacity = 45%
+                        
             if label.spritesheet == ∅:
                 // Text or number label
 
@@ -519,6 +558,7 @@ def _dice_die_model_draw(
                     pos: centroid,
                     z: label_z,
                     color: label_color,
+                    //outline: outline,
                     shadow: rgba(1, 1, 1, label_highlight_opacity)})
                  
                 if underscore:                 
@@ -542,7 +582,10 @@ def _dice_die_model_draw(
             if model.sides == 20:
                 // d20 has too many labels, make them
                 // fade off more quickly
-                α = α³ 
+                α = α³
+            else if model.sides == 12:
+                // d12 faces are small in profile
+                α = α^(3.5)
             else if model.sides == 8 or model.sides == 4:
                 // Steep angles
                 α = α^(1.5)

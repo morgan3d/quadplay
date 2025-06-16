@@ -6,19 +6,33 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
-2025 June TBD
+2025 June 15
 ===================================
 
-- Redesigned the deployed game quadplay toolbar to be more minimal and easier for users to understand
+- Redesigned the deployed HTML game toolbar to be more minimal and easier for users to understand
 - Made intro animations (pause message and quadplay boot animation) skippable with any user input
 - Increased loading speed by async loading more of the implementation
 - Increased exported game loading speed by factoring more IDE code out of the emulator
 - Merged inactive pause and background pause and the sleep versions into a single setting
 - Fixed quadplay sleep problems during intro sequence for deployed games
 - Fixed `dice_set_initial_positions()` in `dice_lib.pyxl` failing with `NaN` results for narrow dice trays
-- Changed `highscores` to `high_scores` in the game.json specification to be consistent with other quadplay naming conventions
+- Changed `highscores` to `high_scores` in the game.json specification 
+  to be consistent with other quadplay naming conventions
 - Added `show_start_animation` option for exported games (defaults to true)
 - Added `mobile_touch_gamepad` option for exported games (defaults to true)
+- Removed support for legacy game.json files that use `*` to denote the start mode
+- Added support for .csv.zip and .txt.zip compressed text files
+- Added `set_table` option for CSV constants and assets for creating
+  a set data structure of unique keys from a CSV file
+- Rewrote asset loader for speed and code maintainability
+- Added `jszip` library dependency
+- IDE button colors now match the emulator theme
+- IDE tab colors now match the emulator theme
+- Added `english_all_table.data.json` dictionary
+- Added `english_all_array.data.json` word list
+- Added `english_sensitive_table.data.json` dictionary
+- Improved `ivanhoe-12` font readability
+- Added `ivanhoe-bold-12` font
 
 
 2025 May 31
