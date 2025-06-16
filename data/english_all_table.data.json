@@ -1,0 +1,7 @@
+{
+    "type": "table",
+    "set_table": true,
+    "url": "english_all.csv.zip",
+    "license": "Public Domain/CC0",
+    "description": "All words in the English language, as typically accepted by word games."
+}
