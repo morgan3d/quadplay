@@ -50,6 +50,7 @@ for size at i in resolution_array:
         
     pos.y += spacing
 
-// Gamepad UI    
+
+// Change the list index on gamepad Y input
 if gamepad_array[0].yy:
     set_index(clamp(index + gamepad_array[0].yy, 0, size(resolution_array) - 1))

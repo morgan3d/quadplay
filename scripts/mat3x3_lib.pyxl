@@ -5,8 +5,9 @@ Copyright 2025, Morgan McGuire
 Open source under the MIT license
 https://opensource.org/licenses/MIT
 
-3D transformation routines using a `mat3x3` type,
-where `M[r][c]` is row `r` column `c`. Compatible
+3D transformation routines using a `mat3x3` type.
+
+`M[r][c]` is row `r` column `c`. Compatible
 with the `MAT3x3_` intrinsics from quadplay. */
 
 

@@ -3,7 +3,7 @@
     "examples": [
         {
             "url": "quad://examples/anim_entity_example/",
-            "title": "anim_entity_example",
+            "title": "Entity Animation Example",
             "description": "Example of a library that reads sprite timing out of a sprite json file.",
             "version": 0,
             "developer": "Stephan Steinbach",
@@ -291,6 +291,19 @@
             "cooperative": true,
             "competitive": false,
             "achievements": false
+        },
+        {
+            "url": "quad://examples/match_display_aspect/",
+            "title": "Match Display Aspect",
+            "description": "Example of continuous resolution changes to match the screen aspect using screen_lib.pyxl.",
+            "version": 1,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/maze/",

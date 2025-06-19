@@ -10159,6 +10159,11 @@ function set_screen_size(size, private_views) {
         $error('Illegal resolution for set_screen_size(): xy(' + w + ', ' + h + ')');
     }
 
+    if ((w === SCREEN_SIZE.x) && (h === SCREEN_SIZE.y) && (VIEW_ARRAY.length === (private_views ? 4 : 1))) {
+        // Nothing to do, already set
+        return;
+    }
+
     // Clear the current and previous draw call stack, which
     // may not be clipped properly to the screen
     $previousGraphicsCommandList.length = 0;

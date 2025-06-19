@@ -41,7 +41,7 @@ Array
   Intended primarily for animation of values, including
   the named arrays of spritesheets, for example,
   `sprite = array_value(spritesheet[animName], frame)`.
-  See also `make_spline()` and the Sprite JSON section. The `extrapolate` values accepted are:
+  See also `animation_frame()`, `make_spline()`, and the Sprite JSON section. The `extrapolate` values accepted are:
 
   - `"oscillate"`
   - `"loop"`
@@ -2135,7 +2135,7 @@ a `start` property in the .sprite.json file.
 
 `sprite.animation`
 : If the sprite is in an animation (a multi-frame named array from a `sprite.json` file),
-  this is the array that contains it.
+  this is the array that contains it. See also `animation_frame()`
 
 `sprite.base`
 : The original spritesheet sprite on which this one is based. For
@@ -4603,8 +4603,11 @@ Raw Device Access
   string telling the host which control feature to execute, and the
   remaining arguments are passed to it. 
   
-  All `device_control()` commands may change in future releases and 
-  may fail silently on any given platform or when not using the IDE.
+  Unlike the rest of the API, all `device_control()` commands may change in future releases and 
+  *may fail silently on any physical platform* or when not using the IDE.
+  This function breaks the <quadplay/> abstraction so that you are not
+  limited by that abstraction. By using it, you are also forgoing the guarantees
+  that the game will work on all devices.
 
   <table class="nested">
     <tr><th> Parameters                      </th><th> Effect </th></tr>
@@ -4646,10 +4649,34 @@ Raw Device Access
                                                          save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
     <tr><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
                                                          the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
-    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The only allowed value of `feature` are: `"768x448,private_views"`, which enables this resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
+    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The options are: <dl><dt>`feature = "768x448,private_views"`</dt><dd>Enables 768x448 resolution for `set_screen_size()` with `private_views=true`, which is too slow to make 60 Hz framerate on Raspberry Pi and some phones.</dd><dt>`feature = "custom_screen_size"`</dt><dd>Enables arbitrary values for `set_screen_size()`, which may cause problems with layout of the HTML page, the pause/system menu, or performance.</dd></dl></td></tr>
     <tr><td> `"multitouch"`</td><td>Returns an array of touch objects for every currently-active touch, which have the form `{id:string, x:number, y:number, xy:xy, screen_x:number, screen_y:number, screen_xy:xy}`. The touch with id == -1 is the mouse.</td></tr>
+    <tr><td> `"get_display"`</td><td>Get an object describing the physical display device, with properties:
+      <dl><dt>`fullscreen_size`<dt><dd>`xy()` of the largest in OS-defined HiDPI pixels the largest the emulator
+      could be with fullscreen if not showing the mobile touch gamepad controls. 
+      This is the display client rect minus the <quadplay/> toolbar height.</dd>
+        <dt>`window_size`</dt><dd>`xy()` of the
+      largest in OS-defined HiDPI pixels the emulator screen can be without fullscreen mode
+      if not showing the mobile touch gamepad controls, as constrained by the browser
+      window or an iframe if embedded. This is the window client rect minus the <quadplay/>
+      toolbar height. When the app goes fullscreen, the `windowed_size` will grow to the
+    `fullscreen_size`.</dd>
+      <dt>`quadplay_size`</dt><dd>xy()` of the emulator's current screen in OS-defined HiDPI pixels.</dd>
+      <dt>`orientation_angle_degrees`</dt><dd>
+        The display's orientation relative to its preferred orientation. 
+       For a phone, this is 0 when it is in 
+       primary portrait mode and changes clockwise with rotation. For a regular desktop monitor with landscape 
+       orientation, this is 0 always.</dd>
+       <dt>`fullscreen`</dt><dd>`true` if the emulator currently in fullscreen mode.</dd>
+      </dl>
+    </td></tr>
   </table>
 
+For example, combining
+`device_control("enable_feature", "custom_screen_size")` with
+`device_control("get_display")` and `set_screen_size()` enables making a game
+that is responsive to the exact resolution of a browser window or orientation
+and fullscreen status on a phone.
 
 Intrinsics
 -----------------------------------------------------------

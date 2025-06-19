@@ -1,0 +1,73 @@
+/*
+quad://scripts/screen_lib.pyxl
+
+Library for managing screen resolution.
+
+Copyright 2025, Morgan McGuire
+Open source under the MIT license
+https://opensource.org/licenses/MIT
+
+*/
+
+
+/* Installs a hook to check every frame, in every mode
+   for the current maximum screen aspect ratio available
+   on the device and change to a non-standard resolution
+   to maintain that aspect ratio. 
+
+   Example (call from the `enter` event of your start mode):
+
+   ```
+   // Always be 384 pixels wide, set height to fill screen vertically
+   continuously_set_screen_size_for_display_aspect("x", 384)
+
+   // Always be 224 pixels tall, set width to fill screen horizontally
+   continuously_set_screen_size_for_display_aspect("y", 224)
+
+   // Set the larger dimension to 384 pixels and fill the screen
+   // on the smaller dimension
+   continuously_set_screen_size_for_display_aspect("larger", 256)
+   ```   
+   
+   This allows you to fix
+   one dimension in quadplay pixels to maintain performance
+   and a pixelated look, but still fill the
+   device screen or window on different devices and during
+   window resizes and orientation changes.
+   
+   Uses `device_control()` and may break the pause menu 
+   and layout of the mobile touch gamepad controls due
+   to the non-standard resolutions.
+   
+   May cause `SCREEN_SIZE` to frequently change before the `frame`
+   event of each mode. So, do not
+   make assumptions about `SCREEN_SIZE` being constant after initialization.
+   
+   `axis`
+   : "x", "y", or "larger"
+   
+   `extent`
+   : size along `axis`
+   
+   `private_views`
+   : same as the `set_screen_size()` argument
+   */
+   def continuously_set_screen_size_for_display_aspect(axis, extent, private_views default false, larger_min default "auto"):
+      device_control("enable_feature", "custom_screen_size")
+  
+      assert(axis == "x" or axis == "y" or axis == "larger", "Illegal axis argument")
+      
+      def hook():
+          const display = device_control("get_display")
+          
+          let new_size = {x: extent, y: extent};
+          if axis == "x" or (axis == "larger" and display.window_size.x ≥ display.window_size.y):
+              new_size.y = ⌊new_size.x * display.window_size.y / display.window_size.x⌋
+          else:
+              new_size.x = ⌊new_size.y * display.window_size.x / display.window_size.y⌋
+          
+          set_screen_size(new_size, private_views)
+  
+      // Check every frame
+      add_frame_hook(hook, ∅, ∞, "all")
+      

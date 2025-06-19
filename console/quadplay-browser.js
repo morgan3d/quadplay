@@ -332,6 +332,43 @@ function device_control(cmd) {
         }
         break;
 
+    case "get_display":
+        {
+            const emulator_screen = document.getElementById('screen');
+            const emulator_bounds = emulator_screen.getBoundingClientRect();
+            const toolbar_height = Math.ceil(document.getElementById('header').getBoundingClientRect().height);
+
+            return Object.freeze({
+                // Largest in OS-defined HiDPI pixels the largest the emulator
+                // could be with fullscreen if not showing the mobile touch gamepad controls. 
+                // This is the display client rect minus the quadplay
+                // toolbar size.
+                max_size: Object.freeze({x: window.screen.availWidth, y: window.screen.availHeight - toolbar_height}),
+
+                // Largest in OS-defined HiDPI pixels the emulator screen can be without fullscreen mode
+                // if not showing the mobile touch gamepad controls, as constrained by the browser
+                // window or an iframe if embedded. This is the window client rect minus the quadplay
+                // toolbar size.
+                window_size: Object.freeze({x: window.innerWidth, y: window.innerHeight - toolbar_height}),
+                
+                // The emulator's current screen in OS-defined HiDPI pixels.
+                quadplay_size: Object.freeze({x: Math.floor(emulator_bounds.width), y: Math.floor(emulator_bounds.height)}),
+
+                // CSS scaling factor. Not the physical to HiDPI pixel ratio
+                // device_pixel_ratio: window.devicePixelRatio,
+
+                // The display's orientation relative to its preferred orientation. 
+                // For a phone, this is 0 when it is in 
+                // primary portrait mode and changes clockwise with rotation. For a regular desktop monitor with landscape 
+                // orientation, this is 0 always.
+                orientation_angle_degrees: window.screen.orientation.angle,
+
+                // Is the emulator currently in fullscreen mode
+                fullscreen: document.fullscreenElement !== null
+            });
+            break;
+        }
+
     case "enable_feature":
         {
             switch (arguments[1]) {
@@ -340,6 +377,7 @@ function device_control(cmd) {
                 break;
                 
             case 'steinbach':
+            case 'custom_screen_size':
                 QRuntime.$feature_custom_resolution = true;
                 break;
                 
@@ -348,6 +386,10 @@ function device_control(cmd) {
             }
             break;
         } // enable_feature
+
+    default:
+        throw new Error('Unknown argument to device_control(): "' + arguments[0] + '"');
+        break;
     }
 }
 
@@ -548,7 +590,7 @@ function processPreviewRecording() {
         // Copy over data to a canvas
         const img = document.createElement('canvas');
         img.width = 192 * PREVIEW_FRAMES_X; img.height = 112 * PREVIEW_FRAMES_Y;
-        const imgCTX = img.getContext('2d');
+        const imgCTX = img.getContext('2d', {willReadFrequently: true});
         const data = imgCTX.createImageData(img.width, img.height);
         new Uint32Array(data.data.buffer).set(previewRecording);
         imgCTX.putImageData(data, 0, 0);
@@ -1286,105 +1328,107 @@ function submitFrame(_updateImageData, _updateImageData32, gpuThreadTime) {
         profiler.smoothGPUTime.update(gpuThreadTime);
     }
     
-    // Force the data back, which may be returned from a web worker
+    // Force the data back into the variables that were temporarily nulled out if using a web worker
     console.assert(_updateImageData, _updateImageData32);
     updateImageData = _updateImageData;
     updateImageData32 = _updateImageData32;
     
-    // Update the image
-    const $postFX = QRuntime.$postFX;
+    {
+        // Update the image
+        const $postFX = QRuntime.$postFX;
 
-    // Ignore bloom and burn_in, which are handled with overlays
-    const hasPostFX =
-          ($postFX.motion_blur > 0) ||
-          ($postFX.color.a > 0) ||
-          ($postFX.angle !== 0) ||
-          ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
-          ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
-          ($postFX.color_blend !== 'source-over');
-    
-    if (previewRecording && (QRuntime.game_frames % (60 / PREVIEW_FPS) === 0)) {
-        processPreviewRecording();
-    }
-
-    if ((! isHosting || isFirefox || isSafari) && ! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
-        // Directly upload to the screen. Fast path when there are no PostFX.
-        //
-        // Chromium (Chrome & Edge) have a bug where we can't get a video stream
-        // from the direct putImageData, so they are excluded from this path when
-        // hosting.
-        ctx.putImageData(updateImageData, 0, 0);
-    } else {
-        // Put on an intermediate image and then stretch. This path is
-        // for postFX and supporting Safari and other platforms where
-        // context graphics can perform nearest-neighbor interpolation
-        // but CSS scaling cannot.
-        const updateCTX = updateImage.getContext('2d', {alpha: false});
-        updateCTX.putImageData(updateImageData, 0, 0);
+        // Ignore bloom and burn_in, which are handled with overlays
+        const hasPostFX =
+            ($postFX.motion_blur > 0) ||
+            ($postFX.color.a > 0) ||
+            ($postFX.angle !== 0) ||
+            ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
+            ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
+            ($postFX.color_blend !== 'source-over');
         
-        if ($postFX.color.a > 0) {
-            updateCTX.fillStyle = rgbaToCSSFillStyle($postFX.color);
-            updateCTX.globalCompositeOperation = $postFX.color_blend;
-            updateCTX.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        if (previewRecording && (QRuntime.game_frames % (60 / PREVIEW_FPS) === 0)) {
+            processPreviewRecording();
         }
 
-        ctx.save();
-
-        if ($postFX.pos.x !== 0 || $postFX.pos.y !== 0 || $postFX.angle !== 0 || $postFX.scale.x !== 1 || $postFX.scale.y !== 1) {
-            // Transformed
-
-            const backgroundRevealed = $postFX.pos.x !== 0 || $postFX.pos.y !== 0 || $postFX.angle !== 0 || $postFX.scale.x < 1 || $postFX.scale.y < 1;
-
-            if (backgroundRevealed) {
-                // Fill revealed background areas. Unfortunately,
-                // canvas patterns cannot clamp to border, so we
-                // draw a big polygon
-
-                const $background = QRuntime.$background;
-                if ($background.spritesheet) {
-                    ctx.fillStyle = '#000';
-                } else {
-                    const color = QRuntime.$colorToUint16($background);
-                    ctx.fillStyle = '#' + (color & 0xf).toString(16) + ((color >> 4) & 0xf).toString(16) + ((color >> 8) & 0xf).toString(16);
-                }
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(emulatorScreen.width, 0);
-                ctx.lineTo(emulatorScreen.width, emulatorScreen.height);
-                ctx.lineTo(0, emulatorScreen.height);
-                ctx.lineTo(0, 0);
-            }            
-
-            ctx.translate(($postFX.pos.x / SCREEN_WIDTH  + 0.5) * emulatorScreen.width,
-                          ($postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
-            ctx.rotate(-$postFX.angle);
-            ctx.scale($postFX.scale.x, $postFX.scale.y);
-            ctx.translate(-emulatorScreen.width * 0.5, -emulatorScreen.height * 0.5);
-
-            if (backgroundRevealed) {
-                // Cut out
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0, emulatorScreen.height);
-                ctx.lineTo(emulatorScreen.width, emulatorScreen.height);
-                ctx.lineTo(emulatorScreen.width, 0);
-                ctx.lineTo(0, 0);
-                
-                ctx.fill();
-            }
-        }
-        
-        if ($postFX.motion_blur > 0) {
-            ctx.globalAlpha = 1 - $postFX.motion_blur;
-        }
+        if ((! isHosting || isFirefox || isSafari) && ! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
+            // Directly upload to the screen. Fast path when there are no PostFX.
+            //
+            // Chromium (Chrome & Edge) have a bug where we can't get a video stream
+            // from the direct putImageData, so they are excluded from this path when
+            // hosting.
+            ctx.putImageData(updateImageData, 0, 0);
+        } else {
+            // Put on an intermediate image and then stretch. This path is
+            // for postFX and supporting Safari and other platforms where
+            // context graphics can perform nearest-neighbor interpolation
+            // but CSS scaling cannot.
+            const updateCTX = updateImage.getContext('2d', {alpha: false});
+            updateCTX.putImageData(updateImageData, 0, 0);
             
-        ctx.drawImage(updateImage,
-                      0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
-                      0, 0, emulatorScreen.width, emulatorScreen.height);
-        ctx.restore();
-    }
+            if ($postFX.color.a > 0) {
+                updateCTX.fillStyle = rgbaToCSSFillStyle($postFX.color);
+                updateCTX.globalCompositeOperation = $postFX.color_blend;
+                updateCTX.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            }
 
-    applyAfterglow($postFX.afterglow);
-    maybeApplyBloom($postFX.bloom, allow_bloom);
+            ctx.save();
+
+            if ($postFX.pos.x !== 0 || $postFX.pos.y !== 0 || $postFX.angle !== 0 || $postFX.scale.x !== 1 || $postFX.scale.y !== 1) {
+                // Transformed
+
+                const backgroundRevealed = $postFX.pos.x !== 0 || $postFX.pos.y !== 0 || $postFX.angle !== 0 || $postFX.scale.x < 1 || $postFX.scale.y < 1;
+
+                if (backgroundRevealed) {
+                    // Fill revealed background areas. Unfortunately,
+                    // canvas patterns cannot clamp to border, so we
+                    // draw a big polygon
+
+                    const $background = QRuntime.$background;
+                    if ($background.spritesheet) {
+                        ctx.fillStyle = '#000';
+                    } else {
+                        const color = QRuntime.$colorToUint16($background);
+                        ctx.fillStyle = '#' + (color & 0xf).toString(16) + ((color >> 4) & 0xf).toString(16) + ((color >> 8) & 0xf).toString(16);
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(emulatorScreen.width, 0);
+                    ctx.lineTo(emulatorScreen.width, emulatorScreen.height);
+                    ctx.lineTo(0, emulatorScreen.height);
+                    ctx.lineTo(0, 0);
+                }            
+
+                ctx.translate(($postFX.pos.x / SCREEN_WIDTH  + 0.5) * emulatorScreen.width,
+                              ($postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
+                ctx.rotate(-$postFX.angle);
+                ctx.scale($postFX.scale.x, $postFX.scale.y);
+                ctx.translate(-emulatorScreen.width * 0.5, -emulatorScreen.height * 0.5);
+
+                if (backgroundRevealed) {
+                    // Cut out
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, emulatorScreen.height);
+                    ctx.lineTo(emulatorScreen.width, emulatorScreen.height);
+                    ctx.lineTo(emulatorScreen.width, 0);
+                    ctx.lineTo(0, 0);
+                    
+                    ctx.fill();
+                }
+            }
+            
+            if ($postFX.motion_blur > 0) {
+                ctx.globalAlpha = 1 - $postFX.motion_blur;
+            }
+                
+            ctx.drawImage(updateImage,
+                        0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
+                        0, 0, emulatorScreen.width, emulatorScreen.height);
+            ctx.restore();
+        }
+
+        applyAfterglow($postFX.afterglow);
+        maybeApplyBloom($postFX.bloom, allow_bloom);
+    }
 
     /*
     // Random graphics for debugging

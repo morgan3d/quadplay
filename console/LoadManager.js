@@ -30,7 +30,7 @@
 
   Open Source under the BSD-2-Clause License:
 
-  Copyright 2018-2021 Morgan McGuire, https://casual-effects.com
+  Copyright 2018-2025 Morgan McGuire, https://casual-effects.com
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions
@@ -177,15 +177,27 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
     // Apply default
     if (forceReload === undefined) { forceReload = LM.forceReload; }
 
-    //if (forceReload) { console.log('Forcing reload of ' + url); }
     console.assert(LM.status !== 'complete',
                    'Cannot call LoadManager.fetch() after LoadManager.end(). url = ' + url);
 
     // The fetch operation that the load manager uses to track progress of asynchronous fetch
     // and callbacks. This is also used as a memoization cache for multiple loads within a LoadManger
     // session. It is NOT used as a cache between sessions in the current implementation.
-    let operation = LM.resource.get(url);
+
+    // TODO: only cache with same callback and url!
+    let operation = undefined;//LM.resource.get(url);
     
+    if (operation) {
+        // If the operation in progress failed, then the LM should have
+        // been marked failed already
+        console.assert(operation.status !== 'failure');
+
+        if (operation.status !== 'success') {
+            // This operation is already in progress but has not completed
+            // TODO
+        }
+    }
+
     // Invoke when the entire operation has failed
     function failOperation() {
         operation.failureMessage += ' during ' + operation.status;
@@ -196,7 +208,6 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 
 
     function runHttpRequest() {
-
         // Create the entry if it does not already exist, or override it if we are forcing a reload
         if (! operation || forceReload) {
             operation = {
@@ -284,6 +295,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                             if ((LM.jsonParser !== 'remote') && (type === 'json')) {
                                 try {
                                     operation.rawData = LM.parseJSON(xhr.response, url, warningCallback);
+                                    console.assert(operation.rawData);
                                     runPostProcess();
                                 } catch (error) {
                                     // Parsing failed
@@ -297,6 +309,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                                 }
                             } else {
                                 operation.rawData = xhr.response;
+                                console.assert(operation.rawData);
                                 runPostProcess();
                             }
                         } else {
@@ -309,7 +322,8 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                     }
                 };
 
-                xhr.onerror = function (e) {
+                xhr.onerror = function (error) {
+                    console.dir(xhr.statusText); // TODO: remove
                     operation.failureMessage = xhr.statusText;
                     failOperation();
                 };
@@ -317,8 +331,9 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 const sendRequest = function() {
                     try {
                         xhr.send();
-                    } catch (e) {
-                        operation.failureMessage = e.toString();
+                    } catch (error) {
+                        console.dir(error); // TODO: remove
+                        operation.failureMessage = error.toString();
                         failOperation();
                     }
                 };
@@ -334,6 +349,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
         } else {
             // This will be overwritten immediately
             operation.status = 'http fetch';
+            console.assert(operation.rawData);
             runPostProcess();
         }
     } // runHttpRequest()
@@ -342,6 +358,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
     // the data to the callback if postProcess === undefined
     function runPostProcess() {
         operation.status = 'postprocess';
+        console.assert(operation.rawData);
 
         // If the HTTP request succeeded but the entire LM has failed in the meantime
         // due to another async fetch, then stop processing this fetch.
@@ -378,26 +395,27 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
     // Execute the callback(). Triggered by runPostProcess, either synch or async
     // depending on the value of postProcess.
     function runCallback() {
+        operation.status = 'callback';
         console.assert(operation.dataCache.has(postProcess));
         const data = operation.dataCache.get(postProcess);
         console.assert(! (data instanceof Promise));
 
-        operation.status = 'callback';
-
         try {
             // Note that callbacks may trigger their own loads, which
             // increase LM.pendingFetches
-            if (callback) { callback(data, operation.rawData, operation.url, postProcess); }
+            if (callback) { 
+                callback(data, operation.rawData, operation.url, postProcess); 
+            }
 
             // This line is the only way for the entire operation to succeed
             operation.status = 'success';
             LM.markRequestCompleted(operation.url, '', true);
 
-        } catch (e) {
+        } catch (error) {
             // The load succeeded, but a callback has failed due to an exception
             console.trace();
             console.log(callback);
-            console.log(e + ' during callback while loading ' + url);
+            console.log(error + ' during callback while loading ' + url);
             operation.failureMessage = error.toString();
 
             failOperation();
@@ -411,11 +429,14 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 
 /** The URL is used only for reporting warnings (not errors) */
 LoadManager.prototype.parseJSON = function (text, url, warningCallback) {
+    let result;
     if (this.jsonParser === 'permissive') {
-        return WorkJSON.parse(text);
+        result = WorkJSON.parse(text);
     } else {
-        return JSON.parse(text);
+        result = JSON.parse(text);
     }
+
+    return result;
 }
 
 

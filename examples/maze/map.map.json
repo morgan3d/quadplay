@@ -26,7 +26,7 @@
     "z_scale": 1,
 
     // Optional license and copyright
-    "license": "©2022 Your Name. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "license": "©2022 Casual Effects. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
 
     // Optional if the map only uses one spritesheet
     "sprite_url": "miniroguelike-8x8.sprite.json",

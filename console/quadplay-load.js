@@ -515,6 +515,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     
                     loadManager.fetch(assetURL, 'text', jsonParser, function (json) {
                         // assetURL is the asset json file
+                        //
                         // json.url is the png, mp3, etc. referenced by the file
 
                         maybeRecordURLDependency(makeURLAbsolute(assetURL, json.url));
@@ -548,10 +549,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                         }
                         
                     }, // end of callback
-                                      null, // error callback
-                                      null, // warning callback
-                                      computeForceReloadFlag(assetURL)
-                                     );
+                    null, // error callback
+                    null, // warning callback
+                    computeForceReloadFlag(assetURL)
+                    );
                 } // if preview.png
             } // for each asset
         } // Assets
@@ -772,7 +773,7 @@ function computeCredits(gameSource) {
     CREDITS.quadplay.push('quadplay✜ ©2019-2025 Morgan McGuire, used under the LGPL 3.0 license');
     CREDITS.quadplay.push('gif.js ©2013 Johan Nordberg, used under the MIT license, with additional programming by Kevin Weiner, Thibault Imbert, and Anthony Dekker');
     CREDITS.quadplay.push('xorshift implementation ©2014 Andreas Madsen and Emil Bay, used under the MIT license');
-    CREDITS.quadplay.push('LoadManager.js ©2018-2020 Morgan McGuire, used under the BSD license');
+    CREDITS.quadplay.push('LoadManager.js ©2018-2025 Morgan McGuire, used under the BSD license');
     CREDITS.quadplay.push('WorkJSON.js ©2020-2021 Morgan McGuire, used under the MIT license');
     CREDITS.quadplay.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
     CREDITS.quadplay.push('matter.js © Liam Brummitt and others, used under the MIT license');
@@ -1815,20 +1816,20 @@ function loadMap(name, json, mapJSONUrl) {
     }
     
     assetCache[mapJSONUrl] = map = Object.assign([], {
-        $name:   name,
-        $type:   'map',
-        $url:    tmxURL,
+        $name:      name,
+        $type:      'map',
+        $url:       tmxURL,
         $flipYOnLoad: json.y_up || false,
-        $json:   json,
-        $jsonURL: mapJSONUrl,
-        offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
-        z_offset: json.z_offset || 0,
-        z_scale: (json.z_scale !== undefined ? json.z_scale : 1),
-        layer:  [],
-        spritesheet_table:Object.create(null),
-        sprite_size: Object.freeze({x:0, y:0}),
-        size:        Object.freeze({x:0, y:0}),
-        size_pixels: Object.freeze({x:0, y:0}),
+        $json:      json,
+        $jsonURL:   mapJSONUrl,
+        offset:     Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
+        z_offset:   json.z_offset || 0,
+        z_scale:    (json.z_scale !== undefined ? json.z_scale : 1),
+        layer:      [],
+        spritesheet_table: Object.create(null),
+        sprite_size: Object.freeze({x: 0, y: 0}),
+        size:        Object.freeze({x: 0, y: 0}),
+        size_pixels: Object.freeze({x: 0, y: 0}),
         loop_x:      json.loop_x || false,
         loop_y:      json.loop_y || false
     });
@@ -1916,7 +1917,7 @@ function loadMap(name, json, mapJSONUrl) {
         
         if ((Object.keys(json.sprite_url_table)[0] !== '<default>') &&
             (Object.keys(json.sprite_url_table)[0] !== spritesheetName)) {
-            throw 'Spritesheet name "' + spritesheetName + '" in ' + spritesheetUrl + ' does not match the name from the map file ' + mapJSONUrl;
+            throw 'Spritesheet name "' + spritesheetName + '" in ' + spritesheetUrl + ' does not match the name from the TMX map file';
         }
         
         map.spritesheet_table[spritesheetName] = map.spritesheet;
@@ -1930,11 +1931,11 @@ function loadMap(name, json, mapJSONUrl) {
         const filename = image.getAttribute('source');
         
         if ((map.spritesheet.sprite_size.x !== map.sprite_size.x) || (map.spritesheet.sprite_size.y !== map.sprite_size.y)) {
-            throw `Sprite size (${map.spritesheet.sprite_size.x}, ${map.spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y}).`;
+            throw `Sprite size (${map.spritesheet.sprite_size.x}, ${map.spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y})`;
         }
         
         if ((map.spritesheet.size.x !== size.x) || (map.spritesheet.size.y !== size.y)) {
-            throw `Sprite sheet size (${map.spritesheet.size.x}, ${map.spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
+            throw `Spritesheet size (${map.spritesheet.size.x}, ${map.spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y})`;
         }
 
         const layerList = Array.from(xml.getElementsByTagName('layer'));
@@ -2011,10 +2012,10 @@ function loadMap(name, json, mapJSONUrl) {
     // the JSON for the spritesheet itself, which loadSpritesheet() expects to be
     // already processed
     onLoadFileStart(spritesheetUrl);
-    
+
     loadManager.fetch(spritesheetUrl, 'text', jsonParser, loadSpritesheetJSONCallback,
                       loadFailureCallback, loadWarningCallback);
-    
+
     return map;
 }
 
@@ -2037,6 +2038,7 @@ let fileContents = {};
 /* Store the original value, unmodified, in fileContents so that it
    can be accessed by the IDE for editing. */
 function jsonParser(source, url) {
+    console.assert(source !== undefined);
     fileContents[url] = source;
     return WorkJSON.parse(source);
 }
@@ -2063,7 +2065,7 @@ function getImageData(image) {
     tempCanvas.width = image.width;
     tempCanvas.height = image.height;
     
-    const tempCtx = tempCanvas.getContext('2d');
+    const tempCtx = tempCanvas.getContext('2d', {willReadFrequently: true});
     tempCtx.drawImage(image, 0, 0, image.width, image.height);
     
     return tempCtx.getImageData(0, 0, image.width, image.height);

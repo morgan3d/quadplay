@@ -1,5 +1,5 @@
 {
-    "title": "anim_entity_example",
+    "title": "Entity Animation Example",
     "developer": "Stephan Steinbach",
     "copyright": "©2023 Stephan Steinbach",
     "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
@@ -45,5 +45,7 @@
             }
         }
     },
-    "screenshot_tag": "anim_entity_example"
+    "screenshot_tag": "entity_animation",
+    "show_start_animation": true,
+    "mobile_touch_gamepad": true
 }

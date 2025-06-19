@@ -8,7 +8,7 @@
 
 <center>[*Quick Start*](#quickstart) 
 ∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/ai) ∙ [*Network*](#network))
-<br>[Assets](assets.md.html target=_blank) ([*Sprites*](assets.md.html#sprites target=_blank) ∙ [*Fonts*](assets.md.html#fonts target=_blank) ∙ [*Sounds*](assets.md.html#sounds target=_blank) ∙ [*Data*](assets.md.html#data target=_blank))
+<br>[*Libraries*](#libraries) ∙ [Assets](assets.md.html target=_blank) ([*Sprites*](assets.md.html#sprites target=_blank) ∙ [*Fonts*](assets.md.html#fonts target=_blank) ∙ [*Sounds*](assets.md.html#sounds target=_blank) ∙ [*Data*](assets.md.html#data target=_blank))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
 ∙ [JSON Formats](#projectfiles) 
@@ -797,6 +797,13 @@ from a sprite sheet authored in aseprite.
 [Color Wheel](../console/quadplay.html?game=quad://examples/color_wheel&IDE=1) 
 shows the difference between `hsv()` and `artist_hsv_to_rgb()` hues 
 and brightnesses.
+
+</td></tr><tr><td>![](../examples/match_display_aspect/label128.png)</td><td>
+  [Color Wheel](../console/quadplay.html?game=quad://examples/color_wheel&IDE=1) 
+</td></tr><tr><td>![](../examples/color_wheel/label128.png)</td><td>
+  [Match Display Aspect](../console/quadplay.html?game=quad://examples/match_display_aspect&IDE=1) 
+  shows how to perform continuous resolution changes to match the screen aspect ratio using 
+  `screen_lib.pyxl`.
 
 </td></tr></table>
 
@@ -1627,6 +1634,42 @@ NES, PICO8, and Game Boy assets.
 
 
 (insert api.md.html here)
+
+
+Libraries
+=============================================================================================
+
+In addition to the built-in API, <quadplay/> provides script assets. These are more likely
+to change than the provided API and are only included in your game if you explicitly choose
+to use them. These also each may have their own open source license. 
+
+The documentation for
+each library appears in the IDE "Game Documentation" section of the Help tab alongside
+documentation for your own code.
+
+[`quad://scripts/cursor_lib.pyxl`](../scripts/cursor_lib.pyxl)
+: Immediate mode GUI gamepad/mouse/touch cursor management routines
+  for selection and buttons.
+
+[`quad://scripts/dice_lib.pyxl`](../scripts/dice_lib.pyxl)
+: Library for working with 3D rendered polyhedral dice. Requires `mat3x3_lib.pyxl`
+
+[`quad://scripts/mat3x3_lib.pyxl`](../scripts/mat3x3_lib.pyxl)
+: 3D transformation routines using a `mat3x3` type.
+
+[`quad://scripts/midi_8x8_lib.pyxl`](../scripts/midi_8x8_lib.pyxl)
+: MIDI device I/O and graphics support for 8x8 devices such as Ableton Push.
+
+[`quad://scripts/particle_lib.pyxl`](../scripts/particle_lib.pyxl)
+: Single-pixel particle system.
+
+[`quad://scripts/platformer_lib.pyxl`](../scripts/platformer_lib.pyxl)
+: Library for side platformers, including
+  double jump, wall jump, friction, and map management.
+
+[`quad://scripts/screen_lib.pyxl`](../scripts/screen_lib.pyxl)
+: Library for managing screen resolution.
+
 
 
 Project Files

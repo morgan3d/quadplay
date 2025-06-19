@@ -714,6 +714,9 @@ function onResize() {
 
     let windowWidth = window.innerWidth, windowHeight = window.innerHeight;
 
+    // The size of the quadplay screen (HTML element id = 'screenBorder') is 
+    // set to scale * SCREEN_SIZE. The size in pixels is thus controlled
+    // by the scale, not by explicitly setting dimensions. 
     let scale = 1;
 
     const editorPane = document.getElementById('editorPane');
@@ -737,7 +740,7 @@ function onResize() {
         // instead of setUIMode() to have any effect.
         screenBorder.removeAttribute('style');
         document.getElementById('debugger').removeAttribute('style');
-        if (SCREEN_WIDTH <= (384>>1) && SCREEN_HEIGHT <= (224 >> 1)) {
+        if (SCREEN_WIDTH <= (384 >> 1) && SCREEN_HEIGHT <= (224 >> 1)) {
             // Half-resolution games run with pixel doubling
             scale *= 2;
         } else if (SCREEN_WIDTH === 640 && SCREEN_HEIGHT === 360) {
@@ -770,15 +773,11 @@ function onResize() {
         
     case 'Emulator':
         {
-            // If 1, add a thick border of the case around the screen
-            // as pre-version 100 quadplay did
-            const useScreenBorder = 0;
-            
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
             if (gbMode) {
-                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - useScreenBorder * 36) / SCREEN_WIDTH));
+                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, windowWidth / SCREEN_WIDTH));
             } else {
-                scale = Math.max(0, Math.min((window.innerHeight - useScreenBorder * 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
+                scale = Math.max(0, Math.min((window.innerHeight) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
             }
             
             // Round to nearest even multiple of the actual pixel size for small emulator screens to
@@ -826,22 +825,20 @@ function onResize() {
     case 'Windowed':
     case 'Test':
         {
-            // Switch to constants view
-            
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
             const isKiosk = getQueryString('kiosk') === '1';
             const headerBar = isKiosk ? 0 : 24;
-            scale = Math.max(0, Math.min((windowHeight - headerBar) / SCREEN_HEIGHT, (windowWidth - 2) / SCREEN_WIDTH));
+            scale = Math.max(0, Math.min((windowHeight - headerBar) / SCREEN_HEIGHT, windowWidth / SCREEN_WIDTH));
             
-            if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
+            if ((scale * window.devicePixelRatio <= 2) && (scale * window.devicePixelRatio > 1)) {
                 // Round to nearest even multiple of the actual pixel size for small screens to
                 // keep per-pixel accuracy
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
 
-            let zoom = setScreenBorderScale(screenBorder, scale);
-            
-            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
+            const zoom = setScreenBorderScale(screenBorder, scale);
+            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom) / (2 * zoom)) + 'px';
+
             if (uiMode === 'Test') {
                 // Show the constants
                 onProjectSelect(undefined, 'constant', undefined);
@@ -2351,16 +2348,32 @@ let updateImageData32;
 
 let error = document.getElementById('error');
 
-function setFramebufferSize(w, h, privateScreen) {
+/* If preserveImage is true, avoid flicker by saving the old framebuffer contents.
+   Used when the framebuffer is resized by a game instead of on start. */
+function setFramebufferSize(w, h, privateScreen, preserveImage) {
     if (privateScreen === undefined) {
+        // Keep the same state as before by default
         privateScreen = PRIVATE_VIEW;
     }
+
+    // Preserve the image during scaling to prevent flicker.
+    // This happens rarely (during resizes), no reason to force willReadFrequently and CPU
+    // canvas storage
+    const oldImage = preserveImage ? ctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) : undefined;
     
+    // Trigger the actual resize
+    emulatorScreen.width = w;
+    emulatorScreen.height = h;
+
+    if (preserveImage) {
+        // Restore old image
+        ctx.putImageData(oldImage, 0, 0);
+    }
+
     SCREEN_WIDTH = w;
     SCREEN_HEIGHT = h;
     PRIVATE_VIEW = privateScreen;
-    emulatorScreen.width = w;
-    emulatorScreen.height = h;
+
     overlayScreen.width = afterglowScreen.width = w;
     overlayScreen.height = afterglowScreen.height = h;
     /*
@@ -2885,7 +2898,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.$navigator          = navigator;
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
-        QRuntime.$setFramebufferSize = setFramebufferSize;
+
+        // When the game forces a framebuffer change, preserve the background to prevent flicker
+        QRuntime.$setFramebufferSize = function (w, h, p) { return setFramebufferSize(w, h, p, true); };
         QRuntime.$escapeHTMLEntities = escapeHTMLEntities;
         QRuntime.$sleep              = useIDE ? null : sleep;
         QRuntime.disconnect_guest    = disconnectGuest;

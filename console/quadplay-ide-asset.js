@@ -88,7 +88,7 @@ function onImportAssetFilterChange() {
 }
 
 
-function suggestedAssetFilename(url, suffix) {
+function suggestedAssetVariableName(url, suffix) {
     // Remove extension
     url = url.replace(/\..*$/, '');
 
@@ -106,6 +106,11 @@ function suggestedAssetFilename(url, suffix) {
 
     // Remove 'kenny_', 'dawnlike_', or 'dawnbringer_'
     url = url.replace(/^(kenney|dawnbringer|dawnlike)_/, '');
+
+    if (! url.match(/$[_a-zA-Z]/)) {
+        // Make a legal variable name
+        url = (suffix || 'x')[0] + url;
+    }
 
     return url + (suffix || '');
 }
@@ -206,7 +211,7 @@ function onImportAssetListSelect(target) {
     const importAssetName = document.getElementById('importAssetName');
     if (importAssetName.value.length === 0) {
         const type = document.getElementById('importAssetType').value;
-        importAssetName.value = suggestedAssetFilename(importAssetFiles.selected, '_' + type);
+        importAssetName.value = suggestedAssetVariableName(importAssetFiles.selected, '_' + type);
     }
     
     document.getElementById('importAssetImportButton').disabled = (importAssetName.value.length === 0);
