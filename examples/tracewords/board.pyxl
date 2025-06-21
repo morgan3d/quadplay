@@ -233,8 +233,9 @@ def board_update(board, pos, angle, history, allow_selection default false)
     
     // Make the selection target slightly small to make 
     // it easier to select diagonals without hitting
-    // the sides
-    const selection_size = center_size - 2
+    // the sides. If this is the first letter, make the
+    // selection radius extra large instead
+    const selection_size = center_size + (if size(board.selection) == 0 then +2 else -1)
             
     set_transform(pos)
     set_camera(xy(0, 0), -angle)

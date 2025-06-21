@@ -463,11 +463,11 @@ function onAppWelcomeTouch(hasTouchScreen) {
 
     unlockAudio();
     
-    if ((uiMode === 'Maximal' || uiMode === 'Windowed') && ! useIDE && hasTouchScreen && gameSource.extendedJSON.mobile_touch_gamepad !== false) {
+    if ((uiMode === 'Maximal' || uiMode === 'Windowed') && ! useIDE && hasTouchScreen && (gameSource.extendedJSON.mobile_touch_gamepad !== false)) {
         // This device probably requires on-screen controls.
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
-    } else if ((! useIDE && uiMode !== 'Windowed') || hasTouchScreen) {
+    } else if ((! useIDE && (uiMode !== 'Windowed')) || hasTouchScreen) {
         if (deployed && (isMobile || getQueryString('mode') !== 'DefaultWindow')) { requestFullScreen(); }
     }
 
@@ -4336,7 +4336,12 @@ if (getQueryString('kiosk') === '1') {
         if (useIDE) {
             newMode = localStorage.getItem('uiMode') || 'IDE';
         } else {
-            newMode = isMobile ? 'Emulator' : 'Windowed';
+            newMode = 
+                isMobile ? 
+                ((gameSource.extendedJSON.mobile_touch_gamepad !== false) ? 
+                    'Emulator' : 
+                    'Maximal') :
+                'Windowed';
         }
     }
 
