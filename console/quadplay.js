@@ -4456,7 +4456,6 @@ reloadRuntime(function () {
             document.getElementById('emulatorUIButtonContainer').style.display = 'none';
         }
 
-
         if (getQueryString('kiosk') !== '1') {
             let newMode = getQueryString('mode');
             if (! newMode || newMode === 'DefaultWindow') {
