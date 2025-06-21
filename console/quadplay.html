@@ -73,6 +73,17 @@
     function generateVolumeControl() {
       document.write(`<div id="volumeControl" style="display:inline-block" class="${useIDE ? 'IDEOnly' : 'noIDE'}"><label for="volumeSlider" style="padding-left: 6px; position: relative; top: 1px;"><img src="icons/ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; margin-top:-2px; top: 3px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()"></div>`);
     }
+
+
+    /* True if a URL does not match the current server */
+    function isRemote(url) {
+        return ! url.startsWith(location.origin + '/');
+    }
+
+    /** Returns the path to the quadplay root from location.origin */
+    function getQuadPath() {
+        return location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
+    }
     </script>
 
   </head>
@@ -307,22 +318,22 @@
           // Can't exit fullscreen on mobile
           if (! isMobile) { makeRadio('<img src="icons/ui-windowed.png" width=26 style="position:relative; top:-2px">', 'windowedUIButton', false, 'title="Windowed"', 'ui'); }
 
-          makeRadio('<img src="icons/ui-fullscreen.png" width=26 style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"', 'ui');
+          makeRadio('<img src="icons/ui-fullscreen.png" width="26" style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"', 'ui');
 
           if (isMobile) { document.write(`<div style="display: inline-block; width: 8px"></div>`); }
 
-          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'icons/ui-touchscreen.png' : 'icons/ui-touchscreen-fullscreen.png'}" width=26 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
+          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'icons/ui-touchscreen.png' : 'icons/ui-touchscreen-fullscreen.png'}" width="26" style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
 
           // Move the buttons away from the corner, which may be curved on mobile
           if (isMobile) { document.write(`<div style="display: inline-block; width: 40px"></div>`); }
         </script>
         <span class="IDEOnly" style="margin-left:-3px;">
         <script>
-          makeRadio('<img src="icons/ui-test.png"     width=26 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
-          makeRadio('<img src="icons/ui-debug.png"    width=26 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
-          makeRadio('<img src="icons/ui-develop.png"  width=26 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
-          makeRadio('<img src="icons/ui-edit.png"     width=26 style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Edit"',  'ui');
-          makeRadio('<img src="icons/ui-ghost.png"    width=26 style="position:relative; top:-2px">', 'ghostUIButton',    false, 'title="Ghost Edit"', 'ui');
+          makeRadio('<img src="icons/ui-test.png"     width="26" style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
+          makeRadio('<img src="icons/ui-debug.png"    width="26" style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
+          makeRadio('<img src="icons/ui-develop.png"  width="26" style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
+          makeRadio('<img src="icons/ui-edit.png"     width="26" style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Edit"',  'ui');
+          makeRadio('<img src="icons/ui-ghost.png"    width="26" style="position:relative; top:-2px">', 'ghostUIButton',    false, 'title="Ghost Edit"', 'ui');
         </script>
         </span>
       </div>
@@ -384,12 +395,12 @@
         
         <div id="codeToolbar" class="toolbar">
           <script>
-            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorUndo', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton(event)');
-            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton(event)');
-            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton(event)');
-            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton(event)');
-            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton(event)');
-            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton(event)');
+            makeButton('<img src="icons/ui-undo.png" width="26" style="position:relative; top:-2px;">', 'codeEditorUndo', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton(event)');
+            makeButton('<img src="icons/ui-redo.png" width="26" style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton(event)');
+            makeButton('<img src="icons/ui-smallfont.png" width="26" style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton(event)');
+            makeButton('<img src="icons/ui-bigfont.png" width="26" style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton(event)');
+            makeButton('<img src="icons/ui-find.png" width="26" style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton(event)');
+            makeButton('<img src="icons/ui-goto.png" width="26" style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton(event)');
           </script>
           <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>
@@ -428,17 +439,17 @@
         <hr>
         <br/>
         <table style="margin-left: -2px; width: 100%; border-collapse: collapse">
-          <tr><td width=200>Display refresh</td><td id="debugFrameRateDisplay" class="right"></td><td></td><td></td><td class="right" id="debugFramePeriodDisplay">(1×)</td></tr>
+          <tr><td width="200">Display refresh</td><td id="debugFrameRateDisplay" class="right"></td><td></td><td></td><td class="right" id="debugFramePeriodDisplay">(1×)</td></tr>
           <tr id="debugIntervalTimeRow"><td>Frame interval</td><td id="debugIntervalTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugIntervalPercentDisplay" class="right"></td></tr>
-          <tr><td title="Frame time: Wall clock time consumed between subsequent frames">Frame&nbsp;time</td><td id="debugFrameTimeDisplay" class="right" style="border-bottom: 1px solid" width=50></td><td style="border-bottom: 1px solid">/</td><td class="right"  style="border-bottom: 1px solid">16.7&#8239;ms</td><td id="debugFramePercentDisplay" class="right" style="border-bottom: 1px solid" width=50></td></tr>
+          <tr><td title="Frame time: Wall clock time consumed between subsequent frames">Frame&nbsp;time</td><td id="debugFrameTimeDisplay" class="right" style="border-bottom: 1px solid" width=50></td><td style="border-bottom: 1px solid">/</td><td class="right"  style="border-bottom: 1px solid">16.7&#8239;ms</td><td id="debugFramePercentDisplay" class="right" style="border-bottom: 1px solid" width="50"></td></tr>
           <tr><td title="Logic time: Estimated time spent per frame on the virtual CPU in your gameplay code">&nbsp;&nbsp;&nbsp;60&#8239;fps Logic</td><td id="debugLogicTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugLogicPercentDisplay" class="right"></td></tr>
           <tr><td title="Graphics time: Estimated time spent on the virtual GPU per frame at  60 fps (regardless of actual refresh rate scaling)">&nbsp;&nbsp;&nbsp;<span id="debugGraphicsFPS">60</span>&#8239;fps Graphics</td><td id="debugGfxTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugGfxPercentDisplay" class="right"></td></tr>
           <tr><td title="Physics time: Estimated time spent on the virtual physics coprocessor per frame">&nbsp;&nbsp;&nbsp;60&#8239;fps Physics</td><td id="debugPhysicsTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugPhysicsPercentDisplay" class="right"></td></tr>
           <tr><td title="Browser time: Estimated overhead from the web browser per frame">&nbsp;&nbsp;&nbsp;Browser</td><td id="debugBrowserTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugBrowserPercentDisplay" class="right"></td></tr>
-          <tr id="debugGPUTimeRow"><td title="GPU time: Wall clock time consumed by the virtual GPU each frame at 60 fps (regardless of actual refresh rate scaling)">GPU&nbsp;time</td><td id="debugGPUTimeDisplay" class="right" width=50 style="border-top: #EEE 1px solid"></td><td style="border-top: #EEE 1px solid">/</td><td style="border-top: 1px solid" class="right">16.7&#8239;ms</td><td style="border-top: #EEE 1px solid" id="debugGPUPercentDisplay" class="right" width=50></td></tr>
+          <tr id="debugGPUTimeRow"><td title="GPU time: Wall clock time consumed by the virtual GPU each frame at 60 fps (regardless of actual refresh rate scaling)">GPU&nbsp;time</td><td id="debugGPUTimeDisplay" class="right" width=50 style="border-top: #EEE 1px solid"></td><td style="border-top: #EEE 1px solid">/</td><td style="border-top: 1px solid" class="right">16.7&#8239;ms</td><td style="border-top: #EEE 1px solid" id="debugGPUPercentDisplay" class="right" width="50"></td></tr>
           <tr><td>Graphics primitives</td><td id="debugDrawCallsDisplay" class="right"></td></tr>
-          <tr><td><code>get_mode()</code></td><td id="debugModeDisplay" class="code" style="text-align: left" colspan=4></td></tr>
-          <tr><td><code>get_previous_mode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: left" colspan=2></td></tr>
+          <tr><td><code>get_mode()</code></td><td id="debugModeDisplay" class="code" style="text-align: left" colspan="4"></td></tr>
+          <tr><td><code>get_previous_mode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: left" colspan="2"></td></tr>
           <tr><td><code>mode_frames</code></td><td id="debugModeFramesDisplay" class="right"></td></tr>
           <tr><td><code>game_frames</code></td><td id="debugGameFramesDisplay" class="right"></td></tr>
         </table>

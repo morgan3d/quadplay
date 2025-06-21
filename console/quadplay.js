@@ -136,15 +136,6 @@ function shortURL(url) {
     }
 }
 
-/* True if a URL does not match the current server */
-function isRemote(url) {
-    return ! url.startsWith(location.origin + '/');
-}
-
-/** Returns the path to the quadplay root from location.origin */
-function getQuadPath() {
-    return location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
-}
 
 //////////////////////////////////////////////////////////////////////////////////
 // UI setup
@@ -4261,7 +4252,206 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 
 
 
+// Assign the action for QRuntime.quit_game() used by the in-game
+// pause menu quit option
+const quitAction = (function() {
+    if (useIDE) {
+        // When the IDE is on, always quit to the IDE
+        return 'launcher';
+    }
+    
+    const q = getQueryString('quit');
+    
+    // Explicit value
+    if (q) {
+        if (/^(close|none|reload|launcher)$/.test(q)) {
+            return q;
+        } else {
+            alert('Illegal setting for HTML query parameter: quit=' + q);
+            // Fall through to a default
+        }
+    }
+
+    const kiosk = getQueryString('kiosk') || '0';
+    
+    if (getQueryString('game')) {
+        if (kiosk === '0') {
+            // Running a single game in the browser
+            return 'close';
+        } else {
+            // Running a single game as a kiosk
+            return 'none';
+        }
+    } else {
+        // Running the launcher in a browser
+        return 'launcher';
+    }
+})();
+
+
+
+/* Called from the quit menu item. Forces closing the server for a nativeapp,
+   which macOS can't detect because the Chromium browser doesn't close on that
+   platform when the last tab closes. */
+function closeClient() {
+    if (nativeapp && isQuadserver) {
+        postToServer({command: 'quit'});
+        setTimeout(function () { window.close(); }, 500);
+    } else {
+        window.close();
+    }
+}
+
+
+
+/* Checks for an update. Called on startup and once an hour (if not sleeping) when 
+   update= is set. Used for IDE and standalone kiosk mode */
+function checkForUpdate() {
+    if (getQueryString('update') === 'dev') {
+        return;
+    }
+    
+    // Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh'
+    // string and returns it as a single integer for version comparisons,
+    // as well as the human-readable version string.
+    function parseVersionJS(text) {
+        try {
+            text = text.match(/^ *const *version *= *['"]([0-9.]+)['"] *;/)[1];
+            const match = text.split('.').map(x => parseInt(x, 10));
+
+            // Months and years have varying length. That doesn't matter.  We
+            // don't need a linear time number. We need one that monotonically
+            // increases. Think of this as parsing a number with an irregular
+            // base per digit.
+            return {value: ((match[0] * 12 + match[1]) * 32 + match[2]) * 24 + match[3],
+                    text: text};
+        } catch {
+            return {value: 0, text: text};
+        }
+    }
+
+    fetch('https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js').then(response => response.text()).then(function (text) {
+        const latestVersion = parseVersionJS(text);
+        const installedVersion = parseVersionJS(`const version = '${version}';\n`);
+
+        if (latestVersion.value > installedVersion.value) {
+            console.log(`There is a newer version of quadplay✜ available online:\n  installed = ${installedVersion.text}\n  newest    = ${latestVersion.text}`);
+            
+            // Replace the recording controls with an update button
+            const menuElement = document.getElementById('recordingControls');
+            menuElement.innerHTML =
+                '&nbsp;&nbsp; &middot; &nbsp;&nbsp;' +
+                `<a style="cursor:pointer; padding-right:4px; padding-left:4px; border-radius: 3px; border: 1px solid" title="Update quadplay✜ to version ${latestVersion.text}" onclick="onUpdateClick('${installedVersion.text}', '${latestVersion.text}')">` +
+                'Update <span style="font-size: 140%; vertical-align: top; position: relative; top: -4px">⚙</span></a>';
+            
+        } else if (latestVersion.value === installedVersion.value) {
+            console.log('You are running the latest version of quadplay✜');
+        } else if (latestVersion.text.indexOf('404') !== -1) {
+            console.log(`You are running a prerelease version of quadplay✜:\n  installed      = ${installedVersion.text}\n  latest release = ${latestVersion.text}`);
+        }
+    });
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+// Load state
+autoPauseEnabled = (localStorage.getItem('autoPauseEnabled') !== 'false');
+
+if (getQueryString('kiosk') === '1') {
+    // Hide the console menu and mode buttons
+    document.getElementById('body').classList.add('kiosk');
+    document.getElementById('body').classList.remove('noKiosk');
+    setUIMode('Maximal');
+} else {
+    document.getElementById('body').classList.remove('kiosk');
+    document.getElementById('body').classList.add('noKiosk');
+    let newMode = getQueryString('mode');
+    if (! newMode || newMode === 'DefaultWindow') {
+        if (useIDE) {
+            newMode = localStorage.getItem('uiMode') || 'IDE';
+        } else {
+            newMode = 
+                isMobile ? 
+                ((gameSource.extendedJSON.mobile_touch_gamepad !== false) ? 
+                    'Emulator' : 
+                    'Maximal') :
+                'Windowed';
+        }
+    }
+
+
+    // Embedded games that reload on quit start without fullscreen
+    // so that the first touch launches them.
+    const noFullscreen = ((getQueryString('quit') === 'reload') ||
+                          (newMode === 'Windowed'));
+    
+    setUIMode(newMode, noFullscreen);
+}
+
+
+
+initializeBrowserEmulator();
+setErrorStatus('');
+setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
+
+// When not in the IDE, force the dots color scheme
+setColorScheme(useIDE ? (localStorage.getItem('colorScheme') || 'dots') : 'dots');
 {
+    let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');
+    for (let i = 0; i < tmp.length; ++i) {
+        tmp[i] = parseInt(tmp[i]);
+    }
+    setGamepadOrderMap(tmp);
+}
+
+// Get the configuration if running on a quadplay server
+if (isQuadserver) {
+    LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
+        serverConfig = json;
+    });
+}
+
+// As early as possible, make the browser aware that we want gamepads
+navigator.getGamepads();
+
+
+// Set to true when intentionally loading a new game to keep nativeapp
+// from closing the server when it loads a new game
+let inPageReload = false;
+if (nativeapp && isQuadserver) {
+    // Tell the server to quit when the browser does
+    window.addEventListener('beforeunload', function () {
+        if (! inPageReload) {
+            postToServer({command: 'quit'});
+        }
+    })
+}
+
+
+if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
+    // Check for updates a few seconds after start, and then every
+    // two hours when not sleeping.
+    const INITIAL_DELAY  = 4000;
+    const REGULAR_PERIOD = 2 * 60 * 60 * 1000;
+    setTimeout(function () {
+        checkForUpdate();
+        setInterval(function () {
+            if (document.getElementById('sleepOverlay').style.visibility !== 'visible') {
+                checkForUpdate();
+            }
+        }, REGULAR_PERIOD);
+    }, INITIAL_DELAY);
+}
+
+// Set the initial size
+setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT, false);
+
+// Load the runtime FIRST, so that we know QRuntime is defined 
+// (some game loading functions depend on it), and then trigger
+// the game load second.
+reloadRuntime(function () {
     let url = getQueryString('game');
 
     if (! url) {
@@ -4317,195 +4507,4 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
             }
         } // use IDE
     });
-}
-
-
-// Load state
-autoPauseEnabled = (localStorage.getItem('autoPauseEnabled') !== 'false');
-
-if (getQueryString('kiosk') === '1') {
-    // Hide the console menu and mode buttons
-    document.getElementById('body').classList.add('kiosk');
-    document.getElementById('body').classList.remove('noKiosk');
-    setUIMode('Maximal');
-} else {
-    document.getElementById('body').classList.remove('kiosk');
-    document.getElementById('body').classList.add('noKiosk');
-    let newMode = getQueryString('mode');
-    if (! newMode || newMode === 'DefaultWindow') {
-        if (useIDE) {
-            newMode = localStorage.getItem('uiMode') || 'IDE';
-        } else {
-            newMode = 
-                isMobile ? 
-                ((gameSource.extendedJSON.mobile_touch_gamepad !== false) ? 
-                    'Emulator' : 
-                    'Maximal') :
-                'Windowed';
-        }
-    }
-
-
-    // Embedded games that reload on quit start without fullscreen
-    // so that the first touch launches them.
-    const noFullscreen = ((getQueryString('quit') === 'reload') ||
-                          (newMode === 'Windowed'));
-    
-    setUIMode(newMode, noFullscreen);
-}
-
-
-// Assign the action for QRuntime.quit_game() used by the in-game
-// pause menu quit option
-const quitAction = (function() {
-    if (useIDE) {
-        // When the IDE is on, always quit to the IDE
-        return 'launcher';
-    }
-    
-    const q = getQueryString('quit');
-    
-    // Explicit value
-    if (q) {
-        if (/^(close|none|reload|launcher)$/.test(q)) {
-            return q;
-        } else {
-            alert('Illegal setting for HTML query parameter: quit=' + q);
-            // Fall through to a default
-        }
-    }
-
-    const kiosk = getQueryString('kiosk') || '0';
-    
-    if (getQueryString('game')) {
-        if (kiosk === '0') {
-            // Running a single game in the browser
-            return 'close';
-        } else {
-            // Running a single game as a kiosk
-            return 'none';
-        }
-    } else {
-        // Running the launcher in a browser
-        return 'launcher';
-    }
-})();
-
-
-initializeBrowserEmulator();
-setErrorStatus('');
-setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
-
-// When not in the IDE, force the dots color scheme
-setColorScheme(useIDE ? (localStorage.getItem('colorScheme') || 'dots') : 'dots');
-{
-    let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');
-    for (let i = 0; i < tmp.length; ++i) {
-        tmp[i] = parseInt(tmp[i]);
-    }
-    setGamepadOrderMap(tmp);
-}
-
-// Set the initial size
-setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT, false);
-reloadRuntime();
-
-// Get the configuration if running on a quadplay server
-if (isQuadserver) {
-    LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
-        serverConfig = json;
-    });
-}
-
-// As early as possible, make the browser aware that we want gamepads
-navigator.getGamepads();
-
-/* Called from the quit menu item. Forces closing the server for a nativeapp,
-   which macOS can't detect because the Chromium browser doesn't close on that
-   platform when the last tab closes. */
-function closeClient() {
-    if (nativeapp && isQuadserver) {
-        postToServer({command: 'quit'});
-        setTimeout(function () { window.close(); }, 500);
-    } else {
-        window.close();
-    }
-}
-
-// Set to true when intentionally loading a new game to keep nativeapp
-// from closing the server when it loads a new game
-let inPageReload = false;
-if (nativeapp && isQuadserver) {
-    // Tell the server to quit when the browser does
-    window.addEventListener('beforeunload', function () {
-        if (! inPageReload) {
-            postToServer({command: 'quit'});
-        }
-    })
-}
-
-
-/* Checks for an update. Called on startup and once an hour (if not sleeping) when 
-   update= is set. Used for IDE and standalone kiosk mode */
-function checkForUpdate() {
-    if (getQueryString('update') === 'dev') {
-        return;
-    }
-    
-    // Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh'
-    // string and returns it as a single integer for version comparisons,
-    // as well as the human-readable version string.
-    function parseVersionJS(text) {
-        try {
-            text = text.match(/^ *const *version *= *['"]([0-9.]+)['"] *;/)[1];
-            const match = text.split('.').map(x => parseInt(x, 10));
-
-            // Months and years have varying length. That doesn't matter.  We
-            // don't need a linear time number. We need one that monotonically
-            // increases. Think of this as parsing a number with an irregular
-            // base per digit.
-            return {value: ((match[0] * 12 + match[1]) * 32 + match[2]) * 24 + match[3],
-                    text: text};
-        } catch {
-            return {value: 0, text: text};
-        }
-    }
-
-    fetch('https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js').then(response => response.text()).then(function (text) {
-        const latestVersion = parseVersionJS(text);
-        const installedVersion = parseVersionJS(`const version = '${version}';\n`);
-
-        if (latestVersion.value > installedVersion.value) {
-            console.log(`There is a newer version of quadplay✜ available online:\n  installed = ${installedVersion.text}\n  newest    = ${latestVersion.text}`);
-            
-            // Replace the recording controls with an update button
-            const menuElement = document.getElementById('recordingControls');
-            menuElement.innerHTML =
-                '&nbsp;&nbsp; &middot; &nbsp;&nbsp;' +
-                `<a style="cursor:pointer; padding-right:4px; padding-left:4px; border-radius: 3px; border: 1px solid" title="Update quadplay✜ to version ${latestVersion.text}" onclick="onUpdateClick('${installedVersion.text}', '${latestVersion.text}')">` +
-                'Update <span style="font-size: 140%; vertical-align: top; position: relative; top: -4px">⚙</span></a>';
-            
-        } else if (latestVersion.value === installedVersion.value) {
-            console.log('You are running the latest version of quadplay✜');
-        } else if (latestVersion.text.indexOf('404') !== -1) {
-            console.log(`You are running a prerelease version of quadplay✜:\n  installed      = ${installedVersion.text}\n  latest release = ${latestVersion.text}`);
-        }
-    });
-}
-
-
-if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
-    // Check for updates a few seconds after start, and then every
-    // two hours when not sleeping.
-    const INITIAL_DELAY  = 4000;
-    const REGULAR_PERIOD = 2 * 60 * 60 * 1000;
-    setTimeout(function () {
-        checkForUpdate();
-        setInterval(function () {
-            if (document.getElementById('sleepOverlay').style.visibility !== 'visible') {
-                checkForUpdate();
-            }
-        }, REGULAR_PERIOD);
-    }, INITIAL_DELAY);
-}
-
+});
