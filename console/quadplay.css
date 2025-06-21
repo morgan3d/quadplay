@@ -1807,8 +1807,9 @@ canvas#screenOverlay {
     position: relative;
 }
 
-/******************** Safari Only Fix for Slider Track being Black ***************/
+/******************** macOS (not iOS) Safari Only Fix for Slider Track being Black ***************/
 /* https://browserstrangeness.bitbucket.io/css_hacks.html */
+@supports not (-webkit-touch-callout: none) {
 _::-webkit-full-page-media, _:future, :root ::-webkit-slider-runnable-track {
     background: #888;
     border-radius: 5px;
@@ -1819,7 +1820,7 @@ _::-webkit-full-page-media, _:future, :root ::-webkit-slider-runnable-track {
 _::-webkit-full-page-media, _:future, :root ::-webkit-slider-thumb {
     margin-top:-5px;
 }
-
+}
 
 /*******************************************************************/
 
