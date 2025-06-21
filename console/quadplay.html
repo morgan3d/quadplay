@@ -3,6 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <title>quadplay✜</title>
     <link rel="stylesheet" href="quadplay.css">
     <link rel="icon" href="icons/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -14,9 +15,16 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>quadplay✜</title>
+
+    <!-- Force a reload version.js immediately and synchronously. This tells us whether we need to force a refresh on other scripts -->
+    <script src="version.js?"></script>
+
     <script>
       performance.mark('Loading quadplay.html');
+  
+      // Track if quadplay was updated since the previous load of this game
+      const forceReloadEverything = localStorage.getItem('quadplay_version') !== version;
+      localStorage.setItem('quadplay_version', version);
       
       const useIDE = (getQueryString('IDE') === '1') || false;
       
@@ -986,16 +994,16 @@
           </tr>
           <tr>
             <td width="100px">Creator</td>
-            <td colspan=3><input id="newAssetCreator" type="text" style="width: 370px" value="Your Name"></td>
+            <td colspan="3"><input id="newAssetCreator" type="text" style="width: 370px" value="Your Name"></td>
           </tr>
           <tr>
             <td>License</td>
-            <td colspan=3><input id="newAssetLicense" type="text" style="width: 370px" value="Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/"></td>
+            <td colspan="3"><input id="newAssetLicense" type="text" style="width: 370px" value="Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/"></td>
           </tr>
           <tr>
             <td>
             </td>
-            <td colspan=3>
+            <td colspan="3">
               <button onclick="document.getElementById('newAssetLicense').value='All rights reserved'" class="license" title="No-one else can use your asset.">All Rights Reserved</button><!-- <button>CC BY-NC-ND</button><button>CC BY-NC-SA</button><button>CC BY-ND</button><button>CC BY-NC</button>--><button onclick="document.getElementById('newAssetLicense').value='Licensed as CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/'" class="license" title="Others who use your asset must credit you and share their changes.">CC BY-SA</button><button  onclick="document.getElementById('newAssetLicense').value='Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/'" class="license" title="Others who use your asset must credit it.">CC BY</button><button  onclick="document.getElementById('newAssetLicense').value='In the Public Domain/Licensed as CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/'" title="Others can freely use the asset as if they made it themselves." class="license">Public Domain</button>
             </td>
           </tr>
@@ -1005,21 +1013,21 @@
             <td width="100px">
               Spritesheet
             </td>
-            <td colspan=3><select id="newAssetMapSpritesheet" style="width: 370px" onchange="{ const json = document.getElementById('newAssetMapCloneSpriteJson'), png = document.getElementById('newAssetMapCloneSpritePng'); if (/(^\.\.|:)/.test(this.value)) { json.disabled = false; png.disabled = ! json.checked;} else { json.disabled = png.disabled = true; }}"></select></td>
+            <td colspan="3"><select id="newAssetMapSpritesheet" style="width: 370px" onchange="{ const json = document.getElementById('newAssetMapCloneSpriteJson'), png = document.getElementById('newAssetMapCloneSpritePng'); if (/(^\.\.|:)/.test(this.value)) { json.disabled = false; png.disabled = ! json.checked;} else { json.disabled = png.disabled = true; }}"></select></td>
           </tr>
           <tr>
             <td></td>
             <td>
               <label style="margin-left:-4px"><input id="newAssetMapCloneSpriteJson" type="checkbox" checked onchange="document.getElementById('newAssetMapCloneSpritePng').disabled = ! this.checked; if (! this.checked) { document.getElementById('newAssetMapCloneSpritePng').checked = false; }">Clone&nbsp;<code>sprite.json</code></label></td>
             </td>
-            <td colspan=2>
+            <td colspan="2">
               <label style="margin-left:-3px"><input id="newAssetMapCloneSpritePng" type="checkbox">Clone <code>png</code></label>
             </td>
           </tr>
           <tr><td></td></tr>
           <tr valign="top">
             <td>Orientation</td>
-            <td colspan=3 style="padding-top: 3px">
+            <td colspan="3" style="padding-top: 3px">
               <script>
                 makeRadio('<span style="font-size:200%; position: relative; top: -13px">■</span>', 'newAssetMapOrientationSquare', true, 'title="Orthographic" style="position: relative; left:-3px"', 'newAssetMapOrientation');
                 makeRadio('<span style="font-size:175%; position: relative; top: -14px">⬥</span>', 'newAssetMapOrientationRotatedSquare', false, 'title="Isometric" style="position: relative; left:-3px"', 'newAssetMapOrientation', 'disabled');
@@ -1031,12 +1039,12 @@
           </tr>
           <tr>
             <td>Map Size</td>
-            <td colspan=3>
-              <input id="newAssetMapWidth" type="number" style="width: 75px; text-align: right" value=16 min=1>
+            <td colspan="3">
+              <input id="newAssetMapWidth" type="number" style="width: 75px; text-align: right" value="16" min="1">
               &times; 
-              <input id="newAssetMapHeight" type="number" style="width: 75px; text-align: right" value=16 min=1> Tiles
+              <input id="newAssetMapHeight" type="number" style="width: 75px; text-align: right" value="16" min="1"> Tiles
 
-              <input id="newAssetMapLayers" type="number" style="margin-left: 30px; width: 75px; text-align: right" value=1 min=1 max=256> Layers
+              <input id="newAssetMapLayers" type="number" style="margin-left: 30px; width: 75px; text-align: right" value="1" min="1" max="256"> Layers
             </td>
           </tr>
           <tr>
@@ -1044,7 +1052,7 @@
             <td>
               <label style="margin-left:-4px"><input type="checkbox" id="newAssetMapLoopX">Loop X</label>
             </td>
-            <td colspan=2>
+            <td colspan="2">
               <label style="margin-left:-3px"><input type="checkbox" id="newAssetMapLoopY">Loop Y</label>
             </td>
           </tr>
@@ -1053,7 +1061,7 @@
             <td>
               <label style="margin-left:-4px"><input id="newAssetMapYUp" type="checkbox">Y-axis = up</label>
             </td>
-            <td colspan=2>
+            <td colspan="2">
               <label style="margin-left:-3px"><input id="newAssetMapCenter" type="checkbox">Origin in center</label>
             </td>
           </tr>
@@ -1205,8 +1213,12 @@
             after the page has completed, so they don't block loading and
             can be loaded asynchronously. 
         */    
-        function loadScript(url, ideFile, lazyLoad, type) {
+        function loadScript(url, ideFile, lazyLoad, type, forceReload) {
             if (! ideFile || useIDE) {
+              if (forceReload || forceReloadEverything) {
+                url += '?refresh=' + new Date().getTime();
+              }
+
               // Not currently using async because of race condition concerns
               return `<script ${lazyLoad ? (useIDE && false ? 'async' : 'defer') : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
             } else {
@@ -1252,43 +1264,42 @@
             // Network
             {url: 'lib/peerjs.min.js', lazyLoad: true},
 
-            'LoadManager.js',
-            'filters.js',
+            {url: 'LoadManager.js', forceReload: useIDE},
+            {url: 'filters.js', forceReload: useIDE},
 
             // Everything below here is the quadplay✜ implementation.
             // Force reload, as these change often.
 
-            {url: 'os/dependencies.py?', type: 'text/javascript'},
-            'version.js?',
-            'pyxlscript-compiler.js?',
-            'quadplay-browser.js?',
-            'quadplay-font.js?',
-            'quadplay-load.js?',
+            {url: 'os/dependencies.py', type: 'text/javascript', forceReload: useIDE},
+            {url: 'pyxlscript-compiler.js', forceReload: useIDE},
+            {url: 'quadplay-browser.js', forceReload: useIDE},
+            {url: 'quadplay-font.js', forceReload: useIDE},
+            {url: 'quadplay-load.js', forceReload: useIDE},
 
             // Needed for frame scaling, so not limited to IDE mode
-            'quadplay-profiler.js?',
+            {url: 'quadplay-profiler.js', forceReload: useIDE},
 
-            {url: 'quadplay-ide-code.js?', ide: true},
-            {url: 'quadplay-ide-game.js?', ide: true},
-            {url: 'quadplay-ide-asset.js?', ide: true},
-            {url: 'quadplay-ide-sprite.js?', ide: true},
-            {url: 'quadplay-ide-constant.js?', ide: true},
-            {url: 'quadplay-ide-mode-diagram.js?', ide: true},
-            {url: 'quadplay-ide-help.js?', ide: true},
-            {url: 'quadplay-ide-debug.js?', ide: true},
-            {url: 'quadplay-ide-vcs.js?', ide: true},
-            {url: 'quadplay-ide.js?', ide: true},
-            'quadplay-network.js?',
-            'quadplay-midi.js?',
-            'quadplay.js?'
+            {url: 'quadplay-ide-code.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-game.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-asset.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-sprite.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-constant.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-mode-diagram.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-help.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-debug.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide-vcs.js', ide: true, forceReload: true},
+            {url: 'quadplay-ide.js', ide: true, forceReload: true},
+            {url: 'quadplay-network.js', forceReload: useIDE},
+            {url: 'quadplay-midi.js', forceReload: useIDE},
+            {url: 'quadplay.js', forceReload: useIDE}
         ];
 
         let s = '';
-        for (let file of scriptArray) {
-            if (file.url) {
-                s += loadScript(file.url, file.ide, file.lazyLoad, file.type);
+        for (let script of scriptArray) {
+            if (script.url) {
+                s += loadScript(script.url, script.ide, script.lazyLoad, script.type, script.forceReload);
             } else {
-                s += loadScript(file);
+                s += loadScript(script);
             }
         }
 

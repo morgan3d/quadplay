@@ -89,7 +89,8 @@ let allow_bloom = true;
                 '\nQuadplay Server: ' + isQuadserver +
                 '\nBrowser: ' + browserName +
                 '\nNative App: ' + nativeapp +
-                '\nIDE: ' + useIDE,
+                '\nIDE: ' + useIDE +
+                '\n' + (new Date().toString()),
                 ...style);
 }
 

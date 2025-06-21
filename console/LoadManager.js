@@ -398,6 +398,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
         operation.status = 'callback';
         console.assert(operation.dataCache.has(postProcess));
         const data = operation.dataCache.get(postProcess);
+        console.assert(data);
         console.assert(! (data instanceof Promise));
 
         try {

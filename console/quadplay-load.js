@@ -2549,7 +2549,7 @@ function transposeGrid(src) {
 */
 function parseCSV(strData, trim) {
     console.assert(! (strData instanceof Promise));
-
+    console.assert(strData);
     // Trim trailing newline
     if (strData.endsWith('\n')) {
         strData = strData.slice(0, strData.length - 1);
@@ -2651,6 +2651,7 @@ function loadCSV(csvURL, definition, outputObject, outputField, callback) {
         isZip ? 'arraybuffer' : 'text',
         isZip ? extractFromZip : null,
         function (csv) {
+            console.assert(csv !== undefined);
             console.assert(! (csv instanceof Promise));
 
             // Parse cells
