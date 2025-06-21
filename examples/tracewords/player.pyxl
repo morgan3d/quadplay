@@ -1,0 +1,73 @@
+def make_player():
+    return {
+        board: make_board(),
+        
+        // Center relative to the screen dimensions
+        rel_pos: xy(½, ½),
+        
+        score: 0,
+        
+        // {word, score} sorted by score
+        word_array: []}
+        
+
+
+def _update_rotate_button(board_pos):
+    let rotate_button_pos = xy(board_pos)
+    let rotate_button_sprite = shapes.curved_arrow.x_flipped
+    if SCREEN_SIZE.x > SCREEN_SIZE.y:
+        // Landscape
+        rotate_button_pos += xy(+36, -½ TILE_EXTENT) + ½ board_pixel_size()
+        rotate_button_sprite = rotate_button_sprite.rotated_270
+    else:
+        // Portrait
+        rotate_button_pos += xy(-½ TILE_EXTENT, 32) + ½ board_pixel_size()
+        rotate_button_sprite = rotate_button_sprite.rotated_270
+        
+    draw_sprite(rotate_button_sprite, rotate_button_pos)
+    draw_text({font: font, text: joy.prompt["(b)"], pos: rotate_button_pos + xy(0, 24), color: #FFF})
+
+    if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.bb:
+        push_mode(Rotate) because "Rotate button"
+                
+        
+
+def player_update(player, angle default 0°, allow_selection default false):
+    if touch.released_a:
+        todo("Release animation and sound")
+        todo("Add to history")
+        player.score += board_score_selection(player.board)
+
+    draw_text({
+        pos: xy(5, 5),
+        font: font,
+        text: "Playing \"" + player.board.seed + "\"",
+        color: #FFF,
+        y_align: "top",
+        x_align: "left"})
+
+    draw_text({
+        pos: xy(SCREEN_SIZE.x - 5, 5),
+        font: font,
+        text: format_number(player.score, "commas"),
+        color: #FFF,
+        y_align: "top",
+        x_align: "right"})
+    
+    const board_pos = player.rel_pos * SCREEN_SIZE
+    
+    board_update(player.board, board_pos, angle, player.history, allow_selection)
+
+    if allow_selection:
+        _update_rotate_button(board_pos)
+        
+        
+        
+def player_reset(player, seed):
+    player.score = 0
+    board_reset(player.board, seed)
+
+
+
+let player = make_player()
+        

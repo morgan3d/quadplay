@@ -1,0 +1,216 @@
+{
+    "title": "Tracewords",
+    "developer": "Casual Effects",
+    "copyright": "©2025 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/screen_lib.pyxl",
+        "board.pyxl",
+        "player.pyxl"
+    ],
+    "modes": [
+        "Play",
+        "Rotate"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "blip_sound": "quad://sounds/blip-04.sound.json",
+        "dictionary": "quad://data/english_all_table.data.json",
+        "tile_font": "quad://fonts/deja-15.font.json",
+        "select_tile_sound": "quad://sounds/hit-08.sound.json",
+        "sensitive": "quad://data/english_sensitive_table.data.json",
+        "word_sound": "quad://sounds/powerup-03.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "high_scores": false,
+    "dual_dpad": false,
+    "midi_sysex": false,
+    "description": "Word game.",
+    "constants": {
+        "TILE_EXTENT": {
+            "type": "number",
+            "value": "40",
+            "description": "Width of a tile",
+            "min": 16,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "TILE_GUTTER": {
+            "type": "number",
+            "value": "4",
+            "description": "Distance between two adjacent tiles",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "ROWS": {
+            "type": "number",
+            "value": "4",
+            "min": 1,
+            "max": 8,
+            "format": "0",
+            "quantum": 1
+        },
+        "COLS": {
+            "type": "number",
+            "value": "4",
+            "min": 1,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "ROTATION_SPEED": {
+            "type": "number",
+            "value": "4.0°",
+            "min": {
+                "type": "number",
+                "value": "1deg"
+            },
+            "max": {
+                "type": "number",
+                "value": "10deg"
+            },
+            "format": "0.0deg",
+            "quantum": {
+                "type": "number",
+                "value": "0.5deg"
+            }
+        },
+        "MIN_WORD_LENGTH": {
+            "type": "number",
+            "value": "3",
+            "min": 2,
+            "max": 5,
+            "format": "0",
+            "quantum": 1,
+            "description": "In letters (not tiles: Qu is two letters)"
+        },
+        "WORD_MIN_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "87%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "53%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "WORD_MAX_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "89%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "11%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "75%"
+                }
+            }
+        },
+        "LETTER_SET_ARRAY": {
+            "type": "raw",
+            "description": "Choice of letters is constrained by selecting from each of these individual distributions.",
+            "value": [
+                "EAGEAN",
+                "AOTOTW",
+                "ABBOOJ",
+                "ELRTTY",
+                "EHRTVW",
+                "CIMOTU",
+                "DISTTY",
+                "EIOSST",
+                "EEGHNW",
+                "AFFKPS",
+                "HLNNRZ",
+                "DEILRX",
+                "DELRVY",
+                "ACHOPS",
+                "EEINSU",
+                [
+                    "H",
+                    "I",
+                    "M",
+                    "N",
+                    "Qu",
+                    "A"
+                ]
+            ]
+        },
+        "LETTER_POINT_TABLE": {
+            "type": "raw",
+            "description": "The qu element is not used when scoring but is used for lookup when visualizing points. Note that qu = Q + U = 10 + 1",
+            "value": {
+                "a": 1,
+                "e": 1,
+                "i": 1,
+                "o": 1,
+                "u": 1,
+                "l": 1,
+                "n": 1,
+                "s": 1,
+                "r": 1,
+                "t": 1,
+                "d": 2,
+                "g": 2,
+                "b": 3,
+                "c": 3,
+                "m": 3,
+                "p": 3,
+                "f": 4,
+                "h": 4,
+                "v": 4,
+                "w": 4,
+                "y": 4,
+                "k": 5,
+                "j": 8,
+                "x": 8,
+                "q": 10,
+                "z": 10,
+                "qu": 11
+            }
+        },
+        "TILE_CENTER_SELECTED_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "32%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "32%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "32%"
+                }
+            }
+        }
+    },
+    "screenshot_tag": "Tracewords",
+    "show_start_animation": false,
+    "mobile_touch_gamepad": true
+}

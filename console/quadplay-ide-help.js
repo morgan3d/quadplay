@@ -52,13 +52,16 @@ function updateProgramDocumentation() {
         pyxlCode = pyxlCode.replaceAll('\r', '');
 
         // Maps names to entries
-        const publicTable = {};
-        const privateTable = {};
-        let hasPrivate = false;
+        const publicFunctionTable = {};
+        const privateFunctionTable = {};
+        const publicVariableTable = {};
+        const privateVariableTable = {};
+        let hasPrivateFunctions = false;
+        let hasPrivateVariables = false;
         
         // Find function definitions, with optional preceding documentation
         // in a block comment.
-        pyxlCode.matchAll(/(?:\/\*((?:\*(?!\/)|[^*])+)\*\/[ \t\n]{0,3})?\ndef[ \t]+([^(]+\([^:&]+)(?:\n&[^:]+)?\:/g).forEach(function (match) {
+        pyxlCode.matchAll(/(?:\/\*((?:\*(?!\/)|[^*])+)\*\/[ \t\n]{0,3})?(?:^|\n)(?![\t ])def[ \t]+([^(]+\([^:&]+)(?:\n&[^:]+)?\:/g).forEach(function (match) {
             // Function prototype. Reduce to one line
             const proto = match[2].replaceAll('\n', '').replace(/  +/g, ' ').replace(/\( /g, '(').trim();
 
@@ -79,19 +82,57 @@ function updateProgramDocumentation() {
 
             const entry = '`' + proto + '`\n: ' + doc + '\n\n';
             const isPrivate = proto[0] === '_';
-            hasPrivate = hasPrivate || isPrivate;
-            (isPrivate ? privateTable : publicTable)[proto] = entry;
+            hasPrivateFunctions = hasPrivateFunctions || isPrivate;
+            (isPrivate ? privateFunctionTable : publicFunctionTable)[proto] = entry;
         });
         
-        // Generate documentation in sorted order
-        for (let proto of Object.keys(publicTable).sort()) {
-            mdSource += publicTable[proto];
+        // Find variable definitions, with optional preceding documentation
+        // in a block comment.
+        pyxlCode.matchAll(/(?:\/\*((?:\*(?!\/)|[^*])+)\*\/[ \t\n]{0,3})?(?:^|\n)(?![\t ])(const|let)[ \t]+([^ \t\n=.,/\\+*\-]+)/g).forEach(function (match) {
+            const declType = match[2]; // 'const' or 'let'
+            const variableName = match[3];
+            let doc = (match[1] || '').trim();
+
+            if (doc !== '') {
+                // Indent documentation
+                doc = doc.replaceAll(/\n/g, '\n  ');
+            } else {
+                doc = '&nbsp;';
+            }
+
+            // Only show 'const' in output, not 'let'
+            const displayName = declType === 'const' ? 'const ' + variableName : variableName;
+            const entry = '`' + displayName + '`\n: ' + doc + '\n\n';
+            const isPrivate = variableName[0] === '_';
+            hasPrivateVariables = hasPrivateVariables || isPrivate;
+            (isPrivate ? privateVariableTable : publicVariableTable)[variableName] = entry;
+        });
+        
+        // Helper function for sorting that ignores 'const ' prefix
+        function sortVarNames(a, b) {
+            // Remove 'const ' prefix if present for comparison
+            const aName = a.replace(/^const /, '');
+            const bName = b.replace(/^const /, '');
+            return aName.localeCompare(bName);
         }
         
-        if (hasPrivate) {
+        // Generate documentation in sorted order
+        // Public variables first, then public functions
+        for (let variableName of Object.keys(publicVariableTable).sort(sortVarNames)) {
+            mdSource += publicVariableTable[variableName];
+        }
+        for (let functionName of Object.keys(publicFunctionTable).sort()) {
+            mdSource += publicFunctionTable[functionName];
+        }
+        
+        if (hasPrivateFunctions || hasPrivateVariables) {
             mdSource += `## ${scriptName} Internal\n\n`;
-            for (let proto of Object.keys(privateTable).sort()) {
-                mdSource += privateTable[proto];
+            // Private variables first, then private functions
+            for (let variableName of Object.keys(privateVariableTable).sort(sortVarNames)) {
+                mdSource += privateVariableTable[variableName];
+            }
+            for (let functionName of Object.keys(privateFunctionTable).sort()) {
+                mdSource += privateFunctionTable[functionName];
             }
         }
         
@@ -106,6 +147,7 @@ function updateProgramDocumentation() {
 <link rel="stylesheet" href="${docPath}manual.css">
 <style>
 body {left:8px}
+.md div.title { font-size: 24px }
 .md h1:before, .md h2:before, .md h3:before {content: none}
 </style>
 <!-- Markdeep: --><script src="${docPath}markdeep.min.js" charset="utf-8"></script>`;
@@ -154,6 +196,8 @@ if (useIDE) {
                 documentationBuiltInAPIOverloads[api] =
                     (documentationBuiltInAPIOverloads[api] || 0) + 1;
             }
+        }, function(error) {
+            console.warn("Failed to load quadplay API for help system:", error);
         });
 
         // Load the manual into the iframe. This triggers markdeep
@@ -236,6 +280,13 @@ function showDocumentation(api, type) {
         const numOverloads = source.index[api];
         if (numOverloads) {
             const iframe = document.getElementById(source.iframeName);
+            
+            // Safety check: ensure iframe exists and is loaded
+            if (!iframe || !iframe.contentWindow || !iframe.contentWindow.location) {
+                console.warn(`Iframe ${source.iframeName} not ready for API ${api}`);
+                continue;
+            }
+            
             const hash = `apiDefinition-${api}-fcn`;
             if (iframe.contentWindow.location.hash !== hash) {
                 // Found a match, go to it within the iframe and show that tab in the debugger

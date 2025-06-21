@@ -75,6 +75,9 @@ function onImportAssetTypeChange() {
     importAssetFiles.selected = null;
     // Recreating the list destroys any selection
     document.getElementById('importAssetImportButton').disabled = true;
+
+    // Clear the preview
+    onImportAssetPreview();
 }
 
 
@@ -89,7 +92,7 @@ function onImportAssetFilterChange() {
 
 
 function suggestedAssetVariableName(url, suffix) {
-    // Remove extension
+    // Remove extensions
     url = url.replace(/\..*$/, '');
 
     // Remove prefix
@@ -107,7 +110,7 @@ function suggestedAssetVariableName(url, suffix) {
     // Remove 'kenny_', 'dawnlike_', or 'dawnbringer_'
     url = url.replace(/^(kenney|dawnbringer|dawnlike)_/, '');
 
-    if (! url.match(/$[_a-zA-Z]/)) {
+    if (! url.match(/^[_a-zA-Z]/)) {
         // Make a legal variable name
         url = (suffix || 'x')[0] + url;
     }
@@ -208,10 +211,12 @@ function onImportAssetListSelect(target) {
     target.classList.add('selected');
     importAssetFiles.selected = target.innerText;
 
+    onImportAssetPreview(importAssetFiles.selected);
+
     const importAssetName = document.getElementById('importAssetName');
     if (importAssetName.value.length === 0) {
         const type = document.getElementById('importAssetType').value;
-        importAssetName.value = suggestedAssetVariableName(importAssetFiles.selected, '_' + type);
+        importAssetName.value = suggestedAssetVariableName(importAssetFiles.selected, (type === 'data') ? '' : '_' + type);
     }
     
     document.getElementById('importAssetImportButton').disabled = (importAssetName.value.length === 0);
@@ -835,4 +840,79 @@ function showPNGEditor(object, assetName) {
     }
 
     onSpriteEditorZoomSliderChange();
+}
+
+/**
+    Clears the import asset preview and description elements. If called with an empty string or undefined,
+    returns immediately after clearing. Otherwise, prepares to update the preview for the given asset URL.
+    @param {string=} url The asset URL to preview, or empty/undefined to clear the preview.
+*/
+function onImportAssetPreview(url) {
+    const previewDiv = document.getElementById('importAssetPreview');
+    previewDiv.innerHTML = '';
+    previewDiv.style.overflow = 'hidden';
+    if (! url) {
+        return;
+    }
+
+    // Sprite JSON preview callback
+    function spriteJsonCallback(json, raw, jsonHttpURL) {
+        const imgUrl = makeURLAbsolute(jsonHttpURL, json.url);
+        let html = `<div class="pixelate" style="width:256px;height:256px;border-radius:5px;border:solid #FFF 1px;background:url('${imgUrl}') center/contain no-repeat #222;margin-bottom:8px;"></div>`;
+        if (json.license) {
+            html += `<div style="font-size:90%;color:#888;margin-bottom:2px;">${json.license}</div>`;
+        } else {
+            html += `<div style="font-size:90%;color:#888;margin-bottom:2px;">No license information</div>`;
+        }
+        if (json.description) {
+            html += `<div style="font-size:90%;color:#888;">${json.description}</div>`;
+        }
+        previewDiv.innerHTML = html;
+    }
+
+    // Sound JSON preview callback
+    function soundJsonCallback(json, raw, jsonHttpURL) {
+        const mp3Url = makeURLAbsolute(jsonHttpURL, json.url);
+        let html = `<audio controls style=\"width:100%;margin-bottom:8px;border-radius:5px;\"><source src=\"${mp3Url}\" type=\"audio/mpeg\">Your browser does not support the audio element.</audio>`;
+        if (json.license) {
+            html += `<div style=\"font-size:90%;color:#888;margin-bottom:2px;\">${json.license}</div>`;
+        } else {
+            html += `<div style=\"font-size:90%;color:#888;margin-bottom:2px;\">No license information</div>`;
+        }
+        if (json.description) {
+            html += `<div style=\"font-size:90%;color:#888;\">${json.description}</div>`;
+        }
+        previewDiv.innerHTML = html;
+    }
+
+    // Generic JSON pretty-print callback
+    function genericJsonCallback(json) {
+        previewDiv.innerHTML = `<pre style="font-size:90%;color:#888;text-align:left;max-width:512px;overflow-x:auto;">${JSON.stringify(json, null, 2)}</pre>`;
+    }
+    
+    if (url.endsWith('.json')) {
+        const absoluteUrl = makeURLAbsolute(window.gameURL, url);
+
+        // Choose callback based on extension
+        let callback;
+        if (url.endsWith('.sprite.json')) {
+            callback = spriteJsonCallback;
+        } else if (url.endsWith('.sound.json')) {
+            callback = soundJsonCallback;
+        } else if (url.endsWith('.font.json')) {
+            callback = spriteJsonCallback;
+        } else {
+            callback = genericJsonCallback;
+        }
+        // TODO: implement other asset preview types
+
+
+        LoadManager.fetchOne(
+            {forceReload: true},
+            absoluteUrl,
+            'json',
+            null,
+            callback
+        );
+    }
 }

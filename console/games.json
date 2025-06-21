@@ -591,6 +591,18 @@
             "achievements": false
         },
         {
+            "url": "quad://examples/tracewords/",
+            "title": "Tracewords",
+            "description": "Word game.",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false
+        },
+        {
             "url": "quad://examples/twin_analog/",
             "title": "Twin Analog",
             "description": "Example of using device_control() to access raw analog sticks",

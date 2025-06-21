@@ -520,6 +520,7 @@ Random Values
 `make_random(seed default local_time().millisecond)`
 : Returns a new _function_ that acts like `random()` but has its own private
   seed and internal state. See also `set_random_seed()`.
+  The `seed` may be a number or a string.
 
 `random()`
 : `random(0, 1)`. Same as the `ξ` operator.
@@ -555,6 +556,7 @@ Random Values
 
 `set_random_seed(seed default local_time().millisecond)`
 : Reset the default random number generator, `random()`, using an optional seed.
+  The `seed` may be a string or number.
   To match the default random number generator, use a seed of `0`.
   See also `make_random()`.
 

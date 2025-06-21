@@ -127,6 +127,10 @@ function visualizeModes(modeEditor) {
             maxYDistance = Math.max(maxYDistance, dy);
         });
         
+        // Ensure denominators are at least 1
+        maxXDistance = Math.max(maxXDistance, 1);
+        maxYDistance = Math.max(maxYDistance, 1);
+        
         // Third pass: compute max normalized Euclidean distance
         let maxNormalizedDistance = 0;
         graph.nodes().forEach(function(v) {
@@ -138,6 +142,9 @@ function visualizeModes(modeEditor) {
             const dy = (node.y - centerY) / maxYDistance;
             maxNormalizedDistance = Math.max(maxNormalizedDistance, Math.hypot(dx, dy));
         });
+        
+        // Ensure denominator is at least 1
+        maxNormalizedDistance = Math.max(maxNormalizedDistance, 1);
         
         // Fourth pass: compute clockwise ordering of nodes
         const nodes = [];
@@ -184,10 +191,10 @@ function visualizeModes(modeEditor) {
         // Compute hue based on node's clockwise ordering
         const hue = (270 + 360 * node.colorOrder / nodeToHTMLColor.numNodes) % 360;
 
-        // Compute normalized distance from center of mass
-        const dx = (node.x - nodeToHTMLColor.centerOfMass.x) / nodeToHTMLColor.maxXDistance;
-        const dy = (node.y - nodeToHTMLColor.centerOfMass.y) / nodeToHTMLColor.maxYDistance;
-        const distance = Math.hypot(dx, dy) / nodeToHTMLColor.maxNormalizedDistance;
+        // Compute normalized distance from center of mass, using max(..., 1) inline
+        const dx = (node.x - nodeToHTMLColor.centerOfMass.x) / Math.max(nodeToHTMLColor.maxXDistance, 1);
+        const dy = (node.y - nodeToHTMLColor.centerOfMass.y) / Math.max(nodeToHTMLColor.maxYDistance, 1);
+        const distance = Math.hypot(dx, dy) / Math.max(nodeToHTMLColor.maxNormalizedDistance, 1);
 
         // Compute saturation from distance
         let saturation = distance * 0.5 + 0.1;

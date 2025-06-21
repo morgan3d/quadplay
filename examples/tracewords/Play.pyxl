@@ -1,0 +1,46 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+todo("Test on phone")
+todo("  Make self-hosting page")
+
+todo("Test D-pad")
+
+todo("Bounce when the selection is a word")
+
+todo("Display scored words")
+
+
+let resolution_hook
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+if not resolution_hook:
+    resolution_hook = continuously_set_screen_size_for_display_aspect("smaller", 224)
+
+
+// Choose a random word as the seed
+set_random_seed()
+let seed_word
+while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
+    seed_word = random_key(dictionary)
+
+player_reset(player, seed_word)
+
+set_background(#222)
+
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+player_update(player, ∅, true)
+
+// Hint for compiler:
+// set_mode(Rotate) because "Rotate button"
+
+
+            
+            

@@ -873,12 +873,6 @@ div.disabled span.label, div.disabled:active span.label {
     right: 0px;
 }
 
-/* Shrink ace gutters to leave an extra column of text editing space */
-.ace_gutter, ace_gutter-layer {
-    margin-right: 0 !important;
-}
-
-
 
 .aceErrorMarker {
     position: absolute;

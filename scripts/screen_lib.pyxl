@@ -9,7 +9,6 @@ https://opensource.org/licenses/MIT
 
 */
 
-
 /* Installs a hook to check every frame, in every mode
    for the current maximum screen aspect ratio available
    on the device and change to a non-standard resolution
@@ -44,30 +43,35 @@ https://opensource.org/licenses/MIT
    make assumptions about `SCREEN_SIZE` being constant after initialization.
    
    `axis`
-   : "x", "y", or "larger"
+   : "x", "y", "larger", or "smaller". Beware that using "smaller" can cause
+     a skinny window to create a very large number of pixels and hurt performance.
    
    `extent`
    : size along `axis`
    
    `private_views`
    : same as the `set_screen_size()` argument
+   
+   Return value is the hook
    */
-   def continuously_set_screen_size_for_display_aspect(axis, extent, private_views default false, larger_min default "auto"):
-      device_control("enable_feature", "custom_screen_size")
+def continuously_set_screen_size_for_display_aspect(axis, extent, private_views default false, larger_min default "auto"):
+  device_control("enable_feature", "custom_screen_size")
+
+  assert(axis == "x" or axis == "y" or axis == "larger" or axis == "smaller", "Illegal axis argument")
   
-      assert(axis == "x" or axis == "y" or axis == "larger", "Illegal axis argument")
+  def hook():
+      const display = device_control("get_display")
       
-      def hook():
-          const display = device_control("get_display")
-          
-          let new_size = {x: extent, y: extent};
-          if axis == "x" or (axis == "larger" and display.window_size.x ≥ display.window_size.y):
-              new_size.y = ⌊new_size.x * display.window_size.y / display.window_size.x⌋
-          else:
-              new_size.x = ⌊new_size.y * display.window_size.x / display.window_size.y⌋
-          
-          set_screen_size(new_size, private_views)
-  
-      // Check every frame
-      add_frame_hook(hook, ∅, ∞, "all")
+      let new_size = {x: extent, y: extent};
+      if ((axis == "x") or 
+          (axis == "larger" and display.window_size.x ≥ display.window_size.y) or
+          (axis == "smaller" and display.window_size.x < display.window_size.y)):
+          new_size.y = ⌊new_size.x * display.window_size.y / display.window_size.x⌋
+      else:
+          new_size.x = ⌊new_size.y * display.window_size.x / display.window_size.y⌋
       
+      set_screen_size(new_size, private_views)
+
+  // Check every frame
+  return add_frame_hook(hook, ∅, ∞, "all")
+    

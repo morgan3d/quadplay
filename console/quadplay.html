@@ -871,7 +871,7 @@
     </div>
 
     <div id="importAssetDialog" class="modal hidden">
-      <div class="dialog" style="margin-top: 10vh; width: 410px">
+      <div class="dialog" style="margin-top: 10vh; width: 700px">
         <center>
           <span class="title">Import Existing Asset</span>
           <table style="width: 100%; margin-top: 10px">
@@ -888,6 +888,10 @@
                   <option value="data">Data</option>
                 </select>
               </td>
+              <td width="20px"> </td>
+              <td width="258" rowspan="4" valign="top">
+                <div id="importAssetPreview" style="width:258px; height: 100%; font-style: italic"></div>
+              </td>
             </tr>
             <tr>
               <td>
@@ -898,7 +902,7 @@
               </td>
             </tr>
             <tr>
-              <td colspan=2 style="text-align:center; padding-top: 10px; padding-bottom: 10px">
+              <td colspan="2" style="text-align:center; padding-top: 10px; padding-bottom: 10px">
                 <div id="importAssetList" style="width:100%; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
                 </div>
               </td>
@@ -1139,6 +1143,30 @@
             };
         }
     }
+
+    // Global ESC key handler for dialogs
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            // Find the currently visible modal dialog
+            const visibleDialogs = document.querySelectorAll('.modal:not(.hidden)');
+            if (visibleDialogs.length > 0) {
+                const dialog = visibleDialogs[0];
+                // Find the Cancel button in this dialog
+                const cancelButton = dialog.querySelector('button[onclick*="Cancel"], button[onclick*="hide"]') || 
+                                   Array.from(dialog.querySelectorAll('button')).find(btn => btn.textContent.trim() === 'Cancel');
+                if (cancelButton) {
+                    // Trigger the cancel button's onclick
+                    const onclick = cancelButton.getAttribute('onclick');
+                    if (onclick) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        // Execute the onclick handler
+                        eval(onclick);
+                    }
+                }
+            }
+        }
+    });
 
    // Bind these here so that they are immediately available to event handlers
    // regardless of script load order
