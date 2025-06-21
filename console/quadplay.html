@@ -61,7 +61,7 @@
 
     // Does not include the commonly recommended test `window.matchMedia("only screen and (max-width: 480px)").matches`
     // because that triggers on desktop on itch.io when "smartphone" is selected as a viable input method
-    const isMobile = window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 1);
+    const isMobile = true;//window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 1);
     const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
     const nativeapp = (getQueryString('nativeapp') === '1') || false;

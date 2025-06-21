@@ -1806,6 +1806,19 @@ canvas#screenOverlay {
     top:-6px;
     position: relative;
 }
+
+/******************** Safari Only Fix for Slider Track being Black ***************/
+_::-webkit-full-page-media, _:future, :root ::-webkit-slider-runnable-track {
+    background: #888;
+    border-radius: 5px;
+    height: 7px;
+    margin-top:-15px;
+}
+_::-webkit-full-page-media, _:future, :root ::-webkit-slider-thumb {
+    margin-top:-5px;
+}
+
+
 /*******************************************************************/
 
 .controllerPresent, .controllerAbsent, .midiPresent, .midiAbsent {
