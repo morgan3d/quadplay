@@ -1814,6 +1814,7 @@ _::-webkit-full-page-media, _:future, :root ::-webkit-slider-runnable-track {
     border-radius: 5px;
     height: 7px;
     margin-top:-15px;
+    -webkit-appearance:none;
 }
 _::-webkit-full-page-media, _:future, :root ::-webkit-slider-thumb {
     margin-top:-5px;
