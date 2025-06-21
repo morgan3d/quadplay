@@ -4368,29 +4368,7 @@ if (getQueryString('kiosk') === '1') {
 } else {
     document.getElementById('body').classList.remove('kiosk');
     document.getElementById('body').classList.add('noKiosk');
-    let newMode = getQueryString('mode');
-    if (! newMode || newMode === 'DefaultWindow') {
-        if (useIDE) {
-            newMode = localStorage.getItem('uiMode') || 'IDE';
-        } else {
-            newMode = 
-                isMobile ? 
-                ((gameSource.extendedJSON.mobile_touch_gamepad !== false) ? 
-                    'Emulator' : 
-                    'Maximal') :
-                'Windowed';
-        }
-    }
-
-
-    // Embedded games that reload on quit start without fullscreen
-    // so that the first touch launches them.
-    const noFullscreen = ((getQueryString('quit') === 'reload') ||
-                          (newMode === 'Windowed'));
-    
-    setUIMode(newMode, noFullscreen);
 }
-
 
 
 initializeBrowserEmulator();
@@ -4477,6 +4455,31 @@ reloadRuntime(function () {
         if (! useIDE && gameSource.extendedJSON.mobile_touch_gamepad === false) {
             document.getElementById('emulatorUIButtonContainer').style.display = 'none';
         }
+
+
+        if (getQueryString('kiosk') !== '1') {
+            let newMode = getQueryString('mode');
+            if (! newMode || newMode === 'DefaultWindow') {
+                if (useIDE) {
+                    newMode = localStorage.getItem('uiMode') || 'IDE';
+                } else {
+                    newMode = 
+                        isMobile ? 
+                        ((gameSource.extendedJSON.mobile_touch_gamepad !== false) ? 
+                            'Emulator' : 
+                            'Maximal') :
+                        'Windowed';
+                }
+            }
+        
+            // Embedded games that reload on quit start without fullscreen
+            // so that the first touch launches them.
+            const noFullscreen = ((getQueryString('quit') === 'reload') ||
+                                  (newMode === 'Windowed'));
+            
+            setUIMode(newMode, noFullscreen);
+        }
+
 
         const appLoadingOverlay = document.getElementById('appLoadingOverlay');
         if (appLoadingOverlay) {
