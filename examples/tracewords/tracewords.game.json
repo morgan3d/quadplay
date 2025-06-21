@@ -212,5 +212,5 @@
     },
     "screenshot_tag": "Tracewords",
     "show_start_animation": false,
-    "mobile_touch_gamepad": true
+    "mobile_touch_gamepad": false
 }
