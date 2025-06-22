@@ -6,6 +6,7 @@
     "packages": [],
     "scripts": [
         "quad://scripts/screen_lib.pyxl",
+        "dictionary.pyxl",
         "board.pyxl",
         "player.pyxl"
     ],
@@ -19,11 +20,11 @@
         "font": "quad://fonts/deja-8.font.json",
         "shapes": "quad://sprites/shapes-32x32.sprite.json",
         "blip_sound": "quad://sounds/blip-04.sound.json",
-        "dictionary": "quad://data/english_all_table.data.json",
         "tile_font": "quad://fonts/deja-15.font.json",
         "select_tile_sound": "quad://sounds/hit-08.sound.json",
         "sensitive": "quad://data/english_sensitive_table.data.json",
-        "word_sound": "quad://sounds/powerup-03.sound.json"
+        "word_sound": "quad://sounds/powerup-03.sound.json",
+        "dictionary_source": "quad://data/english_all_table.data.json"
     },
     "version": 0,
     "min_players": 1,
@@ -94,7 +95,7 @@
             "max": 5,
             "format": "0",
             "quantum": 1,
-            "description": "In letters (not tiles: Qu is two letters)"
+            "description": "In tiles (not letters: Qu is one tile)"
         },
         "WORD_MIN_COLOR": {
             "type": "rgb",
@@ -149,47 +150,39 @@
                 "DELRVY",
                 "ACHOPS",
                 "EEINSU",
-                [
-                    "H",
-                    "I",
-                    "M",
-                    "N",
-                    "Qu",
-                    "A"
-                ]
+                "HIMNQA"
             ]
         },
         "LETTER_POINT_TABLE": {
             "type": "raw",
-            "description": "The qu element is not used when scoring but is used for lookup when visualizing points. Note that qu = Q + U = 10 + 1",
+            "description": "The Q element is 11 because it will decode to QU = Q + U = 10 + 1",
             "value": {
-                "a": 1,
-                "e": 1,
-                "i": 1,
-                "o": 1,
-                "u": 1,
-                "l": 1,
-                "n": 1,
-                "s": 1,
-                "r": 1,
-                "t": 1,
-                "d": 2,
-                "g": 2,
-                "b": 3,
-                "c": 3,
-                "m": 3,
-                "p": 3,
-                "f": 4,
-                "h": 4,
-                "v": 4,
-                "w": 4,
-                "y": 4,
-                "k": 5,
-                "j": 8,
-                "x": 8,
-                "q": 10,
-                "z": 10,
-                "qu": 11
+                "A": 1,
+                "E": 1,
+                "I": 1,
+                "O": 1,
+                "U": 1,
+                "L": 1,
+                "N": 1,
+                "S": 1,
+                "R": 1,
+                "T": 1,
+                "D": 2,
+                "G": 2,
+                "B": 3,
+                "C": 3,
+                "M": 3,
+                "P": 3,
+                "F": 4,
+                "H": 4,
+                "V": 4,
+                "W": 4,
+                "Y": 4,
+                "K": 5,
+                "J": 8,
+                "X": 8,
+                "Q": 11,
+                "Z": 10
             }
         },
         "TILE_CENTER_SELECTED_COLOR": {
@@ -208,6 +201,11 @@
                     "value": "32%"
                 }
             }
+        },
+        "ALPHABET": {
+            "type": "string",
+            "value": "abcdefghijklmnopqrstuvwxyz",
+            "description": "The alphabet as a lowercase string."
         }
     },
     "screenshot_tag": "Tracewords",

@@ -21,23 +21,29 @@ if not resolution_hook:
     resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
 
 
-// Choose a random word as the seed
+// Choose a random, non-sensitive word as the seed
 set_random_seed()
 let seed_word
 while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
-    seed_word = random_key(dictionary)
+    seed_word = lowercase(q_decode(random_value(dictionary_array)))
+
 
 /*
 let max_length = {}
 for word in keys(dictionary):
     const letter = word[0]
     max_length[letter] = max(max_length[letter] default 0, size(word))
-debug_print(max_length)
+debug_print(max_length) // All are ≥ 15
 */
 
 todo("Remove fixed seed")
-seed_word = "hello"
+seed_word = "pomegranate"
 player_reset(player, seed_word)
+
+
+let word_array = board_find_all_words(player.board)
+//debug_print(word_array)
+
 
 set_background(#222)
 

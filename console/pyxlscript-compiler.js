@@ -1247,8 +1247,9 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/[◀◁](=?)/g, ' <<$1 ');
     src = src.replace(/[▶▷](=?)/g, ' >>$1 ');
 
-    // Exponentiation
-    src = src.replace(/\^/g, '**');
+    // Exponentiation. Uses negative lookbehind to avoid replacing "[^", to lay the ground
+    // for future use in regexps.
+    src = src.replace(/(?<!\[)\^/g, '**');
 
     src = src.replace(/(\b|\d)or(\b|\d)/g, '$1 || $2');
     src = src.replace(/∩(=?)/g, ' &$1 ');

@@ -1,102 +1,161 @@
+/* Routines for manipulating a `ROWS` x `COLS` game board, which includes
+   information about the current selection. */
 
+
+/* Create a new board. The board is not initialized. Use `board_reset()`. */
 def make_board():
     const board = {
         // The tiles
         
         tile: make_array(
             xy(COLS, ROWS), {
-                // Could be a letter combo for Qu
+                // uppercase, Q means Qu
                 letter: "?",
-                
+                                
                 // mode_frame at which this was selected
                 selected: false}, 
             deep_clone),
-        
-        // The selection as xy() indices, in order of selection
+                    
+        // The UI selection as xy() indices, in order of selection
         selection: [],
         
         // Chosen based on the point value of the current word in _check
-        selection_color: TILE_CENTER_SELECTED_COLOR
-        
+        selection_color: TILE_CENTER_SELECTED_COLOR        
     }
     
     return board
     
-    
-    
-/* Searches for all words that begin with `word` and 
-   continue through the letter at index. Appends them
-   to word_set. Checks if index is in used_mask.
+  
+
+/* Computes and returns all n-tile sequences that are possible on this board. 
+   Used by the solver.
    
-   Assumes index is in bounds. 
-   
-   
-   The implementation searches all 16 letter words. Every
-   letter in the English dictionary can lead to a word of
-   at least 15 letters, so there is no trivial way to terminate
-   early. The implementation uses quadplay intrinsics and 
-   avoids allocation for efficiency
+   As a side effect, puts all members of that set and smaller
+   n-grams larger than MIN_WORD_LENGTH that are also in `dictionary`
+   into `word_set`.
    */
-def _board_find_helper(board, index, used_mask, word, word_set):
-    const index_mask = 1 bitshl MAD(index.y, COLS, index.x)
+def _board_ngram_set(board, n, word_set):
+    const ngram_set = {}
+    const before = now()
     
-    // Already used
-    if used_mask bitand index_mask: return
-    used_mask = index_mask ∪ used_mask
-    
-    word += lowercase(board.tile[index.x][index.y].letter);
-    
-    if size(word) ≥ MIN_WORD_LENGTH and dictionary[word]:
-        word_set[word] = 1
-    
-    const next = {x: SUB(index.x, 1), y: SUB(index.y, 1)}
-    
-    // Left column
-    if next.x ≥ 0:
-        if next.y ≥ 0:_board_find_helper(board, next, used_mask, word, word_set)
-        
-        next.y = index.y    
-        _board_find_helper(board, next, used_mask, word, word_set)
-        
-        next.y = ADD(index.y, 1)   
-        if next.y < ROWS: _board_find_helper(board, next, used_mask, word, word_set)
-    
-    // Middle column
-    next.x = index.x
-    next.y = SUB(index.y, 1)
-    if next.y ≥ 0: _board_find_helper(board, next, used_mask, word, word_set)
+    // Flatten the board to a string
+    let board_string = ""
+    for y < ROWS:
+        for x < COLS:
+            board_string += board.tile[x][y].letter
 
-    next.y = ADD(index.y, 1)
-    if next.y < ROWS: _board_find_helper(board, next, used_mask, word, word_set)
-
-    // Right column
-    next.x = ADD(index.x, 1)
-    if next.x < COLS:
-        next.y = SUB(index.y, 1)
-        if next.y ≥ 0:_board_find_helper(board, next, used_mask, word, word_set)
-        
-        next.y = index.y    
-        _board_find_helper(board, next, used_mask, word, word_set)
-        
-        next.y = ADD(index.y, 1)   
-        if next.y < ROWS: _board_find_helper(board, next, used_mask, word, word_set)
+    for i < ROWS * COLS:    
+        _board_ngram_set_helper(board_string, i, 0, "", ngram_set, n, word_set)
+    
+    debug_print(round((now() - before) * 1000), "ms to find", size(ngram_set), "x " + n + "-grams and all shorter words")
+    return ngram_set
 
 
+
+/* `_neighbor_index_array_table[i]` = array of indices of all neighbors of tile (`i mod COLS`, `floor(i / cols)`),
+   where the indices have the same packing.
+
+   This simplifies the code for searches over the board and technically makes it them a more
+   generalizable graph algorithm. There's negligible performance impact from
+   using precomputed neighbors vs. computing dynamically
+ */ 
+const _neighbor_index_array_table = make_array(COLS * ROWS, [], clone)
+// Iteration order doesn't matter for these loops, but this makes 
+// more obvious that we're using row-major indexing.
+for y < ROWS:
+    for x < COLS:
+        const tile = _neighbor_index_array_table[x + y * COLS]
+        for -1 ≤ dx ≤ +1:
+            if x + dx ≥ 0 and x + dx < COLS:
+                for -1 ≤ dy ≤ +1:
+                    // Is this neighbor in bounds?
+                    if y + dy ≥ 0 and y + dy < ROWS and (dx ≠ 0 or dy ≠ 0):
+                        push(tile, (x + dx) + (y + dy) * COLS)
+
+
+
+/* Recursive portion of `_board_compute_ngram_set()` 
+
+   `board_string`
+   : The board as a row-major flattening
+
+   `index`
+   : `x + y * COLS` of the current tile coordinates
+*/
+def _board_ngram_set_helper(board_string, index, used_mask, kgram, ngram_set, n, word_set):
+    // Did we already use the letter at index?
+    const mask = 1 bitshl index
+    if mask ∩ used_mask: return
+
+    // Mark the letter used for this path going forward
+    used_mask = mask ∪ used_mask
+    
+    kgram += board_string[index]
+    const k = size(kgram)
+    
+    // We have completed an n-gram
+    if k ≥ MIN_WORD_LENGTH:
+        // We found a real word as a side effect of trigram processing
+        if dictionary[kgram]:
+            word_set[kgram] = 1
+    
+        // Done with this path    
+        if k == n:
+            ngram_set[kgram] = 1
+            return
+    
+    // Check all neighbors
+    for neighbor in _neighbor_index_array_table[index]:
+        _board_ngram_set_helper(board_string, neighbor, used_mask, kgram, ngram_set, n, word_set)
+        
+ 
 
 /* Returns an alphabetically-sorted array of all possible dictionary 
-   words of MIN_WORD_LEN on this board */
+   words of MIN_WORD_LEN on this board. The words are returned in
+   Q-decoded and in uppercase. */
 def board_find_all_words(board):
-    // Store the state in a a 16-bit mask in which bit [x + y * COLS] is
-    // 1 if that letter has been used and 0 if it has not.
+    const before = now()
+
+    // Words discovered during n-gram search
+    const word_set = {}
     
-    let word_set = [];
+    // This produces the 5-grams used for filtering and in the process
+    // also finds all words of length 3, 4, 5.
+    const quintgram_set = _board_ngram_set(player.board, 5, word_set)
+
+    // Used for performance profiling
+    let long_count = 0
     
-    for x < COLS:
-        for y < ROWS:
-            _board_find_helper(board, xy(x, y), 0, "", word_set)
+    // Search all words of length > 5 in the dictionary for likely hits
+    for word in dictionary_array:
+        const k = size(word)
+        
+        if (k > 5 and
+            // 6+-letter word prefix
+            quintgram_set[slice(word, 0, 5)] and
+         
+            // 6+-letter word suffix
+            (k < 6 or quintgram_set[slice(word, k - 5)]) and
+
+            // 8+-letter word middle
+            (k < 8 or quintgram_set[slice(word, 2, 7)])):
+
+            // This long word is very likely to appear, but we
+            // must validate it
+            todo("Search for final words")
+            
+            ++long_count
+    
+    debug_print("\nAfter n-gram filtering:\n", 
+        size(word_set), "words with 3-5 letters\n",
+        long_count, "likely words with 6+ letters\n")
+
+    debug_print(round((now() - before) * 1000), "ms to find all words")
     
     const word_array = keys(word_set)
-    
+    for w < size(word_array):
+        word_array[w] = q_decode(word_array[w])
+        
     sort(word_array)
     return word_array
     
@@ -107,16 +166,16 @@ def board_pixel_size():
 
 
 
+/* Detect if a row or column or main diagonal spells a sensitive word.
+   These words are acceptable in play but we don't want to explicitly
+   spell them out. */
 def board_has_obvious_sensitive_word(board):
-    // Ensure that no row or column or main diagonal spells a sensitive word.
-    // These words are acceptable in play but we don't want
-    // to explicitly spell them out
     
     def is_sensitive(word):
-        word = lowercase(word)
+        // The sensitive dictionary has not been encoded
+        word = lowercase(q_decode(word))
         return sensitive[word] or sensitive[reversed(word)]
         
-    
     let ok = true
     let word = ""
     
@@ -174,7 +233,6 @@ def board_reset(board, seed):
                 tile.letter = random_value(pop(distribution), rnd)
                 tile.selected = false
 
-    //debug_print(board_find_all_words(board))
 
 
 /* True if these xy() integer indices are adjacent */
@@ -217,19 +275,6 @@ def board_deselect_last(board, history):
 
 
 
-/* Computes the letter points and size multiplier. Assumes
-   word is an all-lowercase string with only legal characters.*/
-def _score_word(word):
-    let score = 0
-    for letter in word:
-        score += LETTER_POINT_TABLE[letter] || 0
-    
-    // Length multiplier
-    score *= min(5, size(word) - MIN_WORD_LENGTH + 1)
-    
-    return score
-
-
 
 /* Adjusts the pan for the index */
 def _board_play_sound(sound, volume, pitch, index):
@@ -270,7 +315,7 @@ def board_score_selection(board, history):
         return 0
     else:
         todo("Check history")
-        return _score_word(word)
+        return score_word(word)
 
 
 
@@ -286,7 +331,9 @@ def board_rotate(board):
         for j < ROWS:
             board.tile[i][j] = old[ROWS - j - 1][i]
 
-/* 
+
+
+/* Draw the board and manage UI state changes.
  
    `pos`
    : Center of the grid in pixels
@@ -378,11 +425,11 @@ def board_update(board, pos, angle, history, allow_selection default false)
 
             const text_color = if tile.selected then #fff else #000
             
-            // Letter
+            // Label
             draw_text({
                 pos: pos, 
                 font: tile_font, 
-                text: tile.letter, 
+                text: if tile.letter == "Q" then "Qu" else tile.letter,
                 color: text_color,
                 z: TILE_LETTER_Z})
             
@@ -391,7 +438,7 @@ def board_update(board, pos, angle, history, allow_selection default false)
                 draw_text({
                     pos: pos + subscript_offset, 
                     font: font, 
-                    text: LETTER_POINT_TABLE[lowercase(tile.letter)], 
+                    text: LETTER_POINT_TABLE[tile.letter], 
                     color: #AAA,
                     z: TILE_LETTER_Z})
     
@@ -412,7 +459,7 @@ def board_selected_word(board):
     for s in board.selection:
         word += board.tile[s.x][s.y].letter
         
-    return lowercase(word)
+    return word
 
     
     
