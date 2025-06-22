@@ -11,7 +11,7 @@ https://opensource.org/licenses/MIT
 
 /* Installs a hook to check every frame, in every mode
    for the current maximum screen aspect ratio available
-   on the device and change to a non-standard resolution
+   on the OS window, and change to a non-standard resolution
    to maintain that aspect ratio. 
 
    Example (call from the `enter` event of your start mode):
@@ -54,7 +54,7 @@ https://opensource.org/licenses/MIT
    
    Return value is the hook
    */
-def continuously_set_screen_size_for_display_aspect(axis, extent, private_views default false, larger_min default "auto"):
+def continuously_set_screen_size_to_window(axis, extent, private_views default false):
   device_control("enable_feature", "custom_screen_size")
 
   assert(axis == "x" or axis == "y" or axis == "larger" or axis == "smaller", "Illegal axis argument")
@@ -62,7 +62,7 @@ def continuously_set_screen_size_for_display_aspect(axis, extent, private_views 
   def hook():
       const display = device_control("get_display")
       
-      let new_size = {x: extent, y: extent};
+      let new_size = xy(extent, extent)
       if ((axis == "x") or 
           (axis == "larger" and display.window_size.x ≥ display.window_size.y) or
           (axis == "smaller" and display.window_size.x < display.window_size.y)):

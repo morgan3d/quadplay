@@ -29,15 +29,17 @@ const particle_array = []
    based on where in the world the cam_pos.x is */
 const distant_element_array = []
 
-/* Controls horizontal parallax rate. Don't change; too much is hardcoded to it now. */
+/* Controls horizontal parallax rate. Don't change; 
+   too much is hardcoded to it now. */
 const PARALLAX_BASE = 1.5
 
-/* The perspective scaling factor at this z value*/
+/* The perspective scaling factor at this z value. */
 def perspective(z):
    return PARALLAX_BASE^(z * PARALLAX_STRENGTH)
 
-// Returns the xyz() that a given position projects to,
-// taking parallax and the camera into account.
+
+/* Returns the xyz() that a given position projects to,
+   taking parallax and the camera into account.*/
 def world_to_draw(pos, z):
    const parallax_x = perspective(z)
    let z_factor = sign(z) * 1.55 |z|^(if z < 0 then 0.75 else 1.0)
@@ -103,6 +105,7 @@ def update_and_draw_splashes():
                scale:   ripple_scale,
                opacity: 80% alpha,
                z:       draw_pos.z})
+               
          if draw_small_spray:
             draw_sprite({
                sprite:  SPLASH_SPRITESHEET[1][0],
@@ -110,6 +113,7 @@ def update_and_draw_splashes():
                scale:   small_spray_scale,
                opacity: 80% alpha,
                z:       draw_pos.z})
+               
          if draw_double_spray:
             draw_sprite({
                sprite:  SPLASH_SPRITESHEET[1][0],
@@ -129,7 +133,7 @@ def draw_skippy():
                               game_frames / SKIPPY_SPRITESHEET.spin[0].frames)
 
    const pos = world_to_draw(skippy_position, STONE_Z)
-   const angle = (skippy_angle - launch_angle) * 5.0
+   const angle = 5 (skippy_angle - launch_angle)
    
    if skippy_position.y < 0:
       // Dying
@@ -152,9 +156,7 @@ def draw_skippy():
       angle:  -angle,
       scale:  xy(1, -0.8),
       override_color: reflection_tint,
-      opacity: reflection_alpha
-   })
-
+      opacity: reflection_alpha})
 
    // Stone
    draw_sprite({sprite: sprite, pos: pos, z: pos.z, angle: angle})
@@ -193,7 +195,7 @@ def draw_background():
          // Full-screen fade in of the next background
          draw_sprite({sprite: next_background, pos: xy(0, 0), opacity: α, z: -1000})
    
-   set_background(background)
+   draw_sprite({sprite: background, pos: xy(0, 0), z: -100})
 
 
 
@@ -258,12 +260,12 @@ local:
          far:        [NIGHT_MOUNTAINS],
          mid:        [NIGHT_HILLS],
          near:       [CABINS_0],
-         distance:   infinity
+         distance:   ∞
       }
    ]
 
    // Set up the ranges
-   const ranges = {far: -90, mid: -54, near:-36}
+   const ranges = {far: -90, mid: -54, near: -36}
    
    // Compute the cumulative distances
    let total = 0

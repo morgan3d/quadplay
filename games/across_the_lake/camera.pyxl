@@ -1,5 +1,4 @@
 let cam_pos = xy(200, 0)
-// Debug transition: xy(6685, 0)
 
 def update_camera(target):
    const offset_target = xy(target.x + 50, target.y)

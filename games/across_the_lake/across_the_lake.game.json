@@ -7,7 +7,8 @@
         "skippy.pyxl",
         "camera.pyxl",
         "draw.pyxl",
-        "ui.pyxl"
+        "ui.pyxl",
+        "quad://scripts/screen_lib.pyxl"
     ],
     "modes": [
         "Play",

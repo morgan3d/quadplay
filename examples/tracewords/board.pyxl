@@ -21,7 +21,85 @@ def make_board():
     }
     
     return board
+    
+    
+    
+/* Searches for all words that begin with `word` and 
+   continue through the letter at index. Appends them
+   to word_set. Checks if index is in used_mask.
+   
+   Assumes index is in bounds. 
+   
+   
+   The implementation searches all 16 letter words. Every
+   letter in the English dictionary can lead to a word of
+   at least 15 letters, so there is no trivial way to terminate
+   early. The implementation uses quadplay intrinsics and 
+   avoids allocation for efficiency
+   */
+def _board_find_helper(board, index, used_mask, word, word_set):
+    const index_mask = 1 bitshl MAD(index.y, COLS, index.x)
+    
+    // Already used
+    if used_mask bitand index_mask: return
+    used_mask = index_mask ∪ used_mask
+    
+    word += lowercase(board.tile[index.x][index.y].letter);
+    
+    if size(word) ≥ MIN_WORD_LENGTH and dictionary[word]:
+        word_set[word] = 1
+    
+    const next = {x: SUB(index.x, 1), y: SUB(index.y, 1)}
+    
+    // Left column
+    if next.x ≥ 0:
+        if next.y ≥ 0:_board_find_helper(board, next, used_mask, word, word_set)
+        
+        next.y = index.y    
+        _board_find_helper(board, next, used_mask, word, word_set)
+        
+        next.y = ADD(index.y, 1)   
+        if next.y < ROWS: _board_find_helper(board, next, used_mask, word, word_set)
+    
+    // Middle column
+    next.x = index.x
+    next.y = SUB(index.y, 1)
+    if next.y ≥ 0: _board_find_helper(board, next, used_mask, word, word_set)
 
+    next.y = ADD(index.y, 1)
+    if next.y < ROWS: _board_find_helper(board, next, used_mask, word, word_set)
+
+    // Right column
+    next.x = ADD(index.x, 1)
+    if next.x < COLS:
+        next.y = SUB(index.y, 1)
+        if next.y ≥ 0:_board_find_helper(board, next, used_mask, word, word_set)
+        
+        next.y = index.y    
+        _board_find_helper(board, next, used_mask, word, word_set)
+        
+        next.y = ADD(index.y, 1)   
+        if next.y < ROWS: _board_find_helper(board, next, used_mask, word, word_set)
+
+
+
+/* Returns an alphabetically-sorted array of all possible dictionary 
+   words of MIN_WORD_LEN on this board */
+def board_find_all_words(board):
+    // Store the state in a a 16-bit mask in which bit [x + y * COLS] is
+    // 1 if that letter has been used and 0 if it has not.
+    
+    let word_set = [];
+    
+    for x < COLS:
+        for y < ROWS:
+            _board_find_helper(board, xy(x, y), 0, "", word_set)
+    
+    const word_array = keys(word_set)
+    
+    sort(word_array)
+    return word_array
+    
 
 
 def board_pixel_size():
@@ -96,6 +174,7 @@ def board_reset(board, seed):
                 tile.letter = random_value(pop(distribution), rnd)
                 tile.selected = false
 
+    //debug_print(board_find_all_words(board))
 
 
 /* True if these xy() integer indices are adjacent */
@@ -163,11 +242,13 @@ def _board_play_sound(sound, volume, pitch, index):
    plays a sound and sets the state for visualizing the word
    if there is one */
 def _board_check_new_word(board, history):
-    // Reset selection color
-    board.selection_color = TILE_CENTER_SELECTED_COLOR
     
     const points = board_score_selection(board, history)
-    if points == 0: return false
+
+    if points == 0: 
+        // Reset selection color
+        board.selection_color = TILE_CENTER_SELECTED_COLOR
+        return false
         
     // Every 10 points, notch up
     const α = min(⌊points / 10⌋ / 8, 100%)
@@ -247,6 +328,9 @@ def board_update(board, pos, angle, history, allow_selection default false)
     if touch.released_a or not allow_selection:
         resize(board.selection, 0)
     
+    // Save before iteration so that it does not change within a frame
+    const selection_color = board.selection_color
+    
     for col at i in board.tile:
         for tile at j in col:
             
@@ -282,13 +366,13 @@ def board_update(board, pos, angle, history, allow_selection default false)
             let radius = ½ center_size.x
             
             // Bounce if just selected
-            if tile.selected > mode_frames - 10:
-                radius += ½ oscillate(tile.selected - mode_frames, 0, 5)
+            if tile.selected > mode_frames - 12:
+                radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
             
             draw_disk(
                 pos,
                 radius,
-                if tile.selected then board.selection_color else #FFF,
+                if tile.selected then selection_color else #FFF,
                 ∅, 
                 TILE_CENTER_Z)
 
@@ -316,7 +400,7 @@ def board_update(board, pos, angle, history, allow_selection default false)
         let prev_pos = _index_to_pos(board.selection[0]) 
         for 0 < s < size(board.selection):
             let pos = _index_to_pos(board.selection[s])
-            draw_line(prev_pos, pos, board.selection_color, TILE_CENTER_Z, ¼ TILE_EXTENT)
+            draw_line(prev_pos, pos, selection_color, TILE_CENTER_Z, ¼ TILE_EXTENT)
             prev_pos = pos
         
 

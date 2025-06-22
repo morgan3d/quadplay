@@ -294,8 +294,8 @@
         },
         {
             "url": "quad://examples/match_display_aspect/",
-            "title": "Match Display Aspect",
-            "description": "Example of continuous resolution changes to match the screen aspect using screen_lib.pyxl.",
+            "title": "Fill Window",
+            "description": "Example of continuous resolution changes to match the OS window aspect ratio using screen_lib.pyxl.",
             "version": 1,
             "developer": "Casual Effects",
             "min_players": 1,

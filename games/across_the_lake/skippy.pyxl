@@ -10,19 +10,19 @@ const SPLASH_SOUNDS = [
     SFXSPLASH4,
     SFXSPLASH5
 ]
-let last_splash = nil
+let last_splash = ∅
 
 let skippy_position = xy(0, 0)
 let skippy_velocity = xy(0, 0)
 let gravity = xy(0, -0.03)
-let skippy_hit_water_this_frame = nil
+let skippy_hit_water_this_frame = ∅
 let skippy_splash_type = SPLASH_BIG
-let launch_angle = 15 deg 
+let launch_angle = 15° 
 let skippy_angle = launch_angle
 
 let last_position = skippy_position
-let last_press = nil
-let last_hit_water = nil
+let last_press = ∅
+let last_hit_water = ∅
 
 let times_skipped = 0
 let last_travelled = 0
@@ -37,13 +37,15 @@ let splash_types = [
    SPLASH_MEDIUM,
    SPLASH_BIG
 ]
+
 let bounce_angle_change = [
-    0 deg,
-    1 deg,
-    3 deg,
-    6 deg,
-    10 deg
+    0°,
+    1°,
+    3°,
+    6°,
+    10°
 ]
+
 let speed_lerp_penalty = [
    1.0,
    0.6,
@@ -55,20 +57,22 @@ let speed_lerp_penalty = [
 let PENALTY_WINDOW = 3
 let MAX_FRAMES_UNDERWATER = 12
 
+
 def reset_skippy():
     skippy_position = xy(cam_pos.x - 200, random(15, 25)) 
-    //debug_print("starting at " + unparse(skippy_position))
     skippy_velocity = xy(3.5, 1.8)//xy(random(2.5, 3.5), random(0.1, 1.5))
     launch_angle = 28 deg //random(12 deg, 18 deg)
     skippy_angle = launch_angle
     last_press = nil
     times_skipped = 0
 
+
 def short_vec(v):
     return unparse(v.x) + ", " + v.y
 
+
 def compute_hit_time(loc, vel, acc):
-    let det = (vel.y^2) - (4 acc.y * loc.y)
+    let det = (vel.y²) - (4 acc.y * loc.y)
 
     let result = (-vel.y + sqrt(det)) / (2 loc.y)
     //debug_print(result)
@@ -84,7 +88,7 @@ def skippy_underwater_behavior():
     if frames_under_water > MAX_FRAMES_UNDERWATER:
         game_over()
 
-    if last_press == nil and not DEBUG_ALWAYS_BOUNCE:
+    if last_press == ∅ and not DEBUG_ALWAYS_BOUNCE:
         return
 
     let penalty_index = 4
@@ -99,38 +103,32 @@ def skippy_underwater_behavior():
     if last_press > skippy_hit_water_this_frame:
        penalty_angle_change *= -1.0 
 
-    //debug_print("penalty: " +unparse(penalty_index))
-
-    //debug_print("last_press: " + unparse(last_press))
 
     let speed_lerp = speed_lerp_penalty[penalty_index]
     let fall_angle = atan(skippy_velocity)
     let current_speed = magnitude(skippy_velocity)
     let physics_bounce_speed = current_speed * cos(-fall_angle + skippy_angle)
     let adjusted_new_speed = lerp(physics_bounce_speed, current_speed, speed_lerp)
-    //debug_print("old speed: " + current_speed)
-    //debug_print("new speed: " + adjusted_new_speed)
     
-    //debug_print("previous velocity: " + short_vec(skippy_velocity))
     skippy_velocity = xy(cos(skippy_angle), sin(skippy_angle)) * adjusted_new_speed
     skippy_angle = launch_angle + penalty_angle_change
-    //debug_print("new velocity: " + short_vec(skippy_velocity))
     
     skippy_splash_type = splash_types[penalty_index]
     
-    times_skipped += 1
+    ++times_skipped
 
     //play_sound(SPLASH_SOUNDS[penalty_index])
 
 
 def update_skippy_momentum_only():
     skippy_position += skippy_velocity // px/f
-    skippy_velocity *= 0.95 // px/f/f
+    skippy_velocity *= 95% // px/f/f
     skippy_velocity = lerp(skippy_velocity, xy(0.0, -0.5), 0.05)
+
 
 def update_skippy():
     if mode_frames - last_press > 30:
-       last_press = nil
+       last_press = ∅
     if any_button_press() or touch.aa:
         if last_press == nil or mode_frames - last_press > 30:
             last_press = mode_frames
@@ -145,7 +143,7 @@ def update_skippy():
     if (
             sign(skippy_position.y) < 0 
             and sign(skippy_velocity.y) < 0
-            and skippy_hit_water_this_frame == nil
+            and skippy_hit_water_this_frame == ∅
     ):
         skippy_hit_water_this_frame = mode_frames
         if last_splash:
@@ -161,14 +159,14 @@ def update_skippy():
         last_press = nil
         skippy_position += skippy_velocity // px/f
     else:
-        skippy_hit_water_this_frame = nil
+        skippy_hit_water_this_frame = ∅
         skippy_position += skippy_velocity // px/f
         skippy_velocity += gravity // px/f/f
 
 
 
 def game_over():
-    let distance = (skippy_position.x - last_travelled)/100
+    let distance = (skippy_position.x - last_travelled) / 100
     last_travelled = skippy_position.x
     total_travelled += distance
-    set_mode(GameOver, times_skipped, distance, total_travelled)
+    set_mode(GameOver, times_skipped, distance, total_travelled) because "Sank"

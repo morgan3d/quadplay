@@ -317,7 +317,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 return true;
             },
             null,
-            true // force reload always
+            true // force reload the game.json always
         );
     }
 
@@ -360,9 +360,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 gameJSON.assets[asset_prefix + '_label'] = g.url + 'label64.png';
             }
         } // if isLauncher
-
-        // TODO: Make sure that reloading the kiosk doesn't add
-        // this twice if the JSON was cached
 
         if (! gameJSON.scripts) { gameJSON.scripts = []; }
         if (! gameJSON.modes) { gameJSON.modess = []; }

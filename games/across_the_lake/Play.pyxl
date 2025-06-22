@@ -20,3 +20,7 @@ update_camera(skippy_position + xy(14 * skippy_velocity.x, 0))
 draw_game()
 draw_title_ui()
 
+
+// Compiler hint, the actual call is in skippy.pyxl
+//    set_mode(GameOver, times_skipped, distance, total_travelled) because "Sank"
+

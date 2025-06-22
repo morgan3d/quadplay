@@ -226,7 +226,7 @@
 
     </div>
 
-    <div id="toolsMenu" class="unselectable dropdown IDEOnly">
+    <div id="gameMenu" class="unselectable dropdown IDEOnly">
       <div><a onclick="showOpenGameDialog()">Open Game…</a></div>
       <div><a onclick="onNewGameClick()">New Game…</a></div>
       <!-- Copy menu is only visible when the game is local to discourage cloning others' games -->
@@ -243,22 +243,27 @@
       <br/><label title="Show a low-overhead profiler on the emulator screen"><input id="onScreenHUDEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">On-screen HUD</label>
       <br/><label title="When using an external editor, restart the game when the browser gains focus if not hosting (games always *reload* on focus, if stopped)"><input id="restartOnFocusEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Restart on focus</label>
       <hr>
-      <div><a href="../tools/quantize.html" target="_blank">quantize✜</a></div>
-      <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
-      <div><a href="../tools/fontpack.html" target="_blank">fontpack✜</a></div>
-      <div><a href="../tools/scalepix.html" target="_blank">scalepix✜</a></div>
+      <script>writeCloseOption();</script>
+    </div>
+
+    <div id="toolsMenu" class="unselectable dropdown IDEOnly">
+      <div><a href="../doc/manual.md.html" target="_blank">Manual <small>↗</small></a></div>
+      <hr>
+      <div><a href="../tools/quantize.html" target="_blank">quantize <small>↗</small></a></div>
+      <div><a href="../tools/fontgen.html" target="_blank">fontgen <small>↗</small></a></div>
+      <div><a href="../tools/fontpack.html" target="_blank">fontpack <small>↗</small></a></div>
+      <div><a href="../tools/scalepix.html" target="_blank">scalepix <small>↗</small></a></div>
       <script>
         if (getQueryString('update') === 'dev') {
            document.write('<hr><div><a onclick="doUpdate()">git pull quadplay-dev</a></div>');
         }
       </script>
-      <script>writeCloseOption();</script>
-      </div>
+    </div>
 
     <div id="header" class="unselectable">
       <div style="position: absolute; left: 8px; top: 3px">
         <span class="IDEOnly">
-          <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Game</a>
+          <a style="cursor:pointer" onclick="onMenuButton(event)" id="gameMenuButton">Game</a>
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
         </span>
 
@@ -267,7 +272,9 @@
         </script>
         
         <span class="IDEOnly">        
-            &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a href="../doc/manual.md.html" target="_blank">Manual</a>
+            &nbsp;&nbsp; &middot; &nbsp;&nbsp; 
+            <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
+
             <span id="recordingControls">
               &nbsp;&nbsp; &middot; &nbsp;&nbsp;
               <a style="cursor:pointer" onclick="downloadScreenshot()">PNG(F6)</a>
