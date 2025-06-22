@@ -1476,9 +1476,9 @@ function updateTodoList() {
         if (sectionTable[''].todoArray.length === 0) { delete sectionTable['']; }
 
         // Header
-        result += `<tr style="cursor:pointer" onclick="editorGotoFileLine('${url}', 1)"><td colspan="2" style="border-bottom: double 3px; padding-bottom: 1px"><b>`;
+        result += `<tr style="cursor:pointer" onclick="editorGotoFileLine('${url}', 1)"><td colspan="2" style="border-bottom: double 3px; padding-bottom: 1px"><b style="color: var(--theme-color)">`;
         if (type === 'mode') {
-            result += `<code>${name}</code>`;
+            result += `<code">${name}</code>`;
         } else {
             result += name;
         }
@@ -1491,7 +1491,7 @@ function updateTodoList() {
             // Put headers between groups of todos
             if (sectionName !== '') {
                 if (! first) { result += '<tr><td colspan="2" height="6px"></td></tr>'; }
-                result += `<tr onclick="editorGotoFileLine('${section.url}', ${section.line})" style="cursor:pointer"><td colspan="2"><code>${sectionName}:</code></td></tr>`;
+                result += `<tr onclick="editorGotoFileLine('${section.url}', ${section.line})" style="cursor:pointer; font-weight: bold; color:var(--theme-color)"><td colspan="2"><code>${sectionName}:</code></td></tr>`;
             }
 
             for (let i = 0; i < section.todoArray.length; ++i) {
@@ -1528,7 +1528,7 @@ function updateTodoList() {
     
     // If there are no todo() statements
     if (! hasAnyTodo) {
-        result += 'Put <a href="../doc/manual.md.html#standardlibrary/debugging"><code>todo()</code></a> statements in your code to automatically generate this list.';
+        result += 'Put <a href="../doc/manual.md.html#standardlibrary/debugging" target="_blank"><code>todo()</code></a> statements in your code to automatically generate this list.';
     }
 
     todoView.innerHTML = result;//`<div class="hideScrollBars" style="width: 97%">${result}</div>`;

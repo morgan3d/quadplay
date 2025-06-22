@@ -1,40 +1,8 @@
 /*
  Routines for working with words.
  
- The dictionary contains 280k words.
+ The dictionary contains 283k words.
  
- There are about 250 unique 3-grams and 1000 unique 4-grams 
- on typical a board. There are about 5000 unique 5-grams.
- 
- Computing these n-grams and filtering the entire
- dictionary by them are both practically instantaneous. This 
- quickly gives a short list of possible words to investigate
- more deeply with search.
-  
- 3-gram filtering:
-  - prefixes 280k -> 11k
-  - + suffixes -> 1k
-  - + middle -> 500
-
- 4-gram filtering:
- - prefixes 280k -> 3k
- - + suffixes -> 300
- - + middle -> 200
- 
- 5-grams cut this about 10-15% more, so there is not
- much payoff for going to 6-grams.
- 
- There are also rapidly diminishing returns making more
- than three tests with n-grams, due to repeated letters on
- the board.
- 
- After this filtering, all 3, 4, and 5 letter words 
- found are *definitely* on the board. Longer words are
- *possibly* on the board and must be searched for explicitly
- to validate.
- 
- Running the whole filter, this leaves about 10 words
- of 6+ letters to validate.
  
  The full boggle board contains about 57M possible sequences
  (nodes in the search tree).
@@ -75,6 +43,15 @@ for word in keys(dictionary_source):
         
         if n ≥ MIN_WORD_LENGTH and n ≤ MAX_WORD_LENGTH:
             dictionary[uppercase(w)] = 1
+
+// Check to make sure we did the preprocessing correctly
+assert(dictionary["COLOR"])
+assert(dictionary["COLORS"])
+assert(dictionary["COLOUR"])
+assert(not dictionary["colors"])
+assert(not dictionary["QUEST"])
+assert(dictionary["QEST"])
+
 
 /* Array of all of the words in `dictionary` */
 const dictionary_array = keys(dictionary)

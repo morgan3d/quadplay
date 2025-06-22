@@ -38,28 +38,56 @@ def _board_ngram_set(board, n, word_set):
     const ngram_set = {}
     const before = now()
     
+    // Applied to each subpath
+    def visit(kgram, index):
+        const k = size(kgram)
+        
+        if k ≥ MIN_WORD_LENGTH:
+            // We found a real word as a side effect of trigram processing
+            if dictionary[kgram]:
+                word_set[kgram] = 1
+        
+            // We have completed an n-gram, done with this path    
+            if k == n:
+                ngram_set[kgram] = 1
+                return true
+
+    board_visit_subpaths(board, visit)   
+    
+    // debug_print(round((now() - before) * 1000), "ms to find", size(ngram_set), "x " + n + "-grams and all shorter words")
+    return ngram_set
+
+
+/*
+  Visit all possible subpaths and invoke `visit(word, index)` on them,
+  where the tile index is `xy(index mod COLS, floor(index / COLS))`.
+  
+  If `visit()` returns true, stop searching children of that subpath.
+  
+  The word is all-caps and Q-encoded.
+*/
+def board_visit_subpaths(board, visit):
     // Flatten the board to a string
     let board_string = ""
     for y < ROWS:
         for x < COLS:
             board_string += board.tile[x][y].letter
 
-    for i < ROWS * COLS:    
-        _board_ngram_set_helper(board_string, i, 0, "", ngram_set, n, word_set)
+    for index < ROWS * COLS:
+        _board_visit_paths_helper(board_string, index, 1 bitshl index, board_string[index], visit)
     
-    debug_print(round((now() - before) * 1000), "ms to find", size(ngram_set), "x " + n + "-grams and all shorter words")
-    return ngram_set
-
 
 
 /* `_neighbor_index_array_table[i]` = array of indices of all neighbors of tile (`i mod COLS`, `floor(i / cols)`),
-   where the indices have the same packing.
+   where the indices have the same packing. Used by `_board_ngram_set_helper()`.
 
    This simplifies the code for searches over the board and technically makes it them a more
    generalizable graph algorithm. There's negligible performance impact from
    using precomputed neighbors vs. computing dynamically
  */ 
 const _neighbor_index_array_table = make_array(COLS * ROWS, [], clone)
+
+// Initialize `_neighbor_index_array_table`.
 // Iteration order doesn't matter for these loops, but this makes 
 // more obvious that we're using row-major indexing.
 for y < ROWS:
@@ -79,40 +107,57 @@ for y < ROWS:
    `board_string`
    : The board as a row-major flattening
 
+   `kgram`
+   : Concatenation of the labels of the visited tiles,
+     pulled from `board_string`.
+   
    `index`
    : `x + y * COLS` of the current tile coordinates
+   
+   `visit(word, index)`
+   : Arbitrary callback for processing this subpath.
+     If `visit` returns `true` then the path terminates here,
+     otherwise it recurses as deep as possible.
 */
-def _board_ngram_set_helper(board_string, index, used_mask, kgram, ngram_set, n, word_set):
-    // Did we already use the letter at index?
-    const mask = 1 bitshl index
-    if mask ∩ used_mask: return
-
-    // Mark the letter used for this path going forward
-    used_mask = mask ∪ used_mask
+def _board_visit_paths_helper(board_string, index, used_mask, word, visit):
+    // Run the callback and only continue if it returns false
+    if not visit(word, index):
     
-    kgram += board_string[index]
-    const k = size(kgram)
-    
-    // We have completed an n-gram
-    if k ≥ MIN_WORD_LENGTH:
-        // We found a real word as a side effect of trigram processing
-        if dictionary[kgram]:
-            word_set[kgram] = 1
-    
-        // Done with this path    
-        if k == n:
-            ngram_set[kgram] = 1
-            return
-    
-    // Check all neighbors
-    for neighbor in _neighbor_index_array_table[index]:
-        _board_ngram_set_helper(board_string, neighbor, used_mask, kgram, ngram_set, n, word_set)
+        // Check all neighbors of index
+        for neighbor in _neighbor_index_array_table[index]:
+            const mask = 1 bitshl neighbor
+            
+            // Did we already use the tile at neighbor?
+            if not (mask ∩ used_mask):
+                // Continue search, updating the mask and kgram
+                _board_visit_paths_helper(board_string, neighbor, mask ∪ used_mask, word + board_string[neighbor], visit)
         
- 
+
+
+/* Return true if `word` can be found in `board`. */
+def _board_validate_word(board, word):
+    let found = false
+    
+    def visit(prefix):
+        if found or not starts_with(word, prefix):
+            // Stop all other recursion once we've found the word on some
+            // other path, or determined that this prefix cannot lead to
+            // this word
+            return true
+        else if word == prefix:
+            // We found the word
+            found = true
+            return true
+    
+    board_visit_subpaths(board, visit)
+    
+    return found
+    
+
 
 /* Returns an alphabetically-sorted array of all possible dictionary 
-   words of MIN_WORD_LEN on this board. The words are returned in
-   Q-decoded and in uppercase. */
+   words of `MIN_WORD_LEN` on this board. The words have been processed by
+   `q_decode()` and are uppercase. */
 def board_find_all_words(board):
     const before = now()
 
@@ -125,6 +170,7 @@ def board_find_all_words(board):
 
     // Used for performance profiling
     let long_count = 0
+    const short_count = size(word_set)
     
     // Search all words of length > 5 in the dictionary for likely hits
     for word in dictionary_array:
@@ -141,16 +187,20 @@ def board_find_all_words(board):
             (k < 8 or quintgram_set[slice(word, 2, 7)])):
 
             // This long word is very likely to appear, but we
-            // must validate it
-            todo("Search for final words")
-            
+            // must validate it.
+            if _board_validate_word(board, word):
+                word_set[word] = 1
             ++long_count
-    
-    debug_print("\nAfter n-gram filtering:\n", 
-        size(word_set), "words with 3-5 letters\n",
-        long_count, "likely words with 6+ letters\n")
 
-    debug_print(round((now() - before) * 1000), "ms to find all words")
+    /*    
+    debug_print("\nAfter n-gram filtering:\n", 
+        short_count, "words with 3-5 letters\n",
+        long_count, "likely words with 6+ letters\nAfter validation:\n",
+        short_count, "words with 3-5 letters\n",
+        size(word_set) - short_count, "actual words with 6+ letters\n")
+    */
+
+    debug_print(round((now() - before) * 1000), "ms to find all", size(word_set), "words")
     
     const word_array = keys(word_set)
     for w < size(word_array):

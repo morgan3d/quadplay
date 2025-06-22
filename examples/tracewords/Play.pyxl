@@ -1,9 +1,6 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("Test on phone")
-todo("  Make self-hosting page")
-
 todo("Test D-pad")
 
 todo("Bounce when the selection is a word")
@@ -27,17 +24,7 @@ let seed_word
 while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
     seed_word = lowercase(q_decode(random_value(dictionary_array)))
 
-
-/*
-let max_length = {}
-for word in keys(dictionary):
-    const letter = word[0]
-    max_length[letter] = max(max_length[letter] default 0, size(word))
-debug_print(max_length) // All are ≥ 15
-*/
-
-todo("Remove fixed seed")
-seed_word = "pomegranate"
+seed_word = "hinters"
 player_reset(player, seed_word)
 
 
