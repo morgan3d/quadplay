@@ -15,7 +15,7 @@ def make_board():
                 // mode_frame at which this was selected
                 selected: 0},
             deep_clone),
-                    
+        
         // The UI selection as xy() indices, in order of selection
         selection: [],
         
@@ -304,23 +304,23 @@ def penultimate_value(array):
     
 /* Add `index` to the current selection, playing sounds
    as appropriate */
-def board_select(board, index, history):
+def board_select(board, index, already_found):
     const tile = board.tile[index.x][index.y]
     assert(not tile.selected)
     push(board.selection, index)
     tile.selected = mode_frames
 
     // Pan sound with position
-    if not _board_check_new_word(board, history):
+    if not _board_check_new_word(board, already_found):
         _board_play_sound(select_tile_sound, 85%, 100%, index)
 
 
 
-def board_deselect_last(board, history):
+def board_deselect_last(board, already_found):
     const prev = pop(board.selection)
     board.tile[prev.x][prev.y].selected = false
     
-    if not _board_check_new_word(board, history):
+    if not _board_check_new_word(board, already_found):
         todo("play deselect sound")
 
 
@@ -332,40 +332,35 @@ def _board_play_sound(sound, volume, pitch, index):
     
 
 
+
+def color_for_points(points):
+    // Every 10 points, notch up
+    const α = min(⌊points / 10⌋ / 8, 100%)
+    return perceptual_lerp_color(WORD_MIN_COLOR, WORD_MAX_COLOR, α)
+    
+
+
 /* Call after changing selection. 
    Returns true if there was a new word. As a side effect,
    plays a sound and sets the state for visualizing the word
    if there is one */
-def _board_check_new_word(board, history):
-    
-    const points = board_score_selection(board, history)
+def _board_check_new_word(board, already_found):
+    const word = board_selected_word(board)
+    const points = score_word(word)
 
-    if points == 0: 
+    if points == 0 or already_found[word]: 
         // Reset selection color
         board.selection_color = TILE_CENTER_SELECTED_COLOR
         return false
-        
-    // Every 10 points, notch up
-    const α = min(⌊points / 10⌋ / 8, 100%)
-    board.selection_color = perceptual_lerp_color(WORD_MIN_COLOR, WORD_MAX_COLOR, α)
-    
-    const pitch = 75% + min(max(0, points - 6)^0.1, 3)
-    _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
-
-    todo("visualization state")
-
-    return true
-
-
-
-/* Returns 0 if there is no selection or the word is too short*/
-def board_score_selection(board, history):    
-    const word = board_selected_word(board)
-    if size(word) < MIN_WORD_LENGTH or not dictionary[word]:
-        return 0
     else:
-        todo("** Check history")
-        return score_word(word)
+        board.selection_color = color_for_points(points)
+        
+        const pitch = 75% + min(max(0, points - 6)^0.1, 3)
+        _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
+    
+        todo("visualization state")
+    
+        return true
 
 
 
@@ -399,7 +394,7 @@ def board_rotate(board):
      and preclude more 
      
 */
-def board_update(board, pos, angle, history, allow_selection default false)
+def board_update(board, pos, angle, already_found, allow_selection default false)
 & preserving_transform:
     
     const TILE_CENTER_Z = 1
@@ -438,7 +433,7 @@ def board_update(board, pos, angle, history, allow_selection default false)
                 if touch.aa and (size(board.selection) == 0):
                     
                     // Start selection
-                    board_select(board, index, history)
+                    board_select(board, index, already_found)
                     
                 else if (touch.a and
                         size(board.selection) > 0 and
@@ -447,11 +442,11 @@ def board_update(board, pos, angle, history, allow_selection default false)
                     if tile.selected:
                         // Undo selection, backtracked
                         if equivalent(index, penultimate_value(board.selection)):
-                            board_deselect_last(board, history)
+                            board_deselect_last(board, already_found)
                             
                     else:
                         // Continue selection
-                        board_select(board, index, history)
+                        board_select(board, index, already_found)
 
             
             let radius = ½ center_size.x
@@ -503,7 +498,7 @@ def board_update(board, pos, angle, history, allow_selection default false)
         
 
 
-/* Returns the lower case text word that is selected, 
+/* Returns the Q-encoded upper-case text word that is selected, 
    or "" if no selection */
 def board_selected_word(board):
     let word = ""

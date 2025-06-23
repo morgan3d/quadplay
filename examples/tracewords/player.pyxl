@@ -6,6 +6,13 @@ def make_player():
         
         gamepad: gamepad_array[0],
         
+        // Q-encoded upper case words that have already been found
+        already_found: {},
+        
+        // Each entry is {label, tiles, points, color}.
+        // Used for display.
+        history: [],
+        
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
         using_gamepad: false,
@@ -52,11 +59,20 @@ def player_update(player, angle default 0°, allow_selection default false):
         player.using_gamepad = false
     else if player.gamepad.aa or player.gamepad.bb or player.gamepad.dx or player.gamepad.dy:
         player.using_gamepad = true
+        
     
     if touch.released_a:
         todo("Release animation and sound")
-        todo("Add to history")
-        player.score += board_score_selection(player.board)
+        const word = board_selected_word(player.board)        
+        const points = score_word(word)
+
+        if points > 0:
+            player.already_found[word] = true
+            
+            todo("Insert in sorted order")
+            push(player.history, {label: q_decode(word), tiles: size(word), points: points, color: color_for_points(points)})
+            player.score += points
+        
 
     draw_text({
         pos: xy(5, 5),
@@ -70,7 +86,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     
     // Our board has some content at the top, so don't switch
     // to portrait until all of the UI will be visible
-    if SCREEN_SIZE.x + 28 > SCREEN_SIZE.y:
+    if landscape():
         // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
         // Leave some space on the right so that if someone has the bad idea to play on a phone in this orientation
         // they won't be jammed against the edge with their thumb.
@@ -82,13 +98,52 @@ def player_update(player, angle default 0°, allow_selection default false):
         // Slide up a little on narrow screens so that it is easier to swipe on a phone
         board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
         
-    board_update(player.board, board_pos, angle, player.history, allow_selection)
+    board_update(player.board, board_pos, angle, player.already_found, allow_selection)
 
     _player_draw_score(player, board_pos)
     
     if allow_selection:
         _update_rotate_button(board_pos)
         
+    _player_draw_history(player, board_pos)
+
+
+
+def landscape():
+    return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
+
+
+def _player_draw_history(player, board_pos)
+& preserving_transform:
+    
+    let list_rect
+    if landscape():
+        list_rect = {corner: xy(0, 22), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 20)}
+    else:
+        list_rect = {corner: xy(0, 0), size: xy(SCREEN_SIZE.x, board_pos.y - ½ board_pixel_size().y - 32)}
+    
+    todo("Set clip")
+    set_transform(list_rect.corner)
+    let pos = xy(0, 0)
+    let max_width = 0
+    for entry in player.history:
+        const bounds = draw_text({
+            pos: pos,
+            x_align: "left",
+            y_align: "top",
+            color: entry.color,
+            text: entry.label})
+    
+        max_width = max(max_width, bounds.size.x)
+        pos.y += bounds.height
+        
+        // Wrap into multiple columns
+        if pos.y > list_rect.size.y - 8:
+            pos.y = 0
+            pos.x += max_width + 8
+            max_width = 0
+    
+
         
         
 def player_reset(player, seed):

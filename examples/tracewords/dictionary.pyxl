@@ -67,6 +67,9 @@ def q_decode(word):
    word is an all-uppercase string with only legal characters
    and is Q-encoded (Q appears without U).*/
 def score_word(word):
+    if size(word) < MIN_WORD_LENGTH or not dictionary[word]:
+        return 0
+        
     let score = 0
     for letter in word:
         score += LETTER_POINT_TABLE[letter] || 0
