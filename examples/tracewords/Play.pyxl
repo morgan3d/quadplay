@@ -33,6 +33,7 @@ for i < GOOD_BOARD_TRIES:
         seed_word = ∅
     else:
         debug_print(size(word_array), "words to be found!")
+        player.board.word_count = size(word_array)
         break
     
 //debug_print(word_array)
