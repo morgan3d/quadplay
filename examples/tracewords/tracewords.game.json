@@ -18,7 +18,7 @@
     "docs": [],
     "assets": {
         "font": "quad://fonts/novarese-10.font.json",
-        "tile_point_font": "quad://fonts/deja-8.font.json",
+        "tile_point_font": "quad://fonts/deja-7.font.json",
         "shapes": "quad://sprites/shapes-32x32.sprite.json",
         "blip_sound": "quad://sounds/blip-04.sound.json",
         "tile_font": "quad://fonts/deja-bold-15.font.json",
@@ -27,7 +27,7 @@
         "word_sound": "quad://sounds/powerup-03.sound.json",
         "dictionary_source": "quad://data/english_all_table.data.json"
     },
-    "version": 0,
+    "version": 0.01,
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -40,7 +40,7 @@
     "constants": {
         "TILE_EXTENT": {
             "type": "number",
-            "value": "40",
+            "value": "41",
             "description": "Width of a tile",
             "min": 16,
             "max": 128,
@@ -49,7 +49,7 @@
         },
         "TILE_GUTTER": {
             "type": "number",
-            "value": "4",
+            "value": "5",
             "description": "Distance between two adjacent tiles",
             "min": 0,
             "max": 128,

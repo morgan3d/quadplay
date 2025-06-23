@@ -18,7 +18,7 @@ def make_player():
 def _update_rotate_button(board_pos):
     let rotate_button_sprite = shapes.curved_arrow.x_flipped
     
-    let rotate_button_pos = board_pos + xy(-1, -26) + xy(½, -½) board_pixel_size()
+    let rotate_button_pos = board_pos + xy(-4, -24) + xy(½, -½) board_pixel_size()
         
     draw_disk(rotate_button_pos, 12, ∅, #FFF)
     draw_sprite(rotate_button_sprite, rotate_button_pos + xy(0, -2), ∅, 50%)
@@ -70,10 +70,10 @@ def player_update(player, angle default 0°, allow_selection default false):
     
     if SCREEN_SIZE.x > SCREEN_SIZE.y:
         // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
-        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 12)
+        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 8, ½ SCREEN_SIZE.y + 14)
     else:
         // Portrait. Put at the bottom, centered
-        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 16)
+        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 12)
         
     board_update(player.board, board_pos, angle, player.history, allow_selection)
 

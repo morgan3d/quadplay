@@ -418,7 +418,7 @@ def board_update(board, pos, angle, history, allow_selection default false)
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
 
-    draw_rect(xy(0, 0), grid_size + ½ TILE_EXTENT, #BBB)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, #BBB)
     
     const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
 
