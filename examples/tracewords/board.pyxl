@@ -364,8 +364,22 @@ def _board_check_new_word(board, already_found):
 
 
 
-/* Swaps tiles as if the board were rotated 90 degrees CCW */
+/* Swaps tiles as if the board were rotated 90 degrees CW */
 def board_rotate(board):
+    assert(size(board.selection) == 0)
+    assert(ROWS == COLS)
+    
+    const old = board.tile
+    
+    board.tile = make_array(xy(COLS, ROWS))
+    for i < COLS:
+        for j < ROWS:
+            board.tile[i][j] = old[j][ROWS - i - 1]
+
+
+
+/* 90° CCW */
+def board_reverse_rotate(board):
     assert(size(board.selection) == 0)
     assert(ROWS == COLS)
     

@@ -23,12 +23,12 @@ def make_player():
 
 
 def _update_rotate_button(board_pos):
-    let rotate_button_sprite = shapes.curved_arrow.x_flipped
+    let rotate_button_sprite = shapes.curved_arrow.rotated_270
     
     let rotate_button_pos = board_pos + xy(-4, -19) + xy(½, -½) board_pixel_size()
         
     draw_disk(rotate_button_pos, 10, ∅, #FFF)
-    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(0, -2), ∅, 50%)
+    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(1, 0), ∅, 50%)
     if player.using_gamepad:
         draw_text({font: tile_point_font, text: joy.prompt["(b)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
 
@@ -66,10 +66,9 @@ def player_update(player, angle default 0°, allow_selection default false):
         const word = board_selected_word(player.board)        
         const points = score_word(word)
 
-        if points > 0:
+        if points > 0 and not player.already_found[word]:
             player.already_found[word] = true
             
-            todo("Insert in sorted order")
             push(player.history, {label: q_decode(word), tiles: size(word), points: points, color: color_for_points(points)})
             player.score += points
         

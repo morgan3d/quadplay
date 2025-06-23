@@ -10,11 +10,11 @@ angle = 0°
 
 frame
 ────────────────────────────────────────────────────────────────────────
-angle += ROTATION_SPEED
+angle -= ROTATION_SPEED
 
 player_update(player, angle, false)
 
-if angle + ROTATION_SPEED > 90°:
+if angle - ROTATION_SPEED < -90°:
     // Finish the rotation by swapping elements
     board_rotate(player.board)
     pop_mode()
