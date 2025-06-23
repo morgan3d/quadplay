@@ -67,6 +67,7 @@ for view in VIEW_ARRAY:
     set_clip(view.corner, view.size, -2047, 4096)
 
     draw_text(sectionFont, CREDITS.title, xy(VIEW_ARRAY[0].size.x / 2, VIEW_ARRAY[0].size.y / 3), text_color, $system_prompt_shadow, $system_prompt_shadow, 0, 0)
+    if CREDITS.version: draw_text(bodyFont, "v" + CREDITS.version, xy(VIEW_ARRAY[0].size.x / 2, VIEW_ARRAY[0].size.y / 3 + 13), text_color, $system_prompt_shadow, nil, 0, 0)
     draw_text(bodyFont, "by " + CREDITS.developer, xy(VIEW_ARRAY[0].size.x / 2, VIEW_ARRAY[0].size.y / 3 + 25), text_color, $system_prompt_shadow, nil, 0, 0)
 
     let y = VIEW_ARRAY[0].size.y + 15

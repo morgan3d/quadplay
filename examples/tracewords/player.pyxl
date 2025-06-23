@@ -61,7 +61,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     draw_text({
         pos: xy(5, 5),
         font: tile_point_font,
-        text: "Playing board \"" + player.board.seed + "\"",
+        text: "Playing board \"" + player.board.seed + "\" on v" + CREDITS.version,
         color: #FFF,
         y_align: "top",
         x_align: "left"})

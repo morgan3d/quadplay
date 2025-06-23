@@ -695,13 +695,14 @@ function computeCredits(gameSource) {
     };
 
     // Game
-    CREDITS.game.push((gameSource.json.title || 'Untitled') +
+    CREDITS.game.push((gameSource.json.title || 'Untitled') + (' ' + gameSource.json.version || '') + 
                       (gameSource.json.developer ? ' by ' +
                        gameSource.json.developer : '') + ' ' +
                       (gameSource.json.copyright || ''));
     if (gameSource.json.license) { CREDITS.game.push(canonicalizeLicense(gameSource.json.license)); }
     
     CREDITS.title = gameSource.json.title || 'Untitled';
+    CREDITS.version = gameSource.json.version || 0.0;
     CREDITS.developer = gameSource.json.developer || '';
 
     // Map from canonicalized licenses to assets that use them
