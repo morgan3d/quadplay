@@ -32,7 +32,6 @@ for i < GOOD_BOARD_TRIES:
         debug_print("Rejected board " + seed_word + " because it only produced " + size(word_array) + " words")
         seed_word = ∅
     else:
-        debug_print(size(word_array), "words to be found!")
         player.board.word_count = size(word_array)
         break
     
