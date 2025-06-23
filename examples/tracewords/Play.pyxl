@@ -27,8 +27,6 @@ while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
 seed_word = "hinters"
 player_reset(player, seed_word)
 
-debug_print(keys(CREDITS))
-
 let word_array = board_find_all_words(player.board)
 //debug_print(word_array)
 

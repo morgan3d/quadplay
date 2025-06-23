@@ -75,7 +75,7 @@ def player_update(player, angle default 0°, allow_selection default false):
         board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 12)
     else:
         // Portrait. Put at the bottom, centered
-        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 12)
+        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 18)
         
     board_update(player.board, board_pos, angle, player.history, allow_selection)
 
