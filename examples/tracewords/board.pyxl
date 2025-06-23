@@ -364,7 +364,7 @@ def board_score_selection(board, history):
     if size(word) < MIN_WORD_LENGTH or not dictionary[word]:
         return 0
     else:
-        todo("Check history")
+        todo("** Check history")
         return score_word(word)
 
 

@@ -2,10 +2,13 @@ def make_player():
     return {
         board: make_board(),
         
-        // Center relative to the screen dimensions
-        rel_pos: xy(½, ½),
-        
         score: 0,
+        
+        gamepad: gamepad_array[0],
+        
+        // Determined by most recent input method.
+        // Show button prompts and cursor when using gamepad
+        using_gamepad: false,
         
         // {word, score} sorted by score
         word_array: []}
@@ -13,26 +16,41 @@ def make_player():
 
 
 def _update_rotate_button(board_pos):
-    let rotate_button_pos = xy(board_pos)
-    let rotate_button_sprite = shapes.curved_arrow.x_flipped
-    if SCREEN_SIZE.x > SCREEN_SIZE.y:
-        // Landscape
-        rotate_button_pos += xy(+36, -½ TILE_EXTENT) + ½ board_pixel_size()
-        rotate_button_sprite = rotate_button_sprite.rotated_270
-    else:
-        // Portrait
-        rotate_button_pos += xy(-½ TILE_EXTENT, 32) + ½ board_pixel_size()
-        rotate_button_sprite = rotate_button_sprite.rotated_270
+    let rotate_button_sprite = shapes.curved_arrow.x_flipped.rotated_90
+    
+    let rotate_button_pos = board_pos + xy(½ TILE_EXTENT, -26) + xy(-½, -½) board_pixel_size()
         
-    draw_sprite(rotate_button_sprite, rotate_button_pos)
-    draw_text({font: font, text: joy.prompt["(b)"], pos: rotate_button_pos + xy(0, 24), color: #FFF})
+    draw_disk(rotate_button_pos, 12, ∅, #FFF)
+    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(-2, 0), ∅, 50%)
+    if player.using_gamepad:
+        draw_text({font: font, text: joy.prompt["(b)"], x_align: "left", pos: rotate_button_pos + xy(6, 8), color: #FFF, outline: #000})
 
     if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.bb:
         push_mode(Rotate) because "Rotate button"
-                
+
+
+        
+def _player_draw_score(player, board_pos):
+    let score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(8, 24)
+        
+    draw_text({
+        pos: score_pos,
+        font: font,
+        text: format_number(player.score, "commas") + " pts",
+        color: #FFF,
+        y_align: "center",
+        x_align: "right"})
+
         
 
+/* Run UI for this player and draw their board */
 def player_update(player, angle default 0°, allow_selection default false):
+    // Track most recent UI method
+    if touch.pressed_a:
+        player.using_gamepad = false
+    else if player.gamepad.aa or player.gamepad.dx or player.gamepad.dy:
+        player.using_gamepad = true
+    
     if touch.released_a:
         todo("Release animation and sound")
         todo("Add to history")
@@ -46,18 +64,19 @@ def player_update(player, angle default 0°, allow_selection default false):
         y_align: "top",
         x_align: "left"})
 
-    draw_text({
-        pos: xy(SCREEN_SIZE.x - 5, 5),
-        font: font,
-        text: format_number(player.score, "commas"),
-        color: #FFF,
-        y_align: "top",
-        x_align: "right"})
+    let board_pos;
     
-    const board_pos = player.rel_pos * SCREEN_SIZE
-    
+    if SCREEN_SIZE.x > SCREEN_SIZE.y:
+        // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
+        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 12)
+    else:
+        // Portrait. Put at the bottom, centered
+        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 16)
+        
     board_update(player.board, board_pos, angle, player.history, allow_selection)
 
+    _player_draw_score(player, board_pos)
+    
     if allow_selection:
         _update_rotate_button(board_pos)
         

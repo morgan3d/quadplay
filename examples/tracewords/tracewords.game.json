@@ -20,7 +20,7 @@
         "font": "quad://fonts/deja-8.font.json",
         "shapes": "quad://sprites/shapes-32x32.sprite.json",
         "blip_sound": "quad://sounds/blip-04.sound.json",
-        "tile_font": "quad://fonts/deja-15.font.json",
+        "tile_font": "quad://fonts/deja-bold-15.font.json",
         "select_tile_sound": "quad://sounds/hit-08.sound.json",
         "sensitive": "quad://data/english_sensitive_table.data.json",
         "word_sound": "quad://sounds/powerup-03.sound.json",
