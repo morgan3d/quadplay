@@ -18,12 +18,12 @@ def make_player():
 def _update_rotate_button(board_pos):
     let rotate_button_sprite = shapes.curved_arrow.x_flipped.rotated_90
     
-    let rotate_button_pos = board_pos + xy(½ TILE_EXTENT, -26) + xy(-½, -½) board_pixel_size()
+    let rotate_button_pos = board_pos + xy(-2, -26) + xy(½, -½) board_pixel_size()
         
     draw_disk(rotate_button_pos, 12, ∅, #FFF)
-    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(-2, 0), ∅, 50%)
+    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(-1, 0), ∅, 50%)
     if player.using_gamepad:
-        draw_text({font: font, text: joy.prompt["(b)"], x_align: "left", pos: rotate_button_pos + xy(6, 8), color: #FFF, outline: #000})
+        draw_text({font: tile_point_font, text: joy.prompt["(b)"], x_align: "right", pos: rotate_button_pos + xy(-6, 8), color: #FFF, outline: #000})
 
     if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.bb:
         push_mode(Rotate) because "Rotate button"
@@ -31,7 +31,7 @@ def _update_rotate_button(board_pos):
 
         
 def _player_draw_score(player, board_pos):
-    let score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(8, 24)
+    let score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(40, 24)
         
     draw_text({
         pos: score_pos,
@@ -41,7 +41,9 @@ def _player_draw_score(player, board_pos):
         y_align: "center",
         x_align: "right"})
 
-        
+
+
+todo("Move the rotate button to the right")
 
 /* Run UI for this player and draw their board */
 def player_update(player, angle default 0°, allow_selection default false):
@@ -58,7 +60,7 @@ def player_update(player, angle default 0°, allow_selection default false):
 
     draw_text({
         pos: xy(5, 5),
-        font: font,
+        font: tile_point_font,
         text: "Playing board \"" + player.board.seed + "\"",
         color: #FFF,
         y_align: "top",

@@ -487,7 +487,7 @@ def board_update(board, pos, angle, history, allow_selection default false)
             if not tile.selected:
                 draw_text({
                     pos: pos + subscript_offset, 
-                    font: font, 
+                    font: tile_point_font, 
                     text: LETTER_POINT_TABLE[tile.letter], 
                     color: #AAA,
                     z: TILE_LETTER_Z})

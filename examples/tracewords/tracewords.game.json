@@ -17,7 +17,8 @@
     "start_mode": "Play",
     "docs": [],
     "assets": {
-        "font": "quad://fonts/deja-8.font.json",
+        "font": "quad://fonts/novarese-10.font.json",
+        "tile_point_font": "quad://fonts/deja-8.font.json",
         "shapes": "quad://sprites/shapes-32x32.sprite.json",
         "blip_sound": "quad://sounds/blip-04.sound.json",
         "tile_font": "quad://fonts/deja-bold-15.font.json",
