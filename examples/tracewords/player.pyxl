@@ -74,13 +74,15 @@ def player_update(player, angle default 0°, allow_selection default false):
             player.score += points
         
 
+    // Version/debugging
     draw_text({
         pos: xy(5, 5),
         font: tile_point_font,
         text: "Playing board \"" + player.board.seed + "\" on v" + CREDITS.version,
-        color: #FFF,
+        color: #999,
         y_align: "top",
-        x_align: "left"})
+        x_align: "left",
+        z: -1})
 
     let board_pos;
     

@@ -5,8 +5,6 @@ todo("Test D-pad")
 
 todo("Bounce when the selection is a word")
 
-todo("Display scored words")
-
 
 let resolution_hook
 
@@ -24,14 +22,14 @@ let seed_word
 while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
     seed_word = lowercase(q_decode(random_value(dictionary_array)))
 
-seed_word = "hinters"
+//seed_word = "hinters"
 player_reset(player, seed_word)
 
-let word_array = board_find_all_words(player.board)
+//let word_array = board_find_all_words(player.board)
 //debug_print(word_array)
 
 
-set_background(#222)
+set_background(#544)
 
 
 
