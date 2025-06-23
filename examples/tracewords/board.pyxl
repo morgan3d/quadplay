@@ -13,7 +13,7 @@ def make_board():
                 letter: "?",
                                 
                 // mode_frame at which this was selected
-                selected: false}, 
+                selected: 0},
             deep_clone),
                     
         // The UI selection as xy() indices, in order of selection
@@ -281,7 +281,7 @@ def board_reset(board, seed):
         for col in board.tile:
             for tile in col:
                 tile.letter = random_value(pop(distribution), rnd)
-                tile.selected = false
+                tile.selected = 0
 
 
 
@@ -454,17 +454,18 @@ def board_update(board, pos, angle, history, allow_selection default false)
                         board_select(board, index, history)
 
             
+            let radius = ½ center_size.x
+            
             if touch.released_a or not allow_selection:
                 tile.selected = false
             
-            if not tile.selected:
-                draw_rect(pos, tile_size, #CCC)
-
-            let radius = ½ center_size.x
-            
-            // Bounce if just selected
-            if tile.selected > mode_frames - 12:
-                radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
+            if tile.selected:
+                // Bounce if just selected
+                if tile.selected > mode_frames - 12:
+                    radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
+            else:
+                // Only draw the rect if not selected
+                draw_rect(pos, tile_size, #CCC)            
             
             draw_disk(
                 pos,
