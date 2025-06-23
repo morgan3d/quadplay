@@ -254,7 +254,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             errorCallback(...args);
         },
         jsonParser: 'permissive',
-        forceReload: false});
+        forceReload: forceReloadEverything});
 
     // If given a directory, assume that the file has the same name
     gameURL = makeGameURLAbsolute(gameURL);
@@ -334,6 +334,15 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         }
 
         gameSource.json = gameJSON;
+
+        {
+            const prevVersion = localStorage.getItem('game_version_' + gameURL);
+            if (prevVersion !== gameJSON) {
+                // The game version changed. Force reload of everything for this session
+                localStorage.setItem('game_version_' + gameURL, gameJSON);
+                loadManager.forceReload = true;
+            }
+        }
 
         //////////////////////////////////////////////////////////////////////////////////////////////
 
