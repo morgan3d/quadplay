@@ -3,7 +3,6 @@ todo("Re-color")
 
 def make_player():
     
-    
     // Called by the board after changing selection. 
     // Returns true if there was a new word. As a side effect,
     // plays a sound and sets the state for visualizing the word
@@ -96,7 +95,19 @@ def _player_draw_score(player, board_pos):
         color: #FFF,
         y_align: "center",
         x_align: "right"})
-        
+    
+    
+
+def draw_clock(board_pos):  
+    let clock_pos = board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 19)
+    draw_text({
+        pos: clock_pos,
+        font: score_font,
+        text: format_number(max(0, end_time - now()), "timer"),
+        color: #FFF,
+        y_align: "center",
+        x_align: "right"})
+
 
 
 /* Run UI for this player and draw their board */
@@ -111,7 +122,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     draw_text({
         pos: xy(5, 5),
         font: tile_point_font,
-        text: "Playing board \"" + player.board.seed + "\" on v" + CREDITS.version,
+        text: "Board \"" + player.board.seed + "\" on v" + CREDITS.version,
         color: #999,
         y_align: "top",
         x_align: "left",
@@ -143,6 +154,7 @@ def player_update(player, angle default 0°, allow_selection default false):
         _player_update_rotate_button(player, board_pos)
         
     _player_draw_history(player, board_pos)
+    draw_clock(board_pos)
 
 
 
@@ -153,7 +165,7 @@ def landscape():
 
 def _player_draw_history(player, board_pos)
 & preserving_transform:
-    todo("Scroll the list when it is too long")
+    todo("Fix scrolling the list when it is too long")
     
     
     let list_rect
@@ -163,8 +175,18 @@ def _player_draw_history(player, board_pos)
         list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 3, board_pos.y - ½ board_pixel_size().y - 32)}
     
     set_clip(list_rect)
+
+    // Don't scroll
+    draw_text({
+        pos: list_rect.corner + list_rect.size - xy(2, 1),
+        font: history_font,
+        text: "..." + (player.board.word_count - size(player.history)) + " left",
+        color: #DDD,
+        x_align: "right",
+        y_align: "bottom"})
+
+
     set_transform(list_rect.corner - xy(player.history_scroll, 0))
-    
     let pos = xy(0, 0)
     let max_width = 0
     for entry in player.history:
@@ -186,17 +208,10 @@ def _player_draw_history(player, board_pos)
             pos.x += max_width + HISTORY_COLUMN_SEPARATION
             max_width = 0
     
-    const overextent = pos.x + max_width - player.history_scroll
-    if overextent > list_rect.size.x or joy.a:
-        --player.history_scroll
+    // Scroll away
+    if pos.x + max_width - player.history_scroll > list_rect.size.x:
+        ++player.history_scroll
     
-    draw_text({
-        pos: list_rect.size - xy(2, 1),
-        font: history_font,
-        text: "..." + (player.board.word_count - size(player.history)) + " left",
-        color: #DDD,
-        x_align: "right",
-        y_align: "bottom"})
     
 
         

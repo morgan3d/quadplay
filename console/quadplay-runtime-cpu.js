@@ -8295,6 +8295,16 @@ function format_number(n, fmt) {
             s = h + ':' + $padZero(m);
             break;
         }
+    
+    case 'timer':
+        {
+            n = $Math.ceil(n)
+            const m = $Math.floor($Math.abs(n) / 60) * $Math.sign(n);
+            const S = $padZero(n % 60);
+            s = m + ':' + S;
+            break;
+        }
+
     case 'stopwatch':
         {
             const m = $Math.floor($Math.abs(n) / 60) * $Math.sign(n);

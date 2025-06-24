@@ -20,7 +20,8 @@ if not resolution_hook:
 set_random_seed()
 let seed_word
 const GOOD_BOARD_RETRIES = 10
-const MIN_GOOD_BOARD_WORDS = 100
+const GOOD_BOARD_MIN_WORDS = 100
+const GOOD_BOARD_MIN_LONG_WORDS = 25
 for i < GOOD_BOARD_RETRIES:
     // Find a not-sensitive seed word to show
     while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
@@ -29,9 +30,15 @@ for i < GOOD_BOARD_RETRIES:
     // Reset the player
     player_reset(player, seed_word)
 
-    let word_array = board_find_all_words(player.board)
-    if size(word_array) < MIN_GOOD_BOARD_WORDS:
-        debug_print("Rejected board " + seed_word + " because it only produced " + size(word_array) + " words")
+    const word_array = board_find_all_words(player.board)
+    
+    let long_word_count = 0
+    for word in word_array:
+        if size(word) > 4:
+            ++long_word_count
+    
+    if size(word_array) < GOOD_BOARD_MIN_WORDS or long_word_count < GOOD_BOARD_MIN_LONG_WORDS:
+        debug_print("Rejected board " + seed_word + " because it only produced " + size(word_array) + " words and " + long_word_count + " long words")
         seed_word = ∅
     else:
         player.board.word_count = size(word_array)
@@ -42,7 +49,7 @@ for i < GOOD_BOARD_RETRIES:
 
 set_background(#544)
 
-
+end_time = now() + 60 * 3
 
 
 frame

@@ -8,7 +8,8 @@
         "quad://scripts/screen_lib.pyxl",
         "dictionary.pyxl",
         "board.pyxl",
-        "player.pyxl"
+        "player.pyxl",
+        "game.pyxl"
     ],
     "modes": [
         "Play",
