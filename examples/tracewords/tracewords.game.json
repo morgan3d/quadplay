@@ -29,7 +29,7 @@
         "score_font": "quad://fonts/novarese-10.font.json",
         "history_font": "quad://fonts/scoreboard-6.font.json"
     },
-    "version": "0.036",
+    "version": "0.037",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
