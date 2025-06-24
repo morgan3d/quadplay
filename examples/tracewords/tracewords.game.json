@@ -27,7 +27,7 @@
         "word_sound": "quad://sounds/powerup-03.sound.json",
         "dictionary_source": "quad://data/english_all_table.data.json"
     },
-    "version": "0.033",
+    "version": "0.034",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
