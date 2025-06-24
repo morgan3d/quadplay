@@ -50,7 +50,32 @@ def _player_draw_score(player, board_pos):
 
 
 
-todo("Move the rotate button to the right")
+/* Submits `word` and all of its prefixes (but not other substrings)
+   for scoring. The `word` is Q-encoded. */
+def player_submit_word(player, word):
+    
+    let note = ""
+    for i ≤ size(word) - MIN_WORD_LENGTH:
+        // Submit in reverse order from what was actually entered
+        const subword = slice(word, 0, size(word) - i)
+        
+        const points = score_word(subword)
+        if points > 0 and not player.already_found[subword]:
+            player.already_found[subword] = true
+            
+            push(player.history, {
+                label: note + q_decode(subword), 
+                tiles: size(subword), 
+                points: points, 
+                color: color_for_points(points)})
+                
+            player.score += points
+
+            // Mark subsequent words so that it is clear what
+            // was actually submitted
+            note = "+"
+        
+
 
 /* Run UI for this player and draw their board */
 def player_update(player, angle default 0°, allow_selection default false):
@@ -63,15 +88,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     
     if touch.released_a:
         todo("Release animation and sound")
-        const word = board_selected_word(player.board)        
-        const points = score_word(word)
-
-        if points > 0 and not player.already_found[word]:
-            player.already_found[word] = true
-            
-            push(player.history, {label: q_decode(word), tiles: size(word), points: points, color: color_for_points(points)})
-            player.score += points
-        
+        player_submit_word(player, board_selected_word(player.board))
 
     // Version/debugging
     draw_text({

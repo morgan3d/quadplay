@@ -11,6 +11,60 @@ function onProjectLicensePreset(license) {
     onProjectMetadataChanged();
 }
 
+function onProjectBumpVersion() {
+    const oldValue = document.getElementById('projectVersion').value.trim();
+    let newValue = oldValue;
+    let updated = false;
+
+    // Date format: YYYY.MM.DD.HH, first part > 2000
+    const dateParts = oldValue.split('.');
+    if (dateParts.length === 4 && /^\d+$/.test(dateParts[0]) && Number(dateParts[0]) > 2000) {
+        const now = new Date();
+        const yyyy = now.getFullYear().toString();
+        const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+        const dd = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        newValue = `${yyyy}.${mm}.${dd}.${hh}`;
+        updated = true;
+    } else if (/^\d+(\.\d+)+$/.test(oldValue)) {
+        // Decimal-separated version, e.g., 1.09, 1.1.1, 01.000004
+        const parts = oldValue.split('.');
+        let carry = 1;
+        for (let i = parts.length - 1; i >= 0; --i) {
+            if (carry === 0) { break; }
+            const orig = parts[i];
+            const width = orig.length;
+            let n = parseInt(orig, 10) + carry;
+            if (n.toString().length > width) {
+                // Carry over
+                n = 0;
+                carry = 1;
+            } else {
+                carry = 0;
+            }
+            parts[i] = n.toString().padStart(width, '0');
+        }
+        newValue = parts.join('.');
+        updated = true;
+    } else if (/^\d+$/.test(oldValue)) {
+        // Pure integer
+        const width = oldValue.length;
+        let n = parseInt(oldValue, 10) + 1;
+        newValue = n.toString().padStart(width, '0');
+        updated = true;
+    }
+
+    if (updated) {
+        document.getElementById('projectVersion').value = newValue;
+        document.getElementById('projectLicenseBump').disabled = false;
+        onProjectMetadataChanged();
+    } else {
+        // Unrecognized format: disable the bump button
+        document.getElementById('projectLicenseBump').disabled = true;
+    }
+}
+
+
 function onProjectMetadataChanged() {
     // The gameSource.extendedJSON will be out of sync briefly after this runs,
     // because only gameSource.json is modified. For simplicity, just leave it that way.
@@ -21,6 +75,8 @@ function onProjectMetadataChanged() {
     const t = document.getElementById('projectTitle').value.trim();
     const titleChanged = t !== json.title;
     json.title = t;
+
+    json.version = document.getElementById('projectVersion').value.trim();
 
     const textFields = ['developer', 'copyright', 'license', 'description'];
     for (let f = 0; f < textFields.length; ++f) {

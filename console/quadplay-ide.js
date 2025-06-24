@@ -384,13 +384,14 @@ function visualizeGame(gameEditor, url, game) {
         s += `<tr valign="top"><td>Folder</td><td colspan=3><a onclick="onOpenFolder('${path}')" style="cursor:pointer">${path}</a></td></tr>\n`;
     }
     
-    s += `<tr valign="top"><td width="110px">Title</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${(game.title || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>Developer</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${(game.developer || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>Copyright</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${(game.copyright || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>License</td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectLicense" onchange="onProjectMetadataChanged()">${game.license}</textarea>`;
+    s += `<tr valign="top"><td width="110px">Title</td><td colspan="3"><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${(game.title || '').replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Version</td><td colspan="3"><input type="text" title="Version in the format of decimal separated integers ##.##, ##.###.##, etc., or YYYY.MM.DD.HH" autocomplete="false" style="width:334px" ${disabled} onchange="onProjectMetadataChanged()" id="projectVersion" value="${(game.version === undefined ? '0' : game.version).toString().replace(/"/g, '\\"')}"><button style="width: 50px; height: 19px; font-size: 85%" onclick="onProjectBumpVersion()">Bump</button></td></tr>\n`;
+    s += `<tr valign="top"><td>Developer</td><td colspan="3"><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${(game.developer || '').replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Copyright</td><td colspan="3"><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${(game.copyright || '').replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>License</td><td colspan="3"><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectLicense" onchange="onProjectMetadataChanged()">${game.license}</textarea>`;
     if (editableProject) {
         // License defaults
-        s += '<br><button class="license" onclick="onProjectLicensePreset(\'All\')">All Rights Reserved</button><button class="license" onclick="onProjectLicensePreset(\'GPL\')">GPL 3</button><button onclick="onProjectLicensePreset(\'BSD\')" class="license">BSD</button><button class="license" onclick="onProjectLicensePreset(\'MIT\')">MIT</button><button onclick="onProjectLicensePreset(\'CC0\')" class="license">Public Domain</button>';
+        s += '<br><button class="license" onclick="onProjectLicensePreset(\'All\')">All Rights Reserved</button><button id="projectLicenseBump" class="license" onclick="onProjectLicensePreset(\'GPL\')">GPL 3</button><button onclick="onProjectLicensePreset(\'BSD\')" class="license">BSD</button><button class="license" onclick="onProjectLicensePreset(\'MIT\')">MIT</button><button onclick="onProjectLicensePreset(\'CC0\')" class="license">Public Domain</button>';
     }
     s += '</td></tr>\n';
 
