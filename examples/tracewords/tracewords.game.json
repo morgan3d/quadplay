@@ -17,17 +17,18 @@
     "start_mode": "Play",
     "docs": [],
     "assets": {
-        "font": "quad://fonts/novarese-10.font.json",
-        "tile_point_font": "quad://fonts/deja-7.font.json",
+        "tile_point_font": "quad://fonts/deja-6.font.json",
         "shapes": "quad://sprites/shapes-32x32.sprite.json",
         "blip_sound": "quad://sounds/blip-04.sound.json",
         "tile_font": "quad://fonts/deja-bold-15.font.json",
         "select_tile_sound": "quad://sounds/hit-08.sound.json",
         "sensitive": "quad://data/english_sensitive_table.data.json",
         "word_sound": "quad://sounds/powerup-03.sound.json",
-        "dictionary_source": "quad://data/english_all_table.data.json"
+        "dictionary_source": "quad://data/english_all_table.data.json",
+        "score_font": "quad://fonts/novarese-10.font.json",
+        "history_font": "quad://fonts/scoreboard-6.font.json"
     },
-    "version": "0.035",
+    "version": "0.036",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -212,6 +213,14 @@
             "type": "number",
             "value": "20",
             "min": 1,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "HISTORY_COLUMN_SEPARATION": {
+            "type": "number",
+            "value": "12",
+            "min": 0,
             "max": 128,
             "format": "0",
             "quantum": 1

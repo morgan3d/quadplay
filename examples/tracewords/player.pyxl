@@ -1,4 +1,5 @@
-
+todo("Show demons")
+todo("Re-color")
 
 def make_player():
     
@@ -24,7 +25,7 @@ def make_player():
             const color = color_for_points(points)
             
             push(player.history, {
-                label: q_decode(word) + " (" + points + ")", 
+                label: q_decode(word) + ": " + points, 
                 tiles: size(word), 
                 points: points, 
                 color: if points < 40 then color else #FFF,
@@ -44,7 +45,7 @@ def make_player():
             return true
 
     
-    const player = {
+    return {
         board: make_board(),
         
         score: 0,
@@ -58,20 +59,19 @@ def make_player():
         // Used for display.
         history: [],
         
+        // Horizontal pixels to scroll the history
+        history_scroll: 0,
+        
         selection_change_callback: selection_change_callback,
         
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
-        using_gamepad: false,
+        using_gamepad: false}
         
-        // {word, score} sorted by score
-        word_array: []}
-        
-    return player
         
 
 
-def _update_rotate_button(board_pos):
+def _player_update_rotate_button(player, board_pos):
     let rotate_button_sprite = shapes.curved_arrow.rotated_270
     
     let rotate_button_pos = board_pos + xy(-4, -19) + xy(½, -½) board_pixel_size()
@@ -79,7 +79,7 @@ def _update_rotate_button(board_pos):
     draw_disk(rotate_button_pos, 10, ∅, #FFF)
     draw_sprite(rotate_button_sprite, rotate_button_pos + xy(1, 0), ∅, 50%)
     if player.using_gamepad:
-        draw_text({font: tile_point_font, text: joy.prompt["(b)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
+        draw_text({font: tile_point_font, text: player.gamepad.prompt["(b)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
 
     if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.bb:
         push_mode(Rotate) because "Rotate button"
@@ -91,7 +91,7 @@ def _player_draw_score(player, board_pos):
         
     draw_text({
         pos: score_pos,
-        font: font,
+        font: score_font,
         text: format_number(player.score, "commas") + " pts",
         color: #FFF,
         y_align: "center",
@@ -140,7 +140,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     _player_draw_score(player, board_pos)
     
     if allow_selection:
-        _update_rotate_button(board_pos)
+        _player_update_rotate_button(player, board_pos)
         
     _player_draw_history(player, board_pos)
 
@@ -153,23 +153,24 @@ def landscape():
 
 def _player_draw_history(player, board_pos)
 & preserving_transform:
-    
     todo("Scroll the list when it is too long")
+    
     
     let list_rect
     if landscape():
-        list_rect = {corner: xy(1, 20), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 23)}
+        list_rect = {corner: xy(1, 20), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 22)}
     else:
         list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 3, board_pos.y - ½ board_pixel_size().y - 32)}
     
-    todo("Set clip")
-    set_transform(list_rect.corner)
+    set_clip(list_rect)
+    set_transform(list_rect.corner - xy(player.history_scroll, 0))
     
     let pos = xy(0, 0)
     let max_width = 0
     for entry in player.history:
         const bounds = draw_text({
             pos: pos,
+            font: history_font,
             x_align: "left",
             y_align: "top",
             color: entry.color,
@@ -182,11 +183,16 @@ def _player_draw_history(player, board_pos)
         // Wrap into multiple columns
         if pos.y > list_rect.size.y - 8:
             pos.y = 0
-            pos.x += max_width + 8
+            pos.x += max_width + HISTORY_COLUMN_SEPARATION
             max_width = 0
     
+    const overextent = pos.x + max_width - player.history_scroll
+    if overextent > list_rect.size.x or joy.a:
+        --player.history_scroll
+    
     draw_text({
-        pos: list_rect.size,
+        pos: list_rect.size - xy(2, 1),
+        font: history_font,
         text: "..." + (player.board.word_count - size(player.history)) + " left",
         color: #DDD,
         x_align: "right",
