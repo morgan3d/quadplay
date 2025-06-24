@@ -136,7 +136,7 @@ def _player_draw_history(player, board_pos)
     
     let list_rect
     if landscape():
-        list_rect = {corner: xy(0, 22), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 22)}
+        list_rect = {corner: xy(0, 22), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 23)}
     else:
         list_rect = {corner: xy(0, 0), size: xy(SCREEN_SIZE.x, board_pos.y - ½ board_pixel_size().y - 32)}
     
@@ -163,7 +163,7 @@ def _player_draw_history(player, board_pos)
             max_width = 0
     
     draw_text({
-        pos: list_rect.size, 
+        pos: list_rect.size,
         text: "..." + (player.board.word_count - size(player.history)) + " left",
         color: #DDD,
         x_align: "right",
