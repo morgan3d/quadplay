@@ -1,9 +1,7 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("Test D-pad")
-
-todo("Bounce when the selection is a word")
+todo("Implement D-pad")
 
 
 let resolution_hook

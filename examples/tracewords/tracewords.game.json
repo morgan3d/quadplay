@@ -27,9 +27,10 @@
         "word_sound": "quad://sounds/powerup-03.sound.json",
         "dictionary_source": "quad://data/english_all_table.data.json",
         "score_font": "quad://fonts/novarese-10.font.json",
-        "history_font": "quad://fonts/scoreboard-6.font.json"
+        "history_font": "quad://fonts/scoreboard-6.font.json",
+        "history_emphasis_font": "quad://fonts/scoreboard-7.font.json"
     },
-    "version": "0.039",
+    "version": "0.041",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,

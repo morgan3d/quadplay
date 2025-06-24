@@ -1,8 +1,6 @@
 todo("Show demons")
 todo("Re-color")
 
-todo("**Highlight word in history when already found")
-
 def make_player():
     
     // Called by the board after changing selection. 
@@ -15,11 +13,18 @@ def make_player():
         const word = board_selected_word(board)
         const points = score_word(word)
     
-        if points == 0 or player.already_found[word]: 
-            // Reset selection color
-            board.selection_color = TILE_CENTER_SELECTED_COLOR
-            return false
-        else:
+        // Reset selection color
+        board.selection_color = TILE_CENTER_SELECTED_COLOR
+        
+        if player.already_found[word]:
+            
+            // Show that we've already seen this word by 
+            // finding and emphasizing it
+            player_emphasize_history_word(player, word)
+            play_sound(select_tile_sound, false, 125%, ∅, 40%)
+            return true
+                    
+        else if points > 0:
             // Score the word, even without the player releasing their touch
             player.already_found[word] = true
             
@@ -27,7 +32,9 @@ def make_player():
             
             push(player.history.list, {
                 text:    q_decode(word) + ": " + points, 
+                word:    word,
                 tiles:   size(word), 
+                emphasize_frame: 0,
                 points:  points, 
                 color:   if points < 40 then color else #FFF,
                 outline: if points < 40 then ∅ else color})
@@ -56,9 +63,10 @@ def make_player():
         // and are represented in history.list
         already_found: {},
         
-        // Each entry is {label, tiles, points, color}.
         // Used for display.
         history: {
+            // Each entry is {text, word, tiles, points, color, emphasize_frame}.
+            // `word` is Q-encoded, text may contain arbitrary characters
             list: [],
             scroll: 0,
 
@@ -81,6 +89,18 @@ def make_player():
     return player
         
         
+
+/* Make this q-encoded word that is already in the history 
+   appear emphasized for a few frames to make it obvious 
+   to the player */
+def player_emphasize_history_word(player, word, duration default 30):
+    for entry in player.history.list:
+        if entry.word == word:
+            entry.emphasize_frame = mode_frames + duration
+            return
+        
+    assert(false, "Could not find " + word + " which should already be in history")
+
 
 
 def _player_update_rotate_button(player, board_pos):
@@ -178,8 +198,6 @@ def landscape():
 
 def _player_draw_history(player, board_pos)
 & preserving_transform:
-    todo("Fix scrolling the list when it is too long")
-    
     
     let list_rect
     if landscape():
@@ -203,24 +221,30 @@ def _player_draw_history(player, board_pos)
         player.history.scroll = 0
 
     set_transform(list_rect.corner - xy(player.history.scroll, 0))
-    const pos = xy(0, 0)
+    const pos = xy(3, 2)
     let max_width = 0
     for entry in player.history.list:
-        draw_text({
-            pos: pos,
-            font: history_font,
+        const emphasize = max(0, entry.emphasize_frame - mode_frames)
+        
+        const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
+    
+        const bounds = draw_text({
+            // Bounce if emphasized
+            pos: pos + wiggle,
+            font: if emphasize then history_emphasis_font else history_font,
             x_align: "left",
             y_align: "top",
             color: entry.color,
-            outline: entry.outline,
+            outline: if emphasize then #FFF else entry.outline,
+            z: emphasize,
             text: entry.text})
-    
+
         max_width = max(max_width, text_width(history_font, entry.text))
         pos.y += history_font.line_height + 1
         
         // Wrap into multiple columns
         if pos.y > list_rect.size.y - 8:
-            pos.y = 0
+            pos.y = 2
             pos.x += max_width + HISTORY_COLUMN_SEPARATION
             max_width = 0
     
