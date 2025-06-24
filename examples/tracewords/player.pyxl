@@ -22,7 +22,7 @@ def make_player():
             player.already_found[word] = true
             
             push(player.history, {
-                label: q_decode(word), 
+                label: q_decode(word) + " (" + points + ")", 
                 tiles: size(word), 
                 points: points, 
                 color: color_for_points(points)})

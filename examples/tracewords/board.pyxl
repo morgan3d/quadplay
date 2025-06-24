@@ -333,8 +333,8 @@ def _board_play_sound(sound, volume, pitch, index):
 
 
 def color_for_points(points):
-    // Every 10 points, notch up
-    const α = min(⌊points / 10⌋ / 8, 100%)
+    // Every 6 points, notch up
+    const α = min(⌊points / 6⌋ / 8, 100%)
     return perceptual_lerp_color(WORD_MIN_COLOR, WORD_MAX_COLOR, α)
     
 
