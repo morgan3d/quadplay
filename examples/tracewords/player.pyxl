@@ -44,7 +44,7 @@ def make_player():
             return true
 
     
-    return {
+    const player = {
         board: make_board(),
         
         score: 0,
@@ -66,6 +66,11 @@ def make_player():
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
         using_gamepad: false}
+    
+    // Fake history for layout debugging
+    // for i < 70: push(player.history, {color: #FFF, outline: ∅, label: "hello: 20"})
+        
+    return player
         
         
 
@@ -73,10 +78,10 @@ def make_player():
 def _player_update_rotate_button(player, board_pos):
     let rotate_button_sprite = shapes.curved_arrow.rotated_270
     
-    let rotate_button_pos = board_pos + xy(-4, -19) + xy(½, -½) board_pixel_size()
+    let rotate_button_pos = board_pos + xy(-4, -16) + xy(½, -½) board_pixel_size()
         
-    draw_disk(rotate_button_pos, 10, ∅, #FFF)
-    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(1, 0), ∅, 50%)
+    draw_disk(rotate_button_pos, 8, ∅, #FFF)
+    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(1, 1), ∅, 38%)
     if player.using_gamepad:
         draw_text({font: tile_point_font, text: player.gamepad.prompt["(b)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
 
@@ -86,7 +91,7 @@ def _player_update_rotate_button(player, board_pos):
 
         
 def _player_draw_score(player, board_pos):
-    let score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(40, 19)
+    let score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(40, 16)
         
     draw_text({
         pos: score_pos,
@@ -99,7 +104,7 @@ def _player_draw_score(player, board_pos):
     
 
 def draw_clock(board_pos):  
-    let clock_pos = board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 19)
+    let clock_pos = board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16)
     draw_text({
         pos: clock_pos,
         font: score_font,
@@ -187,7 +192,7 @@ def _player_draw_history(player, board_pos)
 
 
     set_transform(list_rect.corner - xy(player.history_scroll, 0))
-    let pos = xy(0, 0)
+    const pos = xy(0, 0)
     let max_width = 0
     for entry in player.history:
         const bounds = draw_text({
