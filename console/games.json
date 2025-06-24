@@ -594,7 +594,7 @@
             "url": "quad://examples/tracewords/",
             "title": "Tracewords",
             "description": "Word game.",
-            "version": "0.034",
+            "version": "0.035",
             "developer": "Casual Effects",
             "min_players": 1,
             "max_players": 1,

@@ -21,18 +21,21 @@ def make_player():
             // Score the word, even without the player releasing their touch
             player.already_found[word] = true
             
+            const color = color_for_points(points)
+            
             push(player.history, {
                 label: q_decode(word) + " (" + points + ")", 
                 tiles: size(word), 
                 points: points, 
-                color: color_for_points(points)})
+                color: if points < 40 then color else #FFF,
+                outline: if points < 40 then ∅ else color})
                 
             player.score += points
             todo("*Animation for scoring*")
             todo("*Delay appearance of new word on the list until animation completes*")
             todo("*Delay appearance of points until animation completes*")
             
-            board.selection_color = color_for_points(points)
+            board.selection_color = color
             
             const pitch = 75% + min(max(0, points - 6)^0.1, 3)
             _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
@@ -170,10 +173,11 @@ def _player_draw_history(player, board_pos)
             x_align: "left",
             y_align: "top",
             color: entry.color,
+            outline: entry.outline,
             text: entry.label})
     
         max_width = max(max_width, bounds.size.x)
-        pos.y += bounds.height
+        pos.y += bounds.height + 1
         
         // Wrap into multiple columns
         if pos.y > list_rect.size.y - 8:

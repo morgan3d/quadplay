@@ -271,7 +271,7 @@ def board_reset(board, seed):
     const rnd = make_random(seed)
     
     let tries = 0
-    while tries == 0 or board_has_obvious_sensitive_word(board):
+    while (tries == 0 or board_has_obvious_sensitive_word(board)) and tries < MAX_BOARD_SENSITIVE_RETRIES:
         ++tries
         
         // Shuffle the sets themselves

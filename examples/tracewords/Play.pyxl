@@ -19,16 +19,18 @@ if not resolution_hook:
 // Choose a random, non-sensitive word as the seed
 set_random_seed()
 let seed_word
-const GOOD_BOARD_TRIES = 10
-const GOOD_BOARD_WORDS = 60
-for i < GOOD_BOARD_TRIES:
+const GOOD_BOARD_RETRIES = 10
+const MIN_GOOD_BOARD_WORDS = 100
+for i < GOOD_BOARD_RETRIES:
+    // Find a not-sensitive seed word to show
     while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
         seed_word = lowercase(q_decode(random_value(dictionary_array)))
     
+    // Reset the player
     player_reset(player, seed_word)
 
     let word_array = board_find_all_words(player.board)
-    if size(word_array) < GOOD_BOARD_WORDS:
+    if size(word_array) < MIN_GOOD_BOARD_WORDS:
         debug_print("Rejected board " + seed_word + " because it only produced " + size(word_array) + " words")
         seed_word = ∅
     else:

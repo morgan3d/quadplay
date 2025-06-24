@@ -27,7 +27,7 @@
         "word_sound": "quad://sounds/powerup-03.sound.json",
         "dictionary_source": "quad://data/english_all_table.data.json"
     },
-    "version": "0.034",
+    "version": "0.035",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -207,6 +207,14 @@
             "type": "string",
             "value": "abcdefghijklmnopqrstuvwxyz",
             "description": "The alphabet as a lowercase string."
+        },
+        "MAX_BOARD_SENSITIVE_RETRIES": {
+            "type": "number",
+            "value": "20",
+            "min": 1,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "Tracewords",
