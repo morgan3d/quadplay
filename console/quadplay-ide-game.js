@@ -8,8 +8,12 @@
 function onProjectLicensePreset(license) {
     const projectLicense = document.getElementById('projectLicense');
     projectLicense.value = licenseTable[license];
-    onProjectMetadataChanged();
+
+    // Wait for a GUI update to work around threading issues
+    // on Chromium for reading that element immediately
+    setTimeout(onProjectMetadataChanged());
 }
+
 
 function onProjectBumpVersion() {
     const oldValue = document.getElementById('projectVersion').value.trim();
@@ -56,8 +60,10 @@ function onProjectBumpVersion() {
 
     if (updated) {
         document.getElementById('projectVersion').value = newValue;
-        document.getElementById('projectLicenseBump').disabled = false;
-        onProjectMetadataChanged();
+        // Instead of invoking this immediately, wait for the next GUI
+        // thread update. This works around a race-condition like problem
+        // where immediately reading the value gives the old value on Chromium.
+        setTimeout(onProjectMetadataChanged);
     } else {
         // Unrecognized format: disable the bump button
         document.getElementById('projectLicenseBump').disabled = true;

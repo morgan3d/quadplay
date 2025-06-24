@@ -1,5 +1,47 @@
+
+
 def make_player():
-    return {
+    
+    
+    // Called by the board after changing selection. 
+    // Returns true if there was a new word. As a side effect,
+    // plays a sound and sets the state for visualizing the word
+    // if there is one
+    def selection_change_callback():
+    
+        const board = player.board
+        const word = board_selected_word(board)
+        const points = score_word(word)
+    
+        if points == 0 or player.already_found[word]: 
+            // Reset selection color
+            board.selection_color = TILE_CENTER_SELECTED_COLOR
+            return false
+        else:
+            // Score the word, even without the player releasing their touch
+            player.already_found[word] = true
+            
+            push(player.history, {
+                label: q_decode(word), 
+                tiles: size(word), 
+                points: points, 
+                color: color_for_points(points)})
+                
+            player.score += points
+            todo("*Animation for scoring*")
+            todo("*Delay appearance of new word on the list until animation completes*")
+            todo("*Delay appearance of points until animation completes*")
+            
+            board.selection_color = color_for_points(points)
+            
+            const pitch = 75% + min(max(0, points - 6)^0.1, 3)
+            _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
+        
+            todo("visualization state")
+            return true
+
+    
+    const player = {
         board: make_board(),
         
         score: 0,
@@ -13,12 +55,16 @@ def make_player():
         // Used for display.
         history: [],
         
+        selection_change_callback: selection_change_callback,
+        
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
         using_gamepad: false,
         
         // {word, score} sorted by score
         word_array: []}
+        
+    return player
         
 
 
@@ -47,33 +93,6 @@ def _player_draw_score(player, board_pos):
         color: #FFF,
         y_align: "center",
         x_align: "right"})
-
-
-
-/* Submits `word` and all of its prefixes (but not other substrings)
-   for scoring. The `word` is Q-encoded. */
-def player_submit_word(player, word):
-    
-    let note = ""
-    for i ≤ size(word) - MIN_WORD_LENGTH:
-        // Submit in reverse order from what was actually entered
-        const subword = slice(word, 0, size(word) - i)
-        
-        const points = score_word(subword)
-        if points > 0 and not player.already_found[subword]:
-            player.already_found[subword] = true
-            
-            push(player.history, {
-                label: note + q_decode(subword), 
-                tiles: size(subword), 
-                points: points, 
-                color: color_for_points(points)})
-                
-            player.score += points
-
-            // Mark subsequent words so that it is clear what
-            // was actually submitted
-            note = "+"
         
 
 
@@ -85,11 +104,6 @@ def player_update(player, angle default 0°, allow_selection default false):
     else if player.gamepad.aa or player.gamepad.bb or player.gamepad.dx or player.gamepad.dy:
         player.using_gamepad = true
         
-    
-    if touch.released_a:
-        todo("Release animation and sound")
-        player_submit_word(player, board_selected_word(player.board))
-
     // Version/debugging
     draw_text({
         pos: xy(5, 5),
@@ -116,7 +130,9 @@ def player_update(player, angle default 0°, allow_selection default false):
         // Slide up a little on narrow screens so that it is easier to swipe on a phone
         board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
         
-    board_update(player.board, board_pos, angle, player.already_found, allow_selection)
+    board_update(
+        player.board, board_pos, angle,
+        if allow_selection then player.selection_change_callback else ∅)
 
     _player_draw_score(player, board_pos)
     
@@ -136,7 +152,7 @@ def _player_draw_history(player, board_pos)
     
     let list_rect
     if landscape():
-        list_rect = {corner: xy(0, 22), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 23)}
+        list_rect = {corner: xy(1, 20), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 23)}
     else:
         list_rect = {corner: xy(0, 0), size: xy(SCREEN_SIZE.x, board_pos.y - ½ board_pixel_size().y - 32)}
     

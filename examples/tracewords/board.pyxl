@@ -301,26 +301,25 @@ def penultimate_value(array):
     return array[size(array) - 2]
     
     
-    
 /* Add `index` to the current selection, playing sounds
    as appropriate */
-def board_select(board, index, already_found):
+def board_select(board, index, selection_change_callback):
     const tile = board.tile[index.x][index.y]
     assert(not tile.selected)
     push(board.selection, index)
     tile.selected = mode_frames
 
     // Pan sound with position
-    if not _board_check_new_word(board, already_found):
+    if not selection_change_callback():
         _board_play_sound(select_tile_sound, 85%, 100%, index)
 
 
 
-def board_deselect_last(board, already_found):
+def board_deselect_last(board, selection_change_callback):
     const prev = pop(board.selection)
     board.tile[prev.x][prev.y].selected = false
     
-    if not _board_check_new_word(board, already_found):
+    if not selection_change_callback():
         todo("play deselect sound")
 
 
@@ -338,29 +337,6 @@ def color_for_points(points):
     const α = min(⌊points / 10⌋ / 8, 100%)
     return perceptual_lerp_color(WORD_MIN_COLOR, WORD_MAX_COLOR, α)
     
-
-
-/* Call after changing selection. 
-   Returns true if there was a new word. As a side effect,
-   plays a sound and sets the state for visualizing the word
-   if there is one */
-def _board_check_new_word(board, already_found):
-    const word = board_selected_word(board)
-    const points = score_word(word)
-
-    if points == 0 or already_found[word]: 
-        // Reset selection color
-        board.selection_color = TILE_CENTER_SELECTED_COLOR
-        return false
-    else:
-        board.selection_color = color_for_points(points)
-        
-        const pitch = 75% + min(max(0, points - 6)^0.1, 3)
-        _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
-    
-        todo("visualization state")
-    
-        return true
 
 
 
@@ -399,16 +375,15 @@ def board_reverse_rotate(board):
  
    `angle`
    : Rotate by this amount
-   
-   `history`
-   : `player.history` used to prevent repeat word scoring
- 
-   `allow_selection`
-   : If true, process user input. If false, remove selection 
-     and preclude more 
+     
+   `selection_change_callback()`
+   : Invoked when the selection changes, unless it is completely
+     removed. If ∅, remove any current
+     selection and preclude a new one. Return true if there was a new
+     word that is scored.
      
 */
-def board_update(board, pos, angle, already_found, allow_selection default false)
+def board_update(board, pos, angle, selection_change_callback)
 & preserving_transform:
     
     const TILE_CENTER_Z = 1
@@ -431,10 +406,12 @@ def board_update(board, pos, angle, already_found, allow_selection default false
     
     const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
 
-    if touch.released_a or not allow_selection:
+    if touch.released_a or not selection_change_callback:
+        // Remove any active selection
         resize(board.selection, 0)
     
-    // Save before iteration so that it does not change within a frame
+    // Save the selection color before iteration so that
+    // it does not change within a frame
     const selection_color = board.selection_color
     
     for col at i in board.tile:
@@ -443,11 +420,11 @@ def board_update(board, pos, angle, already_found, allow_selection default false
             const index = xy(i, j)
             const pos = _index_to_pos(index)
             
-            if allow_selection and overlaps({pos: pos, shape: "disk", size: selection_size}, touch.xy):
+            if selection_change_callback and overlaps({pos: pos, shape: "disk", size: selection_size}, touch.xy):
                 if touch.aa and (size(board.selection) == 0):
                     
                     // Start selection
-                    board_select(board, index, already_found)
+                    board_select(board, index, selection_change_callback)
                     
                 else if (touch.a and
                         size(board.selection) > 0 and
@@ -456,16 +433,16 @@ def board_update(board, pos, angle, already_found, allow_selection default false
                     if tile.selected:
                         // Undo selection, backtracked
                         if equivalent(index, penultimate_value(board.selection)):
-                            board_deselect_last(board, already_found)
+                            board_deselect_last(board, selection_change_callback)
                             
                     else:
                         // Continue selection
-                        board_select(board, index, already_found)
+                        board_select(board, index, selection_change_callback)
 
             
             let radius = ½ center_size.x
             
-            if touch.released_a or not allow_selection:
+            if touch.released_a or not selection_change_callback:
                 tile.selected = false
             
             if tile.selected:
