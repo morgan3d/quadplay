@@ -147,6 +147,7 @@ def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
 
+
 def _player_draw_history(player, board_pos)
 & preserving_transform:
     
@@ -154,7 +155,7 @@ def _player_draw_history(player, board_pos)
     if landscape():
         list_rect = {corner: xy(1, 20), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT, SCREEN_SIZE.y - 23)}
     else:
-        list_rect = {corner: xy(0, 0), size: xy(SCREEN_SIZE.x, board_pos.y - ½ board_pixel_size().y - 32)}
+        list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 3, board_pos.y - ½ board_pixel_size().y - 32)}
     
     todo("Set clip")
     set_transform(list_rect.corner)
