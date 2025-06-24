@@ -22,6 +22,7 @@ let seed_word
 const GOOD_BOARD_RETRIES = 10
 const GOOD_BOARD_MIN_WORDS = 100
 const GOOD_BOARD_MIN_LONG_WORDS = 25
+const GOOD_BOARD_MIN_VERY_LONG_WORDS = 5
 for i < GOOD_BOARD_RETRIES:
     // Find a not-sensitive seed word to show
     while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
@@ -33,9 +34,12 @@ for i < GOOD_BOARD_RETRIES:
     const word_array = board_find_all_words(player.board)
     
     let long_word_count = 0
+    let very_long_word_count = 0
     for word in word_array:
-        if size(word) > 4:
+        if size(word) ≥ 5:
             ++long_word_count
+        if size(word) ≥ 7:
+            ++very_long_word_count
     
     if size(word_array) < GOOD_BOARD_MIN_WORDS or long_word_count < GOOD_BOARD_MIN_LONG_WORDS:
         debug_print("Rejected board " + seed_word + " because it only produced " + size(word_array) + " words and " + long_word_count + " long words")
@@ -43,13 +47,13 @@ for i < GOOD_BOARD_RETRIES:
     else:
         player.board.word_count = size(word_array)
         break
-    
+
 //debug_print(word_array)
 
 
 set_background(#544)
 
-end_time = now() + 60 * 3
+end_time = now() + 60 * 4
 
 
 frame

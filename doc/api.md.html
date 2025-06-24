@@ -3482,8 +3482,8 @@ same color as the fill. Shapes include their endpoints and borders.
 : Print string `text` relative to `pos`. If the font is unspecified,
   it defaults to the <quadplay/> system 8-pixel font.
 
-  Returns a camera-space bounding box that is clipped to the current
-  clipping region. It has fields `{pos: xy(), size: xy(), height:h,
+  Returns a camera-space bounding box _that is clipped to the current
+  clipping region_ of the text rendered. This bounding box has fields `{pos: xy(), size: xy(), height:h,
   z:z}` that contains the text but not shadows and outlines. This
   bounding box is conservative in height and accounts for the highest
   ascender and accent and lowest descender. The `height` is the
