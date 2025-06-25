@@ -1436,6 +1436,11 @@ code, .code {
     background: #331c2a;
 }
 
+/* Black background for emulator if not in the IDE */
+:not(.IDE) #emulator {
+    background: #000;
+} 
+
 .GhostUI .emulator, .GhostUI div#emulatorPane, .MaximalUI .emulator, .MaximalUI div#emulatorPane {
     padding: 0px;
     margin-top: 0px;

@@ -344,9 +344,14 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             }
         }
 
+        // Hide virtual controller immediately if requested by the game, before
+        // loading the rest of the files
+        if (! useIDE && gameJSON.mobile_touch_gamepad === false) {
+            document.getElementById('emulatorUIButtonContainer').style.display = 'none';
+        }
+
         //////////////////////////////////////////////////////////////////////////////////////////////
 
-        // Upgrade
         if (gameJSON.screenshot_tag === undefined) {
             gameJSON.screenshot_tag = gameJSON.title;
         }

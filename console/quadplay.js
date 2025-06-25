@@ -2008,7 +2008,13 @@ function onPauseButton() {
 function onSystemMenuButton(why) {
     assert(!useIDE);
     if (QRuntime) {
-        QRuntime.$goToSystemMenu = why;
+        if (QRuntime.$gameMode.$name[0] === '$') {
+            // Already in a system menu. Treat as pressing P
+            // to exit that menu
+            QRuntime.$goToSystemMenu = 'cancel';
+        } else {
+            QRuntime.$goToSystemMenu = why;
+        }
     }
 
     // Put the focus back on the emulator
@@ -2730,6 +2736,10 @@ function mainLoopStep() {
             // main JavaScript loop.
             const gamepadSampleTime = performance.now() + 1000 / 60;
             updateInput();
+            if (QRuntime.$goToSystemMenu === 'cancel') {
+                QRuntime.gamepad_array[0].$pp = 1;
+                QRuntime.$goToSystemMenu = false;
+            }
             while (! updateKeyboardPending && ! refreshPending && (performance.now() < gamepadSampleTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
                 coroutine();
             }
@@ -3733,6 +3743,7 @@ function appendToBootScreen(msg) {
     bootScreen.scrollTop = bootScreen.scrollHeight;
 }
 
+
 /** If loadFast is true, do not make any cosmetic delays. This is typically
     set for hot reloads or after configuration changes.
 
@@ -3751,6 +3762,7 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
         setErrorStatus('');
     }
     
+    // Stop the old game
     if (emulatorMode !== 'stop') { onStopButton(false, true); }
 
     const isLauncher = /(^quad:\/\/console\/|\/launcher\.game\.json$)/.test(url);
@@ -4364,10 +4376,18 @@ if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
     document.getElementById('body').classList.add('kiosk');
     document.getElementById('body').classList.remove('noKiosk');
-    setUIMode('Maximal');
 } else {
     document.getElementById('body').classList.remove('kiosk');
     document.getElementById('body').classList.add('noKiosk');
+}
+
+// Perform initial page and game load in maximal mode rather than showing the ununitialized
+// layout. If not in IDE mode this will be overriden with a new mode when the game
+// loads and we know if we need emulator controls.
+if (! useIDE) {
+    setUIMode('Maximal');
+} else {
+    localStorage.getItem('uiMode') || 'IDE';
 }
 
 
@@ -4412,7 +4432,7 @@ if (nativeapp && isQuadserver) {
 if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
     // Check for updates a few seconds after start, and then every
     // two hours when not sleeping.
-    const INITIAL_DELAY  = 4000;
+    const INITIAL_DELAY  = 5000;
     const REGULAR_PERIOD = 2 * 60 * 60 * 1000;
     setTimeout(function () {
         checkForUpdate();
@@ -4451,11 +4471,8 @@ reloadRuntime(function () {
 
     console.log('Loading because of initial page load.');
     loadGameIntoIDE(url, function () {
-        // Hide virtual controller if requested by the game
-        if (! useIDE && gameSource.extendedJSON.mobile_touch_gamepad === false) {
-            document.getElementById('emulatorUIButtonContainer').style.display = 'none';
-        }
-
+        
+        // Set screen mode after checking for mobile_touch_gamepad in the game
         if (getQueryString('kiosk') !== '1') {
             let newMode = getQueryString('mode');
             if (! newMode || newMode === 'DefaultWindow') {
@@ -4478,7 +4495,6 @@ reloadRuntime(function () {
             
             setUIMode(newMode, noFullscreen);
         }
-
 
         const appLoadingOverlay = document.getElementById('appLoadingOverlay');
         if (appLoadingOverlay) {

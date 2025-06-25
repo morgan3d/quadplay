@@ -1032,7 +1032,7 @@ function getIdealGamepads() {
                 prevRealGamepadState.push({axes:[0, 0, 0, 0], 
                     buttons:[false, false, false, false, // 0-3: ABXY buttons
                              false, false, false, false, // 4-7: LB,RB,LT,RT
-                             false, false, // 8 & 9: start + select
+                             false, false, // 8 & 9: select, start
                              false, false, // 10 & 11: LS, RS
                              false, false, false, false // 12-15: D-pad
                              ]});

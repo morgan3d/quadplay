@@ -273,7 +273,6 @@ def player_reset(player):
     // Otherwise we're decreasing the probability of high value letters.
     const GOOD_BOARD_MIN_VALUABLE_LETTER_USES = 4
     
-    
     let done = false
     let seed_word
     let word_array
