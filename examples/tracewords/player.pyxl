@@ -264,21 +264,30 @@ def player_reset(player):
     player.score = 0
     
     const GOOD_BOARD_RETRIES = 15
-    const GOOD_BOARD_MIN_WORDS = 100
-    const GOOD_BOARD_MIN_LONG_WORDS = 25
-    const GOOD_BOARD_MIN_VERY_LONG_WORDS = 5
-    const GOOD_BOARD_SHUFFLE_RETRIES = 9
+    const GOOD_BOARD_MIN_WORDS = 99
+
+    // 5 or more letters, including the very long words
+    const GOOD_BOARD_MIN_LONG_WORDS = 36
+    
+    // 7 or more letters
+    const GOOD_BOARD_MIN_VERY_LONG_WORDS = 7
+    
+    // How many times to shuffle a given board trying to
+    // find a way to satisfy the other constraints. Making
+    // this high avoids affecting letter distribution while
+    // still improving board quality
+    const GOOD_BOARD_SHUFFLE_RETRIES = 15
     
     // If we don't get this, shuffle the letters rather than rerolling.
     // Otherwise we're decreasing the probability of high value letters.
-    const GOOD_BOARD_MIN_VALUABLE_LETTER_USES = 4
+    const GOOD_BOARD_MIN_VALUABLE_LETTER_USES = 5
     
     let done = false
     let seed_word
     let word_array
     for i < GOOD_BOARD_RETRIES:
         // Find a not-sensitive seed word to use
-        if i > 0: debug_print("Re-rolling") 
+        if i > 0: debug_print("*** Re-rolling ***") 
 
         while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
             seed_word = lowercase(q_decode(random_value(dictionary_array)))
