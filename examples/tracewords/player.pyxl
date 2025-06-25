@@ -214,7 +214,7 @@ def _player_draw_history(player, board_pos)
     draw_text({
         pos: list_rect.corner + list_rect.size - xy(2, 1),
         font: history_font,
-        text: "..." + (player.board.word_count - size(player.history)) + " left",
+        text: "..." + (player.board.word_count - size(player.history.list)) + " left",
         color: #DDD,
         x_align: "right",
         y_align: "bottom"})
