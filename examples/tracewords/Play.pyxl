@@ -1,8 +1,6 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("Flashes while rotating?")
-todo("Never decreases number left")
 todo("**Fix losing mouse focus")
 todo("Implement D-pad")
 

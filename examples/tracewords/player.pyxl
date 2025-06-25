@@ -96,7 +96,7 @@ def make_player():
 def player_emphasize_history_word(player, word, duration default 30):
     for entry in player.history.list:
         if entry.word == word:
-            entry.emphasize_frame = mode_frames + duration
+            entry.emphasize_frame = game_frames + duration
             return
         
     assert(false, "Could not find " + word + " which should already be in history")
@@ -193,7 +193,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     draw_clock(board_pos)
 
 
-
+/* `true` if in landscape layout mode */
 def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
@@ -235,7 +235,7 @@ def _player_draw_history(player, board_pos)
             pos.x += max_width + HISTORY_COLUMN_SEPARATION
             max_width = 0
             
-        const emphasize = max(0, entry.emphasize_frame - mode_frames)
+        const emphasize = max(0, entry.emphasize_frame - game_frames)
         
         const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
     
