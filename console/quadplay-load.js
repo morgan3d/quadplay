@@ -317,7 +317,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 return true;
             },
             null,
-            true // force reload the game.json always
+            true // force reload the debug.json always
         );
     }
 
@@ -331,6 +331,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         for (const assetName in gameJSON.assets) {
             if (assetName[0] === '$') { throw 'Illegal asset name: "' + assetName + '"'; }
+        }
+
+        if (! useIDE && gameJSON.show_start_animation === false) {
+            // The game is going to hide the quadplay animation, so
+            // also hide the boot screen animation
+            hideBootScreen();
         }
 
         gameSource.json = gameJSON;
