@@ -110,7 +110,7 @@
                 },
                 "g": {
                     "type": "number",
-                    "value": "53%"
+                    "value": "60%"
                 },
                 "b": {
                     "type": "number",
@@ -123,7 +123,7 @@
             "value": {
                 "r": {
                     "type": "number",
-                    "value": "89%"
+                    "value": "82%"
                 },
                 "g": {
                     "type": "number",
@@ -131,7 +131,7 @@
                 },
                 "b": {
                     "type": "number",
-                    "value": "75%"
+                    "value": "100%"
                 }
             }
         },

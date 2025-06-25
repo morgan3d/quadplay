@@ -79,3 +79,23 @@ def score_word(word):
     
     return score
 
+
+
+def color_for_points(points):
+    
+    const BORING_COLOR = #995
+    const EXCITING_COLOR = #08E
+    const LOW = 5
+    
+    if points ≤ LOW:
+        return BORING_COLOR
+    else if points ≥ 75:
+        return EXCITING_COLOR
+    else:
+        // Scale up in discrete steps
+        const α = min(⌊(points - LOW) / 5⌋ / 8, 100%)
+        let c = perceptual_lerp_color(WORD_MIN_COLOR, WORD_MAX_COLOR, α)
+        c = hsv(c)
+        c.s *= 120%
+        return rgb(c)
+

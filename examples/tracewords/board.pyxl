@@ -272,7 +272,7 @@ def board_has_obvious_sensitive_word(board):
    This process is entirely deterministic based on
    the input.*/
 def board_reset(board, seed_word, permute_number default 0):
-    board.seed = seed_word + permute_number
+    board.seed = seed_word + "-" + permute_number
     const rnd = make_random(seed_word)
         
     // Shuffle the sets themselves
@@ -354,15 +354,6 @@ def board_deselect_last(board, selection_change_callback):
 def _board_play_sound(sound, volume, pitch, index):
     play_sound(sound, false, volume, (index.x + 1) / (COLS + 1), pitch)
     
-
-
-
-def color_for_points(points):
-    // Every 6 points, notch up
-    const α = min(⌊points / 6⌋ / 8, 100%)
-    return perceptual_lerp_color(WORD_MIN_COLOR, WORD_MAX_COLOR, α)
-    
-
 
 
 /* Swaps tiles as if the board were rotated 90 degrees CW */
