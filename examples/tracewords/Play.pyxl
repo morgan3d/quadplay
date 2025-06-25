@@ -1,6 +1,7 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
+todo("**Fix losing mouse focus")
 todo("Implement D-pad")
 
 
@@ -12,42 +13,12 @@ enter
 
 if not resolution_hook:
     resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
+    //device_control("enable_feature", "custom_screen_size")
+    //set_screen_size(xy(224, 400))
 
-
-// Choose a random, non-sensitive word as the seed
 set_random_seed()
-let seed_word
-const GOOD_BOARD_RETRIES = 10
-const GOOD_BOARD_MIN_WORDS = 100
-const GOOD_BOARD_MIN_LONG_WORDS = 25
-const GOOD_BOARD_MIN_VERY_LONG_WORDS = 5
-for i < GOOD_BOARD_RETRIES:
-    // Find a not-sensitive seed word to show
-    while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
-        seed_word = lowercase(q_decode(random_value(dictionary_array)))
-    
-    // Reset the player
-    player_reset(player, seed_word)
 
-    const word_array = board_find_all_words(player.board)
-    
-    let long_word_count = 0
-    let very_long_word_count = 0
-    for word in word_array:
-        if size(word) ≥ 5:
-            ++long_word_count
-        if size(word) ≥ 7:
-            ++very_long_word_count
-    
-    if size(word_array) < GOOD_BOARD_MIN_WORDS or long_word_count < GOOD_BOARD_MIN_LONG_WORDS:
-        debug_print("Rejected board " + seed_word + " because it only produced " + size(word_array) + " words and " + long_word_count + " long words")
-        seed_word = ∅
-    else:
-        player.board.word_count = size(word_array)
-        break
-
-//debug_print(word_array)
-
+player_reset(player)
 
 set_background(#544)
 

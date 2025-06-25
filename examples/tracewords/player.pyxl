@@ -21,7 +21,7 @@ def make_player():
             // Show that we've already seen this word by 
             // finding and emphasizing it
             player_emphasize_history_word(player, word)
-            play_sound(select_tile_sound, false, 125%, ∅, 40%)
+            play_sound(select_tile_sound, false, 150%, ∅, 40%)
             return true
                     
         else if points > 0:
@@ -84,7 +84,7 @@ def make_player():
         using_gamepad: false}
     
     // Fake history for layout debugging
-    // for i < 70: push(player.history, {color: #FFF, outline: ∅, label: "hello: 20"})
+    //for i < 70: push(player.history.list, {color: #FFF, emphasize_frame: 0, outline: ∅, word: "HELLO", text: "HELLO: " + i})
         
     return player
         
@@ -150,7 +150,10 @@ def player_update(player, angle default 0°, allow_selection default false):
         player.using_gamepad = false
     else if player.gamepad.aa or player.gamepad.bb or player.gamepad.dx or player.gamepad.dy:
         player.using_gamepad = true
-        
+    
+    if not player.using_gamepad and not touch.a:
+        resize(player.board.selection, 0)
+    
     // Version/debugging
     draw_text({
         pos: xy(5, 5),
@@ -223,7 +226,15 @@ def _player_draw_history(player, board_pos)
     set_transform(list_rect.corner - xy(player.history.scroll, 0))
     const pos = xy(3, 2)
     let max_width = 0
-    for entry in player.history.list:
+    for entry at e in player.history.list:
+        // Wrap into multiple columns if this element will
+        // go off the page. Do this here so that we never
+        // reset right before the end
+        if pos.y > list_rect.size.y - 8:
+            pos.y = 2
+            pos.x += max_width + HISTORY_COLUMN_SEPARATION
+            max_width = 0
+            
         const emphasize = max(0, entry.emphasize_frame - mode_frames)
         
         const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
@@ -239,24 +250,118 @@ def _player_draw_history(player, board_pos)
             z: emphasize,
             text: entry.text})
 
+        // Track if this makes the column larger
         max_width = max(max_width, text_width(history_font, entry.text))
         pos.y += history_font.line_height + 1
         
-        // Wrap into multiple columns
-        if pos.y > list_rect.size.y - 8:
-            pos.y = 2
-            pos.x += max_width + HISTORY_COLUMN_SEPARATION
-            max_width = 0
-    
-    // Scroll to keep most recent words on screen
-    player.history.scroll = max(player.history.scroll, pos.x + max_width - player.history.scroll - list_rect.size.x)
+    // Set the scroll to whatever it needs to be to keep the 
+    // most recent words on screen
+    player.history.scroll = max(player.history.scroll, pos.x + max_width - list_rect.size.x)
 
     
         
-def player_reset(player, seed):
+def player_reset(player):
     player.score = 0
-    board_reset(player.board, seed)
+    
+    const GOOD_BOARD_RETRIES = 15
+    const GOOD_BOARD_MIN_WORDS = 100
+    const GOOD_BOARD_MIN_LONG_WORDS = 25
+    const GOOD_BOARD_MIN_VERY_LONG_WORDS = 5
+    const GOOD_BOARD_SHUFFLE_RETRIES = 9
+    
+    // If we don't get this, shuffle the letters rather than rerolling.
+    // Otherwise we're decreasing the probability of high value letters.
+    const GOOD_BOARD_MIN_VALUABLE_LETTER_USES = 4
+    
+    
+    let done = false
+    let seed_word
+    let word_array
+    for i < GOOD_BOARD_RETRIES:
+        // Find a not-sensitive seed word to use
+        if i > 0: debug_print("Re-rolling") 
 
+        while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
+            seed_word = lowercase(q_decode(random_value(dictionary_array)))
+        
+        // Loop for shuffling
+        for j < GOOD_BOARD_SHUFFLE_RETRIES:
+            board_reset(player.board, seed_word, j)
+                        
+            word_array = board_find_all_words(player.board)
+        
+            if i == GOOD_BOARD_RETRIES - 1 and j == GOOD_BOARD_SHUFFLE_RETRIES - 1:
+               // Last try, so just give up and accept the board
+               debug_print("Gave up and accepted " + seed_word)
+               done = true
+               break
+    
+            if board_has_obvious_sensitive_word(player.board):
+                debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
+                continue
+    
+            if size(word_array) < GOOD_BOARD_MIN_WORDS:
+                // Not enough words to even examine the board
+                debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
+                continue
+    
+            // Examine the actual words to see if there are enough good ones   
+    
+            // If a valuable letter appears, ensure that it is used in 
+            // at least two words. First find high point value letters.
+            const valuable_letter_table = {}
+            for col in player.board.tile:
+                for tile in col:
+                    if LETTER_POINT_TABLE[tile.letter] ≥ 4:
+                        valuable_letter_table[tile.letter] = 0
+            
+            const valuable_letters = keys(valuable_letter_table)
+        
+            // Iterate through words, rating them for each criterion
+            let long_word_count = 0
+            let very_long_word_count = 0
+            for word in word_array:
+                if size(word) ≥ 5:
+                    ++long_word_count
+                if size(word) ≥ 7:
+                    ++very_long_word_count
+                    
+                for letter in valuable_letters:
+                    if contains(word, letter):
+                        ++valuable_letter_table[letter]
+            
+            if long_word_count < GOOD_BOARD_MIN_LONG_WORDS:
+                debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        
+                continue
+            
+            if very_long_word_count < GOOD_BOARD_MIN_VERY_LONG_WORDS:
+                debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
+                continue
+            
+            // See if we used the valuable letters
+            let used_valuable_letters = true
+            for count at letter in valuable_letter_table:
+                if count < GOOD_BOARD_MIN_VALUABLE_LETTER_USES:
+                    used_valuable_letters = false
+                    
+            if not used_valuable_letters:
+                debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
+                continue
+    
+            // Success!
+            done = true
+            break
+    
+        if done:
+            // Stop early as we have a good board
+            debug_print("Accepted board")
+            break
+        else:
+            // Try again
+            seed_word = ∅
+        
+    player.board.word_count = size(word_array)
+    //debug_print(word_array)
 
 
 let player = make_player()
