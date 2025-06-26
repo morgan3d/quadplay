@@ -30,7 +30,7 @@
         "history_font": "quad://fonts/scoreboard-6.font.json",
         "history_emphasis_font": "quad://fonts/scoreboard-7.font.json"
     },
-    "version": "0.044",
+    "version": "0.045",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
