@@ -30,7 +30,7 @@
         "history_font": "quad://fonts/scoreboard-6.font.json",
         "history_emphasis_font": "quad://fonts/scoreboard-7.font.json"
     },
-    "version": "0.045",
+    "version": "0.046",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -329,6 +329,10 @@
                 }
             },
             "description": "Options for controlling the search for a good board in `player_reset()`"
+        },
+        "DEBUG_BOARD_SEARCH": {
+            "type": "boolean",
+            "value": false
         }
     },
     "screenshot_tag": "Tracewords",

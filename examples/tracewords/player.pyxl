@@ -292,7 +292,7 @@ def _player_draw_history(player, board_pos)
 
     
 
-/* Creates a random board */
+/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def player_reset(player):
     player.score = 0
     remove_all(player.already_found)
@@ -301,12 +301,19 @@ def player_reset(player):
     let done = false
     let seed_word
     let word_array
+    
+    // Construct the rng based on the time. This will
+    // cause players within the same window to be more likely
+    // to have the same board. Temporary prior to investing
+    // multiplayer servers.
+    let board_rng = make_random(if DEBUG_BOARD_SEARCH then (now() * 10) else ⌊now() / (3 * 60)⌋)
+    
     for i < BOARD_SEARCH.RETRIES:
         if i > 0: debug_print("*** Re-rolling ***") 
 
-        // Find a not-sensitive seed word to use
+        // Search for a not-sensitive seed word to use
         while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
-            seed_word = lowercase(q_decode(random_value(dictionary_array)))
+            seed_word = lowercase(q_decode(random_value(dictionary_array, board_rng)))
         
         // Loop for shuffling
         for j < BOARD_SEARCH.SHUFFLE_RETRIES:
