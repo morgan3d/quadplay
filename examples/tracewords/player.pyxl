@@ -1,5 +1,7 @@
-todo("Show demons")
 todo("Re-color")
+todo("Sounds for big words")
+todo("Allow scrolling the words at top")
+todo("Show demons?")
 
 def make_player():
     
@@ -71,7 +73,7 @@ def make_player():
         using_gamepad: false}
     
     // Fake history for layout debugging
-    // for i < 30: player_add_to_history(player, "FOOBAR", 3 + 3 * i)
+    for i < 30: player_add_to_history(player, "FOOBAR", 3 + 3 * i)
         
     return player
 

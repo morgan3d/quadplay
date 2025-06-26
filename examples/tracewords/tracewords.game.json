@@ -101,40 +101,6 @@
             "quantum": 1,
             "description": "In tiles (not letters: Qu is one tile)"
         },
-        "WORD_MIN_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "87%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "60%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "0%"
-                }
-            }
-        },
-        "WORD_MAX_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "82%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "11%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "100%"
-                }
-            }
-        },
         "LETTER_SET_ARRAY": {
             "type": "raw",
             "description": "Choice of letters is constrained by selecting from each of these individual distributions.",
@@ -226,6 +192,84 @@
             "max": 128,
             "format": "0",
             "quantum": 1
+        },
+        "HISTORY_COLOR": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "67%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "63%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "0%"
+                        }
+                    },
+                    "description": "Very low"
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "87%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "60%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "0%"
+                        }
+                    },
+                    "description": "Normal low gradient end"
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "82%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "15%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "100%"
+                        }
+                    },
+                    "description": "Normal high gradient end"
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "0%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "61%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "84%"
+                        }
+                    },
+                    "description": "Super high"
+                }
+            ],
+            "description": "Four color points for discontinuous super low, normal low, normal high, and discontinuous super high"
         }
     },
     "screenshot_tag": "Tracewords",
