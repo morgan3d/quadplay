@@ -18,16 +18,18 @@ def make_player():
         score: 0,
         
         gamepad: gamepad_array[0],
-        
+                
         // Q-encoded upper case words that have already been found
         // and are represented in history.list
         already_found: {},
         
         // Used for display.
         history: {
-            // Each entry is {text, word, tiles, points, color, emphasize_frame}.
+            // Each entry is {text, word, tiles, points, color, emphasize_frame, pos}.
+            // `pos` is computed as a side effect of draw history
             // `word` is Q-encoded, text may contain arbitrary characters
             list: [],
+            
             scroll: 0,
 
             // Scroll computation resets when screen size changes.
@@ -45,6 +47,37 @@ def make_player():
         
     return player
 
+
+/* Creates animation going from the selection to the last word in the history */
+def player_create_score_animation(player):
+    todo("Delay appearance of new word on the list until animation completes")
+
+    let target
+    
+    const board = player.board
+    const color = last_value(player.history.list).color
+    
+    let letter_array = []
+    let start_array = []
+    for tile_index in board.selection:  
+        const tile = board.tile[tile_index.x][tile_index.y]        
+        push(start_array, xy(tile.pos))
+        push(letter_array, q_decode(tile.letter))
+    
+    // Have to wait until callback time for this so that the 
+    // target actually gets rendered and assigned a pos first
+    def capture_target():
+        const entry = last_value(player.history.list)
+        target = entry.pos + xy(size(entry.word) * 4, 4)
+
+    def callback(frames_left, total_frames):
+        const α = linstep(total_frames, 0, frames_left)^1.5
+        for i < size(letter_array):
+            const pos = lerp(start_array[i], target, α)
+            draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), color, ∅, 9)
+            draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
+        
+    sequence({begin_callback: capture_target, callback: callback, frames: 40})
 
 
 /* Called by the board after changing selection. 
@@ -71,9 +104,8 @@ def player_selection_change_callback(player):
     else if points > 0:
         // Score the word, even without the player releasing their touch
         const color = player_add_to_history(player, word, points)
-        todo("*Animation for scoring*")
-        todo("Delay appearance of new word on the list until animation completes")
-        todo("Delay appearance of points until animation completes")
+        
+        player_create_score_animation(player)
         
         board.selection_color = color
         
@@ -271,6 +303,9 @@ def _player_draw_history(player, board_pos)
         
         const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
     
+        // Save for animation later
+        entry.pos = transform_ws_to_ss(pos)
+        
         const bounds = draw_text({
             // Bounce if emphasized
             pos: pos + wiggle,

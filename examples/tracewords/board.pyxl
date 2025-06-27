@@ -13,6 +13,9 @@ def make_board():
             xy(COLS, ROWS), {
                 // uppercase, Q means Qu
                 letter: "?",
+                
+                // Last position rendered to in screen space
+                pos: ∅,
                                 
                 // mode_frame at which this was selected
                 selected: 0},
@@ -435,6 +438,8 @@ def board_update(board, pos, angle, selection_change_callback)
             
             const index = xy(i, j)
             const pos = _index_to_pos(index)
+            
+            tile.pos = transform_ws_to_ss(pos)
             
             if selection_change_callback and overlaps({pos: pos, shape: "disk", size: selection_size}, touch.xy):
                 if touch.aa and (size(board.selection) == 0):
