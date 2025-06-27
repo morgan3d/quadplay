@@ -20,13 +20,13 @@ set_random_seed()
 
 player_reset(player)
 
-set_background(#544)
 
 end_time = now() + 60 * 4
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
+set_background(BACKGROUND_COLOR)
 player_update(player, ∅, true)
 
 // Hint for compiler:

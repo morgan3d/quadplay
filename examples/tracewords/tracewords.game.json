@@ -28,9 +28,10 @@
         "dictionary_source": "quad://data/english_all_table.data.json",
         "score_font": "quad://fonts/novarese-10.font.json",
         "history_font": "quad://fonts/scoreboard-6.font.json",
-        "history_emphasis_font": "quad://fonts/scoreboard-7.font.json"
+        "history_emphasis_font": "quad://fonts/scoreboard-7.font.json",
+        "big_points_sound": "quad://sounds/coin-00.sound.json"
     },
-    "version": "0.047",
+    "version": "0.048",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -333,6 +334,31 @@
         "DEBUG_BOARD_SEARCH": {
             "type": "boolean",
             "value": false
+        },
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "38%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "27%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "11%"
+                }
+            }
+        },
+        "POINTS_ANIMATION_FRAMES": {
+            "type": "number",
+            "value": "40",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "Tracewords",
