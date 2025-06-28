@@ -1,8 +1,8 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("**Fix losing mouse focus")
 todo("Implement D-pad")
+todo("Fix losing mouse focus?")
 
 
 let resolution_hook
@@ -19,6 +19,9 @@ if not resolution_hook:
 set_random_seed()
 
 player_reset(player)
+
+// Fake history for layout debugging
+// for i < 30: player_add_to_history(player, "FOOBAR", 3 + 3 * i)
 
 
 end_time = now() + 60 * 4

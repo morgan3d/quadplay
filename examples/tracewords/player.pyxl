@@ -15,6 +15,16 @@ def make_player():
         score: 0,
         
         gamepad: gamepad_array[0],
+        
+        // Due to finger on history
+        drag_start: {
+            // Position at which the current drag started,
+            // ∅ if not in a drag
+            pos: ∅,
+            
+            // history.scroll when the drag started
+            scroll: ∅
+        },
                 
         // Q-encoded upper case words that have already been found
         // and are represented in history.list
@@ -27,11 +37,17 @@ def make_player():
             // `word` is Q-encoded, text may contain arbitrary characters
             list: [],
             
+            // Auto computed and overriden on new word spawn or resize,
+            // but can be manually affected by the player
             scroll: 0,
 
             // Scroll computation resets when screen size changes.
             // This was the size it was computed for.
-            scroll_screen_size: xy(0, 0)},
+            scroll_screen_size: xy(0, 0),
+            
+            // Scroll computation resets when the list size changes.
+            // This was the size it was computed for.
+            scroll_history_size: 0},
         
         selection_change_callback: selection_change_callback,
         
@@ -39,9 +55,7 @@ def make_player():
         // Show button prompts and cursor when using gamepad
         using_gamepad: false}
     
-    // Fake history for layout debugging
-    //for i < 30: player_add_to_history(player, "FOOBAR", 3 + 3 * i)
-        
+    
     return player
 
 
@@ -76,7 +90,6 @@ def player_spawn_score_animation(player):
     sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
 
 
-todo("Allow scrolling the words at top")
 
 /* Called by the board after changing selection. 
    Returns true if there was a new word. As a side effect,
@@ -220,11 +233,11 @@ def player_update(player, angle default 0°, allow_selection default false):
     
     // Version/debugging
     draw_text({
-        pos: xy(5, 0),
+        pos: xy(2, SCREEN_SIZE.y - 1),
         font: tile_point_font,
         text: "Board \"" + player.board.seed + "\" on v" + CREDITS.version,
-        color: #888,
-        y_align: "top",
+        color: #0008,
+        y_align: "bottom",
         x_align: "left",
         z: -1})
 
@@ -253,7 +266,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     if allow_selection:
         _player_update_rotate_button(player, board_pos)
         
-    _player_draw_history(player, board_pos)
+    _player_update_history(player, board_pos)
     draw_clock(board_pos)
 
 
@@ -264,17 +277,18 @@ def landscape():
 
 
 
-def _player_draw_history(player, board_pos)
+/* Draw the word history and manage touch dragging */
+def _player_update_history(player, board_pos)
 & preserving_transform:
     
     let list_rect
     if landscape():
-        list_rect = {corner: xy(1, 20), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 22)}
+        list_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 16)}
     else:
-        list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 3, board_pos.y - ½ board_pixel_size().y - 32)}
+        list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 32)}
     
     set_clip(list_rect)
-
+    
     // Don't scroll this, draw it first
     draw_text({
         pos: list_rect.corner + list_rect.size - xy(2, 1),
@@ -285,61 +299,85 @@ def _player_draw_history(player, board_pos)
         y_align: "bottom"})
 
     if not equivalent(SCREEN_SIZE, player.history.scroll_screen_size):
-        player.history.scroll_screen_size = xy(SCREEN_SIZE)
+        // Reset
         player.history.scroll = 0
 
-    set_transform(list_rect.corner - xy(player.history.scroll, 0))
     const pos = xy(3, 2)
     let max_width = 0
-    for entry at e in player.history.list:
-        // Wrap into multiple columns if this element will
-        // go off the page. Do this here so that we never
-        // reset right before the end
-        if pos.y > list_rect.size.y - 8:
-            pos.y = 2
-            pos.x += max_width + HISTORY_COLUMN_SEPARATION
-            max_width = 0
+    preserving_transform:
+        set_transform(list_rect.corner - xy(player.history.scroll, 0))
+        for entry at e in player.history.list:
+            // Wrap into multiple columns if this element will
+            // go off the page. Do this here so that we never
+            // reset right before the end
+            if pos.y > list_rect.size.y - 8:
+                pos.y = 2
+                pos.x += max_width + HISTORY_COLUMN_SEPARATION
+                max_width = 0
+                
+            const emphasize = max(0, entry.emphasize_frame - game_frames)
             
-        const emphasize = max(0, entry.emphasize_frame - game_frames)
+            const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
         
-        const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
+            // Save for animation later
+            entry.pos = transform_ws_to_ss(pos)
+            
+            // Hide while animation is playing for this word, but
+            // draw invisibly so we get bounds
+            const show = game_frames > entry.reveal_frame
+            const color = entry.color
+            const outline = if emphasize then #FFF else entry.outline
+            
+            const bounds = draw_text({
+                // Bounce if emphasized
+                pos: pos + wiggle,
+                font: if emphasize then history_emphasis_font else history_font,
+                x_align: "left",
+                y_align: "top",
+                color: if show then color else #0000,
+                outline: if show then outline else #0000,
+                z: emphasize,
+                text: entry.text})
     
-        // Save for animation later
-        entry.pos = transform_ws_to_ss(pos)
-        
-        // Hide while animation is playing for this word, but
-        // draw invisibly so we get bounds
-        const show = game_frames > entry.reveal_frame
-        const color = entry.color
-        const outline = if emphasize then #FFF else entry.outline
-        
-        const bounds = draw_text({
-            // Bounce if emphasized
-            pos: pos + wiggle,
-            font: if emphasize then history_emphasis_font else history_font,
-            x_align: "left",
-            y_align: "top",
-            color: if show then color else #0000,
-            outline: if show then outline else #0000,
-            z: emphasize,
-            text: entry.text})
-
-        // Track if this makes the column larger
-        max_width = max(max_width, text_width(history_font, entry.text))
-        pos.y += history_font.line_height + 1
-        
-    // Set the scroll to whatever it needs to be to keep the 
-    // most recent words on screen
-    player.history.scroll = max(player.history.scroll, pos.x + max_width - list_rect.size.x)
+            // Track if this makes the column larger
+            max_width = max(max_width, text_width(history_font, entry.text))
+            pos.y += history_font.line_height + 1
+    
+    const overflow = pos.x + max_width - list_rect.size.x + 1
+    
+    
+    if not player.drag_start.pos:
+        // Start drag
+        if touch.aa and overlaps(touch, list_rect):
+            player.drag_start.pos = xy(touch.xy)
+            player.drag_start.scroll = player.history.scroll
+    else if touch.a:
+        // Continue drag
+        player.history.scroll = clamp(player.drag_start.scroll + player.drag_start.pos.x - touch.x, overflow, -overflow)
+    else:
+        // End drag
+        player.drag_start_pos = ∅
+    
+    
+    if not player.drag_start.pos and (not equivalent(SCREEN_SIZE, player.history.scroll_screen_size) or player.history.scroll_history_size ≠ size(player.history.list)):
+        player.history.scroll_screen_size = xy(SCREEN_SIZE)
+        player.history.scroll_history_size = size(player.history.list)
+        // Set the scroll to whatever it needs to be to keep the 
+        // most recent words on screen
+        player.history.scroll = max(player.history.scroll, overflow)
 
     
 
-/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def player_reset(player):
     player.score = 0
     remove_all(player.already_found)
     remove_all(player.history.list)
-        
+    _player_find_good_board(player)
+    
+    
+
+/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
+def _player_find_good_board():
     let done = false
     let seed_word
     let word_array
