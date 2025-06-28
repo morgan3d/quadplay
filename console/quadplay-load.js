@@ -358,6 +358,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             }
 
             if (gameJSON.show_controls_button === false) {
+                document.getElementById('controllers_display').style.display = 'none';
             }
         }
 
