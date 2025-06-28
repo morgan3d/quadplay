@@ -12,16 +12,19 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 if not resolution_hook:
-    resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
-    //device_control("enable_feature", "custom_screen_size")
-    //set_screen_size(xy(224, 400))
+    if DEBUG_PORTRAIT:
+        device_control("enable_feature", "custom_screen_size")
+        set_screen_size(xy(224, 400))
+    else:
+        resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
+            
 
 set_random_seed()
 
 player_reset(player)
 
-// Fake history for layout debugging
-// for i < 30: player_add_to_history(player, "FOOBAR", 3 + 3 * i)
+if DEBUG_HISTORY:
+    for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
 
 
 end_time = now() + 60 * 4

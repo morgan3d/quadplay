@@ -122,7 +122,7 @@ def player_selection_change_callback(player):
         const pitch = 75% + min(max(0, points - 6)^0.1, 3)
         _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
     
-        if points ≥ 30:
+        if points ≥ 40:
             play_sound(big_points_sound)
     
         return true
@@ -348,15 +348,17 @@ def _player_update_history(player, board_pos)
     
     if not player.drag_start.pos:
         // Start drag
-        if touch.aa and overlaps(touch, list_rect):
+        //if touch.aa: debug_print(touch.xy, list_rect, overlaps(touch.xy, list_rect))
+        if touch.aa and overlaps(touch.xy, list_rect):
             player.drag_start.pos = xy(touch.xy)
             player.drag_start.scroll = player.history.scroll
     else if touch.a:
         // Continue drag
-        player.history.scroll = clamp(player.drag_start.scroll + player.drag_start.pos.x - touch.x, overflow, -overflow)
+        player.history.scroll = clamp(player.drag_start.scroll + player.drag_start.pos.x - touch.x, 0, overflow)
+        
     else:
         // End drag
-        player.drag_start_pos = ∅
+        player.drag_start.pos = ∅
     
     
     if not player.drag_start.pos and (not equivalent(SCREEN_SIZE, player.history.scroll_screen_size) or player.history.scroll_history_size ≠ size(player.history.list)):
@@ -429,9 +431,12 @@ def _player_find_good_board():
             const valuable_letters = keys(valuable_letter_table)
         
             // Iterate through words, rating them for each criterion
+            let short_word_count = 0
             let long_word_count = 0
             let very_long_word_count = 0
             for word in word_array:
+                if size(word) ≤ 4:
+                    ++short_word_count
                 if size(word) ≥ 5:
                     ++long_word_count
                 if size(word) ≥ 7:
@@ -440,6 +445,10 @@ def _player_find_good_board():
                 for letter in valuable_letters:
                     if contains(word, letter):
                         ++valuable_letter_table[letter]
+            
+            if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
+                debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
+                continue
             
             if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
                 debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        

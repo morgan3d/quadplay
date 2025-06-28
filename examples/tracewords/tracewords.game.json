@@ -32,7 +32,7 @@
         "big_points_sound": "quad://sounds/coin-00.sound.json",
         "rotate_sound": "quad://sounds/powerup-00.sound.json"
     },
-    "version": "0.052",
+    "version": "0.053",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -328,6 +328,13 @@
                     "max": 20,
                     "format": "0",
                     "quantum": 1
+                },
+                "MIN_SHORT_WORDS": {
+                    "type": "number",
+                    "value": 30,
+                    "description": "3 and 4 letter words only",
+                    "format": "0",
+                    "quantum": 1
                 }
             },
             "description": "Options for controlling the search for a good board in `player_reset()`"
@@ -360,6 +367,14 @@
             "max": 128,
             "format": "0",
             "quantum": 1
+        },
+        "DEBUG_PORTRAIT": {
+            "type": "boolean",
+            "value": false
+        },
+        "DEBUG_HISTORY": {
+            "type": "boolean",
+            "value": false
         }
     },
     "screenshot_tag": "Tracewords",
