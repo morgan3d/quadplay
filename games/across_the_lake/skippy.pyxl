@@ -1,15 +1,47 @@
+/* The stone is named "skippy". This is the code for its simulation. 
+
+
+   This code predates Reference constants and loading CSV files in quadplay.
+   If we were to write it today all of the parallel arrays would be loaded from
+   a data file as a table instead.
+*/
+
+// Good bounce
 const SPLASH_PERFECT = 0
 const SPLASH_TINY = 1
 const SPLASH_SMALL = 2
 const SPLASH_MEDIUM = 3
+// Bad bounce
 const SPLASH_BIG = 4
 
 const SPLASH_SOUNDS = [
     SFXSPLASH1,
     SFXSPLASH2,
     SFXSPLASH4,
-    SFXSPLASH5
-]
+    SFXSPLASH5]
+    
+// penalties
+const splash_types = [
+   SPLASH_PERFECT,
+   SPLASH_TINY,
+   SPLASH_SMALL,
+   SPLASH_MEDIUM,
+   SPLASH_BIG]
+
+const bounce_angle_change = [
+    0°,
+    1°,
+    3°,
+    6°,
+    10°]
+
+const speed_lerp_penalty = [
+    1.0,
+    0.6,
+    0.3,
+    0.1,
+   -0.3]    
+    
 let last_splash = ∅
 
 let skippy_position = xy(0, 0)
@@ -29,30 +61,6 @@ let last_travelled = 0
 let total_travelled = 0
 
 
-// penalties
-let splash_types = [
-   SPLASH_PERFECT,
-   SPLASH_TINY,
-   SPLASH_SMALL,
-   SPLASH_MEDIUM,
-   SPLASH_BIG
-]
-
-let bounce_angle_change = [
-    0°,
-    1°,
-    3°,
-    6°,
-    10°
-]
-
-let speed_lerp_penalty = [
-   1.0,
-   0.6,
-   0.3,
-   0.1,
-   -0.3,
-]
    
 let PENALTY_WINDOW = 3
 let MAX_FRAMES_UNDERWATER = 12

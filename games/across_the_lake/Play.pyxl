@@ -16,11 +16,10 @@ update_skippy(start_pos)
 if skippy_hit_water_this_frame == mode_frames: 
     spawn_splash(skippy_splash_type)
    
-update_camera(skippy_position + xy(14 * skippy_velocity.x, 0))
+update_camera(skippy_position + xy(14 skippy_velocity.x, 0))
 draw_game()
 draw_title_ui()
 
 
 // Compiler hint, the actual call is in skippy.pyxl
 //    set_mode(GameOver, times_skipped, distance, total_travelled) because "Sank"
-

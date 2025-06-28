@@ -6,7 +6,7 @@ init
 ────────────────────────────────────────────────────────────────────────
 play_sound(BGM, true)
 
-//continuously_set_screen_size_to_window("larger", 384)
+//continuously_set_screen_size_to_window("x", 384, 224)
 
 
 enter

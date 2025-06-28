@@ -699,7 +699,7 @@
             "url": "quad://games/across_the_lake/",
             "title": "Across the Lake",
             "description": "You are a stone skipping across a lake. One-button endless skipper.",
-            "version": 1,
+            "version": "1.1",
             "developer": "The Steinbachers",
             "min_players": 1,
             "max_players": 1,

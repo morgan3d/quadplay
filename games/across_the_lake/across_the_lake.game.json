@@ -1,7 +1,7 @@
 {
     "title": "Across the Lake",
     "developer": "The Steinbachers",
-    "copyright": "©2020 Steinbach, McGuire, Cole, and LaVietes",
+    "copyright": "©2020-2025 Steinbach, McGuire, Cole, and LaVietes",
     "license": "Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
     "scripts": [
         "skippy.pyxl",
@@ -61,7 +61,7 @@
         "SFXTHROW": "throw.sound.json"
     },
     "y_up": true,
-    "version": 1,
+    "version": "1.1",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -93,6 +93,49 @@
             "type": "number",
             "value": "0",
             "description": "The plane of the game and stone is always z=0"
+        },
+        "TEXT_SHADOW_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "94%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "56%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "60%"
+                }
+            }
+        },
+        "TEXT_OUTLINE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "9%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "2%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "31%"
+                }
+            }
+        },
+        "PARALLAX_BASE": {
+            "type": "number",
+            "value": "1.50",
+            "min": 1,
+            "max": 2,
+            "format": "0.00",
+            "quantum": 0.01,
+            "description": "Controls horizontal parallax rate. Don't change! Too much is hardcoded to it now."
         }
     },
     "screen_size": {
@@ -101,5 +144,6 @@
     },
     "screenshot_tag": "Across the Lake",
     "show_start_animation": true,
-    "mobile_touch_gamepad": false
+    "mobile_touch_gamepad": false,
+    "show_controls_button": false
 }
