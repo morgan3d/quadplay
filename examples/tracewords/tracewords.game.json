@@ -40,7 +40,7 @@
     "achievements": false,
     "high_scores": false,
     "dual_dpad": false,
-    "midi_sysex": false,
+    "midi_sysex": true,
     "description": "Word game.",
     "constants": {
         "TILE_EXTENT": {
@@ -364,5 +364,6 @@
     },
     "screenshot_tag": "Tracewords",
     "show_start_animation": false,
-    "mobile_touch_gamepad": false
+    "mobile_touch_gamepad": false,
+    "show_controls_button": false
 }

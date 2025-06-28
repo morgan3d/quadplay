@@ -90,7 +90,7 @@ function onProjectMetadataChanged() {
         json[key] = document.getElementById('project' + capitalize(key)).value.trim();
     }
 
-    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements', 'Show Start Animation', 'Mobile Touch Gamepad'];
+    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements', 'Show Start Animation', 'Show Controls Button', 'Mobile Touch Gamepad'];
     for (let f = 0; f < boolFields.length; ++f) {
         const name = boolFields[f];
         const key = name.replace(/ /g, '_').toLowerCase();

@@ -352,8 +352,13 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         // Hide virtual controller immediately if requested by the game, before
         // loading the rest of the files
-        if (! useIDE && gameJSON.mobile_touch_gamepad === false) {
-            document.getElementById('emulatorUIButtonContainer').style.display = 'none';
+        if (! useIDE) {
+            if (gameJSON.mobile_touch_gamepad === false) {
+                document.getElementById('emulatorUIButtonContainer').style.display = 'none';
+            }
+
+            if (gameJSON.show_controls_button === false) {
+            }
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////

@@ -101,12 +101,6 @@ function enterKioskMode() {
 }
 
 
-function setIDEEnable(value) {
-    inPageReload = true;
-    location = location.href.replace(/([&?])IDE=./g, '$1') + '&IDE=' + (value ? 1 : 0);
-}
-
-
 /* Returns the path to the game's root, relative to location.origin. Ends in a slash. */
 function getGamePath() {
     let gamePath = gameSource.jsonURL.replace(/\\/g, '/').replace(/\/[^/]+\.game\.json$/g, '/');
@@ -460,7 +454,9 @@ function onAppWelcomeTouch(hasTouchScreen) {
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
     } else if ((! useIDE && (uiMode !== 'Windowed')) || hasTouchScreen) {
-        if (deployed && (isMobile || getQueryString('mode') !== 'DefaultWindow')) { requestFullScreen(); }
+        if (deployed && (isMobile || getQueryString('mode') !== 'DefaultWindow')) { 
+            requestFullScreen(); 
+        }
     }
 
     let url = getQueryString('game');
