@@ -10371,6 +10371,9 @@ function now() {
     return $performance.now() * 0.001;
 }
 
+function utc_now() {
+    return Date.now() * 0.001;
+}
 
 function local_time(args) {
     

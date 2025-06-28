@@ -29,9 +29,10 @@
         "score_font": "quad://fonts/novarese-10.font.json",
         "history_font": "quad://fonts/scoreboard-6.font.json",
         "history_emphasis_font": "quad://fonts/scoreboard-7.font.json",
-        "big_points_sound": "quad://sounds/coin-00.sound.json"
+        "big_points_sound": "quad://sounds/coin-00.sound.json",
+        "rotate_sound": "quad://sounds/powerup-00.sound.json"
     },
-    "version": "0.048",
+    "version": "0.050",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -354,7 +355,7 @@
         },
         "POINTS_ANIMATION_FRAMES": {
             "type": "number",
-            "value": "40",
+            "value": "35",
             "min": 0,
             "max": 128,
             "format": "0",

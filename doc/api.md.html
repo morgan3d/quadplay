@@ -4200,10 +4200,13 @@ unaffected.
 : Returns a time in seconds that is accurate to at least one millisecond.
   The origin for the time is arbitrary but constant per program run.
   Do not use this time for simulation because it will have inconsistent
-  jumps between frames dues to frame rate scaling.
+  jumps between frames dues to frame rate scaling. It is good for performance
+  monitoring within a frame and for synchronizing to a real-time clock,
+  for example for music or MIDI. See also `utc_now()`.
 
-`local_time()`
-: Returns an object with the following properties, set in the current time zone:
+`local_time(time_spec default nil)`
+: Returns an object with the following properties set in the local
+  time zone:
 
   - `year`, e.g., 2019
   - `month` 0-11
@@ -4214,26 +4217,26 @@ unaffected.
   - `millisecond` 0-999
   - `weekday` 0-6, where 0 = Sunday
   - `day_second` seconds since midnight, including a fractional part
-  - `timezone` minutes from UTC
-  - `absolute_milliseconds` Milliseconds since 1970-01-01 in UTC
+  - `timezone` minutes from UTC. See [time zones](https://www.timeanddate.com/time/zones/).
+  - `absolute_milliseconds` milliseconds since 1970-01-01 in UTC
+
+  If `time_spec` is nil (the default) the current time is used.
+
+  If `time_spec` is a string of the form `"hh:mm:ss DD MM YYYY TZ"`
+  such as `"16:30:10 21 Nov 2022 PST"`, then it is parsed 
+  and used as the time. All elements are optional and default to 
+  the lowest possible value, except for the time zone which defaults 
+  to the current time zone.
+
+  If `time_spec` is a structure with the above fields, then it is converted
+  using the `timezone` field to a local time structure.
 
   See `format_number()` for the various clock formatting options for numbers in seconds,
-  and `now()` for a high-precision timer.
+  and `now()` for a high-precision timer. See also `utc_time()`.
 
-`local_time(args)`
-: Returns an object with the same structure as `localtime()` initialized
-  from a specific [time zone](https://www.timeanddate.com/time/zones/), 
-  which is then converted to local time and returned.
-
-  If `args` is a single string of the form `"hh:mm:ss DD MM YYYY TZ"`
-  such as `"16:30:10 21 Nov 2022 PST"`, it is parsed. All elements
-  are optional and default to the lowest possible value, except for the
-  time zone which defaults to the current time zone.
-  
-  `args` may instead be a structure with `year`, `month`, `day`, `hour`, 
-  `minute`, `second`, `millisecond`, and `timezone` minutes from UTC
-  fields, which will then be converted using the `timezone` field to a
-  local time.
+`utc_now()`
+: Seconds since midnight Jan 1, 1970 in UTC, with no guaranteed accuracy 
+  below the second. See also `now()`.
  
  
 AI

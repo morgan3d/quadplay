@@ -6,6 +6,7 @@ let angle
 enter
 ────────────────────────────────────────────────────────────────────────
 angle = 0°
+play_sound({sound: rotate_sound, playback_rate: 180%})
 
 
 frame

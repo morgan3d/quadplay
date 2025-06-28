@@ -1,4 +1,4 @@
-todo("Allow scrolling the words at top")
+todo("Make the round end with timer")
 
 
 /* Constructs a new player with an uninitialized board */
@@ -45,10 +45,9 @@ def make_player():
     return player
 
 
-/* Creates animation going from the selection to the last word in the history */
-def player_create_score_animation(player):
-    todo("Delay appearance of new word on the list until animation completes")
 
+/* Creates animation going from the selection to the last word in the history */
+def player_spawn_score_animation(player):
     let target
     
     const board = player.board
@@ -77,6 +76,7 @@ def player_create_score_animation(player):
     sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
 
 
+todo("Allow scrolling the words at top")
 
 /* Called by the board after changing selection. 
    Returns true if there was a new word. As a side effect,
@@ -102,11 +102,10 @@ def player_selection_change_callback(player):
     else if points > 0:
         // Score the word, even without the player releasing their touch
         const color = player_add_to_history(player, word, points)
-        
-        player_create_score_animation(player)
-        
+                
         board.selection_color = color
-        
+        player_spawn_score_animation(player)
+    
         const pitch = 75% + min(max(0, points - 6)^0.1, 3)
         _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
     
@@ -141,14 +140,15 @@ def player_add_to_history(player, word, points):
     push(player.history.list, {
         text:    q_decode(word) + ": " + points, 
         word:    word,
-        tiles:   size(word), 
+        tiles:   size(word),
         emphasize_frame: 0,
+        reveal_frame: game_frames + POINTS_ANIMATION_FRAMES,
         points:  points, 
         color:   text_color,
         outline: outline})
         
     player.score += points
-     
+    
     return color
     
     
@@ -307,14 +307,20 @@ def _player_draw_history(player, board_pos)
         // Save for animation later
         entry.pos = transform_ws_to_ss(pos)
         
+        // Hide while animation is playing for this word, but
+        // draw invisibly so we get bounds
+        const show = game_frames > entry.reveal_frame
+        const color = entry.color
+        const outline = if emphasize then #FFF else entry.outline
+        
         const bounds = draw_text({
             // Bounce if emphasized
             pos: pos + wiggle,
             font: if emphasize then history_emphasis_font else history_font,
             x_align: "left",
             y_align: "top",
-            color: entry.color,
-            outline: if emphasize then #FFF else entry.outline,
+            color: if show then color else #0000,
+            outline: if show then outline else #0000,
             z: emphasize,
             text: entry.text})
 
@@ -342,7 +348,7 @@ def player_reset(player):
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    let board_rng = make_random(if DEBUG_BOARD_SEARCH then (now() * 10) else ⌊now() / (3 * 60)⌋)
+    let board_rng = make_random(if DEBUG_BOARD_SEARCH then (utc_now() * 10) else ⌊utc_now() / (3 * 60)⌋)
     
     for i < BOARD_SEARCH.RETRIES:
         if i > 0: debug_print("*** Re-rolling ***") 
