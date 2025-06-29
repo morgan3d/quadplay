@@ -791,7 +791,7 @@ frame
 ───────────────────────────────────────────────────────────
 
 SHOULD_FREEZE_FRAME = false
-DEBUG_DRAW_ORIGINS = device_control("getDebugFlag", "entityBounds")
+DEBUG_DRAW_ORIGINS = false//device_control("getDebugFlag", "entityBounds")
 // debug_print(DEBUG_DRAW_ORIGINS)
 
 // @}

@@ -32,7 +32,7 @@
         "big_points_sound": "quad://sounds/coin-00.sound.json",
         "rotate_sound": "quad://sounds/powerup-00.sound.json"
     },
-    "version": "0.053",
+    "version": "0.054",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -375,6 +375,14 @@
         "DEBUG_HISTORY": {
             "type": "boolean",
             "value": false
+        },
+        "TIME_MINUTES": {
+            "type": "number",
+            "value": "3.0",
+            "min": 0.5,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.5
         }
     },
     "screenshot_tag": "Tracewords",

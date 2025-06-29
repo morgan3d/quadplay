@@ -251,5 +251,9 @@
         "btw_lib.pyxl"
     ],
     "title": "Beat The Gobblins",
-    "version": 1
+    "version": "1.1",
+    "screenshot_tag": "Beat The Gobblins",
+    "show_start_animation": true,
+    "show_controls_button": true,
+    "mobile_touch_gamepad": true
 }

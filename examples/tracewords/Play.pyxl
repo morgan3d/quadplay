@@ -11,6 +11,11 @@ let resolution_hook
 enter
 ────────────────────────────────────────────────────────────────────────
 
+if now() ≥ end_time:
+    todo("Make the round end with timer")
+    todo("Play timer sound")
+
+
 if not resolution_hook:
     if DEBUG_PORTRAIT:
         device_control("enable_feature", "custom_screen_size")
@@ -27,7 +32,7 @@ if DEBUG_HISTORY:
     for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
 
 
-end_time = now() + 60 * 4
+end_time = now() + 60 * TIME_MINUTES
 
 
 frame

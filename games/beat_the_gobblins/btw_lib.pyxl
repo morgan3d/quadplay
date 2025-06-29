@@ -46,7 +46,7 @@ let cam_pos = xy(0, 0)
 // detect debug variable status
 // this one is in the tools menu and draws the origins, bounds, and other 
 // things
-let DEBUG_DRAW_ORIGINS = device_control("getDebugFlag", "entityBounds")
+let DEBUG_DRAW_ORIGINS = false//device_control("getDebugFlag", "entityBounds")
 
 // how to offset the sprite by direction
 // @TODO: set a pivot instead
