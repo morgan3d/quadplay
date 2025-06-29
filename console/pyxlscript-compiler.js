@@ -168,8 +168,10 @@ function processWithHeader(test) {
 }
 
 
-/** Given a pyxl FOR-loop test that does not contain the colon,
- * returns the parts before and after the loop. */
+/* Given a pyxl FOR-loop test that does not contain the colon,
+   returns an array of two elements. These are the compiled code 
+   that should run for the loop setup
+   and cleanup, including the interation framework around the loop body. */
 function processForTest(test) {
     let before = '', after = '}';
 
@@ -178,7 +180,8 @@ function processForTest(test) {
         test = test.substring(1, test.length - 1);
     }
 
-    // Named index/key
+    // Named index/key. Assume there isn't one, and then search for one and
+    // override if found
     let key = gensym('key');
     test = test.replace(RegExp('\\s+at\\s+(' + identifierPattern + ')\\s*∊'), function (match, keyName) {
         key = keyName;
@@ -202,6 +205,8 @@ function processForTest(test) {
     match = test.match(RegExp('^\\s*(' + identifierPattern + ')\\s*∊(.*)$'));
     
     if (match) {
+        // Has the form `x in y`
+
         // Generate variables
         const value = match[1],
               container = gensym('container'),
@@ -246,6 +251,7 @@ function processForTest(test) {
         initExpr = '0';
     } else {
         // has the form "expr < variable < expr"
+        //
         // j is the location of the first operator
         // k is the location of the second operator
         

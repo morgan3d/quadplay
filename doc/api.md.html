@@ -1164,12 +1164,10 @@ Change or reset the transform to read them in a different coordinate system, or 
 the transformation routines.
 
 If there is no active touch, then the coordinates reflect the previous
-active touch location.  There is no way to track a hovering mouse or
-detect a scroll wheel or second mouse button with `touch`, which would not be
-mapped to a mobile device anyway. `device_control()` allows low-level access to
-additional device-specific pointer properties.
-
-<!-- The `screen_x` and `screen_y` use (0, 0) as the top left of the emulator screen. -->
+active touch location.  There is no way to track 
+a scroll wheel or second mouse button with `touch`. 
+`device_control()` allows low-level access to
+additional device-specific properties for a mouse or other pointing device.
 
 
 ### Main Menu

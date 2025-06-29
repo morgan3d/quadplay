@@ -331,25 +331,24 @@ def penultimate_value(array):
     
 /* Add `index` to the current selection, playing sounds
    as appropriate */
-def board_select(board, index, selection_change_callback):
+def board_select(board, index, player):
     const tile = board.tile[index.x][index.y]
     assert(not tile.selected)
     push(board.selection, index)
     tile.selected = mode_frames
 
     // Pan sound with position
-    if not selection_change_callback():
+    if not player_selection_change_callback(player):
         _board_play_sound(select_tile_sound, 85%, 100%, index)
 
 
 
-def board_deselect_last(board, selection_change_callback):
+def board_deselect_last(board, player):
     const prev = pop(board.selection)
     board.tile[prev.x][prev.y].selected = false
     
-    if not selection_change_callback():
+    if not player_selection_change_callback(player):
         todo("play deselect sound")
-
 
 
 
@@ -394,15 +393,16 @@ def board_reverse_rotate(board):
  
    `angle`
    : Rotate by this amount
+   
+   `cursor_tile_index`
+   : `xy()` index of the tile for the gamepad cursor,
+     or ∅ if it should not be drawn
      
-   `selection_change_callback()`
-   : Invoked when the selection changes, unless it is completely
-     removed. If ∅, remove any current
-     selection and preclude a new one. Return true if there was a new
-     word that is scored.
+   `allow_selection`
+   : If true show and permit selection via touch/gamepad
      
 */
-def board_update(board, pos, angle, selection_change_callback)
+def board_update(board, pos, angle, player, allow_selection)
 & preserving_transform:
     
     const TILE_CENTER_Z = 1
@@ -425,7 +425,7 @@ def board_update(board, pos, angle, selection_change_callback)
     
     const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
 
-    if touch.released_a or not selection_change_callback:
+    if touch.released_a or not allow_selection:
         // Remove any active selection
         resize(board.selection, 0)
     
@@ -438,14 +438,20 @@ def board_update(board, pos, angle, selection_change_callback)
             
             const index = xy(i, j)
             const pos = _index_to_pos(index)
+            const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
             
             tile.pos = transform_ws_to_ss(pos)
-            
-            if selection_change_callback and overlaps({pos: pos, shape: "disk", size: selection_size}, touch.xy):
+            const tile_center = {pos: pos, shape: "disk", size: selection_size}
+
+            if (allow_selection and 
+                touch.a and 
+                overlaps(tile_center, touch.xy)):
+                
+                player.cursor_tile_index = xy(index)
                 if touch.aa and (size(board.selection) == 0):
                     
                     // Start selection
-                    board_select(board, index, selection_change_callback)
+                    board_select(board, index, player)
                     
                 else if (touch.a and
                         size(board.selection) > 0 and
@@ -454,25 +460,42 @@ def board_update(board, pos, angle, selection_change_callback)
                     if tile.selected:
                         // Undo selection, backtracked
                         if equivalent(index, penultimate_value(board.selection)):
-                            board_deselect_last(board, selection_change_callback)
+                            board_deselect_last(board, player)
                             
                     else:
                         // Continue selection
-                        board_select(board, index, selection_change_callback)
-
+                        board_select(board, index, player)
+                        
             
             let radius = ½ center_size.x
             
-            if touch.released_a or not selection_change_callback:
+            if touch.released_a or not allow_selection:
                 tile.selected = false
             
             if tile.selected:
                 // Bounce if just selected
                 if tile.selected > mode_frames - 12:
                     radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
-            else:
-                // Only draw the rect if not selected
-                draw_rect(pos, tile_size, #CCC)            
+            
+            if not tile.selected or is_cursor_tile:
+                // Background rect
+                draw_rect(pos, tile_size, if is_cursor_tile then #0F0 else #CCC) 
+            
+            /*    
+            if is_cursor_tile:
+                draw_disk(
+                    pos,
+                    radius + 3,
+                    #000,
+                    ∅, 
+                    TILE_CENTER_Z - ε)
+                
+                /* draw_sprite({
+                    sprite: cursor_sprite.bracket, 
+                    pos: pos, 
+                    override_color: #0F0})
+                //draw_rect(pos, tile_size, ∅, CURSOR_COLOR)     
+            */
             
             draw_disk(
                 pos,

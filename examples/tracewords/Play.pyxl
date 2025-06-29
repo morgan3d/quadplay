@@ -3,7 +3,7 @@ Play
 
 todo("Implement D-pad")
 todo("Fix losing mouse focus?")
-
+todo("Is 'yous' a word?")
 
 let resolution_hook
 
@@ -12,7 +12,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 if now() ≥ end_time:
-    todo("Make the round end with timer")
+    set_mode(GameOver) because "Timer expired"
     todo("Play timer sound")
 
 
@@ -41,7 +41,7 @@ set_background(BACKGROUND_COLOR)
 player_update(player, ∅, true)
 
 // Hint for compiler:
-// set_mode(Rotate) because "Rotate button"
+// push_mode(Rotate) because "Rotate button"
 
 
             

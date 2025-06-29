@@ -13,7 +13,8 @@
     ],
     "modes": [
         "Play",
-        "Rotate"
+        "Rotate",
+        "GameOver"
     ],
     "start_mode": "Play",
     "docs": [],
@@ -383,6 +384,23 @@
             "max": 5,
             "format": "0.0",
             "quantum": 0.5
+        },
+        "CURSOR_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "29%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "13%"
+                }
+            }
         }
     },
     "screenshot_tag": "Tracewords",
