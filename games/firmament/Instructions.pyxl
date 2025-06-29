@@ -10,6 +10,8 @@ options = _options
 select_random_background_audio()
 select_random_starfield()
 
+if options.gamepad_indices_by_team[0][0] == -1:
+    set_mode(Play, options) because "DEMO mode"
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -28,8 +30,4 @@ preserving_transform:
         wrap_width: SCREEN_SIZE.x - 160})
 
 if any_button_press() and mode_frames > 20:
-    set_mode(Play, options)
-
-
-leave
-────────────────────────────────────────────────────────────────────────
+    set_mode(Play, options) because "timer or button"

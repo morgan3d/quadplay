@@ -5,6 +5,7 @@ const TITLE_OPTION_ARRAY = [
     {name: "SOLO",   description: "1P vs. CPU",  gamepad_indices_by_team: [[0],    [∅]], time_scale: TIME_SCALE_COOP_SOLO, civilization_names: ["Federation", "Aurean Empire"]},
     {name: "VERSUS", description: "1P vs. 1P",   gamepad_indices_by_team: [[0],    [1]], time_scale: TIME_SCALE_VERSUS,    civilization_names: ["Federation", "Cyan Hegemony"]},
     {name: "CO∙OP",  description: "2P vs. CPU",  gamepad_indices_by_team: [[0, 1], [∅]], time_scale: TIME_SCALE_COOP_SOLO, civilization_names: ["Perse Collective", "Aurean Empire"]},
+    {name: "DEMO",   description: "CPU vs. CPU", gamepad_indices_by_team: [[-1],  [-2]], time_scale: TIME_SCALE_DEMO,      civilization_names: ["Federation", "Cyan Hegemony"]},
     {name: "QUIT",   description: "Exit the game"}]
 
 let selected_index = load_local("title_selected_index") default 0

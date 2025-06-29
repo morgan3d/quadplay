@@ -43,9 +43,9 @@ const CONTROL_ARRAY = [
 
 
 def make_player(gamepad_index, team):
-    const is_human = gamepad_index ≠ ∅
+    const is_human = gamepad_index ≠ ∅ and gamepad_index ≥ 0
     assert((team.name == "CPU") ≠ is_human)
-    const gamepad = if is_human then gamepad_array[gamepad_index] else make_bot_gamepad(CPU_PLAYER_COLOR, "CPU")
+    const gamepad = if is_human then gamepad_array[gamepad_index] else make_bot_gamepad(team.color, "CPU")
     
     const color = gamepad.player_color * (if gamepad_index == 1 then 125% else 100%)
     return {

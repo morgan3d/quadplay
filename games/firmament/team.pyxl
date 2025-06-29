@@ -7,7 +7,17 @@ def make_team(t, gamepad_index_array, civilization_names):
     let name = "P" + (gamepad_index + 1)
     let deselected_sprite_index = gamepad_index
         
-    if size(gamepad_index_array) == 2:
+    if gamepad_index == -1:
+        // Special case for demo mode
+        color = gamepad_array[0].player_color 
+        name = "CPU"
+        deselected_sprite_index = 0
+    else if gamepad_index == -2:
+        // Special case for demo mode
+        color = gamepad_array[1].player_color 
+        name = "CPU"
+        deselected_sprite_index = 1
+    else if size(gamepad_index_array) == 2:
         // Coop human team
         color = COOP_PLAYER_COLOR
         name = "COOP"

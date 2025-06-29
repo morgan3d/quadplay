@@ -783,7 +783,7 @@
             "url": "quad://games/firmament/",
             "title": "Black Firmament",
             "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
-            "version": 1,
+            "version": "1.1",
             "developer": "@CasualEffects",
             "min_players": 1,
             "max_players": 2,

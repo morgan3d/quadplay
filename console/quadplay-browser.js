@@ -67,7 +67,7 @@ function detectControllerType(id) {
             type = 'JoyCon_R';
         } else if (/stadia/i.test(id)) {
             type = 'Stadia';
-        } else if (/xbox 360/i.test(id)) {
+        } else if (/xbox 360/i.test(id) || /45e-28e-Controller/i.test(id) || /Vendor: 045e Product: 028e/i.test(id)) {
             type = 'Xbox360';
         } else if (/x-box 360 pad/i.test(id)) {
             type = 'SteamDeck';
@@ -917,6 +917,18 @@ const gamepadAxisRemap = {
     'T.Flight Hotas X (Vendor: 044f Product: b108)':[0, 1, 6, 2, 4, 5, 3, 7, 8, 9]
 };
 
+const gamepadAxisInvert = {
+    'identity': [+1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1],
+
+    // Firefox Xbox 360 as of June 2025 inverts the Y axix
+    '45e-28e-Controller': isSafari ? [+1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1] :
+                            [+1, -1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1],
+
+    // Chromium Xbox 360 as of June 2025 inverts the Y axix
+    'Controller (STANDARD GAMEPAD Vendor: 045e Product: 028e)': isSafari ? [+1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1] :
+                    [+1, -1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +1]
+};
+
 
 /* Calling navigator.getGamepads is surprisingly slow (consistently
    0.6% of 60Hz frame time on Chromium), so we abstract and amortize over
@@ -963,11 +975,12 @@ function getIdealGamepads() {
             // Construct a simplified web gamepad API
             const mypad = {axes: [0, 0, 0, 0], buttons: [], analogAxes: [0, 0, 0, 0, 0, 0], id: pad.id};
 
+            const axisInvert = gamepadAxisInvert[pad.id] || gamepadAxisInvert.identity;
 	        const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
             
             // Stick axes
             for (let a = 0; a < 4; ++a) {
-                const axis = pad.axes[axisRemap[a]];
+                let axis = pad.axes[axisRemap[a]] * axisInvert[a];
                 mypad.axes[a] = (Math.abs(axis) > deadZone) ? Math.sign(axis) : 0;
                 mypad.analogAxes[a] = axis;
             }

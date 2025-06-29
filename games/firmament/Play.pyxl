@@ -71,7 +71,6 @@ local:
     for value at key in STORY:
         STORY[key] = replace(value, civilization_table)
 
-    
 
 
 frame
