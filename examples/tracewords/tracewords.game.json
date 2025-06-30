@@ -33,7 +33,7 @@
         "big_points_sound": "quad://sounds/coin-00.sound.json",
         "rotate_sound": "quad://sounds/powerup-00.sound.json"
     },
-    "version": "0.054",
+    "version": "0.055",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -371,7 +371,8 @@
         },
         "DEBUG_PORTRAIT": {
             "type": "boolean",
-            "value": false
+            "value": false,
+            "description": "Debug override this to true to force a mobile-device-like aspect ratio in the IDE"
         },
         "DEBUG_HISTORY": {
             "type": "boolean",

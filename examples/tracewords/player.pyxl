@@ -1,9 +1,10 @@
+todo("Move selection to the player")
+
 
 /* Constructs a new player with an uninitialized board */
 def make_player():
-        
-    
-    const player = {
+            
+    return {
         board: make_board(),
         
         score: 0,
@@ -49,9 +50,6 @@ def make_player():
         
         // Where the cursor is
         cursor_tile_index: xy(0, 0) }
-    
-    
-    return player
 
 
 
@@ -124,8 +122,10 @@ def player_selection_change_callback(player):
         return true
 
 
+/* Abstracted to make an argument-less callback */
 def play_big_points_sound():
     play_sound(big_points_sound)
+
 
 
 /* Returns the color. Updates the score. Does not verify that the word has
@@ -188,7 +188,7 @@ def _player_update_rotate_button(player, board_pos):
     if player.using_gamepad:
         draw_text({font: tile_point_font, text: player.gamepad.prompt["(b)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
 
-    if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.bb:
+    if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.ff or joy.cc:
         push_mode(Rotate) because "Rotate button"
 
 
@@ -218,6 +218,28 @@ def draw_timer(board_pos):
         x_align: "right"})
 
 
+/*
+  Moves the cursor. When there is a selection in progress, restricts
+  to within 1 tile of the last selected value. 
+ */
+def _player_update_cursor(player)
+& with cursor_tile_index, gamepad in player:
+
+    const target = cursor_tile_index + xy(gamepad.xx, gamepad.yy)
+    
+    // Only move to adjacent when in selection
+    const selection = player.board.selection
+    const last = last_value(selection) 
+    let lo = xy(0, 0)    
+    let hi = xy(COLS, ROWS) - 1
+
+    if size(selection) > 0:
+        lo = max(lo, last - 1)
+        hi = min(hi, last + 1)
+    
+    cursor_tile_index = clamp(target, lo, hi)
+    
+
 
 /* Run UI for this player and draw their board */
 def player_update(player, angle default 0°, allow_selection default false):
@@ -231,8 +253,8 @@ def player_update(player, angle default 0°, allow_selection default false):
         // Not selecting
         resize(player.board.selection, 0)
 
-    // Move the cursor
-    player.cursor_tile_index = clamp(player.cursor_tile_index + xy(player.gamepad.xx, player.gamepad.yy), xy(0, 0), xy(COLS, ROWS) - 1)
+    // Move the gamepad controlled cursor
+    _player_update_cursor(player)
     
     // Version/debugging stamp
     draw_text({
@@ -260,7 +282,7 @@ def player_update(player, angle default 0°, allow_selection default false):
         // Slide up a little on narrow screens so that it is easier to swipe on a phone
         board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
         
-    board_update(player.board, board_pos, angle, player, allow_selection)
+    _player_update_board(player, board_pos, angle, allow_selection)
 
     _player_draw_score(player, board_pos)
     
@@ -369,7 +391,166 @@ def _player_update_history(player, board_pos)
         // most recent words on screen
         player.history.scroll = max(player.history.scroll, overflow)
 
+
+
+/* Draw the board and manage UI state changes.
+ 
+   `pos`
+   : Center of the grid in pixels
+ 
+   `angle`
+   : Rotate by this amount
+   
+   `cursor_tile_index`
+   : `xy()` index of the tile for the gamepad cursor,
+     or ∅ if it should not be drawn
+     
+   `allow_selection`
+   : If true show and permit selection via touch/gamepad
+     
+*/
+def _player_update_board(player, pos, angle, allow_selection)
+& preserving_transform
+& with board, gamepad in player:
     
+    const TILE_CENTER_Z = 1
+    const TILE_LETTER_Z = 2
+    
+    const grid_size = board_pixel_size()
+    const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
+    const center_size = tile_size - TILE_GUTTER
+    
+    // Make the selection target slightly small to make 
+    // it easier to select diagonals without hitting
+    // the sides. If this is the first letter, make the
+    // selection radius extra large instead
+    const selection_size = center_size + (if size(board.selection) == 0 then +2 else -1)
+            
+    set_transform(pos)
+    set_camera(xy(0, 0), -angle)
+
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, #BBB)
+    
+    const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
+
+    // Store store this before selection changes so that the same
+    // button can be used to start and end selection
+    const cancel_gamepad_selection = (gamepad.aa and size(board.selection) > 0) or gamepad.bb
+    
+    if (touch.released_a or 
+    
+        // Tap A to cancel selection
+        cancel_gamepad_selection or
+        
+        // If not selecting, make sure it is empty
+        not allow_selection):
+        
+        board_deselect_all(board, player)
+        
+    
+    // Save the selection color before iteration so that
+    // it does not change within a frame, as this is modified
+    // based on the value of the word but should be consistent
+    // for a single frame.
+    const selection_color = board.selection_color
+    
+    for col at i in board.tile:
+        for tile at j in col:
+            
+            const index = xy(i, j)
+            const pos = _index_to_pos(index)
+            const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
+            
+            tile.pos = transform_ws_to_ss(pos)
+            const tile_center = {pos: pos, shape: "disk", size: selection_size}
+
+            if allow_selection:
+                // Touch selection                
+                if touch.a and overlaps(tile_center, touch.xy):
+                    player.cursor_tile_index = xy(index)
+                    if touch.aa and (size(board.selection) == 0):
+                        
+                        // Start selection
+                        board_select(board, index, player)
+                        
+                    else if (touch.a and
+                            size(board.selection) > 0 and
+                            _adjacent(index, last_value(board.selection))):
+    
+                        if tile.selected:
+                            // Undo selection, backtracked
+                            if equivalent(index, penultimate_value(board.selection)):
+                                board_deselect_last(board, player)
+                                
+                        else:
+                            // Continue selection
+                            board_select(board, index, player)
+
+                if is_cursor_tile and not cancel_gamepad_selection:
+                    if gamepad.aa and (size(board.selection) == 0):
+                        // Start selection
+                        board_select(board, index, player)
+                        
+                    else if size(board.selection) > 0 and not equivalent(index, last_value(board.selection)) and not gamepad.x and not gamepad.y:
+                        // Selecting and newly on a tile and gamepad was released
+                        
+                        if equivalent(index, penultimate_value(board.selection)):
+                            // Moved back from the current tile
+                            board_deselect_last(board, player)
+                        else if not contains(board.selection, index, equivalent):
+                            // On a selectable tile
+                            board_select(board, index, player)
+    
+            
+            let radius = ½ center_size.x
+            
+            if touch.released_a or not allow_selection:
+                tile.selected = false
+            
+            if tile.selected:
+                // Bounce if just selected
+                if tile.selected > mode_frames - 12:
+                    radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
+            
+            if not tile.selected or is_cursor_tile:
+                // Background rect
+                draw_rect(pos, tile_size, if is_cursor_tile then #0F0 else #CCC, if is_cursor_tile then #0C0 else ∅) 
+            
+            draw_disk(
+                pos,
+                radius,
+                if tile.selected then selection_color else #FFF,
+                ∅, 
+                TILE_CENTER_Z)
+
+            const text_color = if tile.selected then #fff else #000
+            
+            // Label
+            draw_text({
+                pos: pos, 
+                font: tile_font, 
+                text: if tile.letter == "Q" then "Qu" else tile.letter,
+                color: text_color,
+                z: TILE_LETTER_Z})
+            
+            // Points
+            if not tile.selected:
+                draw_text({
+                    pos: pos + subscript_offset, 
+                    font: tile_point_font, 
+                    text: LETTER_POINT_TABLE[tile.letter], 
+                    color: #AAA,
+                    z: TILE_LETTER_Z})
+    
+    // Draw the connectors between selected letters
+    if size(board.selection) > 1:
+        let prev_pos = _index_to_pos(board.selection[0]) 
+        for 0 < s < size(board.selection):
+            let pos = _index_to_pos(board.selection[s])
+            draw_line(prev_pos, pos, selection_color, TILE_CENTER_Z, ¼ TILE_EXTENT)
+            prev_pos = pos
+
+
 
 def player_reset(player):
     player.score = 0
@@ -483,6 +664,8 @@ def _player_find_good_board():
         
     player.board.word_count = size(word_array)
     //debug_print(word_array)
+
+
 
 
 let player = make_player()

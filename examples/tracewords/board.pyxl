@@ -1,11 +1,18 @@
-/* Routines for manipulating a `ROWS` x `COLS` game board, which includes
-   information about the current selection. */
+/* Routines for manipulating a game board of `ROWS` x `COLS` *tiles*.
+   The board includes information about the current selection. 
+   
+   A tile `index` is an integer `xy()` position, where `(0, 0)` is the
+   upper left and `(COLS, ROWS)` is the lower right.
+   
+   Drawing the board is handled by the player script because it is intertwined
+   with UI data stored on the player. */
 
 
 /* Create a new board. The board is not initialized. Use `board_reset()`. */
 def make_board():
     const board = {
         // Lower case q-decoded word and permutation number
+        // used to generate this board
         seed: ∅,
         
         // The tiles
@@ -273,7 +280,7 @@ def board_has_obvious_sensitive_word(board):
 /* Chooses a random letter for each tile, and then 
    permutes the result into pattern `seed_number`.
    This process is entirely deterministic based on
-   the input.*/
+   the input. */
 def board_reset(board, seed_word, permute_number default 0):
     board.seed = seed_word + "-" + permute_number
     const rnd = make_random(seed_word)
@@ -313,12 +320,13 @@ def board_to_string(board):
     return s
     
 
-/* True if these xy() integer indices are adjacent */
+/* True if these xy() tile integer indices are adjacent */
 def _adjacent(A, B):
     return XY_DISTANCE(A, B) < 1.5
     
 
-/* Returns the center of the tile at index in pixels relative to the grid upper left corner */
+/* Returns the center of the tile at index in pixels relative to the
+   grid upper left corner */
 def _index_to_pos(index):
     return (index * (TILE_GUTTER * xy(min(index.x, 1), min(index.y, 1)) + TILE_EXTENT)
            - ½ xy(COLS - 1, ROWS - 1) * (TILE_EXTENT + TILE_GUTTER))
@@ -344,13 +352,21 @@ def board_select(board, index, player):
 
 
 def board_deselect_last(board, player):
-    const prev = pop(board.selection)
-    board.tile[prev.x][prev.y].selected = false
+    const index = pop(board.selection)
+    board.tile[index.x][index.y].selected = false
     
     if not player_selection_change_callback(player):
         todo("play deselect sound")
 
 
+
+def board_deselect_all(board, player):
+    for index in board.selection:
+        board.tile[index.x][index.y].selected = false
+    resize(board.selection, 0)
+    
+    todo("play deselect all sound")
+        
 
 /* Adjusts the pan for the index */
 def _board_play_sound(sound, volume, pitch, index):
@@ -384,153 +400,6 @@ def board_reverse_rotate(board):
         for j < ROWS:
             board.tile[i][j] = old[ROWS - j - 1][i]
 
-
-
-/* Draw the board and manage UI state changes.
- 
-   `pos`
-   : Center of the grid in pixels
- 
-   `angle`
-   : Rotate by this amount
-   
-   `cursor_tile_index`
-   : `xy()` index of the tile for the gamepad cursor,
-     or ∅ if it should not be drawn
-     
-   `allow_selection`
-   : If true show and permit selection via touch/gamepad
-     
-*/
-def board_update(board, pos, angle, player, allow_selection)
-& preserving_transform:
-    
-    const TILE_CENTER_Z = 1
-    const TILE_LETTER_Z = 2
-    
-    const grid_size = board_pixel_size()
-    const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
-    const center_size = tile_size - TILE_GUTTER
-    
-    // Make the selection target slightly small to make 
-    // it easier to select diagonals without hitting
-    // the sides. If this is the first letter, make the
-    // selection radius extra large instead
-    const selection_size = center_size + (if size(board.selection) == 0 then +2 else -1)
-            
-    set_transform(pos)
-    set_camera(xy(0, 0), -angle)
-
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, #BBB)
-    
-    const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
-
-    if touch.released_a or not allow_selection:
-        // Remove any active selection
-        resize(board.selection, 0)
-    
-    // Save the selection color before iteration so that
-    // it does not change within a frame
-    const selection_color = board.selection_color
-    
-    for col at i in board.tile:
-        for tile at j in col:
-            
-            const index = xy(i, j)
-            const pos = _index_to_pos(index)
-            const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
-            
-            tile.pos = transform_ws_to_ss(pos)
-            const tile_center = {pos: pos, shape: "disk", size: selection_size}
-
-            if (allow_selection and 
-                touch.a and 
-                overlaps(tile_center, touch.xy)):
-                
-                player.cursor_tile_index = xy(index)
-                if touch.aa and (size(board.selection) == 0):
-                    
-                    // Start selection
-                    board_select(board, index, player)
-                    
-                else if (touch.a and
-                        size(board.selection) > 0 and
-                        _adjacent(index, last_value(board.selection))):
-
-                    if tile.selected:
-                        // Undo selection, backtracked
-                        if equivalent(index, penultimate_value(board.selection)):
-                            board_deselect_last(board, player)
-                            
-                    else:
-                        // Continue selection
-                        board_select(board, index, player)
-                        
-            
-            let radius = ½ center_size.x
-            
-            if touch.released_a or not allow_selection:
-                tile.selected = false
-            
-            if tile.selected:
-                // Bounce if just selected
-                if tile.selected > mode_frames - 12:
-                    radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
-            
-            if not tile.selected or is_cursor_tile:
-                // Background rect
-                draw_rect(pos, tile_size, if is_cursor_tile then #0F0 else #CCC) 
-            
-            /*    
-            if is_cursor_tile:
-                draw_disk(
-                    pos,
-                    radius + 3,
-                    #000,
-                    ∅, 
-                    TILE_CENTER_Z - ε)
-                
-                /* draw_sprite({
-                    sprite: cursor_sprite.bracket, 
-                    pos: pos, 
-                    override_color: #0F0})
-                //draw_rect(pos, tile_size, ∅, CURSOR_COLOR)     
-            */
-            
-            draw_disk(
-                pos,
-                radius,
-                if tile.selected then selection_color else #FFF,
-                ∅, 
-                TILE_CENTER_Z)
-
-            const text_color = if tile.selected then #fff else #000
-            
-            // Label
-            draw_text({
-                pos: pos, 
-                font: tile_font, 
-                text: if tile.letter == "Q" then "Qu" else tile.letter,
-                color: text_color,
-                z: TILE_LETTER_Z})
-            
-            // Points
-            if not tile.selected:
-                draw_text({
-                    pos: pos + subscript_offset, 
-                    font: tile_point_font, 
-                    text: LETTER_POINT_TABLE[tile.letter], 
-                    color: #AAA,
-                    z: TILE_LETTER_Z})
-    
-    // Draw the connectors
-    if size(board.selection) > 1:
-        let prev_pos = _index_to_pos(board.selection[0]) 
-        for 0 < s < size(board.selection):
-            let pos = _index_to_pos(board.selection[s])
-            draw_line(prev_pos, pos, selection_color, TILE_CENTER_Z, ¼ TILE_EXTENT)
-            prev_pos = pos
-        
 
 
 /* Returns the Q-encoded upper-case text word that is selected, 

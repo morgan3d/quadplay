@@ -1,10 +1,6 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("Implement D-pad")
-todo("Fix losing mouse focus?")
-todo("Is 'yous' a word?")
-
 let resolution_hook
 
 
@@ -16,6 +12,8 @@ if now() ≥ end_time:
     todo("Play timer sound")
 
 
+// Fill the screen even at non-quadplay aspect ratios
+// for a good mobile experience
 if not resolution_hook:
     if DEBUG_PORTRAIT:
         device_control("enable_feature", "custom_screen_size")
