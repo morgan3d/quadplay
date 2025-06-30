@@ -24,23 +24,59 @@
 
       a {
           color: #e61b9d;
-          text-decoration: none;
+          text-decoration: underline;
       }
 
+      a:hover {
+          color: #FFF;
+          text-shadow: 0px 0px 4px #e61b9d,
+                       0px 0px 5px #e61b9d,
+                       0px 0px 6px #e61b9d,
+                       0px 0px 10px #e61b9d;
+      }
+
+      .gradient {
+          background-color: #f3ec78;
+          background-image: linear-gradient(180deg, #fff, #0bf);
+          background-size: 100%;
+          -webkit-background-clip: text;
+          -moz-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          -moz-text-fill-color: transparent;
+      }
     </style>
   </head>
   <body>
 
     <center>
+     
       <a href="https://morgan3d.github.io/quadplay/console/app.html?"><img src="doc/emulator.png"></a>
       <br><a href="https://morgan3d.github.io/quadplay/console/app.html?" style="font-family:quadplay; font-weight: bold; font-size: 24px">Play games online</a>
 
       <p>
         <a href="https://morgan3d.github.io/quadplay/console/quadplay.html?IDE=1&game=quad://games/quadpaddle">Preview the web IDE</a> &nbsp;&middot;&nbsp;
         <a href="https://morgan3d.github.io/quadplay/tools/windows-install-quadplay.cmd">Create Games on Windows</a> &nbsp;&middot;&nbsp;
-        <a href="https://github.com/morgan3d/quadplay/archive/main.zip">Create Games on macOS or Linux</a> &nbsp;&middot;&nbsp;
-        <a href="https://morgan3d.github.io/quadplay/doc/manual.md.html">Read the <span style="font-family:quadplay">quadplay✜</span> Manual</a>
+        <a href="https://github.com/morgan3d/quadplay/archive/main.zip">Create Games on macOS or Linux</a>
+        <br>
+        <a href="https://morgan3d.github.io/quadplay/doc/manual.md.html">Read the <span style="font-family:quadplay">quadplay✜</span> Manual</a> &nbsp;&middot;&nbsp;
+        <a href="https://github.com/morgan3d/quadplay/">View on Github</a>
       </p>
+
+      <div style="max-width: 680px; text-align: justify; font-weight: 100" class="gradient">
+        <p>
+          Imagine the year 1989 in a fantasy timeline. 
+          Instead of chasing realistic 3D graphics, the industry
+          creates powerful development tools and innovative game mechanics
+          decades earlier.
+        </p>
+        <p>        
+          <span style="font-family:quadplay">quadplay✜</span> is the fantasy sibling of the SNES, Neo Geo, and
+          PlayStation from this timeline. It puts the fun first in game jams and education.
+          Retro constraints scope art and code for success.
+          Modern scripting, physics, local and online multiplayer, and AI
+          empower easy implementation and great gameplay.
+        </p>
+      </div>
     </center>
 
   </body>
