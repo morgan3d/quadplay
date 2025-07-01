@@ -36,7 +36,7 @@
         "rotate_sound": "quad://sounds/powerup-00.sound.json",
         "button_prompt_font": "quad://fonts/deja-4.font.json"
     },
-    "version": "0.063",
+    "version": "0.064",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
