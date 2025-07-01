@@ -1,0 +1,71 @@
+// starting size of the keyhole
+const MAX_KEYHOLE_SIZE = magnitude(SCREEN_SIZE.x)
+
+// not used in this project, but left in reference for other things
+def start_keyhole_transition(nframes, start, end):
+    let keyhole_visible = start
+
+    def keyhole_fx(frames_left, total_frames):
+        keyhole_visible = lerp(start, end, frames_left / total_frames)
+        render_keyhole(keyhole_visible)
+
+    add_frame_hook(
+        keyhole_fx,
+        nil,
+        nframes
+    )
+
+// render the keyhole with an additional flourish - moving the center
+def render_keyhole_flourish(center, radius, color, z, min_radius)
+& preserving_transform:
+    reset_transform()
+    let amount = radius/MAX_KEYHOLE_SIZE
+    if amount < 0.5:
+        amount = 2*amount
+    else:
+        amount = 1
+        
+    const eased_amount = smoothstep(0, 1, amount)
+
+    // const eased_amount = 1 - pow(1-amount, 3)
+    let center_animated = lerp(center, SCREEN_SIZE/2, eased_amount)
+    if DEBUG_SHOW_KEYHOLE_TARGETS:
+        let debug_radius_size = 5
+        draw_disk(center_animated, debug_radius_size, rgb(0,1,0), nil, 250)
+        draw_disk(center, debug_radius_size, rgb(1,0,0), nil, 225)
+        draw_disk(center, radius, nil, rgb(0,1,0), 225)
+        draw_disk(center_animated, radius, nil, rgb(1,0,0), 225)
+
+    if min_radius:
+        radius = max(radius, min_radius)
+
+    render_keyhole(center_animated, radius, color, z)
+
+
+// const DEBUG_LINE = SCREEN_SIZE.y/2
+const DEBUG_LINE = nil
+
+// draw a circle keyhole effect over the screen
+def render_keyhole(center, radius, color, z)
+& preserving_transform:
+    reset_transform()
+    for line_y < SCREEN_SIZE.y:
+        if DEBUG_LINE and line_y != DEBUG_LINE:
+            continue
+            
+        const start = xy(0, line_y)
+        const end = xy(SCREEN_SIZE.x, line_y)
+        let y_diff = line_y - center.y
+            
+        if abs(y_diff) > radius:
+            // full horizontal line
+            draw_line(start, end, color, z)
+            continue
+
+        // find the x-coordinate of the hit
+        let x_diff = abs(sqrt(radius*radius - y_diff*y_diff))
+        let p_min = xy(center.x - x_diff, line_y)
+        let p_max = xy(center.x + x_diff, line_y)
+
+        draw_line(start, p_min, color, z)
+        draw_line(p_max, end, color, z)

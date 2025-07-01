@@ -1,0 +1,202 @@
+init
+────────────────────────────────────────────────────────────────────────
+// loop the bgm
+if BGM_LOOP_HANDLE == nil:
+    BGM_LOOP_HANDLE = play_sound(bgm_loop, true)
+
+def draw_screen_border(scale, draw_credits default true, wiggle):
+    preserving_transform:
+        reset_transform()
+        draw_sprite(
+            {
+                sprite: borderSprite,
+                pos: SCREEN_SIZE/2 + wiggle,
+                z: 210,
+                scale: scale,
+            }
+        )
+        if draw_credits:
+            draw_text(
+                font,
+                "a word game\nby @stephan_gfx",
+                xy(15, SCREEN_SIZE.y - 25),
+                rgb(0.2, 0.2, 0.2),
+            )
+
+ACCELERATION_PROFILES["you_prof"] = {
+    max_velocity: 5,
+    num_frames_attack:  10,
+    num_frames_release: 10,
+}
+let you_accels = {
+    x_accel: make_accelerator_from_profile("you_prof"),
+    y_accel: make_accelerator_from_profile("you_prof"),
+}
+let keyhole_two_size = 40
+let keyhole_target = 1*SCREEN_SIZE.x/4
+let ALLOW_INPUT = 0
+const ALPHAS = {
+    border: 1,
+    title_1: 0,
+    title_2: 0,
+    credit: 0,
+    instructions: 0,
+    wiggle_amount: 0,
+    out_transition: 0,
+}
+
+def lerp_alpha_toward(start, target, key, lerp_smootherstep default false):
+    def func_smootherstep(frames_left, total_frames):
+        ALPHAS[key] = lerp(
+            start,
+            target,
+            smootherstep(0, 1, 1-(frames_left/total_frames))
+        )
+    def func(frames_left, total_frames):
+        ALPHAS[key] = lerp(start, target, 1-(frames_left/total_frames))
+
+    if lerp_smootherstep:
+        return func_smootherstep
+
+    return func
+
+def allow_input():
+    ALLOW_INPUT = true
+
+let YOU_POS_OFFSET = xy(0, 0)
+
+const POS_RANDOM_VALUES = [
+    xy(-1, 0),
+    xy(1, -1),
+    xy(-1, -1),
+    xy(1, 1),
+    xy(0, 1),
+]
+
+enter
+────────────────────────────────────────────────────────────────────────
+// zero out the alpha values
+for key in keys(ALPHAS):
+    ALPHAS[key] = 0
+
+sequence(
+    {callback: lerp_alpha_toward(0, 0.1, "border", true), frames: 40},
+    {callback: lerp_alpha_toward(0.1, 0.6, "border", true), frames: 40},
+    {callback: lerp_alpha_toward(0.6, 1, "border", true), frames: 40},
+    {callback: nil, frames: 30},
+    {callback: lerp_alpha_toward(0, 1, "title_1"), frames: 40},
+    {callback: nil, frames: 10},
+    {callback: lerp_alpha_toward(0, 1, "title_2"), frames: 40},
+    {callback: nil, frames: 5},
+    {callback: lerp_alpha_toward(5, 0, "wiggle_amount"), frames: 20},
+    {callback: nil, frames: 80},
+    {callback: lerp_alpha_toward(0, 1, "credit"), frames: 60},
+    allow_input,
+    {callback: nil, frames: 60},
+    {callback: lerp_alpha_toward(0, 1, "instructions"), frames: 60},
+)
+YOU_POS_OFFSET = xy(0,0)
+ALLOW_INPUT = false
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_transform(xy(0,0))
+set_background(DARK_COLOR)
+
+let wiggle = (
+    ALPHAS["wiggle_amount"] 
+    * POS_RANDOM_VALUES[loop(mode_frames, 0, size(POS_RANDOM_VALUES))]
+)
+
+def draw_title_text(str, offset, alpha_key, z default 0):
+    let col = rgba(text_color.r, text_color.g, text_color.b, ALPHAS[alpha_key])
+    return draw_text(
+        {
+            font:font,
+            text:str,
+            pos: SCREEN_SIZE/2 + offset,
+            color: col,
+            shadow: rgba(shadow_color, ALPHAS[alpha_key]),
+            x_align: "center",
+            y_align: "center",
+            z: z,
+        }
+    ).size
+
+let bounds = draw_title_text("A GAME about WORDS", xy(0,0), "title_1")
+let for_bounds = draw_title_text("and    ", xy(0, bounds.y+2), "title_2")
+for_bounds.x -= draw_text(
+    font,
+    "     ",
+    SCREEN_SIZE/2 + xy(0, bounds.y),
+    text_color,
+    nil,
+    nil,
+    0,
+    0
+).size.x
+
+draw_title_text(
+    "YOU", xy(for_bounds.x, bounds.y + 2) + YOU_POS_OFFSET + wiggle,
+    "title_2",
+    300
+)
+draw_title_text("BY @stephan_gfx", 4 * xy(0, bounds.y), "credit")
+draw_title_text(
+    replace("hold [<],[^],[v], or [>]", gamepad_array[0].prompt), 
+    6 * xy(0, bounds.y),
+    "instructions"
+)
+
+draw_rect(
+    SCREEN_SIZE/2+2,
+    SCREEN_SIZE-xy(1,0), 
+    rgba(
+        DARK_COLOR.r,
+        DARK_COLOR.g,
+        DARK_COLOR.b, 
+        ALPHAS["out_transition"],
+        0
+    ),
+
+)
+draw_screen_border(ALPHAS["border"], false, wiggle)
+
+def go_to_next_level():
+    set_mode(Play)
+
+debug_watch(you_accels["x_accel"])
+debug_watch(you_accels["y_accel"])
+
+if ALLOW_INPUT:
+    // update the accelerators
+    accelerator_update(you_accels["x_accel"], gamepad_array[0].x)
+    accelerator_update(you_accels["y_accel"], gamepad_array[0].y)
+
+    YOU_POS_OFFSET += xy(
+        you_accels["x_accel"].current_velocity,
+        you_accels["y_accel"].current_velocity
+    )
+
+    let dist_travelled = magnitude(YOU_POS_OFFSET)
+    ALPHAS["out_transition"] = lerp(0, 1, dist_travelled/60)
+    if ALPHAS["out_transition"] >= 1:
+        ALLOW_INPUT = false
+        sequence(
+            {callback:lerp_alpha_toward(1, 0, "keyhole_amount"), frames: 60},
+            {callback:nil, frames: 60},
+            go_to_next_level,
+        )
+
+render_keyhole_flourish(
+    SCREEN_SIZE/2 + xy(for_bounds.x, bounds.y) + YOU_POS_OFFSET + wiggle,
+    MAX_KEYHOLE_SIZE*ALPHAS["keyhole_amount"],
+    rgb(0.2, 0.2,0.2),
+    200,
+    15
+)
+
+leave
+────────────────────────────────────────────────────────────────────────
+// make sure that the hooks get cleared out or sequence gets weird
+remove_frame_hooks_by_mode(Play)
