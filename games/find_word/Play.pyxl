@@ -8,11 +8,6 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_background(BACKGROUND_COLOR)
 
-if now() ≥ end_time:
-    set_mode(GameOver) because "Timer expired"
-    todo("Play timer sound")
-
-
 // Fill the screen even at non-quadplay aspect ratios
 // for a good mobile experience
 if not resolution_hook:
@@ -45,6 +40,10 @@ for x < COLS:
 frame
 ────────────────────────────────────────────────────────────────────────
 player_update(player, ∅, true)
+
+if now() ≥ end_time:
+    set_mode(GameOver) because "Timer expired"
+    todo("Play timer sound")
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"
