@@ -1,0 +1,694 @@
+todo("Move selection to the player")
+
+/* Constructs a new player with an uninitialized board */
+def make_player():
+            
+    return {
+        board: make_board(),
+        
+        score: 0,
+        
+        gamepad: gamepad_array[0],
+        
+        // Due to finger on history
+        drag_start: {
+            // Position at which the current drag started,
+            // ∅ if not in a drag
+            pos: ∅,
+            
+            // history.scroll when the drag started
+            scroll: ∅
+        },
+                
+        // Q-encoded upper case words that have already been found
+        // and are represented in history.list
+        already_found: {},
+        
+        // Used for display.
+        history: {
+            // Each entry is {text, word, tiles, points, color, emphasize_frame, pos}.
+            // `pos` is computed as a side effect of draw history
+            // `word` is Q-encoded, text may contain arbitrary characters
+            list: [],
+            
+            // Auto computed and overriden on new word spawn or resize,
+            // but can be manually affected by the player
+            scroll: 0,
+
+            // Scroll computation resets when screen size changes.
+            // This was the size it was computed for.
+            scroll_screen_size: xy(0, 0),
+            
+            // Scroll computation resets when the list size changes.
+            // This was the size it was computed for.
+            scroll_history_size: 0},
+        
+        // Determined by most recent input method.
+        // Show button prompts and cursor when using gamepad
+        using_gamepad: false,
+        
+        // Where the cursor is
+        cursor_tile_index: xy(0, 0)}
+
+
+
+/* Creates animation going from the selection to the last word in the history */
+def player_spawn_score_animation(player):
+    let target
+    
+    const board = player.board
+    const color = last_value(player.history.list).color
+    
+    let letter_array = []
+    let start_array = []
+    for tile_index in board.selection:  
+        const tile = board.tile[tile_index.x][tile_index.y]        
+        push(start_array, xy(tile.pos))
+        push(letter_array, q_decode(tile.letter))
+    
+    // Have to wait until callback time for this so that the 
+    // target actually gets rendered and assigned a pos first
+    def capture_target():
+        const entry = last_value(player.history.list)
+        target = entry.pos + xy(4 size(entry.word), 4)
+
+    def callback(frames_left, total_frames):
+        const α = linstep(total_frames, 0, frames_left)^1.5
+        for i < size(letter_array):
+            const pos = lerp(start_array[i], target, α)
+            draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), color, ∅, 9)
+            draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
+        
+    sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
+
+
+
+/* Called by the board after changing selection. 
+   Returns true if there was a new word. As a side effect,
+   plays a sound and sets the state for visualizing the word
+   if there is one. */
+def player_selection_change_callback(player):
+
+    const board = player.board
+    const word = board_selected_word(board)
+    const points = score_word(word)
+
+    // Reset selection color
+    board.selection_color = TILE_CENTER_SELECTED_COLOR
+    
+    if player.already_found[word]:
+        
+        // Show that we've already seen this word by 
+        // finding and emphasizing it
+        player_emphasize_history_word(player, word)
+        play_sound(select_tile_sound, false, 150%, ∅, 40%)
+        return true
+                
+    else if points > 0:
+        // Score the word, even without the player releasing their touch
+        const color = player_add_to_history(player, word, points)
+                
+        board.selection_color = color
+        player_spawn_score_animation(player)
+    
+        const pitch = 75% + min(max(0, points - 6)^0.1, 3)
+        _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
+    
+        // Repeatly ding for 35 or more points
+        for i ≤ (points - 35) / 10:
+            delay(play_big_points_sound, 12 i)
+    
+        return true
+
+
+
+/* Abstracted to make an argument-less callback */
+def play_big_points_sound():
+    play_sound(big_points_sound)
+
+
+
+/* Returns the color. Updates the score. Does not verify that the word has
+   not been found previously */ 
+def player_add_to_history(player, word, points):
+    player.already_found[word] = true
+    
+    let color = color_for_points(points)
+    
+    let text_color = color
+    let outline = ∅
+    
+    // Super scorer colors
+    if points ≥ 65:
+        outline = lerp(color, #FFF, 40%)
+        text_color = #FFF
+    else if points ≥ 45:
+        outline = color
+        text_color = #FFF
+    else if points ≥ 35:
+        outline = lerp(color, #000, 25%)
+        text_color = lerp(color, #FFF, 50%)
+    
+    push(player.history.list, {
+        text:    q_decode(word) + ": " + points, 
+        word:    word,
+        tiles:   size(word),
+        emphasize_frame: 0,
+        reveal_frame: game_frames + POINTS_ANIMATION_FRAMES,
+        points:  points, 
+        color:   text_color,
+        outline: outline})
+        
+    player.score += points
+    
+    return color
+    
+    
+
+/* Make this q-encoded word that is already in the history 
+   appear emphasized for a few frames to make it obvious 
+   to the player */
+def player_emphasize_history_word(player, word, duration default 30):
+    for entry in player.history.list:
+        if entry.word == word:
+            entry.emphasize_frame = game_frames + duration
+            return
+        
+    assert(false, "Could not find " + word + " which should already be in history")
+
+
+
+def _player_update_rotate_button(player, board_pos):
+    let rotate_button_sprite = shapes.curved_arrow.rotated_270
+    
+    let rotate_button_pos = board_pos + xy(-4, -16) + xy(½, -½) board_pixel_size()
+        
+    draw_disk(rotate_button_pos, 8, ∅, #FFF)
+    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(1, 1), ∅, 38%)
+    if player.using_gamepad:
+        draw_text({font: button_prompt_font, text: player.gamepad.prompt["(d)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
+
+    if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.ff or joy.dd:
+        push_mode(Rotate) because "Rotate button"
+
+
+/* Also draws button prompts */
+def _player_draw_score(player, board_pos)
+& with gamepad, board, score in player:
+    
+    const score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(18, 16)
+        
+    draw_text({
+        pos: score_pos,
+        font: score_font,
+        text: format_number(score, "commas") + " pts",
+        color: #FFF,
+        y_align: "center",
+        x_align: "right"})
+    
+    // Button prompts    
+    if player.using_gamepad:
+        const help_pos = score_pos + xy(-136, -1)
+        
+        draw_text({
+            pos: help_pos + xy(0, -1),
+            font: button_prompt_font,
+            text: replace("(a) SELECT", gamepad.prompt),
+            x_align: "left",
+            y_align: "bottom",
+            color: #FFF,
+            z: TILE_LETTER_Z})
+            
+        if size(board.selection) > 1:
+            draw_text({
+                pos: help_pos + xy(0, +1),
+                font: button_prompt_font,
+                text: replace("(b) CANCEL", gamepad.prompt),
+                x_align: "left",
+                y_align: "top",
+                color: #FFF,
+                z: TILE_LETTER_Z})
+    
+    
+
+/* Draws the count-down timer for `end_time` relative to the board */
+def draw_timer(board_pos):  
+    let clock_pos = board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16)
+    draw_text({
+        pos: clock_pos,
+        font: score_font,
+        text: format_number(max(0, end_time - now()), "timer"),
+        color: #FFF,
+        y_align: "center",
+        x_align: "right"})
+
+
+
+/*
+  Moves the cursor. When there is a selection in progress, restricts
+  to within 1 tile of the last selected value. 
+ */
+def _player_update_cursor(player)
+& with cursor_tile_index, board, gamepad in player:
+
+    // Movement
+    // Move on discrete input
+    const target = cursor_tile_index + gamepad.xxyy
+    
+    // Bounds are initially the whole board
+    let lo = xy(0, 0)    
+    let hi = xy(COLS, ROWS) - 1
+
+    // Constrain movement to adjacent tiles when a selection is active
+    const selection = board.selection
+    if size(selection) > 0:
+        const last = last_value(selection) 
+        lo = max(lo, last - 1)
+        hi = min(hi, last + 1)
+    
+    cursor_tile_index = clamp(target, lo, hi)
+
+    // Buttons
+    if gamepad.aa:
+        player.using_gamepad = true
+        if (equivalent(cursor_tile_index, last_value(board.selection)) or
+            equivalent(cursor_tile_index, penultimate_value(board.selection))):
+            // Remove from selection. Allow this to happen by re-selecting
+            // the penultimate or de-selecting the ultimate
+            board_deselect_last(board, player)
+        else if not contains(board.selection, cursor_tile_index, equivalent):
+            // Add to selection
+            board_select(board, cursor_tile_index, player)
+    
+    if gamepad.bb:
+        player.using_gamepad = true
+        // End selection
+        board_deselect_all(board, player)
+            
+
+
+/* Run UI for this player and draw their board */
+def player_update(player, angle default 0°, allow_selection default false):
+    // Track most recent UI method
+    if touch.pressed_a:
+        player.using_gamepad = false
+    else if player.gamepad.aa or player.gamepad.bb or player.gamepad.dx or player.gamepad.dy:
+        player.using_gamepad = true
+    
+    if not player.using_gamepad and not touch.a:
+        // Not selecting
+        resize(player.board.selection, 0)
+
+    // Move the gamepad controlled cursor
+    _player_update_cursor(player)
+    
+    // Version/debugging stamp
+    draw_text({
+        pos: xy(2, SCREEN_SIZE.y - 1),
+        font: tile_point_font,
+        text: "Board \"" + player.board.seed + "\" on v" + CREDITS.version,
+        color: #0008,
+        y_align: "bottom",
+        x_align: "left",
+        z: -1})
+
+    let board_pos
+    
+    // Our board has some content at the top, so don't switch
+    // to portrait until all of the UI will be visible
+    if landscape():
+        // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
+        // Leave some space on the right so that if someone has the bad idea to play on a phone in this orientation
+        // they won't be jammed against the edge with their thumb.
+        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 12)
+    else:
+        // Portrait. Put at the bottom, centered, unless the screen is not very high
+        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 18)
+        
+        // Slide up a little on narrow screens so that it is easier to swipe on a phone
+        board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
+        
+    _player_update_board(player, board_pos, angle, allow_selection)
+
+    _player_draw_score(player, board_pos)
+    
+    if allow_selection:
+        _player_update_rotate_button(player, board_pos)
+        
+    _player_update_history(player, board_pos)
+    draw_timer(board_pos)
+
+
+
+/* `true` if in landscape layout mode */
+def landscape():
+    return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
+
+
+
+/* Draw the word history and manage touch dragging */
+def _player_update_history(player, board_pos)
+& preserving_transform
+& with history in player:
+    
+    let list_rect
+    if landscape():
+        list_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 16)}
+    else:
+        list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 32)}
+    
+    set_clip(list_rect)
+    
+    // Don't scroll this, draw it first
+    draw_text({
+        pos: list_rect.corner + list_rect.size - xy(2, 1),
+        font: history_font,
+        text: "" + size(history.list) + "/" + player.board.word_count,
+        color: #DDD,
+        x_align: "right",
+        y_align: "bottom"})
+
+    if not equivalent(SCREEN_SIZE, history.scroll_screen_size):
+        // Reset
+        history.scroll = 0
+
+    const pos = xy(3, 2)
+    let max_width
+    
+    preserving_transform:
+        set_transform(list_rect.corner - xy(history.scroll, 0))
+        max_width = history_draw(history, pos, list_rect.size.y)
+
+    
+    const overflow = pos.x + max_width - list_rect.size.x + 1
+    
+    
+    if not player.drag_start.pos:
+        // Start drag
+        //if touch.aa: debug_print(touch.xy, list_rect, overlaps(touch.xy, list_rect))
+        if touch.aa and overlaps(touch.xy, list_rect):
+            player.drag_start.pos = xy(touch.xy)
+            player.drag_start.scroll = history.scroll
+    else if touch.a:
+        // Continue drag
+        history.scroll = clamp(player.drag_start.scroll + player.drag_start.pos.x - touch.x, 0, overflow)
+        
+    else:
+        // End drag
+        player.drag_start.pos = ∅
+    
+    
+    if not player.drag_start.pos and (not equivalent(SCREEN_SIZE, history.scroll_screen_size) or history.scroll_history_size ≠ size(history.list)):
+        history.scroll_screen_size = xy(SCREEN_SIZE)
+        history.scroll_history_size = size(history.list)
+        // Set the scroll to whatever it needs to be to keep the 
+        // most recent words on screen
+        history.scroll = max(history.scroll, overflow)
+
+
+
+/* Draw the board and manage UI state changes.
+ 
+   `pos`
+   : Center of the grid in pixels
+ 
+   `angle`
+   : Rotate by this amount
+   
+   `cursor_tile_index`
+   : `xy()` index of the tile for the gamepad cursor,
+     or ∅ if it should not be drawn
+     
+   `allow_selection`
+   : If true show and permit selection via touch/gamepad
+     
+*/
+def _player_update_board(player, pos, angle, allow_selection)
+& preserving_transform
+& with board, gamepad in player:
+    
+    const grid_size = board_pixel_size()
+    const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
+    const center_size = tile_size - TILE_GUTTER
+    
+    // Make the selection target slightly small to make 
+    // it easier to select diagonals without hitting
+    // the sides. If this is the first letter, make the
+    // selection radius extra large instead
+    const selection_size = center_size + (if size(board.selection) == 0 then +2 else -1)
+            
+    set_transform(pos)
+    set_camera(xy(0, 0), -angle)
+
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, #BBB)
+    
+    const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
+
+    // Store store this before selection changes so that the same
+    // button can be used to start and end selection
+    const cancel_gamepad_selection = gamepad.bb
+    
+    if (touch.released_a or 
+    
+        // Tap A to cancel selection
+        cancel_gamepad_selection or
+        
+        // If not selecting, make sure it is empty
+        not allow_selection):
+        
+        board_deselect_all(board, player)
+        
+    
+    // Save the selection color before iteration so that
+    // it does not change within a frame, as this is modified
+    // based on the value of the word but should be consistent
+    // for a single frame.
+    const selection_color = board.selection_color
+    
+    for col at i in board.tile:
+        for tile at j in col:
+            
+            const index = xy(i, j)
+            const pos = _index_to_pos(index)
+            const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
+            
+            tile.pos = transform_ws_to_ss(pos)
+            const tile_center = {pos: pos, shape: "disk", size: selection_size}
+
+            if allow_selection:
+                // Touch selection                
+                if touch.a and overlaps(tile_center, touch.xy):
+                    player.cursor_tile_index = xy(index)
+                    if touch.aa and (size(board.selection) == 0):
+                        
+                        // Start selection
+                        board_select(board, index, player)
+                        
+                    else if (touch.a and
+                            size(board.selection) > 0 and
+                            _adjacent(index, last_value(board.selection))):
+    
+                        if tile.selected:
+                            // Undo selection, backtracked
+                            if equivalent(index, penultimate_value(board.selection)):
+                                board_deselect_last(board, player)
+                                
+                        else:
+                            // Continue selection
+                            board_select(board, index, player)
+    
+            
+            let radius = ½ center_size.x
+            
+            if touch.released_a or not allow_selection:
+                tile.selected = false
+            
+            if tile.selected:
+                // Bounce if just selected
+                if tile.selected > mode_frames - 12:
+                    radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
+            
+            if not tile.selected or is_cursor_tile:
+                // Background rect
+                draw_rect(pos, tile_size, if is_cursor_tile then #0F0 else #CCC, if is_cursor_tile then #0C0 else ∅) 
+            
+            draw_disk(
+                pos,
+                radius,
+                if tile.selected then selection_color else #FFF,
+                ∅, 
+                TILE_CENTER_Z)
+
+            const text_color = if tile.selected then #fff else #000
+            
+            // Label
+            draw_text({
+                pos: pos, 
+                font: tile_font, 
+                text: if tile.letter == "Q" then "Qu" else tile.letter,
+                color: text_color,
+                z: TILE_LETTER_Z})
+            
+            // Points
+            if not tile.selected:
+                draw_text({
+                    pos: pos + subscript_offset, 
+                    font: tile_point_font, 
+                    text: LETTER_POINT_TABLE[tile.letter], 
+                    color: #AAA,
+                    z: TILE_LETTER_Z})
+                
+                
+            /*
+            // Button prompts    
+            if is_cursor_tile:
+                draw_text({
+                    pos: pos + xy(-1, 1) * subscript_offset + xy(0, 1),
+                    font: tile_point_font,
+                    text: gamepad.prompt["(a)"],
+                    color: #AAA,
+                    z: TILE_LETTER_Z})
+                if size(board.selection) > 1:
+                    draw_text({
+                        pos: pos + xy(-1, -1) * subscript_offset + xy(0, -1),
+                        font: tile_point_font,
+                        text: gamepad.prompt["(b)"],
+                        color: #AAA,
+                        z: TILE_LETTER_Z})*/
+                    
+                
+    
+    // Draw the connectors between selected letters
+    if size(board.selection) > 1:
+        let prev_pos = _index_to_pos(board.selection[0]) 
+        for 0 < s < size(board.selection):
+            let pos = _index_to_pos(board.selection[s])
+            draw_line(prev_pos, pos, selection_color, TILE_CENTER_Z, ¼ TILE_EXTENT)
+            prev_pos = pos
+
+
+
+def player_reset(player):
+    player.score = 0
+    remove_all(player.already_found)
+    remove_all(player.history.list)
+    _player_find_good_board(player)
+    
+    
+
+/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
+def _player_find_good_board():
+    let done = false
+    let seed_word
+    let word_array
+    
+    // Construct the rng based on the time. This will
+    // cause players within the same window to be more likely
+    // to have the same board. Temporary prior to investing
+    // multiplayer servers.
+    let board_rng = make_random(if DEBUG_BOARD_SEARCH then (utc_now() * 10) else ⌊utc_now() / (3 * 60)⌋)
+    
+    for i < BOARD_SEARCH.RETRIES:
+        if i > 0: debug_print("*** Re-rolling ***") 
+
+        // Search for a not-sensitive seed word to use
+        while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
+            seed_word = lowercase(q_decode(random_value(dictionary_array, board_rng)))
+        
+        // Loop for shuffling
+        for j < BOARD_SEARCH.SHUFFLE_RETRIES:
+            board_reset(player.board, seed_word, j)
+                        
+            word_array = board_find_all_words(player.board)
+        
+            if i == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
+               // Last try, so just give up and accept the board
+               debug_print("Gave up and accepted " + seed_word)
+               done = true
+               break
+    
+            if board_has_obvious_sensitive_word(player.board):
+                debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
+                continue
+    
+            if size(word_array) < BOARD_SEARCH.MIN_WORDS:
+                // Not enough words to even examine the board
+                debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
+                continue
+    
+            // Examine the actual words to see if there are enough good ones   
+    
+            // If a valuable letter appears, ensure that it is used in 
+            // at least two words. First find high point value letters.
+            const valuable_letter_table = {}
+            for col in player.board.tile:
+                for tile in col:
+                    if LETTER_POINT_TABLE[tile.letter] ≥ 4:
+                        valuable_letter_table[tile.letter] = 0
+            
+            const valuable_letters = keys(valuable_letter_table)
+        
+            // Iterate through words, rating them for each criterion
+            let short_word_count = 0
+            let long_word_count = 0
+            let very_long_word_count = 0
+            for word in word_array:
+                if size(word) ≤ 4:
+                    ++short_word_count
+                if size(word) ≥ 5:
+                    ++long_word_count
+                if size(word) ≥ 7:
+                    ++very_long_word_count
+                    
+                for letter in valuable_letters:
+                    if contains(word, letter):
+                        ++valuable_letter_table[letter]
+            
+            if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
+                debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
+                continue
+            
+            if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
+                debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        
+                continue
+            
+            if very_long_word_count < BOARD_SEARCH.MIN_VERY_LONG_WORDS:
+                debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
+                continue
+            
+            // See if we used the valuable letters
+            let used_valuable_letters = true
+            for count at letter in valuable_letter_table:
+                if count < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
+                    used_valuable_letters = false
+                    
+            if not used_valuable_letters:
+                debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
+                continue
+    
+            // Success!
+            done = true
+            break
+    
+        if done:
+            // Stop early as we have a good board
+            debug_print("Accepted board")
+            break
+        else:
+            // Try again
+            seed_word = ∅
+        
+    player.board.word_count = size(word_array)
+    //debug_print(word_array)
+
+
+
+/* Rotates the board and cursor */
+def player_rotate_board(player)
+& with board, cursor_tile_index in player:
+    board_rotate(board)
+    cursor_tile_index = xy(COLS - cursor_tile_index.y - 1, cursor_tile_index.x)
+    
+
+
+let player = make_player()

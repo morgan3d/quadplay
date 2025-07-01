@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- Makes quadplay load the game in this directory, which must be a subdirectory of
+     `quadplay/xxx/`. This only works within the quadplay distribution. Use export.py
+     or the Export option from the Game menu in the IDE to export your own games.
+ -->
+<html lang="en" style="background:#000; border: none">
+  <head>
+    <link rel="icon" type="image/png" sizes="64x64" href="label64.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="label128.png">
+    <meta property="og:title" content="WORD FIND ALLL NITE">
+    <meta property="og:image" content="https://morgan3d.github.io/quadplay/examples/word_find/label129.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WORD FIND ALLL NITE</title>
+  </head>
+  <body style="padding: 0; margin: 0">
+    <iframe id="quadplayFrame" style="position: fixed; width: 100%; height: 100%; border: none"></iframe>
+    <script>
+      document.getElementById('quadplayFrame').src = "../../console/quadplay.html?game=quad://" + location.href.match(/([^/]+\/){1,2}(?=[^/]*$)/)[0];
+    </script>
+  </body>
+</html>

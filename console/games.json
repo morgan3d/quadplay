@@ -591,18 +591,6 @@
             "achievements": false
         },
         {
-            "url": "quad://examples/tracewords/",
-            "title": "Tracewords",
-            "description": "Word game.",
-            "version": "0.058",
-            "developer": "Casual Effects",
-            "min_players": 1,
-            "max_players": 1,
-            "cooperative": false,
-            "competitive": false,
-            "achievements": false
-        },
-        {
             "url": "quad://examples/twin_analog/",
             "title": "Twin Analog",
             "description": "Example of using device_control() to access raw analog sticks",
@@ -897,6 +885,18 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
+            "achievements": false
+        },
+        {
+            "url": "quad://games/word_find/",
+            "title": "FIND WORD ALLL NITE",
+            "description": "Word game.",
+            "version": "0.058",
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
             "achievements": false
         }
     ]

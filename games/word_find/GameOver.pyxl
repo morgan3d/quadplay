@@ -1,0 +1,42 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+
+def points_order(A, B):
+    return B.points - A.points
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+board_deselect_all(player.board, player)
+
+sort(player.history.list, points_order)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+// Score
+draw_text({
+    font: score_font,
+    text: format_number(player.score, "commas") + " pts",
+    pos: xy(⅓ SCREEN_SIZE.x, 20),
+    color: #FFF})
+
+// Board
+for x < COLS:
+    for y < ROWS:
+        
+
+
+// History
+history_draw(player.history, xy(4, 38), SCREEN_SIZE.y - 30)
+
+// Countdown
+draw_text({
+    font: score_font,
+    text: format_number(max(INTERMISSION_MINUTES * 60 - mode_frames / 60, 0), "timer") + " until next game…",
+    pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10),
+    color: #FFF})
+
+if mode_frames ≥ 3600 INTERMISSION_MINUTES:
+    set_mode(Play) because "Timer"
+
