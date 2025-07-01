@@ -1,3 +1,0 @@
-const DARK_COLOR = rgb(0,0,0)
-
-let BGM_LOOP_HANDLE = nil
