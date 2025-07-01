@@ -1,6 +1,7 @@
 GameOver
 ════════════════════════════════════════════════════════════════════════
 
+
 def points_order(A, B):
     return B.points - A.points
 
@@ -14,21 +15,44 @@ sort(player.history.list, points_order)
 
 frame
 ────────────────────────────────────────────────────────────────────────
+
+const left = if landscape() then ⅓ else ¼
+const right = 100% - left
+
 // Score
 draw_text({
     font: score_font,
     text: format_number(player.score, "commas") + " pts",
-    pos: xy(⅓ SCREEN_SIZE.x, 20),
+    outline: #000,
+    shadow: #000,
+    pos: xy(left * SCREEN_SIZE.x, 24),
     color: #FFF})
 
+draw_text({
+    font: history_font,
+    text: "" + size(player.history.list) + "/" + player.board.word_count + " words found",
+    pos: xy(left * SCREEN_SIZE.x, 38),
+    shadow: #000,
+    color: #FFF})
+
+todo("Global sync game start")
+
 // Board
-for x < COLS:
-    for y < ROWS:
+for y < ROWS:
+    for x < COLS:
+        const pos = xy(right * SCREEN_SIZE.x, 30) + 12 xy(x - 1.5, y - 1.5)
+        draw_disk(pos, 5, #FFF)
         
+        const letter = player.board.tile[x][y].letter
+        draw_text({
+            pos: pos,
+            font: history_font,
+            color: #000,
+            text: if letter == "Q" then "Qu" else letter})
 
 
 // History
-history_draw(player.history, xy(4, 38), SCREEN_SIZE.y - 30)
+history_draw(player.history, xy(4, 60), SCREEN_SIZE.y - 30)
 
 // Countdown
 draw_text({

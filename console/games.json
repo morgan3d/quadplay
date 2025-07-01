@@ -768,6 +768,18 @@
             "achievements": false
         },
         {
+            "url": "quad://games/find_word/",
+            "title": "FIND WORD ALLL NITE",
+            "description": "Word game.",
+            "version": "0.058",
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false
+        },
+        {
             "url": "quad://games/firmament/",
             "title": "Black Firmament",
             "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
@@ -885,18 +897,6 @@
             "max_players": 4,
             "cooperative": false,
             "competitive": true,
-            "achievements": false
-        },
-        {
-            "url": "quad://games/word_find/",
-            "title": "FIND WORD ALLL NITE",
-            "description": "Word game.",
-            "version": "0.058",
-            "developer": "Casual Effects",
-            "min_players": 1,
-            "max_players": 1,
-            "cooperative": false,
-            "competitive": false,
             "achievements": false
         }
     ]

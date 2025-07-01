@@ -30,11 +30,17 @@ player_reset(player)
 if DEBUG_HISTORY or DEBUG_GAME_OVER:
     for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
 
-
 end_time = now() + 60 * TIME_MINUTES
 
 if DEBUG_GAME_OVER:
     set_mode(GameOver)
+
+/*
+const name = ["WORD", "FIND", "ALLL", "NITE"]
+for x < COLS:
+    for y < ROWS:
+        player.board.tile[x][y].letter = name[y][x]
+        */
 
 frame
 ────────────────────────────────────────────────────────────────────────
