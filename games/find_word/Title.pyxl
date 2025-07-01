@@ -116,7 +116,7 @@ for y < 20:
 
 enter
 ────────────────────────────────────────────────────────────────────────
-set_background(#111)
+set_background(#000)
 set_resolution_hook()
 
 fake_player.board.selection_color = TILE_CENTER_SELECTED_COLOR
@@ -136,13 +136,21 @@ intro = sequence(
 
 frame
 ────────────────────────────────────────────────────────────────────────
+draw_text({
+        pos: xy(0, 0),
+        font: tile_point_font,
+        text: "v" + CREDITS.version,
+        color: #777,
+        y_align: "top",
+        x_align: "left",
+        z: 1})
 
 for s at y in background_word_array:
     draw_text({
         font: tile_font,
-        color: #333,
+        color: #222,
         text: s,
-        pos: xy(sign((y mod 2) - 0.5) * 0.2 oscillate(mode_frames, -6000, 6000) - 700, 22 y),
+        pos: xy(sign((y mod 2) - 0.5) * 0.2 oscillate(mode_frames, -2000, 2000) - 700, 22 y),
         x_align: "left",
         z: -2})
 
