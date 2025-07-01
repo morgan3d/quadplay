@@ -1,2 +1,28 @@
-// In seconds
+/* In seconds, using now() */
 let end_time
+
+/* Set by Title */
+let game_type = SOLO
+
+let player = make_player()
+
+/* Returns the second to last value or ∅ */
+def penultimate_value(array):
+    return array[size(array) - 2]
+
+
+
+let resolution_hook
+
+/* Fill the screen even at non-quadplay aspect ratios
+   for a good mobile experience. See also `DEBUG_PORTRAIT` */
+def set_resolution_hook():
+    if not resolution_hook:
+        device_control("set_mouse_cursor", "pointer")
+        
+        if DEBUG_PORTRAIT:
+            device_control("enable_feature", "custom_screen_size")
+            set_screen_size(xy(224, 400))
+        else:
+            resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
+    

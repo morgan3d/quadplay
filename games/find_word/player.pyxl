@@ -1,4 +1,4 @@
-todo("Move selection to the player")
+todo("Move board.selection to the player")
 
 /* Constructs a new player with an uninitialized board */
 def make_player():
@@ -237,7 +237,7 @@ def draw_timer(board_pos):
     draw_text({
         pos: clock_pos,
         font: score_font,
-        text: format_number(max(0, end_time - now()), "timer"),
+        text: format_number(max(0, end_time - utc_now()), "timer"),
         color: #FFF,
         y_align: "center",
         x_align: "right"})
@@ -295,12 +295,22 @@ def player_update(player, angle default 0°, allow_selection default false):
     else if player.gamepad.aa or player.gamepad.bb or player.gamepad.dx or player.gamepad.dy:
         player.using_gamepad = true
     
-    if not player.using_gamepad and not touch.a:
-        // Not selecting
-        resize(player.board.selection, 0)
+    if not player.using_gamepad and not touch.a and size(player.board.selection) > 0:
+        board_deselect_all(player.board, player)
 
     // Move the gamepad controlled cursor
     _player_update_cursor(player)
+    
+    if (touch.released_a or 
+    
+        // Tap B to cancel selection
+        player.gamepad.bb or
+        
+        // If not selecting, make sure it is empty
+        not allow_selection):
+        
+        board_deselect_all(player.board, player)
+
     
     // Version/debugging stamp
     draw_text({
@@ -327,8 +337,8 @@ def player_update(player, angle default 0°, allow_selection default false):
         
         // Slide up a little on narrow screens so that it is easier to swipe on a phone
         board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
-        
-    _player_update_board(player, board_pos, angle, allow_selection)
+
+    player_update_board(player, board_pos, angle, allow_selection)
 
     _player_draw_score(player, board_pos)
     
@@ -415,15 +425,11 @@ def _player_update_history(player, board_pos)
    `angle`
    : Rotate by this amount
    
-   `cursor_tile_index`
-   : `xy()` index of the tile for the gamepad cursor,
-     or ∅ if it should not be drawn
-     
    `allow_selection`
    : If true show and permit selection via touch/gamepad
      
 */
-def _player_update_board(player, pos, angle, allow_selection)
+def player_update_board(player, pos, angle, allow_selection)
 & preserving_transform
 & with board, gamepad in player:
     
@@ -446,18 +452,7 @@ def _player_update_board(player, pos, angle, allow_selection)
 
     // Store store this before selection changes so that the same
     // button can be used to start and end selection
-    const cancel_gamepad_selection = gamepad.bb
-    
-    if (touch.released_a or 
-    
-        // Tap A to cancel selection
-        cancel_gamepad_selection or
-        
-        // If not selecting, make sure it is empty
-        not allow_selection):
-        
-        board_deselect_all(board, player)
-        
+    const cancel_gamepad_selection = gamepad.bb        
     
     // Save the selection color before iteration so that
     // it does not change within a frame, as this is modified
@@ -500,9 +495,6 @@ def _player_update_board(player, pos, angle, allow_selection)
             
             let radius = ½ center_size.x
             
-            if touch.released_a or not allow_selection:
-                tile.selected = false
-            
             if tile.selected:
                 // Bounce if just selected
                 if tile.selected > mode_frames - 12:
@@ -510,7 +502,7 @@ def _player_update_board(player, pos, angle, allow_selection)
             
             if not tile.selected or is_cursor_tile:
                 // Background rect
-                draw_rect(pos, tile_size, if is_cursor_tile then #0F0 else #CCC, if is_cursor_tile then #0C0 else ∅) 
+                draw_rect(pos, tile_size, if is_cursor_tile then CURSOR_COLOR else #CCC, if is_cursor_tile then #0C0 else ∅) 
             
             draw_disk(
                 pos,
@@ -538,25 +530,6 @@ def _player_update_board(player, pos, angle, allow_selection)
                     color: #AAA,
                     z: TILE_LETTER_Z})
                 
-                
-            /*
-            // Button prompts    
-            if is_cursor_tile:
-                draw_text({
-                    pos: pos + xy(-1, 1) * subscript_offset + xy(0, 1),
-                    font: tile_point_font,
-                    text: gamepad.prompt["(a)"],
-                    color: #AAA,
-                    z: TILE_LETTER_Z})
-                if size(board.selection) > 1:
-                    draw_text({
-                        pos: pos + xy(-1, -1) * subscript_offset + xy(0, -1),
-                        font: tile_point_font,
-                        text: gamepad.prompt["(b)"],
-                        color: #AAA,
-                        z: TILE_LETTER_Z})*/
-                    
-                
     
     // Draw the connectors between selected letters
     if size(board.selection) > 1:
@@ -577,7 +550,7 @@ def player_reset(player):
     
 
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
-def _player_find_good_board():
+def _player_find_good_board(player):
     let done = false
     let seed_word
     let word_array
@@ -586,14 +559,19 @@ def _player_find_good_board():
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    let board_rng = make_random(if DEBUG_BOARD_SEARCH then (utc_now() * 10) else ⌊utc_now() / (3 * 60)⌋)
+    debug_print(utc_now())
+    let board_rng = make_random(
+        if DEBUG_BOARD_SEARCH or game_type == SOLO then 
+            (utc_now() * 10)
+        else 
+            floor(utc_now() / (TIME_MINUTES * 60)))
+    todo("Sync global game board")
     
     for i < BOARD_SEARCH.RETRIES:
         if i > 0: debug_print("*** Re-rolling ***") 
 
         // Search for a not-sensitive seed word to use
-        while not seed_word or size(seed_word) > 8 or sensitive[seed_word]:
-            seed_word = lowercase(q_decode(random_value(dictionary_array, board_rng)))
+        seed_word = random_safe_word(board_rng)
         
         // Loop for shuffling
         for j < BOARD_SEARCH.SHUFFLE_RETRIES:
@@ -678,8 +656,8 @@ def _player_find_good_board():
             // Try again
             seed_word = ∅
         
+    player.board.word_list = word_array
     player.board.word_count = size(word_array)
-    //debug_print(word_array)
 
 
 
@@ -689,6 +667,3 @@ def player_rotate_board(player)
     board_rotate(board)
     cursor_tile_index = xy(COLS - cursor_tile_index.y - 1, cursor_tile_index.x)
     
-
-
-let player = make_player()

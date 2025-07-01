@@ -103,3 +103,12 @@ def color_for_points(points):
         c.s *= 120%
         return rgb(c)
 
+
+
+/* Returns a word from the dictionary that is not sensitive */
+def random_safe_word(rng default random, min_size default 5, max_size default 8):        
+    let word = ∅
+    while not word or size(word) < min_size or size(word) > max_size or sensitive[word]:
+        word = lowercase(q_decode(random_value(dictionary_array, rng)))
+    return word
+

@@ -18,7 +18,7 @@ color: #DEDEDE\
 color: #9F9F9F\
 }\
 .ace-quadplay .ace_marker-layer .ace_selection {\
-background: #424242\
+background:rgb(90, 90, 90)\
 }\
 .ace-quadplay.ace_multiselect .ace_selection.ace_start {\
 box-shadow: 0 0 3px 0px #000000;\

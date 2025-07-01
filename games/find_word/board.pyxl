@@ -319,10 +319,12 @@ def board_to_string(board):
             s += "\n"
     return s
     
+    
 
 /* True if these xy() tile integer indices are adjacent */
 def _adjacent(A, B):
     return XY_DISTANCE(A, B) < 1.5
+    
     
 
 /* Returns the center of the tile at index in pixels relative to the
@@ -332,11 +334,6 @@ def _index_to_pos(index):
            - ½ xy(COLS - 1, ROWS - 1) * (TILE_EXTENT + TILE_GUTTER))
 
 
-/* Returns the second to last value or ∅ */
-def penultimate_value(array):
-    return array[size(array) - 2]
-    
-    
 /* Add the `xy()` value `index` to the current selection, playing sounds
    as appropriate */
 def board_select(board, index, player):
@@ -364,8 +361,8 @@ def board_deselect_all(board, player):
     for index in board.selection:
         board.tile[index.x][index.y].selected = false
     resize(board.selection, 0)
-    
     todo("play deselect all sound")
+        
         
 
 /* Adjusts the pan for the index */

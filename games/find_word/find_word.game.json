@@ -13,11 +13,12 @@
         "game.pyxl"
     ],
     "modes": [
+        "Title",
         "Play",
         "Rotate",
         "GameOver"
     ],
-    "start_mode": "Play",
+    "start_mode": "Title",
     "docs": [],
     "assets": {
         "tile_point_font": "quad://fonts/deja-6.font.json",
@@ -35,7 +36,7 @@
         "rotate_sound": "quad://sounds/powerup-00.sound.json",
         "button_prompt_font": "quad://fonts/deja-4.font.json"
     },
-    "version": "0.059",
+    "version": "0.063",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -43,7 +44,7 @@
     "achievements": false,
     "high_scores": false,
     "dual_dpad": false,
-    "midi_sysex": true,
+    "midi_sysex": false,
     "description": "Word game.",
     "constants": {
         "TILE_EXTENT": {
@@ -382,26 +383,27 @@
         },
         "TIME_MINUTES": {
             "type": "number",
-            "value": "3.0",
+            "value": "2.5",
             "min": 0.5,
             "max": 5,
             "format": "0.0",
-            "quantum": 0.5
+            "quantum": 0.5,
+            "description": "Game time"
         },
         "CURSOR_COLOR": {
             "type": "rgb",
             "value": {
                 "r": {
                     "type": "number",
-                    "value": "100%"
+                    "value": "0%"
                 },
                 "g": {
                     "type": "number",
-                    "value": "29%"
+                    "value": "100%"
                 },
                 "b": {
                     "type": "number",
-                    "value": "13%"
+                    "value": "0%"
                 }
             }
         },
@@ -434,6 +436,13 @@
             "max": 3,
             "format": "0.0",
             "quantum": 0.1
+        },
+        "SOLO": {
+            "type": "number",
+            "value": 0,
+            "description": "Game type",
+            "format": "0.00",
+            "quantum": 0.01
         }
     },
     "screenshot_tag": "Tracewords",

@@ -1,21 +1,38 @@
 GameOver
 ════════════════════════════════════════════════════════════════════════
 
+let unfound_word
 
 def points_order(A, B):
     return B.points - A.points
+    
+    
+def word_comparator(entry, word):
+    return entry.word == word
+    
 
+def choose_unfound_word():
+    for i < 30:
+        unfound_word = random_value(player.board.word_list)
+        if not sensitive[unfound_word] and not contains(player.history.list, unfound_word, word_comparator):
+            return
+    
+    unfound_word = ∅
+    
 
 enter
 ────────────────────────────────────────────────────────────────────────
 board_deselect_all(player.board, player)
-
+//debug_print(player.board.word_list)
 sort(player.history.list, points_order)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
+if mode_frames mod 480 == 120:
+    choose_unfound_word()
+    
 const left = if landscape() then ⅓ else ¼
 const right = 100% - left
 
@@ -25,17 +42,27 @@ draw_text({
     text: format_number(player.score, "commas") + " pts",
     outline: #000,
     shadow: #000,
-    pos: xy(left * SCREEN_SIZE.x, 24),
+    pos: xy(left * SCREEN_SIZE.x, 18),
     color: #FFF})
 
 draw_text({
     font: history_font,
     text: "" + size(player.history.list) + "/" + player.board.word_count + " words found",
-    pos: xy(left * SCREEN_SIZE.x, 38),
+    pos: xy(left * SCREEN_SIZE.x, 32),
     shadow: #000,
     color: #FFF})
+    
 
+if unfound_word:
+    draw_text({
+        font: history_font,
+        text: "Try \"" + unfound_word + "\"",
+        pos: xy(left *  SCREEN_SIZE.x, 42),
+        shadow: #000,
+        color: #FFF})
+    
 todo("Global sync game start")
+todo("Show some words not found")
 
 // Board
 for y < ROWS:
