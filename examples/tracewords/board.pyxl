@@ -337,7 +337,7 @@ def penultimate_value(array):
     return array[size(array) - 2]
     
     
-/* Add `index` to the current selection, playing sounds
+/* Add the `xy()` value `index` to the current selection, playing sounds
    as appropriate */
 def board_select(board, index, player):
     const tile = board.tile[index.x][index.y]

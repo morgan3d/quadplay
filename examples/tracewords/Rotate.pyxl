@@ -17,6 +17,6 @@ player_update(player, angle, false)
 
 if angle - ROTATION_SPEED < -90°:
     // Finish the rotation by swapping elements
-    board_rotate(player.board)
+    player_rotate_board(player)
     pop_mode()
 

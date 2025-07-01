@@ -6,6 +6,7 @@ let resolution_hook
 
 enter
 ────────────────────────────────────────────────────────────────────────
+set_background(BACKGROUND_COLOR)
 
 if now() ≥ end_time:
     set_mode(GameOver) because "Timer expired"
@@ -26,21 +27,19 @@ set_random_seed()
 
 player_reset(player)
 
-if DEBUG_HISTORY:
+if DEBUG_HISTORY or DEBUG_GAME_OVER:
     for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
 
 
 end_time = now() + 60 * TIME_MINUTES
 
+if DEBUG_GAME_OVER:
+    set_mode(GameOver)
 
 frame
 ────────────────────────────────────────────────────────────────────────
-set_background(BACKGROUND_COLOR)
 player_update(player, ∅, true)
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"
-
-
-            
             

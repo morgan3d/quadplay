@@ -8,6 +8,7 @@
         "quad://scripts/screen_lib.pyxl",
         "dictionary.pyxl",
         "board.pyxl",
+        "history.pyxl",
         "player.pyxl",
         "game.pyxl"
     ],
@@ -31,9 +32,10 @@
         "history_font": "quad://fonts/scoreboard-6.font.json",
         "history_emphasis_font": "quad://fonts/scoreboard-7.font.json",
         "big_points_sound": "quad://sounds/coin-00.sound.json",
-        "rotate_sound": "quad://sounds/powerup-00.sound.json"
+        "rotate_sound": "quad://sounds/powerup-00.sound.json",
+        "button_prompt_font": "quad://fonts/deja-4.font.json"
     },
-    "version": "0.055",
+    "version": "0.058",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -402,6 +404,36 @@
                     "value": "13%"
                 }
             }
+        },
+        "TILE_LETTER_Z": {
+            "type": "number",
+            "value": "2.0",
+            "description": "Z position of the label",
+            "min": -5,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "TILE_CENTER_Z": {
+            "type": "number",
+            "value": "1.0",
+            "min": -5,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "DEBUG_GAME_OVER": {
+            "type": "boolean",
+            "value": false
+        },
+        "INTERMISSION_MINUTES": {
+            "type": "number",
+            "value": "0.5",
+            "description": "Time in GameOver before next game starts",
+            "min": 0,
+            "max": 3,
+            "format": "0.0",
+            "quantum": 0.1
         }
     },
     "screenshot_tag": "Tracewords",

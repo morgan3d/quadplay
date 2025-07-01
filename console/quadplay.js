@@ -2963,6 +2963,13 @@ function reloadRuntime(oncomplete) {
                 return this.$xx * QRuntime.$scaleX;
             }
         };
+
+        const padXXYYGetter = {
+            enumerable: true,
+            get: function () {
+                return {x: this.$xx * QRuntime.$scaleX, y: this.$yy * QRuntime.$scaleY};
+            }
+        };
         
         const padYGetter = {
             enumerable: true,
@@ -3047,6 +3054,7 @@ function reloadRuntime(oncomplete) {
             Object.defineProperty(pad, 'yy', padYYGetter);
             Object.defineProperty(pad, 'xy', xyGetter);
             Object.defineProperty(pad, 'dxy', dxyGetter);
+            Object.defineProperty(pad, 'xxyy', padXXYYGetter);
             Object.defineProperty(pad, 'angle', angleGetter);
             Object.defineProperty(pad, 'dangle', dangleGetter);
             Object.defineProperty(pad, 'status', statusGetter);
