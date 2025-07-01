@@ -4,7 +4,7 @@ Play
 
 enter
 ────────────────────────────────────────────────────────────────────────
-set_background(BACKGROUND_COLOR)
+set_background(if game_type == GLOBAL then BACKGROUND_COLOR else SOLO_BACKGROUND_COLOR)
 
 set_resolution_hook()            
 

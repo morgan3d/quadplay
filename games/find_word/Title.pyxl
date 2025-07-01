@@ -63,8 +63,6 @@ def update_button(pos, text, index):
         set_mode(Play) because "Selected"
 
 
-
-
 def bounce_row(y, sound default select_tile_sound):
     play_sound(sound)
     board_deselect_all(fake_player.board, fake_player)
@@ -81,9 +79,9 @@ def bounce_row3(): bounce_row(2)
 
 def bounce_row4(): bounce_row(3)
 
-def highlight_row2():
+def highlight_random_row():
     fake_player.board.selection_color = HIGHLIGHT_COLOR
-    bounce_row(1, word_sound)
+    bounce_row(random_integer(0, ROWS - 1), word_sound)
     
 def intro_cleanup():
     intro = ∅ 
@@ -93,9 +91,10 @@ def ease_out(f):
 
 /* Jump to the end of the intro */
 def skip_intro():
-    highlight_row2()
+    highlight_random_row()
     remove_frame_hook(intro)
     intro = ∅
+
 
 // Initialize the board
 const name = ["FIND", "WORD", "ALLL", "NITE"]
@@ -104,6 +103,8 @@ for x < COLS:
         fake_player.board.tile[x][y].letter = name[y][x]
 
 
+
+set_random_seed()
 
 // Initialize the background words
 for y < 20:
@@ -115,7 +116,7 @@ for y < 20:
 
 enter
 ────────────────────────────────────────────────────────────────────────
-set_background(#000)
+set_background(#111)
 set_resolution_hook()
 
 fake_player.board.selection_color = TILE_CENTER_SELECTED_COLOR
@@ -128,7 +129,7 @@ intro = sequence(
     bounce_row2, INTRO_BEAT_FRAMES,
     bounce_row3, INTRO_BEAT_FRAMES,
     bounce_row4, INTRO_BEAT_FRAMES,
-    highlight_row2,
+    highlight_random_row,
     SLIDE_FRAMES + 100,
     intro_cleanup)
 
@@ -139,7 +140,7 @@ frame
 for s at y in background_word_array:
     draw_text({
         font: tile_font,
-        color: #222,
+        color: #333,
         text: s,
         pos: xy(sign((y mod 2) - 0.5) * 0.2 oscillate(mode_frames, -6000, 6000) - 700, 22 y),
         x_align: "left",
@@ -154,8 +155,8 @@ draw_rect(pos, board_pixel_size() + 22, fake_player.board.selection_color, ∅, 
 // How far to slide the buttons, 0 if the intro has been skipped
 const slide = if intro then (3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE_FRAMES), 0)) else 0
 
-update_button(pos - xy(slide, 30), "SOLO GAME", 0)
-update_button(pos + xy(slide, 30), "GLOBAL GAME", 1)
+update_button(pos - xy(slide, 30), "SOLO", 0)
+update_button(pos + xy(slide, 30), "GLOBAL", 1)
 
 if gamepad_array[0].xx or gamepad_array[0].yy:
     if intro: skip_intro()

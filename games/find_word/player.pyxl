@@ -559,12 +559,11 @@ def _player_find_good_board(player):
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    debug_print(utc_now())
-    let board_rng = make_random(
+    const board_rng = make_random(
         if DEBUG_BOARD_SEARCH or game_type == SOLO then 
             (utc_now() * 10)
         else 
-            floor(utc_now() / (TIME_MINUTES * 60)))
+            1000 ⌊1 + utc_now() / (½ TIME_MINUTES * 60)⌋)
     todo("Sync global game board")
     
     for i < BOARD_SEARCH.RETRIES:

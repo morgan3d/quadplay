@@ -36,7 +36,7 @@
         "rotate_sound": "quad://sounds/powerup-00.sound.json",
         "button_prompt_font": "quad://fonts/deja-4.font.json"
     },
-    "version": "0.064",
+    "version": "0.065",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -383,7 +383,7 @@
         },
         "TIME_MINUTES": {
             "type": "number",
-            "value": "2.5",
+            "value": "1.0",
             "min": 0.5,
             "max": 5,
             "format": "0.0",
@@ -440,9 +440,34 @@
         "SOLO": {
             "type": "number",
             "value": 0,
-            "description": "Game type",
-            "format": "0.00",
-            "quantum": 0.01
+            "description": "Enum constant for game_type",
+            "format": "0",
+            "quantum": 1
+        },
+        "GLOBAL": {
+            "type": "number",
+            "value": "1",
+            "description": "Enum constant for game_type",
+            "format": "0",
+            "quantum": 1
+        },
+        "SOLO_BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "38%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "27%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "40%"
+                }
+            },
+            "description": "For game_type == SOLO"
         }
     },
     "screenshot_tag": "Tracewords",
