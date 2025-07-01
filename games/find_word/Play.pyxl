@@ -5,7 +5,6 @@ Play
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(BACKGROUND_COLOR)
-todo("Random board for solo game")
 
 set_resolution_hook()            
 

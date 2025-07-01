@@ -22,6 +22,7 @@ def choose_unfound_word():
 
 enter
 ────────────────────────────────────────────────────────────────────────
+set_background(#333)
 board_deselect_all(player.board, player)
 //debug_print(player.board.word_list)
 sort(player.history.list, points_order)
