@@ -18,6 +18,12 @@ let resolution_hook
 const GLOBAL_GAME_PERIOD = GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES
 
 
+
+/* Time at which the next global game will start */
+def next_global_game_utc_start_time():
+    return round(utc_now(), GLOBAL_GAME_PERIOD)
+
+
     
 /* Time at which the last global game already started
    (or is about to start) */

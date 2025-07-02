@@ -45,7 +45,7 @@ def update_button(pos, text, index):
     draw_text({
         text: text, 
         font: score_font,
-        pos: pos,
+        pos: pos + xy(0, 1),
         color: if selected then #FFF else #000,
         outline: if selected then #090 else ∅,
         z: 101})

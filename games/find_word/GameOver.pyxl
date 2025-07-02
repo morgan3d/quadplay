@@ -68,8 +68,6 @@ if unfound_word:
         shadow: #000,
         color: #FFF})
     
-todo("Show some words not found")
-
 // Board
 for y < ROWS:
     for x < COLS:

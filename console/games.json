@@ -770,13 +770,13 @@
         {
             "url": "quad://games/find_word/",
             "title": "FIND WORD ALLL NITE",
-            "description": "Word game.",
+            "description": "Race the clock and global players to discover English words hidden in the grid.",
             "version": "0.067",
             "developer": "Casual Effects",
             "min_players": 1,
             "max_players": 1,
             "cooperative": false,
-            "competitive": false,
+            "competitive": true,
             "achievements": false
         },
         {

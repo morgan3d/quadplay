@@ -41,12 +41,12 @@
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
-    "competitive": false,
+    "competitive": true,
     "achievements": false,
     "high_scores": false,
     "dual_dpad": false,
     "midi_sysex": false,
-    "description": "Word game.",
+    "description": "Race the clock and global players to discover English words hidden in the grid.",
     "constants": {
         "TILE_EXTENT": {
             "type": "number",
@@ -509,7 +509,7 @@
             "value": false
         }
     },
-    "screenshot_tag": "Tracewords",
+    "screenshot_tag": "find_word",
     "show_start_animation": false,
     "mobile_touch_gamepad": false,
     "show_controls_button": false
