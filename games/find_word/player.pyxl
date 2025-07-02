@@ -558,15 +558,21 @@ def _player_find_good_board(player, game_type):
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    const board_rng = make_random(
-        if DEBUG_BOARD_SEARCH or game_type == SOLO then 
+    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG_BOARD_SEARCH then 
             (utc_now() * 10)
-        else 
-            1000 ⌊1 + utc_now() / (½ TIME_MINUTES * 60)⌋)
+        else
+            // Use the seed for the curent game period, but look a few
+            // seconds into the future in case this player is joining early
+            // to make it robust
+            1000 ⌊1 + (utc_now() + 10) / (GLOBAL_GAME_PERIOD * 60)⌋)
+            
+    debug_print("rng_seed seed =", rng_seed)
+    const board_rng = make_random(rng_seed)
+    todo("Fix global seed");
 
     
     for i < BOARD_SEARCH.RETRIES:
-        if i > 0: debug_print("*** Re-rolling ***") 
+        if i > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
 
         // Search for a not-sensitive seed word to use
         seed_word = random_safe_word(board_rng)
@@ -578,18 +584,18 @@ def _player_find_good_board(player, game_type):
             word_array = board_find_all_words(player.board)
         
             if i == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
-               // Last try, so just give up and accept the board
-               debug_print("Gave up and accepted " + seed_word)
-               done = true
-               break
+                // Last try, so just give up and accept the board
+                if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted " + seed_word)
+                done = true
+                break
     
             if board_has_obvious_sensitive_word(player.board):
-                debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
+                if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
                 continue
     
             if size(word_array) < BOARD_SEARCH.MIN_WORDS:
                 // Not enough words to even examine the board
-                debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
+                if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
                 continue
     
             // Examine the actual words to see if there are enough good ones   
@@ -621,15 +627,15 @@ def _player_find_good_board(player, game_type):
                         ++valuable_letter_table[letter]
             
             if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
-                debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
                 continue
             
             if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
-                debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        
                 continue
             
             if very_long_word_count < BOARD_SEARCH.MIN_VERY_LONG_WORDS:
-                debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
                 continue
             
             // See if we used the valuable letters
@@ -639,7 +645,7 @@ def _player_find_good_board(player, game_type):
                     used_valuable_letters = false
                     
             if not used_valuable_letters:
-                debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
                 continue
     
             // Success!
@@ -648,7 +654,7 @@ def _player_find_good_board(player, game_type):
     
         if done:
             // Stop early as we have a good board
-            debug_print("Accepted board")
+            if DEBUG_BOARD_SEARCH: debug_print("Accepted board")
             break
         else:
             // Try again

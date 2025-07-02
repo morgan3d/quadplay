@@ -22,6 +22,7 @@ if game_type == SOLO:
 else:
     assert(game_type == GLOBAL)
     end_time = prev_global_game_utc_start_time() + 60 GLOBAL_GAME_TIME_MINUTES
+    assert(end_time > utc_now() + 1)
 
 set_background(
     if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR

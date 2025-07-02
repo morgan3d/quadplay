@@ -212,7 +212,8 @@ def board_find_all_words(board):
         size(word_set) - short_count, "actual words with 6+ letters\n")
     */
 
-    debug_print(round((now() - before) * 1000), "ms to find all", size(word_set), "words")
+    if DEBUG_BOARD_SEARCH:
+        debug_print(round((now() - before) * 1000), "ms to find all", size(word_set), "words")
     
     const word_array = keys(word_set)
     for w < size(word_array):
@@ -305,7 +306,7 @@ def board_reset(board, seed_word, permute_number default 0):
             for x < COLS:
                 board.tile[x][y] = flat_array[x + y * COLS]
     
-    debug_print(board_to_string(board))
+    if DEBUG_BOARD_SEARCH: debug_print(board_to_string(board))
 
 
 
