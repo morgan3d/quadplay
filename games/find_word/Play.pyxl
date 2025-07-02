@@ -1,6 +1,8 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
+// Cooldown
+let last_countdown_sound_time
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -12,6 +14,7 @@ set_hooks()
 set_random_seed()
 
 player_reset(player, game_type)
+last_countdown_sound_time = now()
 
 if DEBUG_HISTORY or DEBUG_GAME_OVER:
     for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
@@ -31,15 +34,25 @@ set_background(
     if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
     else SOLO_BACKGROUND_COLOR)
 
+if not in_waiting_room:
+    play_sound(start_sound)
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
 player_update(player, ∅, true)
 
-if utc_now() ≥ end_time or DEBUG_GAME_OVER:
-    set_mode(GameOver) because "Timer"
-    todo("Play timer sound")
+const time_left = end_time - utc_now()
+if time_left > 0.1 and time_left < 5.5 and |loop(time_left, -0.5, 0.5)| ≤ 1/30 and now() - last_countdown_sound_time > 0.2:
+    // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
+    // but ensure that we play only once per timeout
+    last_countdown_sound_time = now()
+    play_sound(timer_countdown_sound, false, 150%)
+
+    
+if time_left ≤ 0 or DEBUG_GAME_OVER:
+    play_sound(times_up_sound)
+    set_mode(Intermission) because "Timer"
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"

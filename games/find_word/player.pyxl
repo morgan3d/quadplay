@@ -1,4 +1,4 @@
-todo("Move board.selection to the player")
+todo("Move board.selection state to the player")
 
 /* Constructs a new player with an uninitialized board */
 def make_player():
@@ -368,14 +368,16 @@ def _player_update_history(player, board_pos)
     
     set_clip(list_rect)
     
-    // Don't scroll this, draw it first
-    draw_text({
-        pos: list_rect.corner + list_rect.size - xy(2, 1),
-        font: history_font,
-        text: "" + size(history.list) + "/" + player.board.word_count,
-        color: #DDD,
-        x_align: "right",
-        y_align: "bottom"})
+    // Show the words left
+    if game_type == SOLO or in_waiting_room:
+        // Don't scroll this, draw it first
+        draw_text({
+            pos: list_rect.corner + list_rect.size - xy(2, 1),
+            font: history_font,
+            text: "" + size(history.list) + "/" + player.board.word_count,
+            color: #DDD,
+            x_align: "right",
+            y_align: "bottom"})
 
     if not equivalent(SCREEN_SIZE, history.scroll_screen_size):
         // Reset

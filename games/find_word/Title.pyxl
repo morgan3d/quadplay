@@ -185,7 +185,7 @@ draw_text({
 for s at y in background_word_array:
     draw_text({
         font: tile_font,
-        color: #222,
+        color: #333,
         text: s,
         pos: xy(sign((y mod 2) - 0.5) * 0.2 oscillate(mode_frames, -2000, 2000) - 700, 22 y),
         x_align: "left",
