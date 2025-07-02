@@ -568,7 +568,6 @@ def _player_find_good_board(player, game_type):
             // to make it robust
             ⌊1 + (utc_now() + 10) / GLOBAL_PERIOD⌋)
     
-    debug_print("rng_seed seed =", rng_seed)
     const board_rng = make_random(rng_seed)
     
     for i < BOARD_SEARCH.RETRIES:
