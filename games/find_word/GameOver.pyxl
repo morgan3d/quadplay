@@ -93,6 +93,6 @@ draw_text({
     color: #FFF})
 
 // End slightly early to give time for finding a good board
-if utc_time() ≥ end_time - 0.75:
+if utc_now() ≥ end_time - 0.75:
     set_mode(Play) because "Timer"
 
