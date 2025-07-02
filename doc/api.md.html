@@ -522,6 +522,9 @@ Random Values
 : Returns a new _function_ that acts like `random()` but has its own private
   seed and internal state. See also `set_random_seed()`.
   The `seed` may be a number or a string.
+  The exact number sequence arising from a given seed is not guaranteed
+  to be consistent across different quadplay versions, as the underlying
+  pseudo-random number generator may change.
 
 `random()`
 : `random(0, 1)`. Same as the `ξ` operator.

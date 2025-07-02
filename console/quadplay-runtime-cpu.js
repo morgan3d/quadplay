@@ -7516,61 +7516,76 @@ function random_within_sphere(rng) {
 }
 
 
-
-/* Based on https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js
-
-    Copyright (c) 2014 Andreas Madsen & Emil Bay
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this
-    software and associated documentation files (the "Software"), to deal in the Software
-    without restriction, including without limitation the rights to use, copy, modify,
-    merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to the following
-    conditions:
-
-    The above copyright notice and this permission notice shall be included in all copies or
-    substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-    PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
-    OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-    OTHER DEALINGS IN THE SOFTWARE.
-*/
 function $makeRng(seed) {
-    if (typeof seed === 'string') {
-        // Convert to a 32-bit number hash
-        let h;
-        for(let i = 0; i < seed.length; ++i) { 
-            h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
-        }
-        seed = h;
-    }
-    
-    var state0U = 5662365, state0L = 20000, state1U = 30000, state1L = 4095;
+    // State of the RNG, which will be captured
+    let state0U = 5662365, state0L = 20000, state1U = 30000, state1L = 4095;
 
-    function set_random_seed(seed) {
+    function _set_random_seed(seed) {
         if (seed === undefined) {
             seed = local_time().millisecond;
         } else if (seed === 0) {
             seed = 4.7499362e+13;
+        } else if (typeof seed === 'string') {
+            // Convert to a 32-bit number hash
+            let h;
+            for (let i = 0; i < seed.length; ++i) { 
+                h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
+            }
+            seed = h;
         }
+    
         if (seed < 2**16) { seed += seed * 1.3529423483002e15; }
-        state0U = $Math.abs(seed / 2**24) >>> 0;
+
+        // Convert to bits
+        const buf = new ArrayBuffer(8);
+        (new Float64Array(buf))[0] = seed;
+        const ibuf = new Uint32Array(buf);
+        state0U = ibuf[0] & 0xFFFF;
+        state0L = (ibuf[0] >>> 16);
+        state1U = ibuf[1] & 0xFFFF;
+        state1L = (ibuf[1] >>> 16);
+
+        /*
+        state0U = $Math.abs(seed / 2**24) >>> 0;        
+        state0L = $Math.abs(seed) >>> 0;
+        state1U = $Math.abs(seed / 2**16) >>> 0;
+        state1L = $Math.abs(seed / 2**32) >>> 0;*/
 
         // Avoid all zeros
         if (state0U === 0) { state0U = 5662365; }
-        
-        state0L = $Math.abs(seed) >>> 0;
-        state1U = $Math.abs(seed / 2**16) >>> 0;
-        state1L = $Math.abs(seed / 2**32) >>> 0;
-        //$console.log(seed, state0U, state0L, state1U, state1L)
+
+        // Get deep in the sequence, as many start similarly
+        for (let i = 0; i < 300; ++i) {
+            _random(0, 1);
+        }
+
+        // $console.log(seed, state0U, state0L, state1U, state1L)
     }
 
-    set_random_seed(seed);
+    _set_random_seed(seed);
 
-    function random(lo, hi) {
+    /* Based on https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js
+
+        Copyright (c) 2014 Andreas Madsen & Emil Bay
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this
+        software and associated documentation files (the "Software"), to deal in the Software
+        without restriction, including without limitation the rights to use, copy, modify,
+        merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to the following
+        conditions:
+
+        The above copyright notice and this permission notice shall be included in all copies or
+        substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+        INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+        PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+        LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+        OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+        OTHER DEALINGS IN THE SOFTWARE.
+    */
+    function _random(lo, hi) {
         // uint64_t s1 = s[0]
         var s1U = state0U, s1L = state0L;
         // uint64_t s0 = s[1]
@@ -7637,15 +7652,17 @@ function $makeRng(seed) {
         }
     }
 
-    return [random, set_random_seed];
+    return [_random, _set_random_seed];
 }
         
 var [random, set_random_seed] = $makeRng(0);
 
+
 function make_random(seed) {
-    var [random, set_random_seed] = $makeRng(seed || (local_time().millisecond * 1e6));
+    const [random, ignore] = $makeRng(seed || (local_time().millisecond * 1e6));
     return random;
 }
+
 
 function random_integer(lo, hi, rng) {
     if (hi === undefined) {
@@ -10371,9 +10388,11 @@ function now() {
     return $performance.now() * 0.001;
 }
 
+
 function utc_now() {
     return Date.now() * 0.001;
 }
+
 
 function local_time(args) {
     

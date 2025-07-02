@@ -507,6 +507,15 @@
         "DEBUG_WAITING_ROOM": {
             "type": "boolean",
             "value": false
+        },
+        "GLOBAL_JOIN_MIN_REMAINING_TIME": {
+            "type": "number",
+            "value": "45",
+            "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
+            "min": 0,
+            "max": 120,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "find_word",

@@ -12,23 +12,37 @@ let player = make_player()
 
 
 let resolution_hook
+let time_hook
 
 
-/* Global games are synchronized to this clock */
-const GLOBAL_GAME_PERIOD = GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES
+const SOLO_INTERMISSION_TIME = 60 SOLO_INTERMISSION_TIME_MINUTES
+const SOLO_GAME_TIME = 60 SOLO_GAME_TIME_MINUTES
+
+
+const GLOBAL_INTERMISSION_TIME = 60 GLOBAL_INTERMISSION_TIME_MINUTES
+const GLOBAL_GAME_TIME = 60 GLOBAL_GAME_TIME_MINUTES
+
+/* Global games are synchronized to this clock, hitting this period exactly 
+   relative to UTC Unix 0 time */
+const GLOBAL_PERIOD = GLOBAL_GAME_TIME + GLOBAL_INTERMISSION_TIME
+
+
+/* Updated once per frame by a frame hook. This ensures that there are no 
+   race conditions within a frame because the time can only change 
+   between frames */
+let utc_time = utc_now()
+
+
+/* Time at which the last global game already started
+   (or is about to start) */
+def prev_global_game_utc_start_time():
+    return floor(utc_time, GLOBAL_PERIOD)
 
 
 
 /* Time at which the next global game will start */
 def next_global_game_utc_start_time():
-    return round(utc_now(), GLOBAL_GAME_PERIOD)
-
-
-    
-/* Time at which the last global game already started
-   (or is about to start) */
-def prev_global_game_utc_start_time():
-    return floor(utc_now(), 60 * GLOBAL_GAME_PERIOD)
+    return round(utc_time, GLOBAL_PERIOD)
 
 
 
@@ -37,10 +51,17 @@ def penultimate_value(array):
     return array[size(array) - 2]
 
 
+def _update_utc_time():
+    utc_time = utc_now()
+
 
 /* Fill the screen even at non-quadplay aspect ratios
    for a good mobile experience. See also `DEBUG_PORTRAIT` */
-def set_resolution_hook():
+def set_hooks():
+    
+    if not time_hook:
+        time_hook = add_frame_hook(_update_utc_time, ∅, ∞, "all")
+        
     if not resolution_hook:
         device_control("set_mouse_cursor", "pointer")
         

@@ -8,7 +8,7 @@ assert(not in_waiting_room)
 
 // Repeat Title global setup in case we're debugging
 // and started in this mode
-set_resolution_hook()
+set_hooks()
 set_random_seed()
 
 player_reset(player, game_type)
@@ -18,11 +18,14 @@ if DEBUG_HISTORY or DEBUG_GAME_OVER:
 
 // Compute end_time
 if game_type == SOLO:
-    end_time = utc_now() + 60 SOLO_GAME_TIME_MINUTES
+    end_time = utc_time + SOLO_GAME_TIME
 else:
     assert(game_type == GLOBAL)
-    end_time = prev_global_game_utc_start_time() + 60 GLOBAL_GAME_TIME_MINUTES
-    assert(end_time > utc_now() + 1)
+    
+    end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
+
+    assert(end_time > utc_time + GLOBAL_JOIN_MIN_REMAINING_TIME - 1,
+        "The game should not end so soon")
 
 set_background(
     if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR

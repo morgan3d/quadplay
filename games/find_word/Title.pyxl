@@ -61,15 +61,33 @@ def update_button(pos, text, index):
          (selected and gamepad_array[0].aa))):
         game_type = index
         
-        const current_time = utc_now()
-        
+        // When did the previous game start?
         const prev_start = prev_global_game_utc_start_time()
-        if (index == GLOBAL and current_time ≥ prev_start + 60 GLOBAL_GAME_TIME_MINUTES and current_time < prev_start + 60 GLOBAL_GAME_PERIOD - 2) or DEBUG_WAITING_ROOM:
+        
+        // Did the previous game finish (i.e., there is no current game)
+        const prev_game_finished = utc_time ≥ prev_start + GLOBAL_GAME_TIME
+                
+        // Is the next game about to begin? If they are within 2 seconds of the next
+        // game just send them to the game a little early, it isn't a huge
+        // advantage and avoids any race condition
+        const next_game_imminent = utc_time > prev_start + GLOBAL_PERIOD - 2
+        
+        // How much time is left in the current game?
+        const curr_game_remaining_time = max((prev_start + GLOBAL_GAME_TIME) - utc_time, 0)
+
+        /*        
+        debug_print(
+            "prev_start =", prev_start,
+            "\nprev_game_finished =", prev_game_finished,
+            "\nnext_game_imminent =", next_game_imminent,
+            "\ncurr_game_remaining_time =", curr_game_remaining_time) */
+        
+        if ((index == GLOBAL and
+            (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
+            not next_game_imminent) or DEBUG_WAITING_ROOM):
             // There is no game currently running because the global game is in 
-            // the GameOver state. Send this player to the waiting room
-            // so that they aren't bored. If they are within 2 seconds of the next
-            // game just send them to the game a little early, it isn't a huge
-            // advantage and avoids any race condition
+            // the GameOver state, or about to be so. Send this player to the waiting room
+            // so that they aren't bored. 
             set_mode(WaitingRoom) because "No global in progress"
         else:
             set_mode(Play) because "Selected"
@@ -126,11 +144,17 @@ for y < 20:
         s += " " + random_safe_word()
     background_word_array[y] = s
 
+/*
+let A = make_random(11676561)
+let B = make_random(11676562)
+for i < 100:
+    debug_print(random_integer(0, 99, A), random_integer(0, 99, B))
+*/
 
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
-set_resolution_hook()
+set_hooks()
 
 fake_player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(fake_player.board, fake_player)

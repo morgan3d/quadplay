@@ -30,7 +30,7 @@ board_deselect_all(player.board, player)
 sort(player.history.list, points_order)
 
 if game_type == SOLO:
-    end_time = utc_now() + 60 SOLO_INTERMISSION_TIME_MINUTES
+    end_time = utc_time + SOLO_INTERMISSION_TIME
 else:    
     end_time = next_global_game_utc_start_time()
 
@@ -88,11 +88,10 @@ history_draw(player.history, xy(4, 60), SCREEN_SIZE.y - 30)
 // Countdown
 draw_text({
     font: score_font,
-    text: format_number(max(INTERMISSION_MINUTES * 60 - mode_frames / 60, 0), "timer") + " until next game…",
+    text: format_number(max(end_time - utc_time, 0), "timer") + " until next game…",
     pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10),
     color: #FFF})
 
-// End slightly early to give time for finding a good board
-if utc_now() ≥ end_time - 0.75:
+if utc_time ≥ end_time:
     set_mode(Play) because "Timer"
 
