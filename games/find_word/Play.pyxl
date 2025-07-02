@@ -34,11 +34,12 @@ set_background(
     if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
     else SOLO_BACKGROUND_COLOR)
 
-if not in_waiting_room:
-    play_sound(start_sound)
-
 frame
 ────────────────────────────────────────────────────────────────────────
+if mode_frames == 1 and not in_waiting_room:
+    // Play here instead of enter because
+    // creating the board can delay the first frame
+    play_sound(start_sound)
 
 player_update(player, ∅, true)
 

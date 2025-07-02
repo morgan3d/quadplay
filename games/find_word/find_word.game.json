@@ -38,9 +38,9 @@
         "button_prompt_font": "quad://fonts/deja-4.font.json",
         "timer_countdown_sound": "quad://sounds/blip-07.sound.json",
         "times_up_sound": "quad://sounds/wild-05.sound.json",
-        "start_sound": "quad://sounds/powerup-03.sound.json",
+        "start_sound": "quad://sounds/good-00.sound.json"
     },
-    "version": "0.069",
+    "version": "0.070",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
