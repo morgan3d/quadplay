@@ -14,6 +14,7 @@
     ],
     "modes": [
         "Title",
+        "WaitingRoom",
         "Play",
         "Rotate",
         "GameOver"
@@ -36,7 +37,7 @@
         "rotate_sound": "quad://sounds/powerup-00.sound.json",
         "button_prompt_font": "quad://fonts/deja-4.font.json"
     },
-    "version": "0.066",
+    "version": "0.067",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -347,23 +348,6 @@
             "type": "boolean",
             "value": false
         },
-        "BACKGROUND_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "38%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "27%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "11%"
-                }
-            }
-        },
         "POINTS_ANIMATION_FRAMES": {
             "type": "number",
             "value": "35",
@@ -380,15 +364,6 @@
         "DEBUG_HISTORY": {
             "type": "boolean",
             "value": false
-        },
-        "TIME_MINUTES": {
-            "type": "number",
-            "value": "1.0",
-            "min": 0.5,
-            "max": 5,
-            "format": "0.0",
-            "quantum": 0.5,
-            "description": "Game time"
         },
         "CURSOR_COLOR": {
             "type": "rgb",
@@ -428,15 +403,6 @@
             "type": "boolean",
             "value": false
         },
-        "INTERMISSION_MINUTES": {
-            "type": "number",
-            "value": "0.5",
-            "description": "Time in GameOver before next game starts",
-            "min": 0,
-            "max": 3,
-            "format": "0.0",
-            "quantum": 0.1
-        },
         "SOLO": {
             "type": "number",
             "value": 0,
@@ -468,6 +434,79 @@
                 }
             },
             "description": "For game_type == SOLO"
+        },
+        "SOLO_GAME_TIME_MINUTES": {
+            "type": "number",
+            "value": "3.5",
+            "min": 0.5,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.5
+        },
+        "GLOBAL_BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "38%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "27%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "11%"
+                }
+            }
+        },
+        "GLOBAL_GAME_TIME_MINUTES": {
+            "type": "number",
+            "value": "2.0",
+            "min": 0.5,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.5,
+            "description": "Game time"
+        },
+        "GLOBAL_INTERMISSION_TIME_MINUTES": {
+            "type": "number",
+            "value": "0.50",
+            "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES exactly",
+            "min": 0.25,
+            "max": 5,
+            "format": "0.00",
+            "quantum": 0.05
+        },
+        "SOLO_INTERMISSION_TIME_MINUTES": {
+            "type": "number",
+            "value": "0.7",
+            "description": "Time in GameOver before next game starts",
+            "min": 0,
+            "max": 3,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "WAITING_ROOM_BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "26%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "31%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "19%"
+                }
+            }
+        },
+        "DEBUG_WAITING_ROOM": {
+            "type": "boolean",
+            "value": false
         }
     },
     "screenshot_tag": "Tracewords",

@@ -20,6 +20,8 @@ def choose_unfound_word():
     unfound_word = ∅
     
 
+let end_time
+
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
@@ -27,6 +29,10 @@ board_deselect_all(player.board, player)
 //debug_print(player.board.word_list)
 sort(player.history.list, points_order)
 
+if game_type == SOLO:
+    end_time = utc_now() + 60 SOLO_INTERMISSION_TIME_MINUTES
+else:    
+    end_time = next_global_game_utc_start_time()
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -62,7 +68,6 @@ if unfound_word:
         shadow: #000,
         color: #FFF})
     
-todo("Global sync game start")
 todo("Show some words not found")
 
 // Board
@@ -89,6 +94,7 @@ draw_text({
     pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10),
     color: #FFF})
 
-if mode_frames ≥ 3600 INTERMISSION_MINUTES:
+// End slightly early to give time for finding a good board
+if utc_time() ≥ end_time - 0.75:
     set_mode(Play) because "Timer"
 

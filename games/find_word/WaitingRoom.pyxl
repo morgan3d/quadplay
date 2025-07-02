@@ -1,32 +1,21 @@
-Play
+WaitingRoom
 ════════════════════════════════════════════════════════════════════════
-
 
 enter
 ────────────────────────────────────────────────────────────────────────
-assert(not in_waiting_room)
-
-// Repeat Title global setup in case we're debugging
-// and started in this mode
-set_resolution_hook()
-set_random_seed()
+assert(game_type == GLOBAL)
+in_waiting_room = true
 
 player_reset(player, game_type)
 
 if DEBUG_HISTORY or DEBUG_GAME_OVER:
     for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
+    
+end_time = prev_global_game_utc_start_time() + 60 GLOBAL_GAME_PERIOD
 
-// Compute end_time
-if game_type == SOLO:
-    end_time = utc_now() + 60 SOLO_GAME_TIME_MINUTES
-else:
-    assert(game_type == GLOBAL)
-    end_time = prev_global_game_utc_start_time() + 60 GLOBAL_GAME_TIME_MINUTES
-
-set_background(
-    if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
-    else SOLO_BACKGROUND_COLOR)
-
+set_background(WAITING_ROOM_BACKGROUND_COLOR)
+set_post_effects({color: #CFC, color_blend: "multiply"})
+    
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -34,9 +23,9 @@ frame
 player_update(player, ∅, true)
 
 if utc_now() ≥ end_time or DEBUG_GAME_OVER:
-    set_mode(GameOver) because "Timer"
-    todo("Play timer sound")
+    in_waiting_room = false
+    reset_post_effects()
+    set_mode(Play) because "Global game start"
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"
-            

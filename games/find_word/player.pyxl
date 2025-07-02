@@ -192,53 +192,52 @@ def _player_update_rotate_button(player, board_pos):
         push_mode(Rotate) because "Rotate button"
 
 
+
 /* Also draws button prompts */
 def _player_draw_score(player, board_pos)
 & with gamepad, board, score in player:
     
     const score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(18, 16)
-        
-    draw_text({
-        pos: score_pos,
-        font: score_font,
-        text: format_number(score, "commas") + " pts",
-        color: #FFF,
-        y_align: "center",
-        x_align: "right"})
+    
+    if in_waiting_room:
+        draw_text({
+            pos: score_pos + xy(0, -7),
+            font: button_prompt_font,
+            text: "GLOBAL GAME\nSTARTS SOON!",
+            x_align: "right",
+            y_align: "top",
+            color: #0F0,
+            z: TILE_LETTER_Z})
+            
+    else:
+        draw_text({
+            pos: score_pos,
+            font: score_font,
+            text: format_number(score, "commas") + " pts",
+            color: #FFF,
+            y_align: "center",
+            x_align: "right"})
     
     // Button prompts    
     if player.using_gamepad:
-        const help_pos = score_pos + xy(-136, -1)
-        
         draw_text({
-            pos: help_pos + xy(0, -1),
+            pos: score_pos + xy(-136, -7),
             font: button_prompt_font,
-            text: replace("(a) SELECT", gamepad.prompt),
+            text: replace("(a) SELECT" + (if size(board.selection) > 1 then "\n(b) CANCEL" else ""), gamepad.prompt),
             x_align: "left",
-            y_align: "bottom",
+            y_align: "top",
             color: #FFF,
             z: TILE_LETTER_Z})
-            
-        if size(board.selection) > 1:
-            draw_text({
-                pos: help_pos + xy(0, +1),
-                font: button_prompt_font,
-                text: replace("(b) CANCEL", gamepad.prompt),
-                x_align: "left",
-                y_align: "top",
-                color: #FFF,
-                z: TILE_LETTER_Z})
     
     
 
 /* Draws the count-down timer for `end_time` relative to the board */
 def draw_timer(board_pos):  
-    let clock_pos = board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16)
     draw_text({
-        pos: clock_pos,
+        pos: board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16),
         font: score_font,
         text: format_number(max(0, end_time - utc_now()), "timer"),
-        color: #FFF,
+        color: if in_waiting_room then #0F0 else #FFF,
         y_align: "center",
         x_align: "right"})
 
@@ -541,16 +540,16 @@ def player_update_board(player, pos, angle, allow_selection)
 
 
 
-def player_reset(player):
+def player_reset(player, game_type):
     player.score = 0
     remove_all(player.already_found)
     remove_all(player.history.list)
-    _player_find_good_board(player)
+    _player_find_good_board(player, game_type)
     
     
 
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
-def _player_find_good_board(player):
+def _player_find_good_board(player, game_type):
     let done = false
     let seed_word
     let word_array
@@ -564,7 +563,7 @@ def _player_find_good_board(player):
             (utc_now() * 10)
         else 
             1000 ⌊1 + utc_now() / (½ TIME_MINUTES * 60)⌋)
-    todo("Sync global game board")
+
     
     for i < BOARD_SEARCH.RETRIES:
         if i > 0: debug_print("*** Re-rolling ***") 

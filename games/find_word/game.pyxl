@@ -1,18 +1,36 @@
 /* In seconds, using now() */
 let end_time
 
-/* Set by Title */
+/* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
 let game_type = SOLO
 
+/* If true, then the player is just warming
+   up for a `GLOBAL` game that will start soon. */
+let in_waiting_room = false
+
 let player = make_player()
+
+
+let resolution_hook
+
+
+/* Global games are synchronized to this clock */
+const GLOBAL_GAME_PERIOD = GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES
+
+
+    
+/* Time at which the last global game already started
+   (or is about to start) */
+def prev_global_game_utc_start_time():
+    return floor(utc_now(), 60 * GLOBAL_GAME_PERIOD)
+
+
 
 /* Returns the second to last value or ∅ */
 def penultimate_value(array):
     return array[size(array) - 2]
 
 
-
-let resolution_hook
 
 /* Fill the screen even at non-quadplay aspect ratios
    for a good mobile experience. See also `DEBUG_PORTRAIT` */

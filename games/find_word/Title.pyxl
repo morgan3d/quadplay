@@ -60,7 +60,17 @@ def update_button(pos, text, index):
         ((touch.aa and overlaps(touch.xy, rect)) or
          (selected and gamepad_array[0].aa))):
         game_type = index
-        set_mode(Play) because "Selected"
+        
+        const time = utc_now()
+        
+        if (index == GLOBAL and time > prev_global_game_utc_start_time() + 60 GLOBAL_GAME_TIME_MINUTES) or DEBUG_WAITING_ROOM:
+            // There is no game currently running because the global game is in 
+            // the GameOver state. Send this player to the waiting room
+            // so that they aren't bored.
+            set_mode(WaitingRoom) because "No global in progress"
+        else:
+            set_mode(Play) because "Selected"
+        
 
 
 def bounce_row(y, sound default select_tile_sound):
