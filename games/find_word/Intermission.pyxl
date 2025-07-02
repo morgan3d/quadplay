@@ -1,4 +1,4 @@
-GameOver
+Intermission
 ════════════════════════════════════════════════════════════════════════
 
 let unfound_word
@@ -86,10 +86,18 @@ for y < ROWS:
 history_draw(player.history, xy(4, 60), SCREEN_SIZE.y - 30)
 
 // Countdown
+const time_left = max(end_time - utc_time, 0)
+const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
+const α = 100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME)
+
+draw_corner_rect(xy(0, timer_pos.y - 10), xy(SCREEN_SIZE.x, 19), #000, #FFF)
+draw_corner_rect(xy(1, timer_pos.y - 9), xy(α * (SCREEN_SIZE.x - 2), 17), #0F0)
+
 draw_text({
     font: score_font,
-    text: format_number(max(end_time - utc_time, 0), "timer") + " until next game…",
-    pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10),
+    text: format_number(time_left, "timer") + " until next game…",
+    outline: #040,
+    pos: timer_pos,
     color: #FFF})
 
 if utc_time ≥ end_time:
