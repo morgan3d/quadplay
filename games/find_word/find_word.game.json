@@ -483,7 +483,7 @@
         },
         "SOLO_INTERMISSION_TIME_MINUTES": {
             "type": "number",
-            "value": "0.7",
+            "value": "0.5",
             "description": "Time in GameOver before next game starts",
             "min": 0,
             "max": 3,

@@ -37,7 +37,7 @@ else:
 frame
 ────────────────────────────────────────────────────────────────────────
 
-if mode_frames mod 480 == 120:
+if mode_frames mod 550 == 120:
     choose_unfound_word()
     
 const left = if landscape() then ⅓ else ¼
