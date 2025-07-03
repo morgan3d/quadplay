@@ -40,7 +40,7 @@
         "times_up_sound": "quad://sounds/wild-05.sound.json",
         "start_sound": "quad://sounds/good-00.sound.json"
     },
-    "version": "0.072",
+    "version": "0.073",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -523,6 +523,91 @@
         "DEBUG_LANDSCAPE": {
             "type": "boolean",
             "value": false
+        },
+        "TILE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "79%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "79%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "79%"
+                }
+            }
+        },
+        "BOARD_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "75%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "75%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "75%"
+                }
+            }
+        },
+        "TILE_CENTER_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "SELECTED_TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
         }
     },
     "screenshot_tag": "find_word",

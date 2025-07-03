@@ -70,6 +70,10 @@ def player_spawn_score_animation(player):
     // target actually gets rendered and assigned a pos first
     def capture_target():
         const entry = last_value(player.history.list)
+        
+        // Abort if the mode ends and history is cleared while 
+        // waiting for this callback
+        if not entry: return sequence.BREAK
         target = entry.pos + xy(4 size(entry.word), 4)
 
     def callback(frames_left, total_frames):
@@ -449,7 +453,7 @@ def player_update_board(player, pos, angle, allow_selection)
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
 
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, #BBB)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, BOARD_COLOR)
     
     const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
 
@@ -505,16 +509,16 @@ def player_update_board(player, pos, angle, allow_selection)
             
             if not tile.selected or is_cursor_tile:
                 // Background rect
-                draw_rect(pos, tile_size, if is_cursor_tile then CURSOR_COLOR else #CCC, if is_cursor_tile then #0C0 else ∅) 
+                draw_rect(pos, tile_size, if is_cursor_tile then CURSOR_COLOR else TILE_COLOR, if is_cursor_tile then #0C0 else ∅) 
             
             draw_disk(
                 pos,
                 radius,
-                if tile.selected then selection_color else #FFF,
+                if tile.selected then selection_color else TILE_CENTER_COLOR,
                 ∅, 
                 TILE_CENTER_Z)
 
-            const text_color = if tile.selected then #fff else #000
+            const text_color = if tile.selected then SELECTED_TEXT_COLOR else TEXT_COLOR
             
             // Label
             draw_text({
