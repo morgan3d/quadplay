@@ -1436,6 +1436,14 @@ code, .code {
     background: #331c2a;
 }
 
+body.IDE #right-side-toolbar {
+    top: -1px; 
+}
+
+body:not(.IDE) #right-side-toolbar {
+    top: 1px; 
+}
+
 /* Black background for emulator if not in the IDE */
 :not(.IDE) #emulator {
     background: #000;
