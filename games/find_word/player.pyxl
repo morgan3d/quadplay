@@ -335,7 +335,7 @@ def player_update(player, angle default 0°, allow_selection default false):
         // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
         // Leave some space on the right so that if someone has the bad idea to play on a phone in this orientation
         // they won't be jammed against the edge with their thumb.
-        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 12)
+        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 8)
     else:
         // Portrait. Put at the bottom, centered, unless the screen is not very high
         board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 18)
@@ -453,7 +453,9 @@ def player_update_board(player, pos, angle, allow_selection)
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
 
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, BOARD_COLOR)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT, BOARD_COLOR, board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, ∅, board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 4, ∅, board.selection_color)
     
     const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
 
