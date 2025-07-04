@@ -5,8 +5,9 @@
 html {
     touch-action: manipulation;
 
-    /* Prevent scroll */
+    /* Prevent iOS scroll */
     position: fixed;
+    overscroll-behavior: none;
 
     /** Disable apple mouse back gesture https://stackoverflow.com/questions/15829172/stop-chrome-back-forward-two-finger-swipe */
     overscroll-behavior-x: none;

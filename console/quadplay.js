@@ -4533,5 +4533,7 @@ reloadRuntime(function () {
 });
 
 // Prevent scrolling/reloading of the page on iOS when touching the toolbar
-document.body.addEventListener('touchmove', preventDefault, { passive: false });
-document.getElementById("header").addEventListener('touchmove', preventDefault, { passive: false });
+document.getElementById("header").addEventListener('touchmove', 
+    function(event) {
+        event.preventDefault();
+    }, { passive: false });
