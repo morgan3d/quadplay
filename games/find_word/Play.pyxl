@@ -1,6 +1,8 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
+todo("Make the timer flash the board as well")
+
 // Cooldown
 let last_countdown_sound_time
 

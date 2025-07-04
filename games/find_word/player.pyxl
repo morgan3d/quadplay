@@ -614,6 +614,7 @@ def _player_find_good_board(player, game_type):
                         valuable_letter_table[tile.letter] = 0
             
             const valuable_letters = keys(valuable_letter_table)
+            const valuable_letter_long_count = keys(valuable_letter_table)
         
             // Iterate through words, rating them for each criterion
             let short_word_count = 0
@@ -622,14 +623,20 @@ def _player_find_good_board(player, game_type):
             for word in word_array:
                 if size(word) ≤ 4:
                     ++short_word_count
-                if size(word) ≥ 5:
+                if size(word) ≥ 5 and size(word) < 7:
                     ++long_word_count
                 if size(word) ≥ 7:
                     ++very_long_word_count
                     
+                if size(word) ≥ 5:
+                    ++long_word_count
+                    
                 for letter in valuable_letters:
                     if contains(word, letter):
                         ++valuable_letter_table[letter]
+                        
+                        if size(word) ≥ 5:
+                            ++valuable_letter_long_count[letter]
             
             if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
                 if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
@@ -645,13 +652,22 @@ def _player_find_good_board(player, game_type):
             
             // See if we used the valuable letters
             let used_valuable_letters = true
+            let used_valuable_letters_in_long_words = true
             for count at letter in valuable_letter_table:
                 if count < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
                     used_valuable_letters = false
                     
+                if valuable_letter_long_count[letter] < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
+                    used_valuable_letters_in_long_words = false
+                    
             if not used_valuable_letters:
                 if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
                 continue
+            
+            if not used_valuable_letters_in_long_words:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
+                continue
+
     
             // Success!
             done = true

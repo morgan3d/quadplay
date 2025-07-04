@@ -42,7 +42,7 @@
         "times_up_sound": "quad://sounds/wild-05.sound.json",
         "start_sound": "quad://sounds/good-00.sound.json"
     },
-    "version": "0.079",
+    "version": "0.081",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -304,7 +304,7 @@
                     "quantum": 1
                 },
                 "MIN_LONG_WORDS": {
-                    "description": "5+ letters. Including very long words",
+                    "description": "5-6 letters",
                     "type": "number",
                     "value": "35",
                     "min": 0,
@@ -313,7 +313,7 @@
                     "quantum": 1
                 },
                 "MIN_VERY_LONG_WORDS": {
-                    "description": "7+ letters. Including very long words",
+                    "description": "7+ letters",
                     "type": "number",
                     "value": "5",
                     "min": 0,
@@ -331,9 +331,18 @@
                     "quantum": 1
                 },
                 "MIN_VALUABLE_LETTER_USES": {
-                    "description": "How many times a good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                    "description": "How many times every good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
                     "type": "number",
                     "value": "12",
+                    "min": 0,
+                    "max": 20,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "MIN_VALUABLE_LETTER_LONG_WORDS": {
+                    "description": "How many times every good letter (such as Q) must be used in 5+ letter words longer than 5 letters. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                    "type": "number",
+                    "value": "3",
                     "min": 0,
                     "max": 20,
                     "format": "0",
@@ -342,7 +351,7 @@
                 "MIN_SHORT_WORDS": {
                     "type": "number",
                     "value": "30",
-                    "description": "3 and 4 letter words only",
+                    "description": "3-4 letters",
                     "format": "0",
                     "quantum": 1
                 }
