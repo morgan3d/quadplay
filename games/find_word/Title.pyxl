@@ -94,9 +94,10 @@ def update_button(pos, text, index):
         
 
 
-def bounce_row(y, sound default select_tile_sound):
+def bounce_row(y, sound default select_tile_sound, color default TILE_CENTER_SELECTED_COLOR):
     play_sound(sound)
     board_deselect_all(fake_player.board, fake_player)
+    fake_player.board.selection_color = color
     for x < 4:
         push(fake_player.board.selection, xy(x, y))
         fake_player.board.tile[x][y].selected = mode_frames
@@ -111,8 +112,8 @@ def bounce_row3(): bounce_row(2)
 def bounce_row4(): bounce_row(3)
 
 def highlight_random_row():
-    fake_player.board.selection_color = HIGHLIGHT_COLOR
-    bounce_row(random_integer(0, ROWS - 1), word_sound)
+    bounce_row(random_integer(0, ROWS - 1), word_sound, HIGHLIGHT_COLOR)
+
     
 def intro_cleanup():
     intro = ∅ 
