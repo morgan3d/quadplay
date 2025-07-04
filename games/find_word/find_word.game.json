@@ -42,7 +42,7 @@
         "times_up_sound": "quad://sounds/wild-05.sound.json",
         "start_sound": "quad://sounds/good-00.sound.json"
     },
-    "version": "0.077",
+    "version": "0.078",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,

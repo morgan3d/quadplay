@@ -5,6 +5,9 @@
 html {
     touch-action: manipulation;
 
+    /* Prevent scroll */
+    position: fixed;
+
     /** Disable apple mouse back gesture https://stackoverflow.com/questions/15829172/stop-chrome-back-forward-two-finger-swipe */
     overscroll-behavior-x: none;
 }
