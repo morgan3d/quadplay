@@ -10,12 +10,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
 
-// Repeat Title global setup in case we're debugging
-// and started in this mode
-set_hooks()
-set_random_seed()
 
-player_reset(player, game_type)
 last_countdown_sound_time = now()
 
 if DEBUG_HISTORY or DEBUG_GAME_OVER:

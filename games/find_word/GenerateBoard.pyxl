@@ -1,0 +1,40 @@
+GenerateBoard
+════════════════════════════════════════════════════════════════════════
+// This mode is just animation so that it does not look like 
+// the game has locked up when board generation runs slowly
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+// Repeat Title global setup in case we're debugging
+// and started in this mode
+
+set_hooks()
+set_random_seed()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// Draw a screen on the first frame. On the second frame, go to
+// the next mode.
+
+draw_text({
+    text: "Creating board…",
+    font: score_font,
+    color: #F3C,
+    pos: ½ SCREEN_SIZE})
+
+if mode_frames == 1:
+    player_reset(player, game_type)
+    
+    if DEBUG_HISTORY or DEBUG_GAME_OVER:
+        for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
+    
+    if in_waiting_room:
+        set_mode(WaitingRoom) because "No global in progress"
+    else:
+        set_mode(Play)
+    
+

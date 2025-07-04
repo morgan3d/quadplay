@@ -1,6 +1,5 @@
 Title
 ════════════════════════════════════════════════════════════════════════
-
 const INTRO_PRE_FRAMES = 9
 const INTRO_BEAT_FRAMES = 35
 const INTRO_NUM_BEATS = 6
@@ -90,9 +89,9 @@ def update_button(pos, text, index):
             // There is no game currently running because the global game is in 
             // the GameOver state, or about to be so. Send this player to the waiting room
             // so that they aren't bored. 
-            set_mode(WaitingRoom) because "No global in progress"
-        else:
-            set_mode(Play) because "Selected"
+            in_waiting_room = true
+        
+        set_mode(GenerateBoard) because "Button"
         
 
 
