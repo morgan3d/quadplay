@@ -306,7 +306,7 @@
                 "MIN_LONG_WORDS": {
                     "description": "5+ letters. Including very long words",
                     "type": "number",
-                    "value": "32",
+                    "value": "34",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -315,7 +315,7 @@
                 "MIN_VERY_LONG_WORDS": {
                     "description": "7+ letters. Including very long words",
                     "type": "number",
-                    "value": "8",
+                    "value": "9",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -333,7 +333,7 @@
                 "MIN_VALUABLE_LETTER_USES": {
                     "description": "How many times a good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
                     "type": "number",
-                    "value": "8",
+                    "value": "10",
                     "min": 0,
                     "max": 20,
                     "format": "0",
