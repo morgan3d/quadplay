@@ -91,6 +91,7 @@ def update_button(pos, text, index):
             // so that they aren't bored. 
             in_waiting_room = true
         
+        play_sound(blip_sound)
         set_mode(GenerateBoard) because "Button"
         
 

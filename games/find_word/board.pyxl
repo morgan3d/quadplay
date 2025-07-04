@@ -27,7 +27,7 @@ def make_board():
                 // mode_frame at which this was selected
                 selected: 0},
             deep_clone),
-        
+                
         // The UI selection as xy() indices, in order of selection
         selection: [],
         

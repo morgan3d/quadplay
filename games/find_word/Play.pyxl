@@ -1,20 +1,15 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("Make the timer flash the board as well")
-
 // Cooldown
 let last_countdown_sound_time
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
 
-
 last_countdown_sound_time = now()
-
-if DEBUG_HISTORY or DEBUG_GAME_OVER:
-    for i < 20: player_add_to_history(player, "FOOBAR", 3 + i)
 
 // Compute end_time
 if game_type == SOLO:
@@ -27,9 +22,10 @@ else:
     assert(end_time > utc_time + GLOBAL_JOIN_MIN_REMAINING_TIME - 1,
         "The game should not end so soon")
 
-set_background(
-    if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
-    else SOLO_BACKGROUND_COLOR)
+set_background(if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
+     else SOLO_BACKGROUND_COLOR)
+
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -41,12 +37,19 @@ if mode_frames == 1 and not in_waiting_room:
 player_update(player, ∅, true)
 
 const time_left = end_time - utc_now()
-if time_left > 0.1 and time_left < 5.5 and |loop(time_left, -0.5, 0.5)| ≤ 1/30 and now() - last_countdown_sound_time > 0.2:
-    // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
-    // but ensure that we play only once per timeout
-    last_countdown_sound_time = now()
-    play_sound(timer_countdown_sound, false, 150%)
-
+if time_left > 0.1 and time_left < 5.5:
+    if |loop(time_left, -0.5, 0.5)| ≤ 1/30 and now() - last_countdown_sound_time > 0.2:
+        // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
+        // but ensure that we play only once per timeout
+        last_countdown_sound_time = now()
+        play_sound(timer_countdown_sound, false, 150%)
+        // Pulse in case sound is off
+        player.background_color = #FFF
+    else:
+        // Fade back towards normal
+        player.background_color = lerp(player.background_color, BOARD_COLOR, 2%)
+    
+    
     
 if time_left ≤ 0 or DEBUG_GAME_OVER:
     play_sound(times_up_sound)

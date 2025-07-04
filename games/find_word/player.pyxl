@@ -8,6 +8,8 @@ def make_player():
         
         score: 0,
         
+        background_color: BOARD_COLOR,
+        
         gamepad: gamepad_array[0],
         
         // Due to finger on history
@@ -436,7 +438,7 @@ def _player_update_history(player, board_pos)
 */
 def player_update_board(player, pos, angle, allow_selection)
 & preserving_transform
-& with board, gamepad in player:
+& with board, gamepad, background_color in player:
     
     const grid_size = board_pixel_size()
     const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
@@ -451,7 +453,7 @@ def player_update_board(player, pos, angle, allow_selection)
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
 
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT, BOARD_COLOR, board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT, background_color, board.selection_color)
     draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, ∅, board.selection_color)
     draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 4, ∅, board.selection_color)
     
@@ -550,6 +552,7 @@ def player_update_board(player, pos, angle, allow_selection)
 
 def player_reset(player, game_type):
     player.score = 0
+    player.background_color = BOARD_COLOR
     remove_all(player.already_found)
     remove_all(player.history.list)
     _player_find_good_board(player, game_type)
