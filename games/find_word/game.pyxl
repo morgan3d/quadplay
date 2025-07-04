@@ -10,7 +10,6 @@ let in_waiting_room = false
 
 let player = make_player()
 
-
 let resolution_hook
 let time_hook
 

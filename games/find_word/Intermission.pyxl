@@ -1,6 +1,8 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
+// Best word, longest word, most words, highest score
+
 let unfound_word
 
 def points_order(A, B):
@@ -15,8 +17,10 @@ def choose_unfound_word():
     for i < 30:
         unfound_word = random_value(player.board.word_list)
         if not sensitive[unfound_word] and not contains(player.history.list, unfound_word, word_comparator):
+            // Accept this word
             return
-    
+
+    // Could not find any good word in 30 tries
     unfound_word = ∅
     
 

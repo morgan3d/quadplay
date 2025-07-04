@@ -386,7 +386,7 @@ def _player_update_history(player, board_pos)
             y_align: "bottom"})
 
     if not equivalent(SCREEN_SIZE, history.scroll_screen_size):
-        // Reset
+        // Reset on window change
         history.scroll = 0
 
     const pos = xy(3, 2)
@@ -396,10 +396,8 @@ def _player_update_history(player, board_pos)
         set_transform(list_rect.corner - xy(history.scroll, 0))
         max_width = history_draw(history, pos, list_rect.size.y)
 
-    
     const overflow = pos.x + max_width - list_rect.size.x + 1
-    
-    
+
     if not player.drag_start.pos:
         // Start drag
         //if touch.aa: debug_print(touch.xy, list_rect, overlaps(touch.xy, list_rect))
@@ -409,11 +407,9 @@ def _player_update_history(player, board_pos)
     else if touch.a:
         // Continue drag
         history.scroll = clamp(player.drag_start.scroll + player.drag_start.pos.x - touch.x, 0, overflow)
-        
     else:
         // End drag
         player.drag_start.pos = ∅
-    
     
     if not player.drag_start.pos and (not equivalent(SCREEN_SIZE, history.scroll_screen_size) or history.scroll_history_size ≠ size(history.list)):
         history.scroll_screen_size = xy(SCREEN_SIZE)
@@ -421,6 +417,9 @@ def _player_update_history(player, board_pos)
         // Set the scroll to whatever it needs to be to keep the 
         // most recent words on screen
         history.scroll = max(history.scroll, overflow)
+    
+    if overflow < 0:
+        history.scroll = 0
 
 
 

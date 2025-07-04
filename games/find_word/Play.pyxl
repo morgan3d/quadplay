@@ -17,7 +17,7 @@ player_reset(player, game_type)
 last_countdown_sound_time = now()
 
 if DEBUG_HISTORY or DEBUG_GAME_OVER:
-    for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
+    for i < 20: player_add_to_history(player, "FOOBAR", 3 + i)
 
 // Compute end_time
 if game_type == SOLO:
