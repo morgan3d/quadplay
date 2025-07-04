@@ -400,7 +400,6 @@ def _player_update_history(player, board_pos)
 
     if not player.drag_start.pos:
         // Start drag
-        //if touch.aa: debug_print(touch.xy, list_rect, overlaps(touch.xy, list_rect))
         if touch.aa and overlaps(touch.xy, list_rect):
             player.drag_start.pos = xy(touch.xy)
             player.drag_start.scroll = history.scroll
@@ -668,6 +667,8 @@ def _player_find_good_board(player, game_type):
         
     player.board.word_list = word_array
     player.board.word_count = size(word_array)
+    if DEBUG_BOARD_SEARCH:
+        debug_print(player.board.word_list)
 
 
 

@@ -52,7 +52,9 @@ def update_button(pos, text, index):
     
     const rect = {pos: pos, size: BUTTON_SIZE}
     if touch.hover and overlaps(touch.hover, rect):
-        selected_index = index
+        if index ≠ selected_index:
+            play_sound(select_tile_sound)
+            selected_index = index
     
     
     if (not intro and
@@ -213,6 +215,8 @@ if gamepad_array[0].xx or gamepad_array[0].yy:
     if intro: skip_intro()
     // Change selection
     selected_index = loop(selected_index + 1, 2)
+    play_sound(select_tile_sound)
+
 
 if any_button_press() or touch.aa:
     skip_intro()
