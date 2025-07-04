@@ -22,17 +22,17 @@ def choose_unfound_word():
 
 let end_time
 
+
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
 board_deselect_all(player.board, player)
-//debug_print(player.board.word_list)
+debug_print(player.board.word_list)
 sort(player.history.list, points_order)
 
-if game_type == SOLO:
-    end_time = utc_time + SOLO_INTERMISSION_TIME
-else:    
+if game_type == GLOBAL:
     end_time = next_global_game_utc_start_time()
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -85,21 +85,36 @@ for y < ROWS:
 // History
 history_draw(player.history, xy(4, 60), SCREEN_SIZE.y - 30)
 
-// Countdown
-const time_left = max(end_time - utc_time, 0)
-const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
-const α = 100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME)
+if game_type == SOLO:
 
-draw_corner_rect(xy(0, timer_pos.y - 10), xy(SCREEN_SIZE.x, 19), #000, #FFF)
-draw_corner_rect(xy(1, timer_pos.y - 9), xy(α * (SCREEN_SIZE.x - 2), 17), #0F0)
-
-draw_text({
-    font: score_font,
-    text: format_number(time_left, "timer") + " until next game…",
-    outline: #040,
-    pos: timer_pos,
-    color: #FFF})
-
-if utc_time ≥ end_time:
-    set_mode(Play) because "Timer"
+    const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
+    draw_rect(pos - xy(0, 1), xy(150, 17), #0F0, #FFF)
+    draw_text({
+        font: score_font,
+        text: "Start New Game",
+        outline: #090,
+        pos: pos,
+        color: #FFF})
+        
+    if (any_button_press() or touch.aa) and mode_frames > 15:
+        set_mode(Play) because "Button press"
+        
+else:
+    // Countdown
+    const time_left = max(end_time - utc_time, 0)
+    const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
+    const α = 100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME)
+    
+    draw_corner_rect(xy(0, timer_pos.y - 10), xy(SCREEN_SIZE.x, 19), #000, #FFF)
+    draw_corner_rect(xy(1, timer_pos.y - 9), xy(α * (SCREEN_SIZE.x - 2), 17), #0F0)
+    
+    draw_text({
+        font: score_font,
+        text: format_number(time_left, "timer") + " until next game…",
+        outline: #090,
+        pos: timer_pos,
+        color: #FFF})
+    
+    if utc_time ≥ end_time:
+        set_mode(Play) because "Global timer"
 

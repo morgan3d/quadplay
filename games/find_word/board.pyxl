@@ -362,6 +362,7 @@ def board_deselect_all(board, player):
     for index in board.selection:
         board.tile[index.x][index.y].selected = false
     resize(board.selection, 0)
+    board.selection_color = TILE_CENTER_SELECTED_COLOR
     todo("play deselect all sound")
         
         

@@ -20,7 +20,9 @@
         "Intermission"
     ],
     "start_mode": "Title",
-    "docs": [],
+    "docs": [
+        "index.html"
+    ],
     "assets": {
         "tile_point_font": "quad://fonts/deja-6.font.json",
         "shapes": "quad://sprites/shapes-32x32.sprite.json",
@@ -40,7 +42,7 @@
         "times_up_sound": "quad://sounds/wild-05.sound.json",
         "start_sound": "quad://sounds/good-00.sound.json"
     },
-    "version": "0.074",
+    "version": "0.075",
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -451,15 +453,15 @@
             "value": {
                 "r": {
                     "type": "number",
-                    "value": "38%"
+                    "value": "12%"
                 },
                 "g": {
                     "type": "number",
-                    "value": "27%"
+                    "value": "12%"
                 },
                 "b": {
                     "type": "number",
-                    "value": "11%"
+                    "value": "12%"
                 }
             }
         },
@@ -480,15 +482,6 @@
             "max": 5,
             "format": "0.00",
             "quantum": 0.05
-        },
-        "SOLO_INTERMISSION_TIME_MINUTES": {
-            "type": "number",
-            "value": "0.5",
-            "description": "Time in GameOver before next game starts",
-            "min": 0,
-            "max": 3,
-            "format": "0.0",
-            "quantum": 0.1
         },
         "WAITING_ROOM_BACKGROUND_COLOR": {
             "type": "rgb",

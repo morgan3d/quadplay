@@ -1,20 +1,42 @@
 <!DOCTYPE html>
-<!-- Makes quadplay load the game in this directory, which must be a subdirectory of
-     `quadplay/xxx/`. This only works within the quadplay distribution. Use export.py
-     or the Export option from the Game menu in the IDE to export your own games.
+<!-- Makes quadplay load the game in this directory to be 
+     hosted directly from github as source, without needing
+     to be exported or to fork the quadplay repo. 
+     
+     For this game, it becomes hosted at:
+     
+     https://morgan3d.github.io/quadplay/games/find_word
+     
+     That URL contains the quadplay repo because that's where this
+     game is hosted, not because it uses quadplay. Your games
+     will have a hosting URL in your own repo.
+     
+     This is good for developing a prototype with external
+     play testers. They can immediately run the
+     game as you iterate.
+     
+     Use export.py or the Export option from the Game menu 
+     in the IDE to export the final versions of your games to 
+     be standalone.
+     
+     Change all of the places that say "find word alll nite"
+     and "find_word" in this file for the name of your game.
  -->
 <html lang="en" style="background:#000; border: none">
   <head>
-    <link rel="icon" type="image/png" sizes="64x64" href="label64.png">
-    <link rel="icon" type="image/png" sizes="128x128" href="label128.png">
+    <!-- Modify these for your game -->
     <meta property="og:title" content="FIND WORD ALLL NITE">
     <meta property="og:image" content="https://morgan3d.github.io/quadplay/games/find_word/label129.png">
+    <title>FIND WORD ALLL NITE</title>
+    <!-- Do not modify below here -->
+
+    <link rel="icon" type="image/png" sizes="64x64" href="label64.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="label128.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FIND WORD ALLL NITE</title>
   </head>
   <body style="padding: 0; margin: 0">
     <iframe id="quadplayFrame" style="position: fixed; width: 100%; height: 100%; border: none"></iframe>

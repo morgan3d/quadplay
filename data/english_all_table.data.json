@@ -2,6 +2,6 @@
     "type": "table",
     "set_table": true,
     "url": "english_all.csv.zip",
-    "license": "Copyright 2020-2025 Wordnik and others. Used under the open source MIT License",
-    "description": "All words in the English language (including British, US, Canadian, etc. dialects), as typically accepted by word games. Based on https://github.com/wordnik/wordlist extended with additional words."
+    "license": "Public Domain/CC0",
+    "description": "All words in the English language (including British, US, Canadian, etc. dialects), as typically accepted by word games."
 }
