@@ -67,6 +67,10 @@ debug_print(format_number(size(dictionary_array), "commas"), "total words in dic
 def q_decode(word):
     return replace(word, "Q", "QU")
     
+    
+def q_encode(word):
+    return replace(word, "QU", "Q")
+    
 
 /* Computes the letter points and size multiplier. Assumes
    word is an all-uppercase string with only legal characters

@@ -37,7 +37,14 @@ def make_board():
     
     return board
     
-  
+/* Convert base 10 number to base 36 string */
+const DECIMAL_TO_BASE36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/* Convert single digit base 36 string to base 10 number */
+const BASE36_TO_DECIMAL = {};
+for letter at index in DECIMAL_TO_BASE36:
+    BASE36_TO_DECIMAL[letter] = index;
+    
 
 /* Computes and returns all n-tile sequences that are possible on this board. 
    Used by the solver.
@@ -70,8 +77,33 @@ def _board_ngram_set(board, n, word_set):
     return ngram_set
 
 
+
+/* Returns a selection array [xy(), …] that matches the word, or ∅ if the word 
+   does not appear in this board. The word is all caps and NOT Q-encoded */
+def board_find_unencoded_word(board, unencoded_word):
+    
+    let path = ∅
+    const encoded = q_encode(unencoded_word)
+
+    def visit(word, index, base36_path):
+        if not starts_with(encoded, word):
+            return true
+        else if word == encoded:
+            path = []
+            // Convert the base36 path into an xy() path
+            for d in base36_path:
+                const i = BASE36_TO_DECIMAL[d]
+                push(path, xy(i mod COLS, ⌊i / COLS⌋))
+                
+            return true
+            
+    board_visit_subpaths(board, visit)
+    
+    return path
+
+
 /*
-  Visit all possible subpaths and invoke `visit(word, index)` on them,
+  Visit all possible subpaths and invoke `visit(word, index, base36_path)` on them,
   where the tile index is `xy(index mod COLS, floor(index / COLS))`.
   
   If `visit()` returns true, stop searching children of that subpath.
@@ -79,6 +111,8 @@ def _board_ngram_set(board, n, word_set):
   The word is all-caps and Q-encoded.
 */
 def board_visit_subpaths(board, visit):
+    assert(ROWS * COLS ≤ 36, "Cannot express all tiles as single-digit base36")
+    
     // Flatten the board to a string
     let board_string = ""
     for y < ROWS:
@@ -86,7 +120,7 @@ def board_visit_subpaths(board, visit):
             board_string += board.tile[x][y].letter
 
     for index < ROWS * COLS:
-        _board_visit_paths_helper(board_string, index, 1 bitshl index, board_string[index], visit)
+        _board_visit_paths_helper(board_string, index, 1 bitshl index, board_string[index], visit, DECIMAL_TO_BASE36[index])
     
 
 
@@ -113,27 +147,30 @@ for y < ROWS:
                         push(tile, (x + dx) + (y + dy) * COLS)
 
 
-
 /* Recursive portion of `_board_compute_ngram_set()` 
 
    `board_string`
    : The board as a row-major flattening
 
-   `kgram`
+   `word`
    : Concatenation of the labels of the visited tiles,
      pulled from `board_string`.
    
    `index`
    : `x + y * COLS` of the current tile coordinates
    
+   `base36_path`
+   : A string of the path to this point, encoded as the
+     index in base36.
+   
    `visit(word, index)`
    : Arbitrary callback for processing this subpath.
      If `visit` returns `true` then the path terminates here,
      otherwise it recurses as deep as possible.
 */
-def _board_visit_paths_helper(board_string, index, used_mask, word, visit):
+def _board_visit_paths_helper(board_string, index, used_mask, word, visit, base36_path):
     // Run the callback and only continue if it returns false
-    if not visit(word, index):
+    if not visit(word, index, base36_path):
     
         // Check all neighbors of index
         for neighbor in _neighbor_index_array_table[index]:
@@ -141,12 +178,12 @@ def _board_visit_paths_helper(board_string, index, used_mask, word, visit):
             
             // Did we already use the tile at neighbor?
             if not (mask ∩ used_mask):
-                // Continue search, updating the mask and kgram
-                _board_visit_paths_helper(board_string, neighbor, mask ∪ used_mask, word + board_string[neighbor], visit)
+                // Continue search, updating the mask, word, and path
+                _board_visit_paths_helper(board_string, neighbor, mask ∪ used_mask, word + board_string[neighbor], visit, base36_path + DECIMAL_TO_BASE36[neighbor])
         
 
 
-/* Return true if `word` can be found in `board`. */
+/* Return true if `word` can be found in `board`. See also `board_find_unencoded_word()`*/
 def _board_validate_word(board, word):
     let found = false
     
