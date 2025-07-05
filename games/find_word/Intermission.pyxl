@@ -50,7 +50,7 @@ sort(unfound_word_array, length_comparator)
 // the player also feels like they could have gotten these
 if size(unfound_word_array) > 10:
     for i < 3:
-        swap(unfound_word_array, random_integer(0, size(unfound_word_array) - 8), size(unfound_word_array) - 1 - random_integer(1, 8))
+        swap(unfound_word_array, random_integer(0, size(unfound_word_array) - 8), size(unfound_word_array) - 1 - random_integer(1, 6))
 
 
 frame
