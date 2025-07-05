@@ -126,7 +126,8 @@ history_draw(player.history, xy(4, 60), SCREEN_SIZE.y - 30)
 if game_type == SOLO:
 
     const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
-    draw_rect(pos - xy(0, 1), xy(150, 17), #0F0, #FFF)
+    const size = xy(150, 17)
+    draw_rect(pos - xy(0, 1), size, #0F0, #FFF)
     draw_text({
         font: score_font,
         text: "Start New Game",
@@ -134,7 +135,7 @@ if game_type == SOLO:
         pos: pos,
         color: #FFF})
         
-    if (any_button_press() or touch.aa) and mode_frames > 15:
+    if (any_button_press(gamepad_array[0]) or (touch.aa and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
         set_mode(GenerateBoard) because "Button press"
         
 else:
