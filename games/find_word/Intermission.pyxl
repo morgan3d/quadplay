@@ -20,6 +20,11 @@ def length_comparator(A, B):
 
 let end_time
 
+def swap(array, i, j):
+    const temp = array[i]
+    array[i] = array[j]
+    array[j] = temp
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -38,8 +43,14 @@ for word in player.board.word_list:
         push(unfound_word_array, word)
 
 
-// Sort from shortest to longest
-//sort(unfound_word_array, length_comparator)
+// Sort from shortest to longest to emphasize impressive words
+sort(unfound_word_array, length_comparator)
+
+// Now swap some of the other words towards the back so that
+// the player also feels like they could have gotten these
+if size(unfound_word_array) > 10:
+    for i < 3:
+        swap(unfound_word_array, random_integer(0, size(unfound_word_array) - 8), size(unfound_word_array) - 1 - random_integer(1, 8))
 
 
 frame
