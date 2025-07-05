@@ -549,15 +549,26 @@ def player_update_board(player, pos, angle, allow_selection)
             prev_pos = pos
 
 
-
-def player_reset(player, game_type):
+/* If board_string is specified it should be of the form "AAAA BBBB CCCC DDDD" */
+def player_reset(player, game_type, board_string default ∅):
     player.score = 0
     player.background_color = BOARD_COLOR
     remove_all(player.already_found)
     remove_all(player.history.list)
-    _player_find_good_board(player, game_type)
+    if board_string:
+        
+        for y < ROWS:
+            for x < COLS:
+                player.board.tile[x][y].letter = board_string[x + y * (COLS + 1)]
+              
+        player.board.seed = board_string
+        player.board.word_list = board_find_all_words(player.board)
+        player.board.word_count = size(player.board.word_list)
     
+    else:
+        _player_find_good_board(player, game_type)
     
+
 
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def _player_find_good_board(player, game_type):
@@ -588,7 +599,6 @@ def _player_find_good_board(player, game_type):
         // Loop for shuffling
         for j < BOARD_SEARCH.SHUFFLE_RETRIES:
             board_reset(player.board, seed_word, j)
-                        
             word_array = board_find_all_words(player.board)
         
             if i == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
@@ -670,7 +680,6 @@ def _player_find_good_board(player, game_type):
             if not used_valuable_letters_in_long_words:
                 if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
                 continue
-
     
             // Success!
             done = true
@@ -683,7 +692,7 @@ def _player_find_good_board(player, game_type):
         else:
             // Try again
             seed_word = ∅
-        
+    
     player.board.word_list = word_array
     player.board.word_count = size(word_array)
     if DEBUG_BOARD_SEARCH:

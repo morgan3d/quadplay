@@ -130,13 +130,8 @@ def skip_intro():
     intro = ∅
 
 
-// Initialize the board
-const name = ["FIND", "WORD", "ALLL", "NITE"]
-for x < COLS:
-    for y < ROWS:
-        fake_player.board.tile[x][y].letter = name[y][x]
-
-
+// Initialize the fake board
+player_reset(fake_player, SOLO, "FIND WORD ALLL NITE")
 
 set_random_seed()
 

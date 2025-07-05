@@ -1,9 +1,10 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
-// Best word, longest word, most words, highest score
+todo("Multiplayer: Reward best word, longest word, most words, highest score")
 
 let unfound_word
+let unfound_word_array
 
 def points_order(A, B):
     return B.points - A.points
@@ -11,18 +12,11 @@ def points_order(A, B):
     
 def word_comparator(entry, word):
     return entry.word == word
+        
     
+def length_comparator(A, B):
+    return size(A) - size(B)
 
-def choose_unfound_word():
-    for i < 30:
-        unfound_word = random_value(player.board.word_list)
-        if not sensitive[unfound_word] and not contains(player.history.list, unfound_word, word_comparator):
-            // Accept this word
-            return
-
-    // Could not find any good word in 30 tries
-    unfound_word = ∅
-    
 
 let end_time
 
@@ -38,11 +32,22 @@ if game_type == GLOBAL:
     end_time = next_global_game_utc_start_time()
 
 
+unfound_word_array = []
+for word in player.board.word_list:
+    if not sensitive[lowercase(word)] and not contains(player.history.list, word, word_comparator):
+        push(unfound_word_array, word)
+
+
+// Sort from shortest to longest
+//sort(unfound_word_array, length_comparator)
+
+
 frame
 ────────────────────────────────────────────────────────────────────────
 
 if mode_frames mod 550 == 120:
-    choose_unfound_word()
+    // Choose the next unfound word
+    unfound_word = pop(unfound_word_array)
     
 const left = if landscape() then ⅓ else ¼
 const right = 100% - left
