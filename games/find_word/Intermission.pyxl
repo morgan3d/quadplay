@@ -56,7 +56,7 @@ if size(unfound_word_array) > 10:
 frame
 ────────────────────────────────────────────────────────────────────────
 
-if mode_frames mod 550 == 120:
+if mode_frames mod 500 == 100:
     // Choose the next unfound word
     unfound_word = pop(unfound_word_array)
     
