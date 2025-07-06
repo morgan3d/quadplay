@@ -1,0 +1,73 @@
+/* Total number of avatar sprites available. In the actual 
+   spritesheet, the last few are unused, so we stop this 
+   count early */
+const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 10
+
+/* Legal letters in an avatar name. Names are also run through a sensitive check
+   before being displayed. */
+const AVATAR_NAME_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞!?♥★♦+-/ "
+
+def avatar_save(avatar):
+    save_local("avatar", {
+        name: player.avatar.name,
+        sprite_index: avatar_sprite_to_linear_index(player.avatar.sprite)})
+
+
+def avatar_compute_color(sprite):
+    const color = hsv(sprite.mean_color)
+    color.s *= 130%
+    color.v = max(color.v, 70%)
+    return rgb(color)
+        
+        
+        
+def avatar_draw_large(avatar, pos):
+    draw_disk(pos - xy(0, 1), 20, avatar.color)
+    const sprite = avatar.sprite.x_flipped
+    
+    // Outline
+    for -1 ≤ dx ≤ +1:
+        if dx ≠ 0:
+            draw_sprite({sprite: sprite, scale: 200%, override_color: #000, pos: pos + xy(dx, -1)})
+            draw_sprite({sprite: sprite, scale: 200%, override_color: #000, pos: pos + xy(0, dx - 1)})
+    draw_sprite({sprite: sprite, scale: 200%, pos: pos + xy(0, -1)})
+    draw_text({font: score_font, text: avatar.name, color: avatar.color, pos: pos + xy(0, 26)})
+
+
+
+/* Computes an index of this sprite so that we can get the "next" and "previous". */
+def avatar_sprite_to_linear_index(sprite):
+    const index = sprite.tile_index.x + ⌊½ sprite.tile_index.y⌋ * sprite.spritesheet.size_in_sprites.x
+    assert(index ≥ 0 and index < AVATAR_SPRITE_COUNT)
+    return index
+
+
+/* Inverse of `avatar_sprite_to_linear_index()` */
+def avatar_sprite_from_linear_index(index):
+    assert(index ≥ 0 and index < AVATAR_SPRITE_COUNT)
+
+    const x = index mod avatar_sprite.size_in_sprites.x
+    const y = 2 ⌊index / avatar_sprite.size_in_sprites.x⌋
+    
+    assert(x < avatar_sprite.size_in_sprites.x and x ≥ 0)
+    assert(y < avatar_sprite.size_in_sprites.y - 1 and y ≥ 0)
+    
+    return avatar_sprite[x][y]
+
+
+
+def avatar_next_sprite(sprite, dir default +1):
+    let i = avatar_sprite_to_linear_index(sprite)
+    i = loop(i + dir, AVATAR_SPRITE_COUNT)
+    return avatar_sprite_from_linear_index(i)
+
+
+
+def avatar_next_name_letter(letter, dir default +1):
+    let i = find(AVATAR_NAME_ALPHABET, letter)
+    i = loop(i + dir, size(AVATAR_NAME_ALPHABET))
+    return AVATAR_NAME_ALPHABET[i]
+    
+    
+    
+    

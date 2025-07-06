@@ -1,0 +1,155 @@
+AvatarEditor
+════════════════════════════════════════════════════════════════════════
+const DONE_BUTTON_INDEX = 4
+const AVATAR_SCALE = 300%
+
+// Which button is selected
+let selection_index = -1
+
+// Used for triangle button selection
+let selection_sign = 0
+
+/* Returns true if button was "pressed" */
+def update_triangle_button(pos, index, scale_y default +1):
+    
+    if player.using_gamepad and selection_index ≠ index:
+        // Don't bother drawing this one, we're using a gamepad
+        // and are on a different item
+        return
+    
+    const r = 10
+    
+    const bounds = {pos: pos, size: 3 r * xy(1, 1), shape: "disk"}
+    if touch.hover and overlaps(touch.hover, bounds):
+        // Select
+        selection_index = index
+        selection_sign = scale_y
+        
+    const selected = selection_index == index and (player.using_gamepad or selection_sign == scale_y)
+    const color = if selected then CURSOR_COLOR else #FFFD
+    const outline = if selected then #FFF else #666
+    
+    draw_tri(xy(-1, -0.5), xy(0, 1), xy(1, -0.5), color, outline, pos, ∅, r * xy(1, scale_y), 1)
+
+    // Return true if activated
+    return (player.gamepad.yy == scale_y) or (not player.using_gamepad and selected and touch.aa)
+
+
+/* Returns str with str[index] replaced with `replacement` */
+def letter_replaced(str, index, replacement):
+    return slice(str, 0, index) + replacement + slice(str, index + 1)
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+selection_index = -1
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_background_words()
+
+if player.using_gamepad and selection_index == -1:
+    // Don't allow no selection once gamepad is active
+    selection_index = 0
+else if not player.using_gamepad and (touch.dx or touch.dy or touch.hover):
+    // Mouse/touch moved, wait until we see where it went
+    // before highlighting something below
+    selection_index = -1
+    
+const SPACING = 48
+
+preserving_transform:
+    draw_text({
+        font: score_font,
+        text: "Choose Your Avatar",
+        pos: xy(½ SCREEN_SIZE.x, 20),
+        color: #FFF})
+        
+    set_transform(½ SCREEN_SIZE)
+
+    local:
+        const x = -1.5 SPACING
+        // Prev:
+        for j < 2:
+            const s = sign(j - 0.5)
+            if update_triangle_button(xy(x, 45 s), 0, s):
+                player.avatar.sprite = avatar_next_sprite(player.avatar.sprite, s)
+                    
+        let sprite = player.avatar.sprite
+        if ⌊mode_frames / 30⌋ mod 2:
+            sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
+    
+        draw_sprite({
+            sprite: sprite.x_flipped,
+            scale: 300%,
+            pos: xy(x, -4)})
+            
+        
+        
+    for i < 3:
+        const x = SPACING * (i - 0.5) + 6
+        const letter = player.avatar.name[i]
+        
+        for j < 2:
+            const s = sign(j - 0.5)
+            if update_triangle_button(xy(x, 45 s), i + 1, s):
+                player.avatar.name = letter_replaced(player.avatar.name, i, avatar_next_name_letter(letter, s))
+        
+        draw_text({
+            font: giant_score_font,
+            text: letter,
+            pos: xy(x, 0),
+            color: #FFF,
+            outline: #000})
+            
+            
+
+// Button            
+local:
+    const rect = {pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), size: xy(150, 21)}
+    
+    if touch.hover and overlaps(touch.hover, rect):
+        selection_index = DONE_BUTTON_INDEX
+        
+    const selected = selection_index == DONE_BUTTON_INDEX
+    
+    let label = "Done"
+    if player.using_gamepad:
+        label += replace(" (b)", player.gamepad.prompt)
+    
+    if selected:
+        // Highlight
+        for 1 ≤ i < 4: 
+            draw_rect(rect.pos, rect.size + 2i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
+            
+    draw_rect(rect.pos, rect.size, if selected then CURSOR_COLOR else #FFF, #FFF)
+    draw_text({
+        font: score_font,
+        text: label,
+        pos: rect.pos + xy(0, 1),
+        outline: if selected then #000 else ∅,
+        color: if selected then #FFF else #000})
+    
+    if (mode_frames > 2 and 
+        ((player.gamepad.aa and selection_index == DONE_BUTTON_INDEX) or
+         player.gamepad.bb or 
+         (touch.aa and overlaps(touch.xy, rect)))):
+        pop_mode() because "Button"
+
+// D-pad for letters and avatar
+if player.gamepad.xx:
+    selection_index = clamp(selection_index + player.gamepad.xx, 0, DONE_BUTTON_INDEX - 1)
+
+// A button for advance, including to the done button. Do this at 
+// the end of processing so that it is not considered accepting the 
+// done button.
+if player.gamepad.aa:
+    selection_index = clamp(selection_index + 1, 0, DONE_BUTTON_INDEX)
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+avatar_save(player.avatar)
+
+    

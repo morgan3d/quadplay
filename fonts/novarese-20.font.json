@@ -1,0 +1,9 @@
+{
+    "url":           "novarese-20.png",
+    "license":       "by Morgan McGuire, 2025",
+    "char_size":      {"x": 32, "y": 40},
+    "char_min_width": 4,
+    "letter_spacing": {"x": 4, "y": 8},
+    "baseline":      42,
+    "format":        "20211015"
+}
