@@ -1,23 +1,18 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
-todo("* Implement awards")
+todo("Implement Best Word award")
+todo("Implement Longest award")
+todo("Implement Best Unique award")
+todo("Implement High Score award")
+todo("Implement Most Words award")
 todo("* Make SOLO version")
 todo("Force GLOBAL to SOLO version when nobody else is there")
 todo("Mark unique words in history")
 
-// History      Award
-//   :
-//   :           Rank
-//   :            :
-//                :
-//
-//              Suggestion
-// 
-// [ Button/Timer ]
 
-// {avatar, score, word_list, representative_text}
-// word_list is Q-encoded
+/* `{avatar, score, word_list, representative_text}`
+   `word_list` is Q-encoded */
 const competitor_array = []
 
 let end_time
@@ -72,35 +67,71 @@ board_deselect_all(player.board)
 
 // Convert the local player into a competitor
 local:
-    let best_word_points = 0
     const competitor = {
         avatar: player.avatar,
         score: player.score,
+        best_word_text: "",
+        best_word_points: 0,
+        longest_word_text: "",
+        longest_word_size: 0,
         me: true,
-        text: ∅,
         word_list: []}
-        
-    push(competitor_array, competitor)
-        
+
     for entry in player.history.list:
         push(competitor.word_list, entry.word)
-        if entry.points > best_word_points:
-            best_word_points = entry.points
-            competitor.text = q_decode(entry.word)
-
+        
+    push(competitor_array, competitor)
+                    
 
 // Make some bogus competitors
-todo("Replace with real in a GLOBAL game")
+todo("Replace with real players in a GLOBAL game")
 for i < 10:
     const sprite = avatar_sprite[4][2i]
-    const word = random_value(player.board.word_list)
     const competitor = {
         avatar: {sprite: sprite, color: avatar_compute_color(sprite), name: random_value(ALPHABET) + random_value(ALPHABET) + random_value(ALPHABET)},
-        score: 42 + 11 score_word(word), 
-        word_list: [],
-        text: q_decode(word)}
-    push(competitor_array, competitor)   
+        score: 0,
+        best_word_text: "",
+        best_word_points: 0,
+        longest_word_text: "",
+        longest_word_size: 0}
+        
+    // Make a bogus word list and score it
+    let word_set = {}
+    for i < random_integer(5, 10):
+        word_set[random_value(player.board.word_list)] = 1
+        word_set[random_value(player.history.list).word] = 1
+        
+    competitor.word_list = keys(word_set)
     
+    def remove_sensitive(word):
+        if sensitive[lowercase(word)]:
+            return iterate.REMOVE
+            
+    iterate(competitor.word_list, remove_sensitive)
+    
+    for word at i in competitor.word_list:
+        competitor.score += score_word(word)
+    
+    push(competitor_array, competitor)
+
+
+// Compute everyone's best
+for competitor in competitor_array:
+    for word in competitor.word_list:
+        const points = score_word(word)
+        const text = q_decode(word)
+        
+        if (points > competitor.best_word_points) or (points == competitor.best_word_points and text > competitor.best_word_text):
+            competitor.best_word_points = points
+            competitor.best_word_text = text
+            competitor.text = text
+    
+        if (size(text) > competitor.longest_word_size) or (size(text) == competitor.longest_word_size and text > competitor.longest_word_text):
+            competitor.longest_word_size = size(text)
+            competitor.longest_word_text = text
+
+
+// Rank all competitors    
 sort(competitor_array, "score", true)
 
     
@@ -132,12 +163,12 @@ preserving_transform:
     const avatar = player.avatar
     set_transform(xy(SCREEN_SIZE.x - 95, 34))
     
-    draw_text({font: history_font, text: "Best Word", color: #FFF, pos: xy(0, -29)})
-    avatar_draw_large(avatar, xy(0, -7))    
+    draw_text({font: history_font, text: "Best Word", color: #FFF, shadow: #000, pos: xy(0, -29), z: 2})
+    avatar_draw_large(avatar, xy(0, -4))    
 
 // Board
 preserving_transform:
-    set_transform(xy(SCREEN_SIZE.x - 32, 34))
+    set_transform(xy(SCREEN_SIZE.x - 32, 36))
     
     if mode_frames mod 420 == 100:
         // Choose the next unfound word
@@ -171,7 +202,7 @@ preserving_transform:
         draw_text({
             font: history_font,
             text: "\"" + unfound_word + "\"",
-            pos: xy(0, -29),
+            pos: xy(0, -31),
             shadow: #000,
             color: player.board.selection_color})
             
