@@ -376,8 +376,8 @@ function startHosting() {
         sampleSize: {min: 4, ideal: 8}
     });
     */
-    
-    if (! deployed) {
+
+    if (false && ! deployed) {
         // Local monitor when debugging
         const videoElement = document.getElementById('guestVideo');
         videoElement.style.zIndex = 100;

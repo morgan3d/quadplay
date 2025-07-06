@@ -1,4 +1,4 @@
-peer.js          1.4.7         Network          https://peerjs.com/
+peer.js          1.5.5         Network          https://peerjs.com/
 gif.js           0.2.0         GIF recording    https://github.com/jnordberg/gif.js
 qrcode.js        2018          QRCode gen       https://github.com/KeeeX/qrcodejs fork of https://github.com/davidshimjs/qrcodejs
 js-yaml.min.js   4.1.0         YAML parsing     https://github.com/nodeca/js-yaml

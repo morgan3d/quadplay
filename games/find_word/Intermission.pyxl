@@ -1,7 +1,7 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
-todo("Multiplayer: Reward best word, longest word, most words, highest score")
+todo("Multiplayer/achievements/high scroes: Reward best word, longest word, most words, highest score")
 
 let end_time
 let unfound_word

@@ -391,7 +391,7 @@ def board_deselect_last(board, player):
     board.tile[index.x][index.y].selected = false
     
     if not player_selection_change_callback(player):
-        todo("play deselect sound")
+        // Could play a deselect sound here
 
 
 
@@ -400,7 +400,7 @@ def board_deselect_all(board, player):
         board.tile[index.x][index.y].selected = false
     resize(board.selection, 0)
     board.selection_color = TILE_CENTER_SELECTED_COLOR
-    todo("play deselect all sound")
+    // Could play a deselect sound here
         
         
 
