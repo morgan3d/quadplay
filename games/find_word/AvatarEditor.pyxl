@@ -20,7 +20,7 @@ def update_triangle_button(pos, index, scale_y default +1):
     const r = 10
     
     const bounds = {pos: pos, size: 3 r * xy(1, 1), shape: "disk"}
-    if touch.hover and overlaps(touch.hover, bounds):
+    if (touch.hover and overlaps(touch.hover, bounds)) or (touch.aa and overlaps(touch.xy, bounds)):
         // Select
         selection_index = index
         selection_sign = scale_y
