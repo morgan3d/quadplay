@@ -9,11 +9,13 @@
         "dictionary.pyxl",
         "board.pyxl",
         "history.pyxl",
+        "avatar.pyxl",
         "player.pyxl",
         "game.pyxl"
     ],
     "modes": [
         "Title",
+        "AvatarEditor",
         "WaitingRoom",
         "GenerateBoard",
         "Play",
@@ -41,7 +43,9 @@
         "button_prompt_font": "quad://fonts/deja-4.font.json",
         "timer_countdown_sound": "quad://sounds/blip-07.sound.json",
         "times_up_sound": "quad://sounds/wild-05.sound.json",
-        "start_sound": "quad://sounds/good-00.sound.json"
+        "start_sound": "quad://sounds/good-00.sound.json",
+        "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
+        "giant_score_font": "quad://fonts/novarese-20.font.json"
     },
     "version": "0.092",
     "min_players": 1,
@@ -187,7 +191,7 @@
         },
         "ALPHABET": {
             "type": "string",
-            "value": "abcdefghijklmnopqrstuvwxyz",
+            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
             "description": "The alphabet as a lowercase string."
         },
         "MAX_BOARD_SENSITIVE_RETRIES": {
@@ -200,7 +204,7 @@
         },
         "HISTORY_COLUMN_SEPARATION": {
             "type": "number",
-            "value": "12",
+            "value": "8",
             "min": 0,
             "max": 128,
             "format": "0",
@@ -414,10 +418,6 @@
             "format": "0.0",
             "quantum": 0.1
         },
-        "DEBUG_GAME_OVER": {
-            "type": "boolean",
-            "value": false
-        },
         "SOLO": {
             "type": "number",
             "value": 0,
@@ -611,6 +611,10 @@
                     "value": "100%"
                 }
             }
+        },
+        "DEBUG_INTERMISSION": {
+            "type": "boolean",
+            "value": false
         }
     },
     "screenshot_tag": "find_word",

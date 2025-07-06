@@ -1,10 +1,33 @@
-todo("Move board.selection state to the player")
 
 /* Constructs a new player with an uninitialized board */
 def make_player():
             
+    let avatar_data = load_local("avatar")
+    
+    if not avatar_data:
+        avatar_data = {
+            sprite_index: random_integer(0, AVATAR_SPRITE_COUNT - 1),
+            name: ""}
+
+        // Generate a random nam
+        while avatar_data.name == "" or sensitive[lowercase(avatar_data.name)]:
+            avatar_data.name = ""
+            for i < 3:
+                avatar_data.name += random_value(ALPHABET)
+        
+        // Persist the random avatar        
+        save_local("avatar", avatar_data)
+    
+    avatar_data.sprite = avatar_sprite_from_linear_index(avatar_data.sprite_index)
+    
     return {
         board: make_board(),
+        
+        avatar: {
+            sprite: avatar_data.sprite,
+            color: avatar_compute_color(avatar_data.sprite),
+            name: avatar_data.name
+        },
         
         score: 0,
         
@@ -51,6 +74,7 @@ def make_player():
         
         // Where the cursor is
         cursor_tile_index: xy(0, 0)}
+
 
 
 
@@ -135,7 +159,7 @@ def play_big_points_sound():
 
 
 /* Returns the color. Updates the score. Does not verify that the word has
-   not been found previously */ 
+   not been found previously. word is Q-encoded */ 
 def player_add_to_history(player, word, points):
     player.already_found[word] = true
     
@@ -275,7 +299,6 @@ def _player_update_cursor(player)
 
     // Buttons
     if gamepad.aa:
-        player.using_gamepad = true
         if (equivalent(cursor_tile_index, last_value(board.selection)) or
             equivalent(cursor_tile_index, penultimate_value(board.selection))):
             // Remove from selection. Allow this to happen by re-selecting
@@ -286,7 +309,6 @@ def _player_update_cursor(player)
             board_select(board, cursor_tile_index, player)
     
     if gamepad.bb:
-        player.using_gamepad = true
         // End selection
         board_deselect_all(board, player)
             

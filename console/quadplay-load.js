@@ -1323,8 +1323,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             transposedSpritesheet[y] = new Array(cols);
         }
 
-        spritesheet.size_in_sprites = Object.freeze({x: rows, y: cols});
-        transposedSpritesheet.size_in_sprites = Object.freeze({x: cols, y: rows});
+        spritesheet.size_in_sprites = Object.freeze({x: cols, y: rows});
+        transposedSpritesheet.size_in_sprites = Object.freeze({x: rows, y: cols});
         
         for (let x = 0; x < cols; ++x) {
             spritesheet[x] = [];

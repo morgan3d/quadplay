@@ -27,10 +27,12 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 if mode_frames == 1:
-    player_reset(player, game_type)
+    player_reset(player, game_type, if DEBUG_INTERMISSION then "HEMI SAVF ELOO AHTE" else ∅)
     
-    if DEBUG_HISTORY or DEBUG_GAME_OVER:
-        for i < 60: player_add_to_history(player, "FOOBAR", 3 + i)
+    if DEBUG_HISTORY or DEBUG_INTERMISSION:
+        for i < 60:
+            const word = q_encode(player.board.word_list[i])
+            player_add_to_history(player, word, score_word(word))
     
     if in_waiting_room:
         set_mode(WaitingRoom) because "No global in progress"

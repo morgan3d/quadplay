@@ -21,7 +21,7 @@ frame
 
 player_update(player, ∅, true)
 
-if utc_time ≥ end_time or DEBUG_GAME_OVER:
+if utc_time ≥ end_time or DEBUG_INTERMISSION:
     in_waiting_room = false
     reset_post_effects()
     set_mode(GenerateBoard) because "Global game start"

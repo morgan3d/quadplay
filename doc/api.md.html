@@ -1389,7 +1389,7 @@ def launchpad_show_sprite(sprite):
     for x < 8:
         for y < 8:
             pos.x = x; pos.y = 7 - y
-            get_sprite_pixel_color(sprite, pos, c)
+            sprite_pixel_color(sprite, pos, c)
             msg.push(0x03, (x + 1) + 10 (y + 1), map(c.r), map(c.g), map(c.b))
     push(msg, 0xF7)
 
@@ -2045,7 +2045,7 @@ draw_poly(es_vertex_array, fill, border, entity.pos, entity.angle, entity.scale,
 
 ### Sprite Pixel Coordinates
 
-Sprite coordinates are used by `get_sprite_pixel_color()`. These are integers
+Sprite coordinates are used by `sprite_pixel_color()`. These are integers
 with (0,0) on the top left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
 on the lower right.
 
@@ -2905,7 +2905,7 @@ using the full physics engine.
   If neither the sprite callback nor the pixel callback
   is specified, then the default pixel callback is equivalent to:
   
-  `def default_pixel_callback(s, p): return if get_sprite_pixel_color(s, p).a >= 50% then s else nil`
+  `def default_pixel_callback(s, p): return if sprite_pixel_color(s, p).a >= 50% then s else nil`
 
   Does not respect map wrapping.
   
@@ -4542,10 +4542,10 @@ and persistent worlds.
 Network
 ------------------------------------------------------------------------------------
 
-All <quadplay/> games with 2-4 player local multiplayer ("couch multiplayer") support
-automatically recieve shared-screen network multiplayer support.
-Program your game as if it was solely local mulitplayer. Players can begin
-hosting or join another game as a guest using the system pause menu or the game
+All <quadplay/> games with 2-4 player *local* multiplayer ("couch multiplayer") support
+automatically recieve shared-screen *network* multiplayer support.
+Program your game as if it was solely local mulitplayer, using `gamepad_array` and such.
+Players can begin hosting or join another game as a guest using the system pause menu or the game
 launcher. There's no work for you as the programmer and no code to write.
 
 The default network multiplayer support requires players to use some outside
@@ -4554,11 +4554,14 @@ URLs, and QR codes that players can communicate via text, email, discord, phone,
 verbally, etc. to connect. This helps ensure players do not encounter strangers
 online.
 
-You can customize network multiplayer in several ways beyond this:
+You can customize network multiplayer in several ways beyond this automatic support:
 
 - The Host-Guest section describes how to extend 2-4 player shared-screen games
-  with custom in-game UI for launching the online experience in addition to the
+  with _custom_ in-game UI for launching the online experience in addition to the
   built-in pause menu support.
+- Setting the `online_menu` property of the game.json file to `false` disables
+  the built-in Online option of the System Menu. It is automatically disabled
+  if the maximum number of players is set to 1 in the game.json file as well
 - The `private_screens` argument to `set_screen_size()` can enable per-player
   private screens instead a single shared screen in multiplayer.
 - The Conduit section describes a more complicated alternative API that can
@@ -4653,13 +4656,13 @@ The core data structures of the Conduit API are:
   usually generated each session. 
 
 `netroomid`
-: A string with the prefix "netroomid" identifying a group of game instances that are playing together. This is a "room"
+: A string with the prefix "netroomid" identifying a group of game instances 
+  that are playing together. This is a "room"
   in the "chatroom" sense. It could also be a "server"
-  in the sense that players refer to them, versus a server machine or process. It should be globally
-  unique and not the same as any `netid`.
+  in the sense that players refer to them, versus a server machine or process.
   
 `conduit`
-: The network communication object.
+: The reliable network communication object.
 
 `conduit.status`
 : `"pending"`, `"ok"`, or `"closed"`
@@ -4668,8 +4671,9 @@ The core data structures of the Conduit API are:
 : The `netid` of the game instance being communicated with through this conduit.
 
 `conduit.message_queue`
-: Messages appear at element 0 before each frame and are added at the end.
-  It is your job to remove the messages at least every few frames.
+: Messages in the order they were received.
+  New messages are appended at the end of each frame.
+  It is your job to process and remove the messages at least every few frames.
   If the messages start backing up then the conduit may close with
   an error. The messages can have any format that you choose which is serializable
   without loops.

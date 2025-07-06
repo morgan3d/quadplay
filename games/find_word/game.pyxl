@@ -12,6 +12,7 @@ let player = make_player()
 
 let resolution_hook
 let time_hook
+let input_hook
 
 
 const SOLO_GAME_TIME = 60 SOLO_GAME_TIME_MINUTES
@@ -23,6 +24,22 @@ const GLOBAL_GAME_TIME = 60 GLOBAL_GAME_TIME_MINUTES
    relative to UTC Unix 0 time */
 const GLOBAL_PERIOD = GLOBAL_GAME_TIME + GLOBAL_INTERMISSION_TIME
 
+
+/* Array of strings for background display on the title and avatar editor, by row. See `draw_background_words()`. */
+const background_word_array = []
+
+
+/* Used by Title and AvatarEditor */
+def draw_background_words():
+    for s at y in background_word_array:
+        draw_text({
+            font: tile_font,
+            color: #333,
+            text: s,
+            pos: xy(sign((y mod 2) - 0.5) * 0.2 oscillate(game_frames, -2000, 2000) - 700, 22 y),
+            x_align: "left",
+            z: -2})
+    
 
 /* Updated once per frame by a frame hook. This ensures that there are no 
    race conditions within a frame because the time can only change 
@@ -52,9 +69,21 @@ def _update_utc_time():
     utc_time = utc_now()
 
 
+/* Hook that automaticaly switches the detected input mechanism */
+def detect_input():
+    if player.gamepad.aa or player.gamepad.bb or player.gamepad.xx or player.gamepad.yy:
+        player.using_gamepad = true
+    else if touch.dx or touch.dy or touch.aa or touch.hover:
+        // Used touch screen or mouse
+        player.using_gamepad = false
+    
+
 /* Fill the screen even at non-quadplay aspect ratios
    for a good mobile experience. See also `DEBUG_PORTRAIT` */
 def set_hooks():
+    
+    if not input_hook:
+        input_hook = add_frame_hook(detect_input, ∅, ∞, "all")
     
     if not time_hook:
         time_hook = add_frame_hook(_update_utc_time, ∅, ∞, "all")
@@ -69,4 +98,14 @@ def set_hooks():
             set_screen_size(xy(224, 400))
         else:
             resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
-    
+
+
+set_random_seed()
+
+// Initialize the background words
+for y < 20:
+    let s = random_safe_word()
+    while size(s) < 250:
+        s += " " + random_safe_word()
+    background_word_array[y] = s
+

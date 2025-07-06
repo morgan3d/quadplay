@@ -9,43 +9,51 @@ of [<quadplay/>](manual.md.html).
 2025 July TBD
 ===================================
 
-- New example: Fill Window
-- New game: Find Word Alll Nite
-- Added `device_control("get_display")`
-- Added `device_control("enable_feature", "custom_screen_size")`
-- Added `screen_lib.pyxl` library
-- Added `deja-bold-15.font.json`
-- Added `CREDITS.version`
-- Added `"timer"` format for `format_number()`
-- Added game version number to auto-generated credits
-- Added `utc_now()`
-- Added `silence.mp3`
-- Added `good-00.mp3`
-- Added `gamepad.xxyy` accessor
-- Added the advanced Conduit network API for MMO and explicit network
-  multiplayer state synchronization (see the Conduit section of the manual)
-- New game.json option to disable the Online menu item in the System Menu for
-  games that should not support Online play or use the Conduit API
-- Increased editor selection background contrast
-- Clarified `local_time()` documentation
-- All assets and scripts are forced to refresh from the server and bypass
-  the browser cache if either the quadplay version or the game version has changed
-  since the previous load 
-- Moved the toolbar buttons closer to the right edge on mobile
-- `set_random_seed()` and `make_random()` now allow a string as the seed
-- Improved random number generator initialization so that sequences with 
-  similar seeds diverge more quickly
-- Repacked `kenney-1bit-14x14.png` so that it can work with Tiled; redrew a small number of sprites
-- Asset import dialog now shows a preview of the contents
-- Added constants and variables to generated program documentation for scripts
-- Background is now black with full-screen boot screen for deployed games
-- Upgraded to peer.js 1.5.5
-- Fix: Generated documentation only covers top-level functions and variables
-- Fix: ESC always cancels all open modal IDE dialogs
-- Fix: fullscreen emulator screen was 2px smaller than the actual display
-- Fix: Slider tracks are now visible on Safari
-- Fix: Version now appears in the IDE's metadata editor
-- Fix: Prevented reload by swiping down on iOS Safari
+- New game: "Find Word Alll Nite"
+- New example: "Fill Window"
+- New library: `screen_lib.pyxl` library
+- API changes:
+  - Advanced Conduit network API for MMO and explicit network
+    multiplayer state synchronization (see the Conduit section of the manual)
+  - `device_control("get_display")`
+  - `device_control("enable_feature", "custom_screen_size")`
+  - `"timer"` format for `format_number()`
+  - `utc_now()`
+  - `gamepad.xxyy`
+  - `CREDITS.version`
+  - `set_random_seed()` and `make_random()` now allow a string as the seed
+  - Clarified `local_time()` documentation
+  - Improved random number generator initialization so that sequences with 
+    similar seeds diverge more quickly
+  - Added game.json `online_menu` option to disable the Online menu item in the System Menu for
+    games that should not support Online play or use the Conduit API
+- Asset changes:
+  - `deja-bold-15.font.json`
+  - `novarese-20.font.json`
+  - `novarese-bold-20.font.json`
+  - `silence.sound.json`
+  - `good-00.sound.json`
+  - Repacked `kenney-1bit-14x14.png` so that it can work with Tiled; redrew a small number of sprites
+- IDE improvements:
+  - Asset import dialog now shows a preview of the contents
+  - Moved the toolbar buttons closer to the right edge on mobile
+  - Added constants and variables to generated program documentation for scripts
+  - Increased editor selection background contrast
+- Runtime improvements:
+  - Added game version number to auto-generated credits
+  - All assets and scripts are forced to refresh from the server and bypass
+    the browser cache if either the quadplay version or the game version has changed
+    since the previous load 
+  - Background is now black with full-screen boot screen for deployed games
+  - Upgraded to peer.js 1.5.5
+- Bug fixes:
+  - `spritesheet.size_in_sprites` was transposed, is now fixed 
+  - Generated documentation now is restricted to top-level functions and variables
+  - ESC now always cancels all open modal IDE dialogs
+  - Fullscreen emulator screen was 2px smaller than the actual display
+  - Slider tracks are now visible on Safari
+  - Version now appears in the IDE's metadata editor
+  - Prevented reload by swiping down on the toolbar on iOS Safari
 
 2025 June 15
 ===================================

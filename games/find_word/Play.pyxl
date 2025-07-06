@@ -51,7 +51,7 @@ if time_left > 0.1 and time_left < 5.5:
     
     
     
-if time_left ≤ 0 or DEBUG_GAME_OVER:
+if time_left ≤ 0 or DEBUG_INTERMISSION:
     play_sound(times_up_sound)
     set_mode(Intermission) because "Timer"
 
