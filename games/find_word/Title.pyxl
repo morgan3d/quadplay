@@ -8,6 +8,7 @@ const INTRO_DURATION = INTRO_PRE_FRAMES + INTRO_BEAT_FRAMES * INTRO_NUM_BEATS
 const SLIDE_FRAMES = 40
 const HIGHLIGHT_COLOR = #F3C
 
+set_random_seed()
 const fake_player = make_player()
 
 /* Value for selected_index */

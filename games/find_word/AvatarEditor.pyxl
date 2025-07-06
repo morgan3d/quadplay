@@ -34,6 +34,8 @@ def update_triangle_button(pos, index, scale_y default +1):
     // Return true if activated
     return (player.gamepad.yy == scale_y) or (not player.using_gamepad and selected and touch.aa)
 
+todo("Avatar buttons on touch screen are completely broken and randomly fire")
+
 
 /* Returns str with str[index] replaced with `replacement` */
 def letter_replaced(str, index, replacement):
