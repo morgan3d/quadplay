@@ -168,7 +168,9 @@ if size(unfound_word_array) > 10:
 
 board_deselect_all(player.board)
 
+
 // Convert the local player into a competitor
+resize(competitor_array, 0)
 local:
     const competitor = {
         avatar: player.avatar,
