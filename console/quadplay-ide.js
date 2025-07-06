@@ -443,6 +443,8 @@ function visualizeGame(gameEditor, url, game) {
     s += `<tr valign="top"><td></td><td><label><input id="project_show_controls_button" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.show_controls_button !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()" title="Show the toolbar icons for active controllers and button for jumping to the control configuation">Show Controls Button</label></td>`;
     s +=   `<td><label><input id="project_mobile_touch_gamepad" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.mobile_touch_gamepad !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()" title="Enable a virtual gamepad on touch screens">Mobile Touch Gamepad</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
+    s += `<tr valign="top"><td>Network</td><td><label><input id="projectonlinemencheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.online_menu !== false ? 'checked' : ''} onchange="onProjectOnlineMenuChange(this)" title="Show online option in system menu">Online option in System Menu</label></td></tr>\n`;
+    s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged()" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
     s += '<tr valign="top"><td>Features</td><td colspan=3>';
@@ -453,7 +455,7 @@ function visualizeGame(gameEditor, url, game) {
         s += `<label><input ${disabled} type="checkbox" id="project_${field}" onchange="onProjectMetadataChanged()" ${gameSource.json[field] ? 'checked' : ''}>${name}</label> `;
     }
     s += '</td></tr>\n';
-    s += `<tr><td></td><td><input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged()" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged()" id="projectMaxPlayers" value=${game.max_players || 1}></input> Players</td></tr>\n`;
+    s += `<tr><td></td><td><input style="width: 30px; text-align: right" type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged()" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="text" style="width: 30px; text-align: right" ${disabled} onchange="onProjectMetadataChanged()" id="projectMaxPlayers" value="${game.max_players || 1}"></input><button ${disabled} onclick="document.getElementById('projectMaxPlayers').value='∞'; onProjectMetadataChanged()" style="width: 20px; height: 19px; font-size: 85%">∞</button> Players</td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
 
     s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;

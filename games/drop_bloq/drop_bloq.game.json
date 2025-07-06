@@ -113,5 +113,6 @@
     },
     "screenshot_tag": "Drop Bloq",
     "y_up": true,
-    "midi_sysex": true
+    "midi_sysex": true,
+    "online_menu": false
 }

@@ -98,9 +98,15 @@ function onProjectMetadataChanged() {
     }
 
     const mn = parseInt(document.getElementById('projectMinPlayers').value);
-    const mx = parseInt(document.getElementById('projectMaxPlayers').value);
+    const maxPlayersValue = document.getElementById('projectMaxPlayers').value.trim();
+    
+    // Handle infinity values for max_players
+    const isInfinity = (maxPlayersValue === '∞' || maxPlayersValue.toLowerCase() === 'infinity');
+    const mx = isInfinity ? Infinity : parseInt(maxPlayersValue);
+    
     json.min_players = Math.min(mn, mx);
-    json.max_players = Math.max(mn, mx);
+    json.max_players = isInfinity ? '∞' : Math.max(mn, mx);
+    
     document.getElementById('projectMinPlayers').value = json.min_players;
     document.getElementById('projectMaxPlayers').value = json.max_players;
 
@@ -129,6 +135,12 @@ function onProjectDualDPadChange(target) {
 
 function onProjectMIDISysexChange(target) {
     gameSource.json.midi_sysex = (target.checked === true);
+    serverSaveGameJSON();
+}
+
+
+function onProjectOnlineMenuChange(target) {
+    gameSource.json.online_menu = (target.checked === true);
     serverSaveGameJSON();
 }
 

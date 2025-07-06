@@ -341,6 +341,11 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         gameSource.json = gameJSON;
 
+        // Set default values for upgrading undefined property
+        if (gameJSON.online_menu === undefined) {
+            gameJSON.online_menu = true;
+        }
+
         {
             const prevVersion = localStorage.getItem('game_version_' + gameURL);
             if (prevVersion !== gameJSON) {

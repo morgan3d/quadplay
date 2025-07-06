@@ -35,10 +35,8 @@ def draw_view(view):
     $clipZ2 = 2049
     set_transform(view.corner)
     
-    if $getIsOffline():
+    if $isOffline:
         draw_text({
-            // Message for use in intermediate releases:
-            //text: "This release does not support online multiplayer. Coming soon...",
             text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
             font: medium_font,
             pos: xy(0.5 view.size.x, 80),

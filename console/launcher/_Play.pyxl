@@ -148,11 +148,12 @@ def manage_games_tab():
 
     // Icons
     let y = 112
-    if game.max_players == 0 or game.min_players == 0 and game.max_players == nil:
-        draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).y
-        draw_icon(icons.players[0], xy(sideX, y)).y
+    if game.max_players == "∞" or game.max_players == "infinity":
+        // Infinite players
+        draw_icon(icons.players[6], xy(sideX, y))
+        draw_text({font:mediumFont, text:"∞-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"})
         y += 15
-    else if game.min_players != nil and game.max_players != nil:
+    else if game.max_players != nil and game.min_players != nil:
         let lo = clamp(min(game.min_players, game.max_players), 1, 5)
         let hi = clamp(max(game.min_players, game.max_players), 1, 5)
         if lo != hi:

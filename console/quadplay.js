@@ -2929,7 +2929,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.start_hosting       = $start_hosting;
         QRuntime.stop_hosting        = stopHosting;
         QRuntime.$startGuesting      = startGuesting;
-        QRuntime.$getIsOffline       = getIsOffline;
+        QRuntime.$hideOnlineMenu     = hideOnlineMenu;
+        QRuntime.$isOffline          = isOffline;
         QRuntime.$NET_ID_WORD_TABLE  = NET_ID_WORD_TABLE;
         QRuntime.$showPopupMessage   = showPopupMessage;
         QRuntime.$setRuntimeDialogVisible   = setRuntimeDialogVisible;

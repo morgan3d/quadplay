@@ -43,9 +43,9 @@
         "times_up_sound": "quad://sounds/wild-05.sound.json",
         "start_sound": "quad://sounds/good-00.sound.json"
     },
-    "version": "0.089",
+    "version": "0.090",
     "min_players": 1,
-    "max_players": 1,
+    "max_players": "∞",
     "cooperative": false,
     "competitive": true,
     "achievements": false,
@@ -616,5 +616,6 @@
     "screenshot_tag": "find_word",
     "show_start_animation": false,
     "mobile_touch_gamepad": false,
-    "show_controls_button": false
+    "show_controls_button": false,
+    "online_menu": false
 }

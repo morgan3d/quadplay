@@ -4542,17 +4542,37 @@ and persistent worlds.
 Network
 ------------------------------------------------------------------------------------
 
-All <quadplay/> games with local multiplayer automatically have shared
-screen network multiplayer support. Online games are programmed
-exactly the same as local games. Players can begin hosting or join
-another game as a guest using the system pause menu or the game
-launcher.
+All <quadplay/> games with 2-4 player local multiplayer ("couch multiplayer") support
+automatically recieve shared-screen network multiplayer support.
+Program your game as if it was solely local mulitplayer. Players can begin
+hosting or join another game as a guest using the system pause menu or the game
+launcher. There's no work for you as the programmer and no code to write.
 
-You can make your own games easier to join or support private screens
-using the network API. These are still programmed with an entirely
-local model. The network API is for improving the user experience when
-joining games and supporting optional private per-player screens, not
-state synchronization or messages.
+The default network multiplayer support requires players to use some outside
+mechanism to discover each other. <quadplay/> provides Host Codes (4-word sequences),
+URLs, and QR codes that players can communicate via text, email, discord, phone,
+verbally, etc. to connect. This helps ensure players do not encounter strangers
+online.
+
+You can customize network multiplayer in several ways beyond this:
+
+- The Host-Guest section describes how to extend 2-4 player shared-screen games
+  with custom in-game UI for launching the online experience in addition to the
+  built-in pause menu support.
+- The `private_screens` argument to `set_screen_size()` can enable per-player
+  private screens instead a single shared screen in multiplayer.
+- The Conduit section describes a more complicated alternative API that can
+  support unbounded numbers of players and slightly lower latency. It also 
+  provides online discovery for connecting players without requiring them
+  to exchange data through a side channel.
+
+### Host-Guest
+
+You can make your own 2-4 player games easier to join, or support private screens
+using this Host Code network API. These are still programmed with an entirely
+local model. The Host-Guest network API is for improving the user experience when
+joining games and supporting optional private per-player screens, not for
+state synchronization or messages. Those are still handled automatically for you.
 
 `HOST_CODE`
 : A string of the six words that are the online ID this host uses. Can
@@ -4587,19 +4607,135 @@ state synchronization or messages.
 See also `gamepad.online_name` and `gamepad.status` for information about
 guests. 
 
-See `set_screen_size()` for enabling per-player private screens instead
-of shared-screen multiplayer.
+#### Limitations
 
-_The current implementation of online multiplayer is in testing. It
-has the following limitations, some of which will be removed in the
-final version. Current online play can only be entered from 384x224
-and 192x112 resolution, although it can be used with games in any
-resolution. Disconnecting and reconnecting could change the order of
-players. Only one player is supported per computer. Games with
+Host-Guest online play can only be entered from 384x224 and 192x112
+resolution because the on-screen UI is designed for those.
+It can be _used_ with games in any resolution once in game.
+
+Disconnecting and reconnecting could change the order of
+players.
+
+Only one player is supported per computer. 
+
+Games with
 complicated animated backgrounds and background music are more likely
-to be laggy (pausing the game can reset the lag). As host, you cannot
-currently kick or ban players, or change the order of players. As a
-guest, you cannot currently leave without restarting <quadplay/>.
+to be laggy (pausing the game can reset the lag).
+
+As host, you cannot currently kick or ban players, or change the order of players. As a
+guest, you cannot currently leave a game without restarting <quadplay/>.
+
+
+### Conduit
+
+The Conduit network API is an alternative to built-in Host-Guest shared-screen
+multiplayer. Both APIs can be used together, although the Conduit API is intended to
+completely replace Host-Guest for games that use it. It provides sufficient facilities
+for 
+
+The Conduit API supports creating direct peer-to-peer data connections between
+instances of your game running on multiple computers or in multiple browser windows
+on the same computer. It gives nearly full control of the network code to your game
+at the expense of requiring you to perform all state synchronization. It can be used for
+building any network topology, including client-dedicated server star networks,
+or peer-to-peer ones. Because
+the Conduit API it is based on WebRTC, it will work even for nodes that are not publicly accessible.
+
+Conduit's state synchronization and server coding are more complex than the
+built in shared-screen Host-Code network multiplayer. So, the Conduit API is best for 
+experienced developers polishing games rather than for new developers or rapid protyping
+in game jams.
+
+The core data structures of the Conduit API are:
+
+`netid`
+: A string with the prefix "netid" uniquely identifying an instance of your game (not a user, computer, or browser) that is 
+  usually generated each session. 
+
+`netroomid`
+: A string with the prefix "netroomid" identifying a group of game instances that are playing together. This is a "room"
+  in the "chatroom" sense. It could also be a "server"
+  in the sense that players refer to them, versus a server machine or process. It should be globally
+  unique and not the same as any `netid`.
+  
+`conduit`
+: The network communication object.
+
+`conduit.status`
+: `"pending"`, `"ok"`, or `"closed"`
+
+`conduit.netid`
+: The `netid` of the game instance being communicated with through this conduit.
+
+`conduit.message_queue`
+: Messages appear at element 0 before each frame and are added at the end.
+  It is your job to remove the messages at least every few frames.
+  If the messages start backing up then the conduit may close with
+  an error. The messages can have any format that you choose which is serializable
+  without loops.
+
+The Conduit API is:
+
+`netroom_get_new_conduits(netroomid default "netroomid General")`
+: Returns an array of all conduits to other instances that have joined
+  since the last time this was called.
+  You can only connect to people playing the same <quadplay/> game,
+  hosted from the same webserver. The `netroomid` may be the empty string,
+  which is a single common room.
+
+  The first time that it is called, this causes 
+  the local instance to join `netroomid` and connect to everyone else in that room.
+  An instance can be in multiple rooms simultaneously and can use the.
+
+  Once you have called `get_new_conduits()`, you must keep
+  calling it every few frames to process any new players joining.
+  
+  Conduits will keeping being created for everyone who joins
+  and continue to exist and consume resources even if you do not 
+  check for the new conduits or drop your pointers to them
+  until you call `reset_conduits()`.
+
+  You must track the conduits once they are returned. There is no way
+  to recover the list of all open conduits.
+
+  Your own instance will not ever be returned from this call.
+
+`make_conduit(other_netid)`
+: Connect to one other game instance whose `netid` is known by some
+  means other than the room/`get_new_conduits()` API.
+  The conduit will initially be in a `"pending"` state. If using a
+  room, this function is not necessary.
+
+  An instance can create a conduit to itself.
+
+  If using netrooms it is not necessary to explicitly create a conduit
+  with `make_conduit()`.
+
+`reset_conduits()`
+: Close all open conduits and leave any netrooms this instance is currently in.
+  The message queues will not be emptied.
+
+`get_netid()`
+: Return the `netid` of this instance, creating it if it has not already been
+  generated.
+  
+  It is generally not necessary to use this function and it is provided 
+  primarily for debugging.
+
+`set_netid(netid)`
+: Set the `netid` of this instance, which must be done before any other
+  network APIs are used. The `netid` must be globally unique!
+  
+  *This function is useful when creating a static server. It should not be
+  used in other cases.*
+
+`conduit_send(conduit, message)`
+: Send a message the conduit. The message can be any serializable value
+  without loops. It will appear in their `conduit.message_queue`.
+
+If using the Conduit API, you likely also want to disable the built-in Host-Code
+network API by unchecking the corresponding option on your game's main
+page in the IDE or changing it directly in the game.json file.
 
 
 Raw Device Access
@@ -4657,7 +4793,7 @@ Raw Device Access
                                                          save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
     <tr><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
                                                          the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
-    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The options are: <dl><dt>`feature = "768x448,private_views"`</dt><dd>Enables 768x448 resolution for `set_screen_size()` with `private_views=true`, which is too slow to make 60 Hz framerate on Raspberry Pi and some phones.</dd><dt>`feature = "custom_screen_size"`</dt><dd>Enables arbitrary values for `set_screen_size()`, which may cause problems with layout of the HTML page, the pause/system menu, or performance.</dd></dl></td></tr>
+    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The options are: <dl><dt>`feature = "768x448,private_views"`</dt><dd>Enables 768x448 resolution for `set_screen_size()` with `private_views=true`, which is too slow to make 60 Hz framerate on Raspberry Pi and some phones and so not enabled in the base API.</dd><dt>`feature = "custom_screen_size"`</dt><dd>Enables arbitrary values for `set_screen_size()`, which may cause problems with layout of the HTML page, the pause/system menu, or performance.</dd></dl></td></tr>
     <tr><td> `"multitouch"`</td><td>Returns an array of touch objects for every currently-active touch, which have the form `{id:string, x:number, y:number, xy:xy, screen_x:number, screen_y:number, screen_xy:xy}`. The touch with id == -1 is the mouse.</td></tr>
     <tr><td> `"get_display"`</td><td>Get an object describing the physical display device, with properties:
       <dl><dt>`fullscreen_size`<dt><dd>`xy()` of the largest in OS-defined HiDPI pixels the largest the emulator

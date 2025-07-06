@@ -245,8 +245,10 @@ function setMyOnlineName(n) {
 }
 
 
-function getIsOffline() {
-    return isOffline;
+function hideOnlineMenu() {
+    const maxPlayers = gameSource.json.max_players;
+    const isInfinity = (maxPlayers === '∞' || maxPlayers === 'infinity' || maxPlayers === Infinity);
+    return isOffline || (gameSource.json.online_menu === false) || (!isInfinity && maxPlayers < 2);
 }
 
 
