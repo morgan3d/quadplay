@@ -1,11 +1,6 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
-todo("Implement Best Word award")
-todo("Implement Longest award")
-todo("Implement Best Unique award")
-todo("Implement High Score award")
-todo("Implement Most Words award")
 todo("* Make SOLO version")
 todo("Force GLOBAL to SOLO version when nobody else is there")
 todo("Mark unique words in history")
@@ -35,6 +30,114 @@ def swap(array, i, j):
     const temp = array[i]
     array[i] = array[j]
     array[j] = temp
+
+
+/* History of words found by the local player */
+def update_history()
+& preserving_transform:
+    set_clip(xy(0,0), xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y)) 
+    history_draw(player.history, xy(2, 1), SCREEN_SIZE.y - 22)
+
+
+
+/* Draw and animates Awards (Longest, Best Word, Best Unique, High Score, Most Words) */
+def update_awards()
+& preserving_transform:
+    todo("Implement Best Word award")
+    todo("Implement Longest award")
+    todo("Implement Best Unique award")
+    todo("Implement High Score award")
+    todo("Implement Most Words award")    
+
+    const avatar = player.avatar
+    set_transform(xy(SCREEN_SIZE.x - 95, 34))
+    
+    draw_text({font: history_font, text: "Best Word", color: #FFF, shadow: #000, pos: xy(0, -29), z: 2})
+    avatar_draw_large(avatar, xy(0, -4))    
+
+
+
+/* Words shown on the mini board */
+def update_mini_board()
+& preserving_transform:
+    set_transform(xy(SCREEN_SIZE.x - 32, 36))
+    
+    if mode_frames mod 420 == 100:
+        // Choose the next unfound word
+        unfound_word = pop(unfound_word_array)
+        
+        // Select this word
+        board_deselect_all(player.board)
+        player.board.selection = board_find_unencoded_word(player.board, unfound_word)
+        player.board.selection_color = #E1B
+        
+        // Select these letters
+        for index in player.board.selection:
+            player.board.tile[index.x][index.y].selected = mode_frames
+    
+        
+    for y < ROWS:
+        for x < COLS:
+            const tile = player.board.tile[x][y]
+            tile.pos = 12 xy(x - 1.5, y - 1.5)
+            
+            draw_disk(tile.pos, 5, if tile.selected then player.board.selection_color else #FFF)
+            
+            draw_text({
+                pos: tile.pos,
+                font: history_font,
+                color: if tile.selected then #FFF else #000,
+                text: if tile.letter == "Q" then "Qu" else tile.letter})
+    
+    if size(player.board.selection) > 0:
+        // Draw word
+        draw_text({
+            font: history_font,
+            text: "\"" + unfound_word + "\"",
+            pos: xy(0, -31),
+            shadow: #000,
+            color: player.board.selection_color})
+            
+        // Draw connectors
+        for 1 ≤ i < size(player.board.selection):
+            const prev = player.board.selection[i - 1]
+            const curr = player.board.selection[i]
+            draw_line(player.board.tile[prev.x][prev.y].pos, player.board.tile[curr.x][curr.y].pos, player.board.selection_color, -1, 2)
+    
+    todo("Put # found at end of history")
+    /*
+    draw_text({
+        font: history_font,
+        text: "" + size(player.history.list) + "/" + player.board.word_count + " found",
+        pos: xy(0, 30),
+        shadow: #000,
+        color: #FFF})*/
+
+
+
+/* Draw the ranked competitors and perform UI logic */
+def update_competitor_list()
+& preserving_transform:
+    set_clip(xy(0, 0), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 22))
+    set_transform(xy(SCREEN_SIZE.x - 104, 80))    
+
+    const RANK_SPACING_Y = 16
+    for competitor at i in competitor_array:
+        const pos = xy(-3, i * RANK_SPACING_Y)
+                
+        // Highlight
+        if competitor.me:
+            draw_corner_rect(pos - xy(10, 8), xy(120, 16), #F3C6, ∅, ∅, -1)
+            
+        // Animate sprite
+        let sprite = competitor.avatar.sprite
+        if ⌊mode_frames / 30⌋ mod 2:
+            sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
+         
+        draw_sprite(sprite.x_flipped, pos)
+        draw_text({text: competitor.avatar.name, pos: pos + xy(17, 0), color: competitor.avatar.color})
+        draw_text({text: competitor.score, pos: pos + xy(58, 0), x_align: "right", color: #FFF})
+        draw_text({font: history_font, text: competitor.text, x_align: "left", pos: pos + xy(68, 0), color: #FFF})
 
 
 enter
@@ -138,14 +241,7 @@ sort(competitor_array, "score", true)
 frame
 ────────────────────────────────────────────────────────────────────────
 
-// History
-preserving_transform:
-    set_clip(xy(0,0), xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y)) 
-    history_draw(player.history, xy(2, 1), SCREEN_SIZE.y - 22)
-
-
-const left = 50%
-const right = 75%
+update_history()
 
 // Score
 /*
@@ -158,92 +254,12 @@ draw_text({
     color: #FFF})
 */
 
-// Awards (Longest, Best Word, Best Unique, High Score, Most Words)
-preserving_transform:
-    const avatar = player.avatar
-    set_transform(xy(SCREEN_SIZE.x - 95, 34))
-    
-    draw_text({font: history_font, text: "Best Word", color: #FFF, shadow: #000, pos: xy(0, -29), z: 2})
-    avatar_draw_large(avatar, xy(0, -4))    
+// update_awards()
 
-// Board
-preserving_transform:
-    set_transform(xy(SCREEN_SIZE.x - 32, 36))
-    
-    if mode_frames mod 420 == 100:
-        // Choose the next unfound word
-        unfound_word = pop(unfound_word_array)
-        
-        // Select this word
-        board_deselect_all(player.board)
-        player.board.selection = board_find_unencoded_word(player.board, unfound_word)
-        player.board.selection_color = #E1B
-        
-        // Select these letters
-        for index in player.board.selection:
-            player.board.tile[index.x][index.y].selected = mode_frames
-    
-        
-    for y < ROWS:
-        for x < COLS:
-            const tile = player.board.tile[x][y]
-            tile.pos = 12 xy(x - 1.5, y - 1.5)
-            
-            draw_disk(tile.pos, 5, if tile.selected then player.board.selection_color else #FFF)
-            
-            draw_text({
-                pos: tile.pos,
-                font: history_font,
-                color: if tile.selected then #FFF else #000,
-                text: if tile.letter == "Q" then "Qu" else tile.letter})
-    
-    if size(player.board.selection) > 0:
-        // Draw word
-        draw_text({
-            font: history_font,
-            text: "\"" + unfound_word + "\"",
-            pos: xy(0, -31),
-            shadow: #000,
-            color: player.board.selection_color})
-            
-        // Draw connectors
-        for 1 ≤ i < size(player.board.selection):
-            const prev = player.board.selection[i - 1]
-            const curr = player.board.selection[i]
-            draw_line(player.board.tile[prev.x][prev.y].pos, player.board.tile[curr.x][curr.y].pos, player.board.selection_color, -1, 2)
-    
-    todo("Put # found at end of history")
-    /*
-    draw_text({
-        font: history_font,
-        text: "" + size(player.history.list) + "/" + player.board.word_count + " found",
-        pos: xy(0, 30),
-        shadow: #000,
-        color: #FFF})*/
-        
-        
-// Rank
-preserving_transform:
-    set_clip(xy(0, 0), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 22))
-    set_transform(xy(SCREEN_SIZE.x - 104, 80))    
+update_mini_board()
 
-    const RANK_SPACING_Y = 16
-    for competitor at i in competitor_array:
-        const pos = xy(-3, i * RANK_SPACING_Y)
-                
-        // Highlight
-        if competitor.me:
-            draw_corner_rect(pos - xy(10, 8), xy(120, 16), #F3C6, ∅, ∅, -1)
-            
-        // Animate sprite
-        let sprite = competitor.avatar.sprite
-        if ⌊mode_frames / 30⌋ mod 2:
-            sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
-         
-        draw_sprite(sprite.x_flipped, pos)
-        draw_text({text: competitor.avatar.name, pos: pos + xy(17, 0), color: competitor.avatar.color})
-        draw_text({text: competitor.score, pos: pos + xy(58, 0), x_align: "right", color: #FFF})
-        draw_text({font: history_font, text: competitor.text, x_align: "left", pos: pos + xy(68, 0), color: #FFF})
+update_competitor_list()
+
 
             
 // Button/timer
