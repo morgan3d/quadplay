@@ -54,10 +54,11 @@ draw_background_words()
 if player.using_gamepad and selection_index == -1:
     // Don't allow no selection once gamepad is active
     selection_index = 0
-else if not player.using_gamepad and (touch.dx or touch.dy or touch.hover):
+else if not player.using_gamepad and (touch.dx or touch.dy or touch.hover or touch.aa):
     // Mouse/touch moved, wait until we see where it went
     // before highlighting something below
     selection_index = -1
+    selection_sign = 0
     
 const SPACING = 48
 
