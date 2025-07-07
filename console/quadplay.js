@@ -4534,10 +4534,17 @@ reloadRuntime(function () {
     });
 });
 
-// Prevent scrolling/reloading of the page on iOS when touching the toolbar
-/*
-document.getElementById("header").addEventListener('touchmove', 
-    function(event) {
-        event.preventDefault();
-    }, { passive: false });
-*/
+
+{
+    // Prevent scrolling/reloading of the page on iOS when touching the toolbar,
+    // without preventing touchmove events on its children (such as the volume slider)
+    const header = document.getElementById("header");
+    header.addEventListener('touchmove', 
+        function (event) {
+            if (event.target === header) {
+                event.preventDefault();
+            }
+        }, {
+            passive: false
+        });
+}
