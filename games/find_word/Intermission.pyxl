@@ -118,7 +118,7 @@ def update_mini_board()
 def update_competitor_list()
 & preserving_transform:
     set_clip(xy(0, 0), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 22))
-    set_transform(xy(SCREEN_SIZE.x - 104, 80))    
+    set_transform(xy(SCREEN_SIZE.x - 110, 80))    
 
     const RANK_SPACING_Y = 16
     for competitor at i in competitor_array:
@@ -126,7 +126,7 @@ def update_competitor_list()
                 
         // Highlight
         if competitor.me:
-            draw_corner_rect(pos - xy(10, 8), xy(120, 16), #F3C6, ∅, ∅, -1)
+            draw_corner_rect(pos - xy(10, 9), xy(130, 18), #F3C6, ∅, ∅, -1)
             
         // Animate sprite
         let sprite = competitor.avatar.sprite
