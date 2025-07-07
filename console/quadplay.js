@@ -4544,6 +4544,7 @@ reloadRuntime(function () {
             if (event.target === header) {
                 event.preventDefault();
                 event.stopPropagation();
+                return true;
             }
         }, {
             passive: false

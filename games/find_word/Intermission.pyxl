@@ -42,8 +42,39 @@ def update_history()
 /* Draw and animates Awards (Longest, Best Word, Best Unique, High Score, Most Words) */
 def update_awards()
 & preserving_transform:
+    set_transform(xy(SCREEN_SIZE.x - 95, 34))
+
     todo("Start with summary")
+
+    draw_corner_rect(xy(-28, -36), xy(128, 64), player.avatar.color)
     
+    // Draw one row of a table for the summary
+    def draw_row(y, caption, value, font default history_font):
+        const shadow = 60% player.avatar.color
+        
+        draw_text({
+            font: font,
+            text: caption,
+            pos: xy(-26, y),
+            x_align: "left",
+            shadow: shadow,
+            color: #FFF})
+
+        draw_text({
+            font: font,
+            text: value,
+            x_align: "right",
+            pos: xy(92, y),
+            shadow: shadow,
+            color: #FFF})
+
+    draw_row( -26, "Score", format_number(player.score, "commas"), score_font)
+    draw_row( -10, "Found", "" + size(player.history.list) + " / " + player.board.word_count)
+    draw_row(   0, "Best Word", "FOOBAR")
+    draw_row(  10, "Best Unique", "FOOBAR")
+    draw_row(  20, "Longest Word", "FOOBAR")
+    
+            
     /*
     Summary:
     
@@ -58,11 +89,10 @@ def update_awards()
     todo("Implement High Score award")
     todo("Implement Most Words award")    
 
-    const avatar = player.avatar
-    set_transform(xy(SCREEN_SIZE.x - 95, 34))
-    
-    draw_text({font: history_font, text: "Best Word", color: #FFF, shadow: #000, pos: xy(0, -29), z: 2})
-    avatar_draw_large(avatar, xy(0, -4))    
+    if false:
+        const avatar = player.avatar    
+        draw_text({font: history_font, text: "Best Word", color: #FFF, shadow: #000, pos: xy(0, -29), z: 2})
+        avatar_draw_large(avatar, xy(0, -4))    
 
 
 
@@ -113,16 +143,7 @@ def update_mini_board()
             const curr = player.board.selection[i]
             draw_line(player.board.tile[prev.x][prev.y].pos, player.board.tile[curr.x][curr.y].pos, player.board.selection_color, -1, 2)
     
-    todo("Put # found at end of history")
-    /*
-    draw_text({
-        font: history_font,
-        text: "" + size(player.history.list) + "/" + player.board.word_count + " found",
-        pos: xy(0, 30),
-        shadow: #000,
-        color: #FFF})*/
-
-
+    
 
 /* Draw the ranked competitors and perform UI logic */
 def update_competitor_list()
@@ -136,7 +157,7 @@ def update_competitor_list()
                 
         // Highlight
         if competitor.me:
-            draw_corner_rect(pos - xy(10, 9), xy(130, 18), #F3C6, ∅, ∅, -1)
+            draw_corner_rect(pos - xy(10, 9), xy(130, 18), player.avatar.color, ∅, ∅, -1)
             
         // Animate sprite
         let sprite = competitor.avatar.sprite
@@ -144,9 +165,17 @@ def update_competitor_list()
             sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
          
         draw_sprite(sprite.x_flipped, pos)
-        draw_text({text: competitor.avatar.name, pos: pos + xy(17, 0), color: competitor.avatar.color})
-        draw_text({text: competitor.score, pos: pos + xy(58, 0), x_align: "right", color: #FFF})
-        draw_text({font: history_font, text: competitor.text, x_align: "left", pos: pos + xy(68, 0), color: #FFF})
+        
+        const shadow = if competitor.me then 60% competitor.avatar.color else ∅
+        
+        draw_text({
+            text: competitor.avatar.name,
+            pos: pos + xy(18, 0),
+            shadow: shadow,
+            color: if competitor.me then #FFF else competitor.avatar.color})
+            
+        draw_text({text: format_number(competitor.score, "commas"), pos: pos + xy(59, 0), x_align: "right", shadow: shadow, color: #FFF})
+        draw_text({font: history_font, text: competitor.text, x_align: "right", pos: pos + xy(110, 0), shadow: shadow, color: #FFF})
 
 
 
@@ -164,7 +193,9 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
             avatar: {
                 sprite: sprite, 
                 color: avatar_compute_color(sprite), 
-                name: random_value(ALPHABET, rng) + random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET, rng)},
+                // Weigh the probability towards capital letters,
+                // and always start with a capital letter
+                name: random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng)},
             score: 0,
             best_word_text: "",
             best_word_points: 0,
@@ -277,20 +308,9 @@ frame
 
 update_history()
 
-// Score
-/*
-draw_text({
-    font: score_font,
-    text: format_number(player.score, "commas") + " pts",
-    outline: #000,
-    shadow: #000,
-    pos: xy(left * SCREEN_SIZE.x, 18),
-    color: #FFF})
-*/
+update_awards()
 
-// update_awards()
-
-update_mini_board()
+//update_mini_board()
 
 update_competitor_list()
 
