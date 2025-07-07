@@ -47,7 +47,7 @@
         "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
         "giant_score_font": "quad://fonts/novarese-20.font.json"
     },
-    "version": "0.100",
+    "version": "0.102",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

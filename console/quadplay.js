@@ -4533,17 +4533,3 @@ reloadRuntime(function () {
         } // use IDE
     });
 });
-
-
-if (false) {
-    // Prevent scrolling/reloading of the page on iOS when touching the toolbar,
-    // without preventing touchmove events on its children (such as the volume slider)
-    const header = document.getElementById('header');
-    header.addEventListener('touchmove', 
-        function (event) {
-            event.preventDefault();
-            return false;
-        }, {
-            passive: false
-        });
-}

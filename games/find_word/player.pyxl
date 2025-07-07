@@ -390,6 +390,8 @@ def _player_update_history(player, board_pos)
 & preserving_transform
 & with history in player:
     
+    todo("Generalize to support the Intermission listing")
+    
     let list_rect
     if landscape():
         list_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
@@ -577,6 +579,9 @@ def player_reset(player, game_type, board_string default ∅):
     player.background_color = BOARD_COLOR
     remove_all(player.already_found)
     remove_all(player.history.list)
+    player.history.scroll = 0
+    player.history.scroll_history_size = 0
+    
     if board_string:
         
         for y < ROWS:

@@ -27,6 +27,12 @@ def history_draw(history, pos, max_height):
         const color = entry.color
         const outline = if emphasize then #FFF else entry.outline
         
+        let text = entry.text
+        
+        // Emphasize unique values when on the Intermission mode.
+        // For other modes, unique will never be true
+        if entry.unique: text += "✓"
+        
         const bounds = draw_text({
             // Bounce if emphasized
             pos: pos + wiggle,
@@ -36,10 +42,10 @@ def history_draw(history, pos, max_height):
             color: if show then color else #0000,
             outline: if show then outline else #0000,
             z: emphasize,
-            text: entry.text})
+            text: text})
 
         // Track if this makes the column larger
-        max_width = max(max_width, text_width(history_font, entry.text))
+        max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
         
     return max_width
