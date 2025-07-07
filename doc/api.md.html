@@ -4638,42 +4638,61 @@ The Conduit network API is an alternative to built-in Host-Guest shared-screen
 multiplayer. Both APIs can be used together, although the Conduit API is intended to
 completely replace Host-Guest for games that use it. 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
+let group_conduit
+let my_netid
+let last_jump
+let player_table = {}
 
-const conduit_array = []
+def handle_message(message, node_netid, conduit):
+  if message == nil:
+    // This particular example doesn't require a hand shake message
+    // but here's how you'd add one
+    player_table[node_netid] = "idle"
+  
+  else if message.type == "action":
+    player_table[node_netid] = message.action
 
-def process_conduit(conduit)
-& with message_queue in conduit:
-  if conduit.status == "closed":
-    // This peer left
-    return iterate.REMOVE
 
-  for message in message_queue:
-    if message.type == "action":
-      debug_print("Received " + message.action + " message from " + conduit.net_id)
+// Send to others and process myself for lower latency
+def send(message):
+    conduit_send(group_conduit, message)
+    handle_message(message, my_netid)
 
-  // Remove these messages now that we've processed them
-  remove_all(message_queue)
+
+def jump():
+    send({type: "action", action: "jump"})
+
+
+def land():
+  send({type: "action", action: "land"})
+
+
+enter
+--------------------------------------------------
+my_netid = get_node_netid()
+player_table[my_netid] = "idle"
+group_conduit = make_conduit()
 
 
 frame
 --------------------------------------------------
-// Join the room/get any new conduits
-append(conduit_array, netroom_get_new_conduits())
+// Example of receiving incoming messages. We receive never receive
+// messages from ourselves
+conduit_iterate(group_conduit, handle_message, handle_leave)
 
-if gamepad_array[0].aa:
-  // Example of broadcasting a message to other nodes
-  conduit_send(conduit_array, {type: "action", action: "jump"})
+if gamepad_array[0].aa and player_table[my_netid] == "idle":
+  jump()
+  delay(5, land)
 
-// Example of receiving incomming messages
-iterate(conduit, process_conduit)
 
 exit
 --------------------------------------------------
-// Leave the room on exit
-reset_conduits()
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Leave the group on exit
+conduit_close(group_conduit)
+group_conduit = nil
+remove_all(player_table)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Conduit API supports creating direct peer-to-peer data connections between
 instances of your game running on multiple computers or in multiple browser windows
@@ -4691,12 +4710,13 @@ in game jams.
 
 The core data structures of the Conduit API are:
 
-`net_id`
-: A string with the prefix "net_id" uniquely identifying an instance of your game (not a user, computer, or browser) that is 
-  usually generated each session. 
+`node_netid`
+: A string with the prefix "node_netid" uniquely identifying an instance
+  of your game (not a user, computer, or browser) that is 
+  usually generated each session using `get_node_netid()`.
 
-`netroom_id`
-: A string with the prefix "netroom_id" identifying a group of game instances 
+`group_netid`
+: A string with the prefix "group_netid" identifying a group of game instances 
   that are playing together. This is a "room"
   in the "chatroom" sense. It could also be a "server"
   in the sense that players refer to them, versus a server machine or process.
@@ -4708,75 +4728,63 @@ The core data structures of the Conduit API are:
 : `"pending"`, `"ok"`, or `"closed"`
 
 `conduit.netid`
-: The `netid` of the game instance being communicated with through this conduit.
-
-`conduit.message_queue`
-: Messages in the order they were received.
-  New messages are appended at the end of each frame.
-  It is your job to process and remove the messages at least every few frames.
-  If the messages start backing up then the conduit may close with
-  an error. The messages can have any format that you choose which is serializable
-  without loops.
+: The `netid` of the group or node being communicated with through this conduit.
 
 
 The Conduit API is:
 
-`netroom_get_new_conduits(netroom_id default "netroom_id General")`
-: Returns an array of all conduits to other instances that have joined
-  since the last time this was called.
-  You can only connect to people playing the same <quadplay/> game,
-  hosted from the same webserver. The `netroom_id` may be the empty string,
-  which is a single common room.
+`make_conduit(id default "group_netid 0000", join_message default nil)`
+: Create a connection to one or more nodes on the network. `id`
+  is a string. `join_message` is an arbitrary object to send
+  immediately after the connection succeeds, which may be before
+  the next frame.
 
-  The first time that it is called, this causes 
-  the local instance to join `netroom_id` and connect to everyone else in that room.
-  An instance can be in multiple rooms simultaneously and can use the.
+  If `id` begins with the string `"group_netid"`, then the conduit
+  communicates many-to-many with all nodes in that group that are running the same game loaded
+  from the same server, i.e., from the same URL. You do not need to put the name 
+  of your game in the ID. (The restriction to the same game is to make it harder
+  for someone to fork your game and then corrupt its network communications.)
 
-  Once you have called `netroom_get_new_conduits()`, you must keep
-  calling it every few frames to process any new players joining.
-  
-  Conduits will keeping being created for everyone who joins
-  and continue to exist and consume resources even if you do not 
-  check for the new conduits or drop your pointers to them
-  until you call `reset_conduits()`.
+  If `id` begins with the string `"node_netid"`, then the conduit communicates
+  one-to-one with a single node that was calling `conduit_listen()`. You must
+  have obtained that net_id through some side band, or chosen to make it
+  fixed if you are connecting to a server.
 
-  You must track the conduits once they are returned. There is no way
-  to recover the list of all open conduits.
-
-  Your own instance will not ever be returned from this call.
-
-`make_conduit(other_net_id)`
-: Connect to one other game instance whose `netid` is known by some
-  means other than the room/`get_new_conduits()` API.
-  The conduit will initially be in a `"pending"` state. If using a
-  room, this function is not necessary.
-
-  An instance can create a conduit to itself.
-
-  If using netrooms it is not necessary to explicitly create a conduit
-  with `make_conduit()`.
-
-`reset_conduits()`
-: Close all open conduits and leave any netrooms this instance is currently in.
-  The message queues will not be emptied.
-
-`get_net_id()`
-: Return the `netid` of this instance, creating it if it has not already been
-  generated.
-  
-  It is generally not necessary to use this function and it is provided 
-  primarily for debugging.
-
-`set_net_id(net_id)`
-: Set the `net_id` of this instance, which must be done before any other
-  network APIs are used. The `net_id` must be globally unique!
-  
-  *This function is useful for the optional design of intentionally creating a
-   dedicated server. It should not be used in other cases.*
+`get_node_netid()`
+: Get the `netid` for this node, which is a globally unique string per session
+  unless `set_node_netid()` has been called.
 
 `conduit_send(conduit, message)`
-: Send a message the conduit. The message can be any serializable value
-  without loops. It will appear in their `conduit.message_queue`.
+: Send this message, which can be any serializable message. 
+  TODO: how does the serializer do with DAGs? with cycles? With functions? With quadplay structures?
+
+`conduit_iterate(conduit, message_handler, leave_handler)`
+: Iterate through all incoming messages. For each, invokes `message_handler(message, node_netid, conduit)`.
+  `leave_handler(node_netid, conduit)` is called when a node closes their side of the conduit.
+
+`conduit_close(conduit)`
+: Close this connection immediately. This is faster and conserves resources compared to
+  dropping pointers and letting the conduit time out.
+
+`reset_conduits()`
+: Close all connections and assign a new random `node_netid`.
+
+`set_node_netid(node_netid)`
+: Set the `node_netid` for this node. This is only used when creating a static server
+  architecture. Calling this resets any network connections that have previously
+  been established by the Conduit API. After calling this, use `conduit_listen()`
+  each frame to accept incoming connections; there's no other use for a fixed
+  ID than to accept connections.
+
+`conduit_listen(new_conduit_handler)`
+: When creating a game architecture that uses one-to-one connections, you must
+  call this every frame to process new incoming connections that were initiated
+  on the other side by `make_conduit()` with a node netid instead of a group netid.
+
+  The function `new_conduit_handler(conduit)` will be invoked for each incoming 
+  connection. You must retain these conduits to communicate on them and keep
+  them open. To reject a connection, ignore it to force it to time out, or call `conduit_close()`
+  to terminate it and free resources.
 
 If using the Conduit API, you likely also want to disable the built-in Host-Code
 network API by unchecking the corresponding option on your game's main
