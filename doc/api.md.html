@@ -4569,6 +4569,9 @@ You can customize network multiplayer in several ways beyond this automatic supp
   provides online discovery for connecting players without requiring them
   to exchange data through a side channel.
 
+Because all of these APIs are is implemented using on WebRTC, they will work even between
+computers that are not publicly accessible on the internet due to NATs or firewalls.
+
 ### Host-Guest
 
 You can make your own 2-4 player games easier to join, or support private screens
@@ -4633,16 +4636,53 @@ guest, you cannot currently leave a game without restarting <quadplay/>.
 
 The Conduit network API is an alternative to built-in Host-Guest shared-screen
 multiplayer. Both APIs can be used together, although the Conduit API is intended to
-completely replace Host-Guest for games that use it. It provides sufficient facilities
-for 
+completely replace Host-Guest for games that use it. 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+const conduit_array = []
+
+def process_conduit(conduit)
+& with message_queue in conduit:
+  if conduit.status == "closed":
+    // This peer left
+    return iterate.REMOVE
+
+  for message in message_queue:
+    if message.type == "action":
+      debug_print("Received " + message.action + " message from " + conduit.net_id)
+
+  // Remove these messages now that we've processed them
+  remove_all(message_queue)
+
+
+frame
+--------------------------------------------------
+// Join the room/get any new conduits
+append(conduit_array, netroom_get_new_conduits())
+
+if gamepad_array[0].aa:
+  // Example of broadcasting a message to other nodes
+  conduit_send(conduit_array, {type: "action", action: "jump"})
+
+// Example of receiving incomming messages
+iterate(conduit, process_conduit)
+
+exit
+--------------------------------------------------
+// Leave the room on exit
+reset_conduits()
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Conduit API supports creating direct peer-to-peer data connections between
 instances of your game running on multiple computers or in multiple browser windows
-on the same computer. It gives nearly full control of the network code to your game
-at the expense of requiring you to perform all state synchronization. It can be used for
+on the same computer. It gives nearly full control of the network code to your game,
+at the expense of requiring you to perform all state synchronization. 
+
+Conduits can be used for
 building any network topology, including client-dedicated server star networks,
-or peer-to-peer ones. Because
-the Conduit API it is based on WebRTC, it will work even for nodes that are not publicly accessible.
+or peer-to-peer ones.
 
 Conduit's state synchronization and server coding are more complex than the
 built in shared-screen Host-Code network multiplayer. So, the Conduit API is best for 
@@ -4651,12 +4691,12 @@ in game jams.
 
 The core data structures of the Conduit API are:
 
-`netid`
-: A string with the prefix "netid" uniquely identifying an instance of your game (not a user, computer, or browser) that is 
+`net_id`
+: A string with the prefix "net_id" uniquely identifying an instance of your game (not a user, computer, or browser) that is 
   usually generated each session. 
 
-`netroomid`
-: A string with the prefix "netroomid" identifying a group of game instances 
+`netroom_id`
+: A string with the prefix "netroom_id" identifying a group of game instances 
   that are playing together. This is a "room"
   in the "chatroom" sense. It could also be a "server"
   in the sense that players refer to them, versus a server machine or process.
@@ -4678,20 +4718,21 @@ The core data structures of the Conduit API are:
   an error. The messages can have any format that you choose which is serializable
   without loops.
 
+
 The Conduit API is:
 
-`netroom_get_new_conduits(netroomid default "netroomid General")`
+`netroom_get_new_conduits(netroom_id default "netroom_id General")`
 : Returns an array of all conduits to other instances that have joined
   since the last time this was called.
   You can only connect to people playing the same <quadplay/> game,
-  hosted from the same webserver. The `netroomid` may be the empty string,
+  hosted from the same webserver. The `netroom_id` may be the empty string,
   which is a single common room.
 
   The first time that it is called, this causes 
-  the local instance to join `netroomid` and connect to everyone else in that room.
+  the local instance to join `netroom_id` and connect to everyone else in that room.
   An instance can be in multiple rooms simultaneously and can use the.
 
-  Once you have called `get_new_conduits()`, you must keep
+  Once you have called `netroom_get_new_conduits()`, you must keep
   calling it every few frames to process any new players joining.
   
   Conduits will keeping being created for everyone who joins
@@ -4704,7 +4745,7 @@ The Conduit API is:
 
   Your own instance will not ever be returned from this call.
 
-`make_conduit(other_netid)`
+`make_conduit(other_net_id)`
 : Connect to one other game instance whose `netid` is known by some
   means other than the room/`get_new_conduits()` API.
   The conduit will initially be in a `"pending"` state. If using a
@@ -4719,19 +4760,19 @@ The Conduit API is:
 : Close all open conduits and leave any netrooms this instance is currently in.
   The message queues will not be emptied.
 
-`get_netid()`
+`get_net_id()`
 : Return the `netid` of this instance, creating it if it has not already been
   generated.
   
   It is generally not necessary to use this function and it is provided 
   primarily for debugging.
 
-`set_netid(netid)`
-: Set the `netid` of this instance, which must be done before any other
-  network APIs are used. The `netid` must be globally unique!
+`set_net_id(net_id)`
+: Set the `net_id` of this instance, which must be done before any other
+  network APIs are used. The `net_id` must be globally unique!
   
-  *This function is useful when creating a static server. It should not be
-  used in other cases.*
+  *This function is useful for the optional design of intentionally creating a
+   dedicated server. It should not be used in other cases.*
 
 `conduit_send(conduit, message)`
 : Send a message the conduit. The message can be any serializable value

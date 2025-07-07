@@ -116,3 +116,10 @@ def random_safe_word(rng default random, min_size default 5, max_size default 8)
         word = lowercase(q_decode(random_value(dictionary_array, rng)))
     return word
 
+
+
+/* `iterate()` callback for filtering out sensitive words */
+def remove_sensitive(word):
+    if sensitive[lowercase(word)]:
+        return iterate.REMOVE
+

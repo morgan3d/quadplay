@@ -3,7 +3,6 @@ Intermission
 
 todo("* Make SOLO version")
 todo("Force GLOBAL to SOLO version when nobody else is there")
-todo("Mark unique words in history")
 
 
 /* `{avatar, score, word_list, representative_text}`
@@ -140,6 +139,51 @@ def update_competitor_list()
         draw_text({font: history_font, text: competitor.text, x_align: "left", pos: pos + xy(68, 0), color: #FFF})
 
 
+
+def insert_synthetic_competitors(competitor_array, num_competitors):
+
+    // Make the competitors stable in their personalities by using a fixed
+    // rng.
+    const rng = make_random(4581)
+    
+    for i < num_competitors:
+        
+        const sprite = avatar_sprite_from_linear_index(random_integer(0, AVATAR_SPRITE_COUNT - 1, rng))
+        
+        const competitor = {
+            avatar: {
+                sprite: sprite, 
+                color: avatar_compute_color(sprite), 
+                name: random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET, rng)},
+            score: 0,
+            best_word_text: "",
+            best_word_points: 0,
+            longest_word_text: "",
+            longest_word_size: 0}
+        
+        // Make stable how good this player is overall, and then add noise per game
+        const words_found = random_integer(5, 10) + random_integer(1, 20, rng)
+        
+        // Make a bogus word list for this competitor and score it.
+        // Choose about half from the player's discovered words and half
+        // from the board. Let collisions happen
+        
+        const word_set = {}
+        for i < ½ words_found:
+            word_set[random_value(player.board.word_list)] = 1
+            word_set[random_value(player.history.list).word] = 1
+            
+        competitor.word_list = keys(word_set)
+        
+        iterate(competitor.word_list, remove_sensitive)
+        
+        for word at i in competitor.word_list:
+            competitor.score += score_word(word)
+        
+        push(competitor_array, competitor)
+
+
+
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
@@ -168,7 +212,6 @@ if size(unfound_word_array) > 10:
 
 board_deselect_all(player.board)
 
-
 // Convert the local player into a competitor
 resize(competitor_array, 0)
 local:
@@ -186,38 +229,17 @@ local:
         push(competitor.word_list, entry.word)
         
     push(competitor_array, competitor)
-                    
 
-// Make some bogus competitors
-todo("Replace with real players in a GLOBAL game")
-for i < 10:
-    const sprite = avatar_sprite[4][2i]
-    const competitor = {
-        avatar: {sprite: sprite, color: avatar_compute_color(sprite), name: random_value(ALPHABET) + random_value(ALPHABET) + random_value(ALPHABET)},
-        score: 0,
-        best_word_text: "",
-        best_word_points: 0,
-        longest_word_text: "",
-        longest_word_size: 0}
-        
-    // Make a bogus word list and score it
-    let word_set = {}
-    for i < random_integer(5, 10):
-        word_set[random_value(player.board.word_list)] = 1
-        word_set[random_value(player.history.list).word] = 1
-        
-    competitor.word_list = keys(word_set)
-    
-    def remove_sensitive(word):
-        if sensitive[lowercase(word)]:
-            return iterate.REMOVE
-            
-    iterate(competitor.word_list, remove_sensitive)
-    
-    for word at i in competitor.word_list:
-        competitor.score += score_word(word)
-    
-    push(competitor_array, competitor)
+                    
+todo("Use real players in a GLOBAL game")
+
+// Make some bogus competitors for testing purposes
+insert_synthetic_competitors(competitor_array, 15)
+
+todo("Trim down when there are very many competitors, keeping the top 3, the bottom 3, and 3 around the player")
+
+
+todo("Mark unique words in history")
 
 
 // Compute everyone's best
