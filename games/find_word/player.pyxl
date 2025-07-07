@@ -180,7 +180,7 @@ def player_add_to_history(player, word, points):
         text_color = lerp(color, #FFF, 50%)
     
     push(player.history.list, {
-        text:    q_decode(word) + ": " + points, 
+        text:    q_decode(word) + " " + points, 
         word:    word,
         tiles:   size(word),
         emphasize_frame: 0,

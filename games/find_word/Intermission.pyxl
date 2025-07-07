@@ -154,7 +154,7 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
             avatar: {
                 sprite: sprite, 
                 color: avatar_compute_color(sprite), 
-                name: random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET, rng)},
+                name: random_value(ALPHABET, rng) + random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET, rng)},
             score: 0,
             best_word_text: "",
             best_word_points: 0,
