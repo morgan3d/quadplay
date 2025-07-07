@@ -171,7 +171,7 @@ frame
 draw_text({
         pos: xy(0, 0),
         font: tile_point_font,
-        text: "v" + CREDITS.version,
+        text: "v" + CREDITS.version + "+" + QUADPLAY_INFO.version,
         color: #777,
         y_align: "top",
         x_align: "left",

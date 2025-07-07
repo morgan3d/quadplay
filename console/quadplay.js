@@ -3351,6 +3351,7 @@ function makeConstants(environment, constants, CREDITS) {
 
     // Now redefine all constants appropriately
     redefineScreenConstants(environment, alreadySeen);
+    redefineConstant(environment, 'QUADPLAY_INFO', {version: version}, alreadySeen);
     redefineConstant(environment, 'CREDITS', CREDITS, alreadySeen);
     const IDE_USER = (isQuadserver && useIDE && serverConfig && serverConfig.IDE_USER) || 'anonymous';
     redefineConstant(environment, 'IDE_USER', IDE_USER, alreadySeen);
