@@ -47,7 +47,7 @@
         "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
         "giant_score_font": "quad://fonts/novarese-20.font.json"
     },
-    "version": "0.102",
+    "version": "0.103",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -486,7 +486,7 @@
         },
         "GLOBAL_INTERMISSION_TIME_MINUTES": {
             "type": "number",
-            "value": "0.50",
+            "value": "0.70",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES exactly",
             "min": 0.25,
             "max": 5,
@@ -516,7 +516,7 @@
         },
         "GLOBAL_JOIN_MIN_REMAINING_TIME": {
             "type": "number",
-            "value": "45",
+            "value": "30",
             "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
             "min": 0,
             "max": 120,
