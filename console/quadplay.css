@@ -240,6 +240,8 @@ div#header {
     padding-top: 3px;
     overflow: hidden;
     white-space: nowrap;
+    /* Prevent iOS scroll when touching the header bar */
+    touch-action: none;
 }
 
 .IDE div#header {
