@@ -4534,7 +4534,9 @@ reloadRuntime(function () {
 });
 
 // Prevent scrolling/reloading of the page on iOS when touching the toolbar
+/*
 document.getElementById("header").addEventListener('touchmove', 
     function(event) {
         event.preventDefault();
     }, { passive: false });
+*/

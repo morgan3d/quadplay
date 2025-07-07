@@ -26,6 +26,8 @@ set_background(if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
      else SOLO_BACKGROUND_COLOR)
 
 
+board_deselect_all(player.board, player)
+
 
 frame
 ────────────────────────────────────────────────────────────────────────

@@ -233,7 +233,7 @@ def _player_draw_score(player, board_pos)
         draw_text({
             pos: score_pos + xy(0, -7),
             font: button_prompt_font,
-            text: "GLOBAL GAME\nSTARTS SOON!",
+            text: "WARM UP HERE\nGLOBAL GAME STARTS SOON!",
             x_align: "right",
             y_align: "top",
             color: #0F0,
