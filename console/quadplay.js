@@ -4538,11 +4538,12 @@ reloadRuntime(function () {
 {
     // Prevent scrolling/reloading of the page on iOS when touching the toolbar,
     // without preventing touchmove events on its children (such as the volume slider)
-    const header = document.getElementById("header");
+    const header = document.getElementById('header');
     header.addEventListener('touchmove', 
         function (event) {
             if (event.target === header) {
                 event.preventDefault();
+                event.stopPropagation();
             }
         }, {
             passive: false

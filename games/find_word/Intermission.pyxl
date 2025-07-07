@@ -42,6 +42,16 @@ def update_history()
 /* Draw and animates Awards (Longest, Best Word, Best Unique, High Score, Most Words) */
 def update_awards()
 & preserving_transform:
+    todo("Start with summary")
+    
+    /*
+    Summary:
+    
+    Score       1,0000
+    Found       37/122
+    Longest     FOOBAR
+    
+    */
     todo("Implement Best Word award")
     todo("Implement Longest award")
     todo("Implement Best Unique award")
