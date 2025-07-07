@@ -4541,11 +4541,9 @@ reloadRuntime(function () {
     const header = document.getElementById('header');
     header.addEventListener('touchmove', 
         function (event) {
-            if (event.target === header) {
-                event.preventDefault();
-                event.stopPropagation();
-                return true;
-            }
+            event.preventDefault();
+            event.stopPropagation();
+            return true;
         }, {
             passive: false
         });
