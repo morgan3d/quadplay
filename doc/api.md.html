@@ -4654,7 +4654,7 @@ def handle_message(message, node_netid, conduit):
     player_table[node_netid] = message.action
 
 
-// Send to others and process myself for lower latency
+// Send to others and process myself immediately for lower latency
 def send(message):
     conduit_send(group_conduit, message)
     handle_message(message, my_netid)
@@ -4720,6 +4720,12 @@ The core data structures of the Conduit API are:
   that are playing together. This is a "room"
   in the "chatroom" sense. It could also be a "server"
   in the sense that players refer to them, versus a server machine or process.
+
+`message`
+: Any simple data structure composed of strings, numbers, nil, booleans,
+  objects, and arrays that are strictly a tree. That is, no functions, 
+  built-in <quadplay/> objects (such as sprites), or data structures 
+  that form DAGs or cycles.
   
 `conduit`
 : The reliable network communication object.
