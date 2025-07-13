@@ -127,6 +127,11 @@ def show_word_in_board(word):
         board_deselect_all(player.board)
         player.board.selection = board_find_unencoded_word(player.board, word)
         player.board.selection_color = #E1B
+
+        if not player.board.selection:
+            // Bug workaround
+            debug_print(word)
+            return
         
         // Select these letters
         for index in player.board.selection:
