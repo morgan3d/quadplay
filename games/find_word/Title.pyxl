@@ -190,6 +190,8 @@ const slide = if intro then (3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE
 update_button(pos - xy(slide, 30), "Solo", 0)
 update_button(pos + xy(slide, 30), "Global", 1)
 
+draw_sprite({sprite: logo_sprite, pos: SCREEN_SIZE - xy(22 + slide, 20), z: -0.6})
+
 // Avatar
 local:
     const pos = xy(22 + slide, SCREEN_SIZE.y - 34)

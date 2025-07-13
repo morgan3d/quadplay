@@ -1,7 +1,7 @@
 {
     "title": "FIND WORD ALLL NITE",
-    "developer": "Casual Effects",
-    "copyright": "©2025 Morgan McGuire",
+    "developer": "SHMUEL",
+    "copyright": "©2025 Factory 797",
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
@@ -46,9 +46,10 @@
         "times_up_sound": "quad://sounds/wild-05.sound.json",
         "start_sound": "quad://sounds/good-00.sound.json",
         "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
-        "giant_score_font": "quad://fonts/novarese-20.font.json"
+        "giant_score_font": "quad://fonts/novarese-20.font.json",
+        "logo_sprite": "logo.sprite.json"
     },
-    "version": "0.112",
+    "version": "0.113",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
