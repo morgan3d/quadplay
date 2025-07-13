@@ -2,7 +2,8 @@
  Routines for working with words, including
  the dictionary word sets.
  
- The dictionary contains about 200k words. 
+ The dictionary contains about 193k words that are not proper nouns,
+ including variations such as plurals.
  
  The full boggle board contains about 57M possible 
  sequences (nodes in the search tree).
@@ -11,7 +12,7 @@
 /* Longest possible word */
 const MAX_WORD_LENGTH = ROWS * COLS
 
-/* Cleaned dictionary table of about 280k words with:
+/* Revised dictionary table of about 192k words with:
  
    - No capitalized words
    - No words shorter than `MIN_WORD_LENGTH`

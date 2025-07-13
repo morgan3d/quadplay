@@ -50,7 +50,7 @@
         "logo_sprite": "logo.sprite.json",
         "sensitive_source": "quad://data/english_sensitive_table.data.json"
     },
-    "version": "0.114",
+    "version": "0.115",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -489,10 +489,10 @@
         },
         "GLOBAL_INTERMISSION_TIME_MINUTES": {
             "type": "number",
-            "value": "0.70",
+            "value": "0.60",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES exactly",
-            "min": 0.25,
-            "max": 5,
+            "min": 0.15,
+            "max": 2.00,
             "format": "0.00",
             "quantum": 0.05
         },

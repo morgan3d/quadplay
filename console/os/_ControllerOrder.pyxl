@@ -230,7 +230,7 @@ for view in VIEW_ARRAY:
 // Input processing
 if current_index < 4:
     for gamepad in gamepad_array:
-        if gamepad.$pp:
+        if gamepad.$pressed_p:
             // Show reset values and exit
             play_sound($acceptUISound)
             gamepadOrderMap = [0, 1, 2, 3]

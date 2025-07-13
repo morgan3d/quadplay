@@ -58,7 +58,7 @@ for view in VIEW_ARRAY:
 
     if mode_frames > max(15, OPEN_FRAMES):
         for control in gamepad_array:
-            if control.pressed_q or control.$pp or (control.pressed_a and choice_index == 0):
+            if control.pressed_q or control.$pressed_p or (control.pressed_a and choice_index == 0):
                 // Cancel
                 play_sound($cancelUISound)
                 pop_mode(∅)

@@ -136,7 +136,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 if mode_frames > fade_in_frames + slide_in_frames + 2:
    for control in gamepad_array:
-      if control.pressed_q or control.$pp:
+      if control.pressed_q or control.$pressed_p:
          play_sound($cancelUISound)
          close(∅)
       else if control.pressed_a or control.pressed_b:

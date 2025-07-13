@@ -1498,7 +1498,7 @@ function updateInput() {
         
         for (let b = 0; b < buttons.length; ++b) {
             const button = buttons[b];
-            const prefix = button === 'p' ? '$' : '';
+            const prefix = (button === 'p') ? '$' : '';
             
             const oldv = pad[prefix + button];
             

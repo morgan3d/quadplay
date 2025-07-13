@@ -2733,7 +2733,7 @@ function mainLoopStep() {
             const gamepadSampleTime = performance.now() + 1000 / 60;
             updateInput();
             if (QRuntime.$goToSystemMenu === 'cancel') {
-                QRuntime.gamepad_array[0].$p_pressed = 1;
+                QRuntime.gamepad_array[0].$pressed_p = 1;
                 QRuntime.$goToSystemMenu = false;
             }
             while (! updateKeyboardPending && ! refreshPending && (performance.now() < gamepadSampleTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {

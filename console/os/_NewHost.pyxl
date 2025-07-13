@@ -184,7 +184,7 @@ preserving_transform:
             if gamepad.pressed_q: pop_mode()
 
             // Visit
-            if gamepad.$pp:
+            if gamepad.$pressed_p:
                 // Return the host name list to the caller
                 let word_list = []
                 for index at column in word_array:

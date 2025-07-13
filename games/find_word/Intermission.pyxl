@@ -59,7 +59,6 @@ def draw_award_summary()
     draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 23), x_align: "right"})
 
 
-
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
 & preserving_transform:
@@ -110,7 +109,7 @@ def draw_most_words_award(winner):
 
 
 
-/* word is Q-decoded */
+/* word is Q-decoded. Does not show if already shown, so that pulse animation works */
 def show_word_in_board(word):
     assert(word)
     if q_decode(board_selected_word(player.board)) ≠ word:

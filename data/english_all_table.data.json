@@ -3,5 +3,5 @@
     "set_table": true,
     "url": "english_all.csv.zip",
     "license": "Public Domain/CC0",
-    "description": "All words in the English language (including British, US, Canadian, etc. dialects), as typically accepted by word games."
+    "description": "Words in the English language (including common ones in British, US, Canadian, etc. dialects), as typically accepted by word games."
 }
