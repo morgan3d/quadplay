@@ -1,0 +1,186 @@
+/* Information about other players online (or virtual ones) used by Intermission */
+
+
+/* `{avatar, score, word_list, representative_text}`
+   `word_list` is Q-encoded */
+const competitor_array = []
+
+let player_competitor
+
+// Competitors winning each award
+let best_word_winner
+let best_rare_winner
+let longest_winner
+let most_words_winner
+
+
+
+def insert_synthetic_competitors(competitor_array, num_competitors):
+
+    // Make the competitors stable in their personalities by using a fixed
+    // rng for anything specific to the competitor generation. Do not use
+    // this rng for word selection.
+    const rng = make_random(4582)
+    
+    // Used for finding legal substrings
+    const word_table = {}
+    for word in player.board.word_list:
+        if dictionary[word]:
+            word_table[word] = 1
+    
+    for i < num_competitors:
+        
+        const sprite = avatar_sprite_from_linear_index(random_integer(0, AVATAR_SPRITE_COUNT - 1, rng))
+        
+        const competitor = {
+            avatar: {
+                sprite: sprite, 
+                color: avatar_compute_color(sprite), 
+                // Weigh the probability towards capital letters,
+                // and always start with a capital letter
+                name: random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng)},
+            score: 0}
+
+        // Make stable how good this player is overall, and then add noise per game.
+        // Apply that as a fraction of all words possible
+        const competitor_base_percentage = rng(2%^⅓, 29%^⅓)³
+        const find_percentage = random(3%^⅓, 27%^⅓)³ + competitor_base_percentage
+        const words_found = max(8, ⌊size(player.board.word_list) * find_percentage⌋)
+        
+        // Make a bogus word list for this competitor and score it.
+        // Choose both from the player's discovered words and
+        // from the board. Higher chance of discovering shorter words
+        // via rejection sampling.
+        
+        const word_set = {}
+        def maybe_add_word(word):
+            // Accept words that this competitor hasn't found with
+            // decreasing probability as the word gets longer than 3 letters.
+            // Players with higher base percentages also are better at long words.
+            if not word_set[word] and ξ ≤ (1.3 competitor_base_percentage + 30%) / pow(max(size(word) - 2, 1), 1.7):
+                // Ensure that if a word is found, all substrings are found
+                for 3 ≤ s ≤ size(word):
+                    const w = slice(word, 0, s)
+                    if word_table[w]:
+                        word_set[w] = 1
+        
+        let tries = 0
+        while size(word_set) < 88% words_found and tries < 2 words_found:
+            ++tries
+            maybe_add_word(random_value(player.board.word_list))
+            
+        // Steal some words from the player
+        tries = 0
+        while size(word_set) < words_found and tries < 2 words_found:
+            ++tries
+            maybe_add_word(random_value(player.history.list).word)
+        
+        
+        competitor.word_list = keys(word_set)
+                
+        // Remove sensitive words from computer players
+        iterate(competitor.word_list, remove_sensitive)
+        
+        sort(competitor.word_list, size_comparator)
+        
+        for word at i in competitor.word_list:
+            competitor.score += score_word(word)
+        
+        push(competitor_array, competitor)
+
+
+
+/* Convert the local player into a competitor */
+def add_player_competitor():
+    player_competitor = {
+        avatar: player.avatar,
+        score: player.score,
+        word_list: []}
+    
+    for entry in player.history.list:
+        push(player_competitor.word_list, entry.word)
+        
+    push(competitor_array, player_competitor)
+
+
+
+/* Called from `Intermission.enter` */
+def analyze_competitors(competitor_array):
+    // How many players have each word; used for 
+    // finding rare words
+    const count = {}
+    
+    // Compute everyone's best results
+    for competitor in competitor_array:
+        
+        // Censor names by slicing off the 2nd letter, if inappropriate,
+        // and replacing common letter substitutions to prevent casual
+        // looks-like thwarting
+        if sensitive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
+            competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
+
+        competitor.best_word_points = 0
+        competitor.longest_size = 0
+        for word in competitor.word_list:
+            // Increment the count
+            count[word] = (count[word] default 0) + 1
+            
+            const points = score_word(word)
+            const text = q_decode(word)
+            
+            if (points > competitor.best_word_points) or (points == competitor.best_word_points and text > competitor.best_word_text):
+                competitor.best_word_points = points
+                competitor.best_word_text = text
+                competitor.text = text
+        
+            if (size(text) > competitor.longest_size) or (size(text) == competitor.longest_size and text > competitor.longest_text):
+                competitor.longest_size = size(text)
+                competitor.longest_text = text
+    
+    // Find the best rare word for each competitor
+    for competitor in competitor_array:
+    
+        competitor.num_rare = 0
+        competitor.best_rare_points = 0
+        competitor.best_rare_text = 0
+    
+        for word in competitor.word_list:
+            if count[word] == 1:
+                const points = score_word(word)
+                const text = q_decode(word)
+                
+                // Nobody else has this word
+                ++competitor.num_rare
+                
+                if points > competitor.best_rare_points or (points == competitor.best_rare_points and text > competitor.best_rare_text):
+                    competitor.best_rare_points = points
+                    competitor.best_rare_text = text
+    
+    // Update the history rare fields for the player competitor
+    // as these are used for display. We don't need this for others
+    for entry in player.history.list:
+        if count[entry.word] == 1:
+            entry.rare = true
+    
+    // Rank all competitors by score
+    sort(competitor_array, "score", true)
+            
+    // Find the winner in each category. Ties are broken
+    // by total score by running in order after that sort
+    best_word_winner = competitor_array[0]
+    best_rare_winner  = competitor_array[0]
+    longest_winner = competitor_array[0]
+    most_words_winner = competitor_array[0]
+    
+    for competitor in competitor_array:
+        if competitor.best_word_points > best_word_winner.best_word_points:
+            best_word_winner = competitor
+            
+        if competitor.best_rare_points > best_rare_winner.best_rare_points:
+            best_rare_winner = competitor
+
+        if competitor.longest_size > longest_winner.longest_size:
+            longest_winner = competitor
+
+        if size(competitor.word_list) > size(most_words_winner.word_list):
+            most_words_winner = competitor

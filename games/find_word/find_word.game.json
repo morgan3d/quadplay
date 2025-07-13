@@ -12,7 +12,8 @@
         "avatar.pyxl",
         "player.pyxl",
         "board_search.pyxl",
-        "game.pyxl"
+        "game.pyxl",
+        "competitor.pyxl"
     ],
     "modes": [
         "Title",
@@ -49,7 +50,7 @@
         "giant_score_font": "quad://fonts/novarese-20.font.json",
         "logo_sprite": "logo.sprite.json"
     },
-    "version": "0.113",
+    "version": "0.114",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -658,7 +659,7 @@
                 "SUMMARY": 0,
                 "BEST_WORD": 1,
                 "MOST_WORDS": 2,
-                "BEST_UNIQUE": 3,
+                "BEST_RARE": 3,
                 "LONGEST": 4
             },
             "description": "Constants for intermission awards stages"

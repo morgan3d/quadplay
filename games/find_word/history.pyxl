@@ -60,9 +60,9 @@ def history_draw(history, pos, max_height):
         
         let text = entry.text
         
-        // Emphasize unique values when on the Intermission mode.
-        // For other modes, unique will never be true
-        if entry.unique: text += "✓"
+        // Emphasize rare values when on the Intermission mode.
+        // For other modes (e.g., Play), `rare` will never be true.
+        if entry.rare: text += "✓"
         
         const bounds = draw_text({
             // Bounce if emphasized
