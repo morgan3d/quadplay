@@ -457,8 +457,8 @@ def player_update_board(player, pos, angle, allow_selection)
             
             if tile.selected:
                 // Bounce if just selected
-                if tile.selected > mode_frames - 12:
-                    radius += ⅕ oscillate(tile.selected - mode_frames, 0, 6) + 0.8
+                if tile.selected > game_frames - 12:
+                    radius += ⅕ oscillate(tile.selected - game_frames, 0, 6) + 0.8
             
             if not tile.selected or is_cursor_tile:
                 // Background rect

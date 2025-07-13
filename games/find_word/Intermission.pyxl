@@ -1,15 +1,18 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
+todo("** Make best rare award not require uniqueness -> Lowest found. Mark 'rare' as less than 1/6")
+todo("** Make most rare award (requires tracking rareness to show off the words)")
+
 todo("* Make SOLO version")
-todo("Make most rare award (requires tracking rareness to show off the words)")
 todo("Force GLOBAL to SOLO version when nobody else is there")
 
 
 // Cycle through the award stages. See `STAGE`
 let stage
 
-
+/* Wall clock time in seconds ala `utc_now()` when the Intermission ends
+   for a `GLOBAL` game. */
 let end_time
 
 /* Words *not* found by the local player. Q-decoded. */
@@ -17,6 +20,7 @@ let unfound_word_array
 
 
 /*
+todo("Use for SOLO")
     if mode_frames mod 380 == 60:
         // Choose the next unfound word
         show_word_in_board(pop(unfound_word_array))
@@ -101,8 +105,7 @@ def draw_most_words_award(winner):
     draw_corner_rect(xy(-35, -24), xy(69, 37), winner.avatar.color)
     avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color)
 
-    const FRAMES_PER_WORD = 15
-    show_word_in_board(array_value(winner.word_list, draw_most_words_award.frames / FRAMES_PER_WORD, "loop"))
+    show_word_in_board(array_value(winner.word_list, draw_most_words_award.frames / MOST_WORDS_AWARD_FRAMES_PER_WORD, "loop"))
     board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
 
 
@@ -116,14 +119,13 @@ def show_word_in_board(word):
         player.board.selection_color = #E1B
 
         if not player.board.selection:
-            // Bug workaround
+            // Bug workaround for rare crash
             debug_print(word)
             return
         
         // Select these letters
         for index in player.board.selection:
-            // Need +1 because this can be selected on frame 0
-            player.board.tile[index.x][index.y].selected = mode_frames + 1
+            player.board.tile[index.x][index.y].selected = game_frames
         
 
 
@@ -218,7 +220,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 // Cycle through awards, giving equal time to each
-if game_type == GLOBAL:
+if game_type == GLOBAL or DEBUG_INTERMISSION:
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
 
 // Separator bars

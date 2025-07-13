@@ -68,6 +68,7 @@ def q_decode(word):
     return replace(word, "Q", "QU")
     
     
+const sensitive = {…sensitive_source, "quadplay":1, "sarah":1, "levi":1, "morgan":1, "sonya":1, "shmuel":1}
 def q_encode(word):
     return replace(word, "QU", "Q")
     
@@ -122,4 +123,5 @@ def random_safe_word(rng default random, min_size default 5, max_size default 8)
 def remove_sensitive(word):
     if sensitive[lowercase(word)]:
         return iterate.REMOVE
+        
 

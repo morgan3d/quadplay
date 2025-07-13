@@ -16,6 +16,7 @@ set_random_seed()
 
 frame
 ────────────────────────────────────────────────────────────────────────
+set_background(#000)
 
 // Draw a screen on the first frame. On the second frame, go to
 // the next mode.
@@ -27,7 +28,7 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 if mode_frames == 1:
-    player_reset(player, game_type, if DEBUG_INTERMISSION then "HEMI SAVF ELOO AHTE" else ∅)
+    player_reset(player, game_type, if DEBUG_INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅)
     
     if DEBUG_HISTORY or DEBUG_INTERMISSION:
         for i < 35:

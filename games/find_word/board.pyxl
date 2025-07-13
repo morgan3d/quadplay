@@ -381,7 +381,7 @@ def board_select(board, index, player):
     const tile = board.tile[index.x][index.y]
     assert(not tile.selected)
     push(board.selection, index)
-    tile.selected = mode_frames
+    tile.selected = game_frames
 
     // Pan sound with position
     if not player_selection_change_callback(player):
@@ -466,7 +466,9 @@ def board_draw_mini(board, pos)
             
             tile.pos = 12 xy(x - 1.5, y - 1.5)
             
-            draw_disk(tile.pos, 5, if tile.selected then board.selection_color else #FFF)
+            // Pulse when just selected
+            const radius = if tile.selected and (tile.selected > game_frames - 12) then 6 else 5
+            draw_disk(tile.pos, radius, if tile.selected then board.selection_color else #FFF)
             
             draw_text({
                 pos: tile.pos,

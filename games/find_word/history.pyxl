@@ -62,7 +62,7 @@ def history_draw(history, pos, max_height):
         
         // Emphasize rare values when on the Intermission mode.
         // For other modes (e.g., Play), `rare` will never be true.
-        if entry.rare: text += "✓"
+        if entry.rare: text += "★"
         
         const bounds = draw_text({
             // Bounce if emphasized
