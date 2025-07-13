@@ -2,7 +2,9 @@ Intermission
 ════════════════════════════════════════════════════════════════════════
 
 todo("* Make SOLO version")
+todo("Make most unique award (requires tracking uniqueness to show off the words)")
 todo("Force GLOBAL to SOLO version when nobody else is there")
+
 
 // Cycle through the award stages. See `STAGE`
 let stage
@@ -353,7 +355,7 @@ todo("Use real players in a GLOBAL game")
 // Make some bogus competitors for testing purposes
 insert_synthetic_competitors(competitor_array, 15)
 
-todo("Trim down when there are very many competitors, keeping the top 3, the bottom 3, and 3 around the player")
+todo("Trim down when there are very many competitors, keeping the top 4, the bottom 4, and 3 around the player")
 
 analyze_competitors(competitor_array)
 
