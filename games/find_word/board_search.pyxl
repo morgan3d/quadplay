@@ -1,0 +1,128 @@
+/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
+def _player_find_good_board(player, game_type):
+    let done = false
+    let seed_word
+    let word_array
+    
+    // Construct the rng based on the time. This will
+    // cause players within the same window to be more likely
+    // to have the same board. Temporary prior to investing
+    // multiplayer servers.
+    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG_BOARD_SEARCH then 
+            (10 utc_now())
+        else
+            // Use the seed for the curent game period, but look a few
+            // seconds into the future in case this player is joining early
+            // to make it robust
+            ⌊1 + (utc_now() + 10) / GLOBAL_PERIOD⌋)
+    
+    const board_rng = make_random(rng_seed)
+    
+    for i < BOARD_SEARCH.RETRIES:
+        if i > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
+
+        // Search for a not-sensitive seed word to use
+        seed_word = random_safe_word(board_rng)
+        
+        // Loop for shuffling
+        for j < BOARD_SEARCH.SHUFFLE_RETRIES:
+            board_reset(player.board, seed_word, j)
+            word_array = board_find_all_words(player.board)
+        
+            if i == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
+                // Last try, so just give up and accept the board
+                if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted " + seed_word)
+                done = true
+                break
+    
+            if board_has_obvious_sensitive_word(player.board):
+                if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
+                continue
+    
+            if size(word_array) < BOARD_SEARCH.MIN_WORDS:
+                // Not enough words to even examine the board
+                if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
+                continue
+    
+            // Examine the actual words to see if there are enough good ones   
+    
+            // If a valuable letter appears, ensure that it is used in 
+            // at least two words. First find high point value letters.
+            const valuable_letter_table = {}
+            for col in player.board.tile:
+                for tile in col:
+                    if LETTER_POINT_TABLE[tile.letter] ≥ 4:
+                        valuable_letter_table[tile.letter] = 0
+            
+            const valuable_letters = keys(valuable_letter_table)
+            const valuable_letter_long_count = keys(valuable_letter_table)
+        
+            // Iterate through words, rating them for each criterion
+            let short_word_count = 0
+            let long_word_count = 0
+            let very_long_word_count = 0
+            for word in word_array:
+                if size(word) ≤ 4:
+                    ++short_word_count
+                if size(word) ≥ 5 and size(word) < 7:
+                    ++long_word_count
+                if size(word) ≥ 7:
+                    ++very_long_word_count
+                    
+                if size(word) ≥ 5:
+                    ++long_word_count
+                    
+                for letter in valuable_letters:
+                    if contains(word, letter):
+                        ++valuable_letter_table[letter]
+                        
+                        if size(word) ≥ 5:
+                            ++valuable_letter_long_count[letter]
+            
+            if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
+                continue
+            
+            if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        
+                continue
+            
+            if very_long_word_count < BOARD_SEARCH.MIN_VERY_LONG_WORDS:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
+                continue
+            
+            // See if we used the valuable letters
+            let used_valuable_letters = true
+            let used_valuable_letters_in_long_words = true
+            for count at letter in valuable_letter_table:
+                if count < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
+                    used_valuable_letters = false
+                    
+                if valuable_letter_long_count[letter] < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
+                    used_valuable_letters_in_long_words = false
+                    
+            if not used_valuable_letters:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
+                continue
+            
+            if not used_valuable_letters_in_long_words:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
+                continue
+    
+            // Success!
+            done = true
+            break
+    
+        if done:
+            // Stop early as we have a good board
+            if DEBUG_BOARD_SEARCH: debug_print("Accepted board")
+            break
+        else:
+            // Try again
+            seed_word = ∅
+    
+    player.board.word_list = word_array
+    player.board.word_count = size(word_array)
+    if DEBUG_BOARD_SEARCH:
+        debug_print(player.board.word_list)
+
