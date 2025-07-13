@@ -62,14 +62,9 @@ def history_draw(history, pos, max_height):
         
         // Emphasize rare values when on the Intermission mode.
         // For other modes (e.g., Play), `rare` will never be true.
-        let has_markup = false
-        if entry.rare: 
-            if game_frames mod 60 > 50:
-                // Blink
-                text += "{color:#ddd ★}"
-                has_markup = true
-            else:
-                text += "★"
+        if entry.rare:  text += "★"
+        
+        const flash = entry.rare and (game_frames + 500 - ¼ pos.y) mod 120 > 110
         
         const bounds = draw_text({
             // Bounce if emphasized
@@ -77,14 +72,13 @@ def history_draw(history, pos, max_height):
             font: if emphasize then history_emphasis_font else history_font,
             x_align: "left",
             y_align: "top",
-            color: if show then color else #0000,
+            color: if show then (if flash then #fff else color) else #0000,
             outline: if show then outline else #0000,
-            markup: has_markup,
             z: emphasize,
             text: text})
 
         // Track if this makes the column larger
-        max_width = max(max_width, text_width(history_font, text, has_markup))
+        max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
         
     return max_width

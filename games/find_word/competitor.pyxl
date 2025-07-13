@@ -13,8 +13,6 @@ let best_rare_winner
 let longest_winner
 let most_words_winner
 
-todo("** Make best rare award not require uniqueness -> Lowest found. Mark 'rare' as less than 1/6")
-
 /* Generate a stable set of synthetic competitors with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_synthetic_competitors(competitor_array, num_competitors):
@@ -38,9 +36,7 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
             avatar: {
                 sprite: sprite, 
                 color: avatar_compute_color(sprite), 
-                // Weigh the probability towards capital letters,
-                // and always start with a capital letter
-                name: random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng)},
+                name: make_random_name(rng)},
             score: 0}
 
         // Make stable how good this player is overall, and then add noise per game.
@@ -109,7 +105,7 @@ def add_player_competitor():
 /* Called from `Intermission.enter` */
 def analyze_competitors(competitor_array):
     // How many players have each word; used for 
-    // finding rare words
+    // identifying rare words
     const count = {}
     
     // Compute everyone's best results
@@ -139,6 +135,9 @@ def analyze_competitors(competitor_array):
                 competitor.longest_size = size(text)
                 competitor.longest_text = text
     
+    // Count at which a word is rare
+    const rare_threshold = max(1, floor(size(competitor_array) / 6))
+
     // Find the best rare word for each competitor
     for competitor in competitor_array:
     
@@ -147,11 +146,11 @@ def analyze_competitors(competitor_array):
         competitor.best_rare_text = 0
     
         for word in competitor.word_list:
-            if count[word] == 1:
+            if count[word] <= rare_threshold:
                 const points = score_word(word)
                 const text = q_decode(word)
                 
-                // Nobody else has this word
+                // This word has appeared very few times
                 ++competitor.num_rare
                 
                 if points > competitor.best_rare_points or (points == competitor.best_rare_points and text > competitor.best_rare_text):
@@ -161,7 +160,7 @@ def analyze_competitors(competitor_array):
     // Update the history rare fields for the player competitor
     // as these are used for display. We don't need this for others
     for entry in player.history.list:
-        if count[entry.word] == 1:
+        if count[entry.word] <= rare_threshold:
             entry.rare = true
     
     // Rank all competitors by score

@@ -111,6 +111,17 @@ def swap(array, i, j):
     array[i] = array[j]
     array[j] = temp
 
+    
+
+/* Weigh the probability towards capital letters,
+   and always start with a capital letter */
+def make_random_name(rng default random):
+    return (
+        random_value(ALPHABET, rng) +
+        random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) +
+        random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng))
+
+
 
 /* Fill the screen even at non-quadplay aspect ratios
    for a good mobile experience. See also `DEBUG_PORTRAIT` */
