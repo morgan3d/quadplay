@@ -3,9 +3,6 @@ AvatarEditor
 const DONE_BUTTON_INDEX = 4
 const AVATAR_SCALE = 300%
 
-
-todo("Make the held button repeat")
-
 // Which button is selected
 let selection_index = -1
 
@@ -23,7 +20,7 @@ def update_triangle_button(pos, index, scale_y default +1):
     const r = 10
     
     const bounds = {pos: pos, size: 3 r * xy(1, 1), shape: "disk"}
-    if (touch.hover and overlaps(touch.hover, bounds)) or (touch.aa and overlaps(touch.xy, bounds)):
+    if (touch.hover and overlaps(touch.hover, bounds)) or (touch.a and overlaps(touch.xy, bounds)):
         // Select
         selection_index = index
         selection_sign = scale_y
@@ -34,19 +31,19 @@ def update_triangle_button(pos, index, scale_y default +1):
     
     draw_tri(xy(-1, -0.5), xy(0, 1), xy(1, -0.5), color, outline, pos, ∅, r * xy(1, scale_y), 1)
 
+    const gamepad_button_pressed = button_repeat(if (player.gamepad.y == scale_y) then player.gamepad.y_frames else 0)
+    const touch_pressed = button_repeat(touch.a)
+
     // Return true if activated
-    return (player.gamepad.yy == scale_y) or (not player.using_gamepad and selected and touch.aa)
+    return gamepad_button_pressed or (not player.using_gamepad and selected and touch_pressed)
 
-
-/* Returns str with str[index] replaced with `replacement` */
-def letter_replaced(str, index, replacement):
-    return slice(str, 0, index) + replacement + slice(str, index + 1)
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
 
 selection_index = -1
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -55,7 +52,7 @@ draw_background_words()
 if player.using_gamepad and selection_index == -1:
     // Don't allow no selection once gamepad is active
     selection_index = 0
-else if not player.using_gamepad and (touch.dx or touch.dy or touch.hover or touch.aa):
+else if not player.using_gamepad and (touch.dx or touch.dy or touch.hover or touch.pressed_a):
     // Mouse/touch moved, wait until we see where it went
     // before highlighting something below
     selection_index = -1
@@ -72,14 +69,17 @@ preserving_transform:
         
     set_transform(½ SCREEN_SIZE)
 
+    // Avatar
     local:
         const x = -1.5 SPACING
-        // Prev:
+        // Buttons
         for j < 2:
             const s = sign(j - 0.5)
             if update_triangle_button(xy(x, 45 s), 0, s):
                 player.avatar.sprite = avatar_next_sprite(player.avatar.sprite, s)
-                    
+                player.avatar.color = avatar_compute_color(player.avatar.sprite)
+        
+        // Sprite  
         let sprite = player.avatar.sprite
         if ⌊mode_frames / 30⌋ mod 2:
             sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
@@ -89,17 +89,18 @@ preserving_transform:
             scale: 300%,
             pos: xy(x, -4)})
             
-        
-        
+    // Letters   
     for i < 3:
         const x = SPACING * (i - 0.5) + 6
         const letter = player.avatar.name[i]
         
+        // Buttons
         for j < 2:
             const s = sign(j - 0.5)
             if update_triangle_button(xy(x, 45 s), i + 1, s):
                 player.avatar.name = letter_replaced(player.avatar.name, i, avatar_next_name_letter(letter, s))
         
+        // Letter
         draw_text({
             font: giant_score_font,
             text: letter,
@@ -109,7 +110,7 @@ preserving_transform:
             
             
 
-// Button            
+// Large done button            
 local:
     const rect = {pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), size: xy(150, 21)}
     
@@ -122,8 +123,8 @@ local:
     if player.using_gamepad:
         label += replace(" (b)", player.gamepad.prompt)
     
+    // Highlight the done button
     if selected:
-        // Highlight
         for 1 ≤ i < 4: 
             draw_rect(rect.pos, rect.size + 2i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
             
@@ -136,19 +137,19 @@ local:
         color: if selected then #FFF else #000})
     
     if (mode_frames > 2 and 
-        ((player.gamepad.aa and selection_index == DONE_BUTTON_INDEX) or
-         player.gamepad.bb or 
-         (touch.aa and overlaps(touch.xy, rect)))):
+        ((player.gamepad.pressed_a and selection_index == DONE_BUTTON_INDEX) or
+         player.gamepad.pressed_b or 
+         (touch.pressed_a and overlaps(touch.xy, rect)))):
         pop_mode() because "Button"
 
-// D-pad for letters and avatar
+// Gamepad selection
 if player.gamepad.xx:
     selection_index = clamp(selection_index + player.gamepad.xx, 0, DONE_BUTTON_INDEX - 1)
 
-// A button for advance, including to the done button. Do this at 
+// Use the (a) button for advancing to the next selection, including to the done button. Do this at 
 // the end of processing so that it is not considered accepting the 
 // done button.
-if player.gamepad.aa:
+if player.gamepad.pressed_a:
     selection_index = clamp(selection_index + 1, 0, DONE_BUTTON_INDEX)
 
 

@@ -239,8 +239,8 @@ if current_index < 4:
         // Actually accept any button, even though the prompt says "A". Do not
         // allow E or F buttons because one is the "option" key on the Mac that
         // is ambiguous with the Options button on a PS4 controller
-        if gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd or gamepad.qq:
-            if gamepad.qq:
+        if gamepad.pressed_a or gamepad.pressed_b or gamepad.pressed_c or gamepad.pressed_d or gamepad.pressed_q:
+            if gamepad.pressed_q:
                 // Skip this player
                 play_sound($acceptUISound)
                 gamepadOrderMap[current_index] = DISABLED_GAMEPAD

@@ -97,7 +97,7 @@ else:
 // Prevent accidental button double tap by waiting a few frames before
 // accepting input
 if mode_frames > 10:
-    if gui.gamepad.aa:
+    if gui.gamepad.pressed_a:
         pop_mode(true)
-    else if gui.gamepad.bb and not forced:
+    else if gui.gamepad.pressed_b and not forced:
         pop_mode(false)

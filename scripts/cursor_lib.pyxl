@@ -16,7 +16,7 @@ Copyright 2025, Morgan McGuire
 const cursor = make_cursor()
 
 def button_callback(data, cursor)
-& if cursor.gamepad.aa or touch.aa:
+& if cursor.gamepad.pressed_a or touch.pressed_a:
     // Do the thing
     
 //////////////////////////////////////////////////    
@@ -42,13 +42,13 @@ cursor_update(cursor)
   Coordinates are relative to the current transform  
 
   - `callback`: Callback `callback(data, cursor)` runs if the _any_ button is pressed on this target or
-    there is a touch on the target. Test cursor.gamepad.aa, .bb, touch.aa, etc. to determine
+    there is a touch on the target. Test cursor.gamepad.pressed_a, .pressed_b, touch.pressed_a, etc. to determine
     what was pressed. If `callback == ∅`, the cursor changes to show that no callback is allowed.
   - `hover_callback`: Callback `hover_callback(data, cursor)` runs when this target is selected
     by gamepad navigation or mouse hover.
 
   Sounds and visuals differ for the cursor based on which callbacks are set. If `callback` is
-  set, the target is activateable by pressing gamepad.aa. Otherwise, the target may be used
+  set, the target is activateable by pressing gamepad.pressed_a. Otherwise, the target may be used
   for cursor traversal but is not selectable.
 */
 def cursor_register_target(cursor, pos, size, callback default ∅, data default ∅, shape default "rect", hover_callback default ∅):
@@ -120,9 +120,9 @@ def cursor_update(cursor)
             play_sound({sound: cursor.bad_sound, pan: pos})
     
     const mouse = device_control("get_mouse_state")
-    if mouse.dx or mouse.dy or touch.aa:
+    if mouse.dx or mouse.dy or touch.pressed_a:
         
-        const mouse_pos = if touch.aa then touch.xy else mouse.xy
+        const mouse_pos = if touch.pressed_a then touch.xy else mouse.xy
         
         // Find target *under* mouse
         const new_target = cursor_find_closest_target(cursor, mouse_pos)

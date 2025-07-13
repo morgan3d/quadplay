@@ -51,7 +51,7 @@ if α == 100%:
 
         for gamepad in player in player_array:
             choice = clamp(choice + gamepad.xx, 0, 2)
-            if gamepad.aa:
+            if gamepad.pressed_a:
                 if choice == 0:
                     set_mode(Play, make_player_info(), game_type) because "Rematch"
                 else if choice == 1:

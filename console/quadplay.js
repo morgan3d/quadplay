@@ -2658,7 +2658,7 @@ function resetTouchInput() {
     if (mouse.movement_x !== undefined) {
         mouse.movement_x = mouse.movement_y = 0;
     }
-    QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = 0;
+    QRuntime.touch.pressed_a = QRuntime.touch.released_a = 0;
 }
 
 // Invoked by requestAnimationFrame() or setTimeout. 
@@ -2733,7 +2733,7 @@ function mainLoopStep() {
             const gamepadSampleTime = performance.now() + 1000 / 60;
             updateInput();
             if (QRuntime.$goToSystemMenu === 'cancel') {
-                QRuntime.gamepad_array[0].$pp = 1;
+                QRuntime.gamepad_array[0].$p_pressed = 1;
                 QRuntime.$goToSystemMenu = false;
             }
             while (! updateKeyboardPending && ! refreshPending && (performance.now() < gamepadSampleTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
@@ -2965,10 +2965,10 @@ function reloadRuntime(oncomplete) {
             }
         };
 
-        const padXXYYGetter = {
+        const padXFramesGetter = {
             enumerable: true,
             get: function () {
-                return {x: this.$xx * QRuntime.$scaleX, y: this.$yy * QRuntime.$scaleY};
+                return this.$x_frames;
             }
         };
         
@@ -2992,7 +2992,14 @@ function reloadRuntime(oncomplete) {
                 return this.$yy * QRuntime.$scaleY;
             }
         };
-        
+
+        const padYFramesGetter = {
+            enumerable: true,
+            get: function () {
+                return this.$y_frames;
+            }
+        };
+
         const xyGetter = {
             enumerable: true,
             get: function () {
@@ -3045,17 +3052,17 @@ function reloadRuntime(oncomplete) {
             get: function() { return this.$status; }
         };
 
-
         function $bind_gamepad_getters(pad) {
             Object.defineProperty(pad, 'x', padXGetter);
             Object.defineProperty(pad, 'dx', dxGetter);
             Object.defineProperty(pad, 'xx', padXXGetter);
+            Object.defineProperty(pad, 'x_frames', padXFramesGetter);
             Object.defineProperty(pad, 'y', padYGetter);
             Object.defineProperty(pad, 'dy', dyGetter);
             Object.defineProperty(pad, 'yy', padYYGetter);
+            Object.defineProperty(pad, 'y_frames', padYFramesGetter);
             Object.defineProperty(pad, 'xy', xyGetter);
             Object.defineProperty(pad, 'dxy', dxyGetter);
-            Object.defineProperty(pad, 'xxyy', padXXYYGetter);
             Object.defineProperty(pad, 'angle', angleGetter);
             Object.defineProperty(pad, 'dangle', dangleGetter);
             Object.defineProperty(pad, 'status', statusGetter);
@@ -3068,7 +3075,6 @@ function reloadRuntime(oncomplete) {
             screen_dy: 0,
             a: 0,
             pressed_a: 0,
-            aa: 0,
             released_a: 0
         };
 
@@ -3116,7 +3122,7 @@ function reloadRuntime(oncomplete) {
         Object.defineProperty(QRuntime.touch, 'hover', hoverGetter);
         Object.seal(QRuntime.touch);
         
-        QRuntime.gamepad_array = Object.seal([0,0,0,0]);
+        QRuntime.gamepad_array = Object.seal([0, 0, 0, 0]);
         const COLOR_ARRAY = ['f5a', '0af', 'ed3', '4e4'];
 
         for (let p = 0; p < 4; ++p) {
@@ -3139,11 +3145,10 @@ function reloadRuntime(oncomplete) {
                 // Set from network updates
                 $guest_latest_state: null,
                 
-                $x: 0, $dx: 0, $xx: 0,
-                $y: 0, $dy: 0, $yy: 0,
+                $x: 0, $dx: 0, $xx: 0, $x_frames: 0,
+                $y: 0, $dy: 0, $yy: 0, $y_frames: 0,
                 $angle:0, $dangle:0,
                 a:0, b:0, c:0, d:0, e:0, f:0, $p:0, q:0,
-                aa:0, bb:0, cc:0, dd:0, ee:0, ff:0, $pp:0, qq:0,
                 pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, pressed_e: 0, pressed_f:0, $pressed_p:0, pressed_q:0,
                 released_a:0, released_b:0, released_c:0, released_d:0, released_e:0, released_f:0, $released_p:0, released_q:0,
                 index: p,

@@ -227,7 +227,7 @@ draw_text({
 
 if mode_frames > 10:
     for gamepad in gamepad_array:
-        if gamepad.aa:
+        if gamepad.pressed_a:
             // Refine the selection
             let scenario = scenario_array[scenario_index]
             if scenario.name == "<RANDOM>":
@@ -239,9 +239,9 @@ if mode_frames > 10:
 
             const c = (if is_single_player or not offline then 1 else num_controllers)
             set_mode(Intro, c, is_single_player, difficulty, scenario) because "Pressed A"
-        else if gamepad.bb:
+        else if gamepad.pressed_b:
             set_mode(Title) because "Pressed B"
-        else if gamepad.cc:
+        else if gamepad.pressed_c:
             reverse_start = not reverse_start
         
         scenario_index = loop(scenario_index + gamepad.yy, size(scenario_array))

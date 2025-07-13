@@ -109,14 +109,14 @@ def gui_action(gui)
         assert(piece ≠ EMPTY_SPACE)
         
         // In target mode
-        if gamepad.bb or (gamepad.aa and equivalent(cursor_board_pos, selected_board_pos)):
+        if gamepad.pressed_b or (gamepad.pressed_a and equivalent(cursor_board_pos, selected_board_pos)):
             // Unselect
             play_sound({sound: cancel_sound, pan: sound_pos})
             selected_board_pos = ∅
             gui.moves = ∅
             gui.threat_map = game_compute_threat_map(global_game)
             
-        else if gamepad.aa:
+        else if gamepad.pressed_a:
             
             if contains(gui.moves, cursor_board_pos, equivalent):
                 // Remove the selection
@@ -131,7 +131,7 @@ def gui_action(gui)
                 // Illegal move
                 play_sound({sound: refuse_sound, pan: sound_pos})
             
-    else if gamepad.aa:
+    else if gamepad.pressed_a:
         // In selection mode
         const piece = gui_get_piece(cursor_board_pos)
         if piece ≠ EMPTY_SPACE and piece.player_index == player_index:

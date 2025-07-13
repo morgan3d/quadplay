@@ -60,7 +60,7 @@ set_volume(bgm_loops[2], sqrt(crossfade))
 // Handle input
 if not disable_input:
     for pad in gamepad_array: // any connected control can operate the menus
-        if pad.aa ≠ 0:
+        if pad.pressed_a ≠ 0:
             disable_input = true
             play_sound(SND_CURSOR_ACCEPT)
             if next_level_index == -1:

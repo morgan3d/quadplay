@@ -1001,57 +1001,61 @@ Input
 The gamepad objects in the four-element `gamepad_array` each have
 the following properties:
 
-Property           | Values   | Meaning
--------------------|----------|----------------------------------
-`index`            | 0,1,2,3  | Index of this gamepad in `gamepad_array`. The player name is `"P" + (gamepad.index + 1)`
-`player_color`     | rgb      | Color identifying this player (not the color of the gamepad itself)
-`x`                | -1,0,+1  | D-pad value on the _x_-axis at the start of the current frame frame
-`xx`               | -1,0,+1  | If the D-pad moved from the center to a side on the _x_-axis at any time between the previous and current frame, this is the side that it moved to. When it hit both extremes, the last one is returned.
-`dx`               | -2,-1,0,+1,+2 | Change in value of `x` between the previous and current frames on the _x_-axis
-`y`                | -1,0,+1  | D-pad value on the _y_-axis at the start of the current frame
-`yy`               | -1,0,+1  | If the D-pad moved from the center to a side on the _y_-axis at any time between the previous and current frame, this is the side that it moved to.  When it hit both extremes, the last one is returned.
-`dy`               | -2,-1,0,+1,+2 | Change in value of `y` between the previous and current frames
-<code>xy</code>    | xy       | `xy(x, y)` for the gamepad
-`dxy`              | xy       | `xy(dx, dy)` for the gamepad
-`xxyy`             | xy       | `xy(xx, yy)` for the gamepad
-`angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both are not zero, otherwise the last angle
-`dangle`           | -π to +π | Change in `angle` this frame
-`a`                | number   | The number of frames the ⓐ button has been held down, 0 if it was not held down at the start of the current frame
-`aa` or `pressed_a`| number   | Nonzero if the ⓐ button went from up to down at least once since the previous frame
-`released_a`       | number   | Number of frames the ⓐ button was down if it went from down to up at least once since the previous frame, otherwise 0
-`b`                | number   | The number of frames the ⓑ button has been held down, 0 if it was not held down at the start of the current frame
-`bb` or `pressed_b`| number   | Nonzero if the ⓑ button went from up to down at least once since the previous frame
-`released_b`       | number   | Number of frames the ⓑ button was down if it went from down to up at least once since the previous frame, otherwise 0
-`c`                | number   | The number of frames the ⓒ button has been held down, 0 if it was not held down at the start of the current frame
-`cc` or `pressed_c`| number   | Nonzero if the ⓒ button went from up to down at least once since the previous frame
-`released_c`       | number   | Number of frames the ⓒ button was down if it went from down to up at least once since the previous frame, otherwise 0
-`d`                | number   | The number of frames the ⓓ button has been held down, 0 if it was not held down at the start of the current frame
-`dd` or `pressed_d`| number   | Nonzero if the ⓓ button went from up to down at least once since the previous frame
-`released_d`       | number   | Number of frames the ⓓ button was down if it went from down to up at least once since the previous frame, otherwise 0
-`e`                | number   | The number of frames the ⓔ button has been held down, 0 if it was not held down at the start of the current frame
-`ee` or `pressed_e`| number   | Nonzero if the ⓔ button went from up to down at least once since the previous frame
-`released_e`       | number   | Number of frames the ⓔ button was down if it went from down to up at least once since the previous frame, otherwise 0
-`f`                | number   | The number of frames the ⓕ button has been held down, 0 if it was not held down at the start of the current frame
-`ff` or `pressed_e`| number   | Nonzero if the ⓕ button went from up to down at least once since the previous frame
-`released_f`       | number   | Number of frames the ⓕ button was down if it went from down to up at least once since the previous frame, otherwise 0
-`q`                | number   | The number of frames the ⓠ button has been held down, 0 if it was not held down at the start of the current frame
-`qq` or `pressed_q`| number   | Nonzero if the ⓠ button went from up to down at least once since the previous frame
-`released_q`       | number   | Number of frames the ⓠ button was down if it went from down to up at least once since the previous frame, otherwise 0
-<code>type</code>  | string   | The type of gamepad, as autodetected based on serial number or overriden by the player
-`prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
-`status`           | string   | `"absent"` before any interaction this game on this gamepad. `"present"` if local interaction has occurred and not playing an online game. `"host"` if the host in an online game. `"guest"` if a guest in an online game. Starting or stopping online hosting/guesting resets to `"absent"`.
-`online_name`      | string   | Name of the computer this gamepad is connected to. Useful primarily for online play.
+Property                   | Values   | Meaning
+---------------------------|----------|----------------------------------
+`gamepad.index`            | 0,1,2,3  | Index of this gamepad in `gamepad_array`. The player name is `"P" + (gamepad.index + 1)`
+`gamepad.player_color`     | rgb      | Color identifying this player (not the color of the gamepad itself)
+`gamepad.x`                | -1,0,+1  | D-pad value on the _x_-axis at the start of the current frame frame
+`gamepad.xx`               | -1,0,+1  | If the D-pad moved from the center to a side on the _x_-axis at any time between the previous and current frame, this is the side that it moved to. When it hit both extremes, the last one is returned.
+`gamepad.x_frames`         | number   | Number of frames that `x` has had the current value, 0 if it just changed this frame
+`gamepad.dx`               | -2,-1,0,+1,+2 | Change in value of `x` between the previous and current frames on the _x_-axis
+`gamepad.y`                | -1,0,+1  | D-pad value on the _y_-axis at the start of the current frame
+`gamepad.yy`               | -1,0,+1  | If the D-pad moved from the center to a side on the _y_-axis at any time between the previous and current frame, this is the side that it moved to.  When it hit both extremes, the last one is returned.
+`gamepad.y_frames`         | number   | Number of frames that `y` has had the current value, 0 if it just changed this frame
+`gamepad.dy`               | -2,-1,0,+1,+2 | Change in value of `y` between the previous and current frames
+<code>gamepad.xy</code>    | xy       | `xy(x, y)` for the gamepad
+`gamepad.dxy`              | xy       | `xy(dx, dy)` for the gamepad
+`gamepad.angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both `x` and `y` are not zero, otherwise the last angle
+`gamepad.dangle`           | -π to +π | Change in `angle` this frame
+`gamepad.a`                | number   | The number of frames the ⓐ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_a`        | number   | Nonzero if the ⓐ button went from up to down at least once since the previous frame.
+`gamepad.released_a`       | number   | Number of frames the ⓐ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`gamepad.b`                | number   | The number of frames the ⓑ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_b`        | number   | Nonzero if the ⓑ button went from up to down at least once since the previous frame
+`gamepad.released_b`       | number   | Number of frames the ⓑ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`gamepad.c`                | number   | The number of frames the ⓒ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_c`        | number   | Nonzero if the ⓒ button went from up to down at least once since the previous frame
+`gamepad.released_c`       | number   | Number of frames the ⓒ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`gamepad.d`                | number   | The number of frames the ⓓ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_d`        | number   | Nonzero if the ⓓ button went from up to down at least once since the previous frame
+`gamepad.released_d`       | number   | Number of frames the ⓓ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`gamepad.e`                | number   | The number of frames the ⓔ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_e`        | number   | Nonzero if the ⓔ button went from up to down at least once since the previous frame
+`gamepad.released_e`       | number   | Number of frames the ⓔ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`gamepad.f`                | number   | The number of frames the ⓕ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_e`        | number   | Nonzero if the ⓕ button went from up to down at least once since the previous frame
+`gamepad.released_f`       | number   | Number of frames the ⓕ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`gamepad.q`                | number   | The number of frames the ⓠ button has been held down, 0 if it was not held down at the start of the current frame
+`gamepad.pressed_q`        | number   | Nonzero if the ⓠ button went from up to down at least once since the previous frame
+`gamepad.released_q`       | number   | Number of frames the ⓠ button was down if it went from down to up at least once since the previous frame, otherwise 0
+<code>gamepad.type</code>  | string   | The type of gamepad, as autodetected based on serial number or overriden by the player
+`gamepad.prompt`           | `{...}`  | An object mapping button names to text prompts for use with `replace()`. See the example below.
+`gamepad.status`           | string   | `"absent"` before any interaction this game on this gamepad. `"present"` if local interaction has occurred and not playing an online game. `"host"` if the host in an online game. `"guest"` if a guest in an online game. Starting or stopping online hosting/guesting resets to `"absent"`.
+`gamepad.online_name`      | string   | Name of the computer this gamepad is connected to. Useful primarily for online play.
 
 !!! 
-    Use the single-letter gamepad properties (`x`, `a`) for
-    temporally continuous inputs such as aiming or charging. Use
-    double-letter properties (`xx`, `aa`) for discrete inputs such as
-    firing or choosing a menu option.
+    Use the single-letter gamepad properties (e.g., `x`, `a`) for
+    continuous inputs such as aiming or charging. Use
+    double-letter properties (e.g., `xx`, `aa`) for discrete inputs such as
+    firing or choosing a menu option. Use the frame counter
+    in (e.g., `x_frames`, `a`, `touch.a`) for cooldowns and
+    button repeats.
 
 !!! 
     Use `sign(gamepad.a)` etc. if you want to force the value to 1
-    or 0.  There is never a need to convert to a boolean because 0 =
-    false and nonzero = true for statements such as `if gamepad.a:`
+    or 0 for a computation. For branching there is never a need to convert
+    to a boolean because 0 = `false` and nonzero = `true` for 
+    statements such as `if gamepad.a:`.
 
 
 If a button is pressed and released very quickly, then `a` could be 0
@@ -1153,7 +1157,6 @@ Property                 | Type     | Meaning
 `touch.dxy`              | xy       | `xy(touch.dx, touch.dy)`
 `touch.a`                | number   | Number of frames that the touch has been held down, or 0 if not currently down
 `touch.pressed_a`        | number   | Nonzero if the touch started this frame
-`touch.aa`               | number   | Same as `pressed_a`
 `touch.released_a`       | number   | Nonzero if the touch ended this frame
 `touch.screen_x`         | number   | Screen-space x position
 `touch.screen_y`         | number   | Screen-space y position
@@ -3916,8 +3919,7 @@ indices. The map's z-axis corresponds to layers.
   span. `size` is the extent of the span, which must be 0 along the
   `y` axis (vertical spans are reserved for future expansion). 
   The span will be transformed by the `camera.pos`, but does not rotate with
-  the `camera.angle`.
-  `map_coord0` is an `xy()` in map coordinates for the source colors,
+  the `camera.angle`.  `map_coord0` is an `xy()` in map coordinates for the source colors,
   which corresponds to the `start` pixel on screen. `map_coord1` is
   the end coordinate in map coordinates.
   
@@ -4636,7 +4638,53 @@ guest, you cannot currently leave a game without restarting <quadplay/>.
 
 The Conduit network API is an alternative to built-in Host-Guest shared-screen
 multiplayer. Both APIs can be used together, although the Conduit API is intended to
-completely replace Host-Guest for games that use it. 
+completely replace Host-Guest for games that use it.
+
+The default behavior of `make_conduit()` connects you to a *global broadcast group* that
+is like a world-wide radio station. Here's what happens:
+
+1. **Automatic Join**: When you call `make_conduit()`, you're instantly connected to every other instance of your game running anywhere in the world
+2. **No Setup Required**: No dedicated servers, no server configuration, no IP addresses, no port forwarding needed
+3. **Broadcast Communication**: You can send messages that reach all other players, and receive messages from all other players
+4. **Game-Specific**: Only players running the same game (from the same URL) can join this group
+
+This works because system uses a virtual routing layer that handles all the complex networking (NAT traversal, peer discovery, etc.) behind the scenes and operates 
+in a purely peer-to-peer, client side manner from statically hosted content. You can also
+customize the behavior to produce alternative network structures, more restricted groups,
+or have peers act in differentiated roles (e.g., as servers).
+
+The simplest possible example of using the global group is a chatroom:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
+let group_conduit
+
+def handle_message(message, node_netid):
+  debug_print(node_netid + " says: " + message)
+
+enter
+--------------------------------------------------
+// Instantly connect to a single massive global group of all
+// instances of this game everywhere in the world
+group_conduit = make_conduit()
+
+frame
+--------------------------------------------------
+// Receive
+conduit_iterate(group_conduit, handle_message)
+
+// Send
+if gamepad_array[0].aa:
+  conduit_send(group_conduit, "Hello world!")
+
+exit
+--------------------------------------------------
+// Leave the group on exit
+conduit_close(group_conduit)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+A more game-like framework extends that chatroom to track per-player
+state about other nodes, and handle the local player's state directly:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
 let group_conduit
@@ -4672,6 +4720,9 @@ enter
 --------------------------------------------------
 my_netid = get_node_netid()
 player_table[my_netid] = "idle"
+
+// Connect to a single massive global group of all
+// instances of this game everywhere
 group_conduit = make_conduit()
 
 
@@ -4685,7 +4736,6 @@ if gamepad_array[0].aa and player_table[my_netid] == "idle":
   jump()
   delay(5, land)
 
-
 exit
 --------------------------------------------------
 // Leave the group on exit
@@ -4694,50 +4744,93 @@ group_conduit = nil
 remove_all(player_table)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+The key concepts in this API are:
+
+*Conduit*
+: A connection on which discrete messages can be reliably sent and received.
+  The latency is reasonably low, but remaines limited by the 60 Hz frame rates of
+  the sender and receiver serving their queues. So, expect a minimum of
+  120 ms for a round trip communication and much higher if the nodes are
+  behind NATs, many physical network hops apart, or the messages are very large.
+
+*Message*
+: An arbitrary game-specific data structure. It can have cycles and other
+  complex internal pointer relationships that will be preserved similar to 
+  structured cloning. However, certain values can't be included in a message
+  because they can't be serialized or are machine specific (e.g., functions, 
+  sprites and other assets).
+
+*Node*
+: A single instance of your game, running on one tab of a web browser. There 
+  can be multiple instances on the same computer, and each instance might perform
+  multiple roles simultaneously, or change roles over time. A node can be programmed
+  to act as a discovery server, a game server, a game client, or a game peer.
+
+*Group*
+: A network clique of nodes that can broadcast to each other. Think of this 
+  like a global radio channel. When connected to
+  a group, each node has a single conduit on which it sends and receives messages. It 
+  can only broadcast to everyone on in the group, but when receiving messages knows
+  the ID of the node that sent to it.
+
+*netid*
+: A virtual address by which a node or group is identified. These are strings
+  that can be chosen as transient per session or hardcoded for specific purposes.
+  They must be globally unique. For a node, this is somewhat analogous to an IP address, but 
+  because it operates on a virtual network avoids many of the limitations of IP
+  addresses. For a group, this is somewhat analogous to a UDP broadcast mask,
+  but it is reliable and operates on the global internet instead of the local network and has
+  no routing limitations.
+
+
 The Conduit API supports creating direct peer-to-peer data connections between
 instances of your game running on multiple computers or in multiple browser windows
 on the same computer. It gives nearly full control of the network code to your game,
 at the expense of requiring you to perform all state synchronization. 
 
-Conduits can be used for
-building any network topology, including client-dedicated server star networks,
-or peer-to-peer ones.
+Conduits can be used for building any network topology, including peer-to-peer,
+clients that host a temporary server on the same node, and client-dedicated server star networks.
+Conduit operates on a virtual routing system that does not use IP addresses, so will
+work with nodes behind NATs and does not require static IP addresses. 
+
+The ways that you can connect to other nodes with Conduit are:
+
+- In Groups
+  - Connect to a single global peer group. This forms a clique where every node communicates
+    with ever other node. This is the default operation of `make_conduit()` and is good
+    for an MMO-like experience.
+  - Connect to a peer group with a specific static or dynamic ID, where that ID has been discovered
+    via a side channel. You can build your own "server browser" by using the global group 
+    as the side channel, or ask players to use another side channel such as Discord or SMS.
+- 1:1
+  - Connect to a node with a specific dynamic ID, where that ID has been discovered via
+    a side channel. This is good for 1:1 games, or for star networks with transient
+    servers hosted by players.
+  - Connect to a node with a specific static ID, where that ID is either hardcoded into
+    your game or discovered via a side channel. This is good for dedicated servers, such
+    as where you use a computer that you can keep online continuously to host your game.
+    This can be as simple as a Rasberry Pi on a home network or as complex as an AWS virtual hosted
+    process.
+  - Listen for incoming connections from other nodes. This is the receiving side 
+    of the two previous connection strategies.
 
 Conduit's state synchronization and server coding are more complex than the
 built in shared-screen Host-Code network multiplayer. So, the Conduit API is best for 
 experienced developers polishing games rather than for new developers or rapid protyping
 in game jams.
 
-The core data structures of the Conduit API are:
-
-`node_netid`
-: A string with the prefix "node_netid" uniquely identifying an instance
-  of your game (not a user, computer, or browser) that is 
-  usually generated each session using `get_node_netid()`.
-
-`group_netid`
-: A string with the prefix "group_netid" identifying a group of game instances 
-  that are playing together. This is a "room"
-  in the "chatroom" sense. It could also be a "server"
-  in the sense that players refer to them, versus a server machine or process.
-
-`message`
-: Any simple data structure composed of strings, numbers, nil, booleans,
-  objects, and arrays that are strictly a tree. That is, no functions, 
-  built-in <quadplay/> objects (such as sprites), or data structures 
-  that form DAGs or cycles.
-  
-`conduit`
-: The reliable network communication object.
+A conduit has the following properties:
 
 `conduit.status`
-: `"pending"`, `"ok"`, or `"closed"`
+: - `"pending"` - in the process of connecting. Messages sent or received will be queued while awaiting the full handshake.
+  - `"ok"` - the connection is open and stable.
+  - `"closed"` - the connection has been terminated on one or both sides.
 
 `conduit.netid`
 : The `netid` of the group or node being communicated with through this conduit.
 
-
-The Conduit API is:
+The functions in the conduit API are:
 
 `make_conduit(id default "group_netid 0000", join_message default nil)`
 : Create a connection to one or more nodes on the network. `id`
@@ -4750,6 +4843,9 @@ The Conduit API is:
   from the same server, i.e., from the same URL. You do not need to put the name 
   of your game in the ID. (The restriction to the same game is to make it harder
   for someone to fork your game and then corrupt its network communications.)
+  The group is created (or recreated) when the first node connects and taken down when the last node
+  disconnects.
+  The default value connects everyone to a single global group for your game.
 
   If `id` begins with the string `"node_netid"`, then the conduit communicates
   one-to-one with a single node that was calling `conduit_listen()`. You must

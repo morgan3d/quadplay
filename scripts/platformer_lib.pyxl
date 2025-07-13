@@ -185,7 +185,7 @@ def player_update(player, map, layer, particle_array)
     const can_air_jump = player.since_jump_button > 20
     const just_jumped = player.since_jump_button < 8
 
-    if player.gamepad.aa:
+    if player.gamepad.pressed_a:
         player.since_jump_button = 0
     else:
         player.since_jump_button = min(1000, player.since_jump_button + 1)

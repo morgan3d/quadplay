@@ -65,18 +65,52 @@ def penultimate_value(array):
     return array[size(array) - 2]
 
 
+
 def _update_utc_time():
     utc_time = utc_now()
 
 
+
 /* Hook that automaticaly switches the detected input mechanism */
 def detect_input():
-    if player.gamepad.aa or player.gamepad.bb or player.gamepad.xx or player.gamepad.yy:
+    if player.gamepad.pressed_a or player.gamepad.pressed_b or player.gamepad.xx or player.gamepad.yy:
         player.using_gamepad = true
-    else if touch.dx or touch.dy or touch.aa or touch.hover:
+    else if touch.dx or touch.dy or touch.pressed_a or touch.hover:
         // Used touch screen or mouse
         player.using_gamepad = false
-    
+
+
+
+/* Returns a boolean that is true if the button has just been
+   pressed or is on a repeat press this frame */
+def button_repeat(button_frames):
+    return (
+        (button_frames == 1) or 
+          (MAX(button_frames - BUTTON_REPEAT_DELAY, 0) mod BUTTON_REPEAT_PERIOD) == 1)
+
+
+
+/* `true` if in landscape layout mode */
+def landscape():
+    return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
+
+
+/* For sorting on size(A) */
+def size_comparator(A, B):
+    return size(A) - size(B)
+
+
+/* Returns str with str[index] replaced with `replacement` */
+def letter_replaced(str, index, replacement):
+    return slice(str, 0, index) + replacement + slice(str, index + 1)
+
+
+/* Swap elements i and j in array. */
+def swap(array, i, j):
+    const temp = array[i]
+    array[i] = array[j]
+    array[j] = temp
+
 
 /* Fill the screen even at non-quadplay aspect ratios
    for a good mobile experience. See also `DEBUG_PORTRAIT` */

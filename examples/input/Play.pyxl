@@ -76,7 +76,7 @@ for i < 4:
         for b in jp: if p[b]: jp[b] = mode_frames
         
         // Rumble on A button press if supported
-        if p.aa: device_control("rumble", i)
+        if p.pressed_a: device_control("rumble", i)
         
         const player_color = OFF_COLOR[i]
         
@@ -154,7 +154,7 @@ draw_sprite(CURSOR_SPRITE, mouse.xy)
 //draw_line(mouse.xy, mouse.xy + 10 mouse.dxy, #F00)
 
 if touch.a: last_touch_pos = xy(touch.x, touch.y)
-if touch.aa: last_touch_frame = mode_frames
+if touch.pressed_a: last_touch_frame = mode_frames
    
 if last_touch_pos:
     const recent = last_touch_frame > mode_frames - 10

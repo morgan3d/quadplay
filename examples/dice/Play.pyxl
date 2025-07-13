@@ -80,7 +80,7 @@ def process_ui():
         
         
     // Swap dice
-    if (touch.aa or joy.bb) and selected_die:
+    if (touch.pressed_a or joy.pressed_b) and selected_die:
         if contains(dice.die_array, selected_die):
             dice_transfer(tray, selected_die)
             last_selected_die = find_closest_die(selected_die.pos, ∅, dice)
@@ -99,11 +99,11 @@ def process_ui():
             // following it to the new area
             last_selected_die = selected_die
         
-        if touch.aa:
+        if touch.pressed_a:
             // Hide the selection visualization
             selected_die = ∅
             
-    else if ((touch.aa and not selected_die and overlaps(touch.xy, dice)) or joy.aa) and size(dice.die_array) > 0:
+    else if ((touch.pressed_a and not selected_die and overlaps(touch.xy, dice)) or joy.pressed_a) and size(dice.die_array) > 0:
         // Choose results and set up for the roll animation
         ++num_rolls
         dice_prepare_roll(dice, true)

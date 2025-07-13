@@ -133,7 +133,7 @@ for j < NUM_WHITE_KEYS:
             key.audio = ∅
 
 // Bossa nova button
-if gamepad.qq:
+if gamepad.pressed_q:
     if get_audio_status(bossa_nova).state == "PLAYING":
         stop_audio(bossa_nova)
     else:

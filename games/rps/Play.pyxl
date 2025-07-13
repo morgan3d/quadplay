@@ -68,13 +68,13 @@ for player in player_array:
       if player.is_human and mode_frames < TIMEOUT_FRAMES:
          // Make choices
          const gamepad = gamepad_array[player.index]
-         if gamepad.yy == -1 or gamepad.dd:
+         if gamepad.yy == -1 or gamepad.pressed_d:
             player.choice = "rock"
-         else if gamepad.xx == -1 or gamepad.cc:
+         else if gamepad.xx == -1 or gamepad.pressed_c:
             player.choice = "paper"
-         else if (gamepad.xx == +1 or gamepad.bb) and player.health < MAX_HEALTH:
+         else if (gamepad.xx == +1 or gamepad.pressed_b) and player.health < MAX_HEALTH:
             player.choice = "heal"
-         else if gamepad.yy == +1 or gamepad.aa:
+         else if gamepad.yy == +1 or gamepad.pressed_a:
             player.choice = "scissors"
 
          if player.choice: play_sound(player.audio_clip)

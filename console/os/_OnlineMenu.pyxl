@@ -156,7 +156,7 @@ def draw_view(view):
             play_sound($moveUISound)
 
         // Touch selection
-        if touch.aa and overlaps(touch, bounds):
+        if touch.pressed_a and overlaps(touch, bounds):
             touch_current_choice = true
             
         pos.y += line_height
@@ -168,7 +168,7 @@ def draw_view(view):
 def manage_online_input(choice_array, touch_current_choice):
     for gamepad in gamepad_array:
         online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)
-        if gamepad.aa or touch_current_choice:
+        if gamepad.pressed_a or touch_current_choice:
             const choice = choice_array[online_choice_index]
             if choice == "Change Host Code":
                 $changeMyHostNetID()

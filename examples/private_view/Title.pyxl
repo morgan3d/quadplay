@@ -88,6 +88,6 @@ for choice at i in choice_array:
 
 choice_index = clamp(choice_index + gamepad_array[0].yy, 0, size(choice_array) - 1)
 
-if gamepad_array[0].aa:
+if gamepad_array[0].pressed_a:
     // Make this menu choice
     choice_array[choice_index].callback()

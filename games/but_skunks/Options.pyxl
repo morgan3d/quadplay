@@ -57,7 +57,7 @@ if not disable_input:
             // fade in the calibration loop
             set_volume(bgm_loops[2], if current_menu_item == MENU_CALIBRATE then 100% else 0%)
         // Handle "back to main menu"
-        if pad.bb ≠ 0:
+        if pad.pressed_b ≠ 0:
             disable_input = true
             play_sound(SND_CURSOR_BACK)
             add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
@@ -68,7 +68,7 @@ if not disable_input:
             else if current_menu_item == MENU_DEV_CHEATS:
                 cheat_index = loop(cheat_index+pad.xx, 0, size(CHEATS))
                 DEBUG_CHEATS = CHEATS[cheat_index].value
-        if current_menu_item == MENU_CALIBRATE and pad.aa ≠ 0:
+        if current_menu_item == MENU_CALIBRATE and pad.pressed_a ≠ 0:
             const target_f = BGM_FRAMES_PER_MEASURE/2 // target frame is halfway through the measure, at the snare hit
             const release_measure_f = (bgm_measure_f + BGM_FRAMES_PER_MEASURE - target_f) mod BGM_FRAMES_PER_MEASURE
             const press_f = (bgm_measure_f + BGM_FRAMES_PER_MEASURE - target_f) mod BGM_FRAMES_PER_MEASURE

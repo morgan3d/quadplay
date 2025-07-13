@@ -53,8 +53,8 @@ def set_tab_index(t):
    across all tabs */
 def manage_tabs():
     for pad in gamepad_array:
-        if (pad.ee or pad.xx < 0) and tab_index > 0: set_tab_index(tab_index - 1)
-        if (pad.ff or pad.xx > 0) and tab_index < size(tab_array) - 1: set_tab_index(tab_index + 1)
+        if (pad.pressed_e or pad.xx < 0) and tab_index > 0: set_tab_index(tab_index - 1)
+        if (pad.pressed_f or pad.xx > 0) and tab_index < size(tab_array) - 1: set_tab_index(tab_index + 1)
         
     draw_corner_rect(xy(0, 0), xy(384, 16), #2)
     draw_line(xy(0, 16), xy(384, 16), #f)
@@ -188,7 +188,7 @@ def manage_games_tab():
         y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).size.y
 
     for pad in gamepad_array:
-        if pad.aa or pad.qq:
+        if pad.pressed_a or pad.pressed_q:
             const game = game_array[gameIndex]
             if (game.title == "") and $getIsHosting():
                 // Resolution restriction for games that are not full or half resolution

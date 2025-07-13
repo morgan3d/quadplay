@@ -159,7 +159,7 @@ frame
 set_background(#234)
 
 // Process user input
-if joy.bb: control = (control + 1) mod size(objectArray)
+if joy.pressed_b: control = (control + 1) mod size(objectArray)
 const object = objectArray[control]
 
 let scheme = "⍇⍈⍐"
@@ -182,7 +182,7 @@ else if object == "person":
    accelerate(person, xy(2 joy.x, 0), xy(1, 0))
 
    // Jump
-   if joy.aa or joy.yy > 0:
+   if joy.pressed_a or joy.yy > 0:
       // Test whether the character is on the ground
       const childRegion = {shape: "rect", pos: xy(0, -person.size.y / 2), size: xy(120% person.size.x, 3)}
       if physics_entity_has_contacts(physics, person, childRegion, xy(0, 1)):

@@ -94,7 +94,7 @@ for gamepad in gamepad_array:
         play_sound({sound: selection_sound, volume: 200%, playback_rate: 60%})
     
     // Accept
-    if mode_frames > 20 and gamepad.aa:
+    if mode_frames > 20 and gamepad.pressed_a:
         if selected_index == size(TITLE_OPTION_ARRAY) - 1:
             quit_game() because "Selected quit"
         else:

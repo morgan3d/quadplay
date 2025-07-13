@@ -1333,7 +1333,7 @@ function updateInput() {
     mouse.screen_y_prev = mouse.screen_y;
 
     // Update touch frame count (after the first frame)
-    if (QRuntime.touch.a && ! QRuntime.touch.aa) {
+    if (QRuntime.touch.a && ! QRuntime.touch.pressed_a) {
         ++QRuntime.touch.a;
     }
     
@@ -1388,7 +1388,7 @@ function updateInput() {
                 const oldv = pad[prefix + button];
                 const newv = latest[prefix + button];
 
-                pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (newv >= 0.5) && (oldv < 0.5) ? 1 : 0;
+                pad[prefix + 'pressed_' + button] = (newv >= 0.5) && (oldv < 0.5) ? 1 : 0;
                 pad[prefix + 'released_' + button] = (newv < 0.5) && (oldv >= 0.5) ? oldv : 0;
                 pad[prefix + button] = newv ? oldv + 1 : 0;
             }
@@ -1506,10 +1506,10 @@ function updateInput() {
                 // Keyboard (only P1's P button has three codes)
                 const b0 = map[button][0], b1 = map[button][1], b2 = map[button][2];
                 pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1] || emulatorKeyState[b2]) ? oldv + 1 : 0;
-                pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1] || emulatorKeyJustPressed[b2]) ? 1 : 0;
+                pad[prefix + 'pressed_' + button] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1] || emulatorKeyJustPressed[b2]) ? 1 : 0;
                 pad[prefix + 'released_' + button] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1] || emulatorKeyJustReleased[b2]) ? oldv : 0;
             } else {
-                pad[prefix + button] = pad[prefix + button + button] = pad[prefix + 'released_' + button] = pad[prefix + 'pressed_' + button] = 0;
+                pad[prefix + button] = pad[prefix + 'released_' + button] = pad[prefix + 'pressed_' + button] = 0;
             }
 
             const i = buttonIndex[b], j = altButtonIndex[b];
@@ -1520,7 +1520,6 @@ function updateInput() {
             if (isPressed) { pad[prefix + button] = oldv + 1; }
 	    
             if (isPressed && ! wasPressed) {
-                pad[prefix + button + button] = 1;
                 pad[prefix + 'pressed_' + button] = 1;
             }
 
@@ -1559,6 +1558,18 @@ function updateInput() {
     for (let i = 0; i < 4; ++i) {
         if (gamepadArray[i]) {
             prevRealGamepadState[i] = gamepadArray[i];
+        }
+    }
+
+    // Update x_frames and y_frames counters
+    for (let i = 0; i < 4; ++i) {
+        const pad = QRuntime.gamepad_array[i];
+        for (const axis of 'xy') {
+            if (pad['$d' + axis]) {
+                pad['$' + axis + '_frames'] = 0
+            } else {
+                ++pad['$' + axis + '_frames'];
+            }
         }
     }
 

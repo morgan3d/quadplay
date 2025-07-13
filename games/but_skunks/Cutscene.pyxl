@@ -91,7 +91,7 @@ if advance:
     cmd_start_frame = mode_frames
     advance = false
 // skip cutscenes with B
-if joy.bb:
+if joy.pressed_b:
     play_sound(SND_CURSOR_ACCEPT)
     next_cmd_index = size(cmds)-1
 
@@ -203,7 +203,7 @@ else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
         skunk.sprite = animation_frame(player_infos[i].walk_anim, bgm_now_f)
         draw_entity(skunk)
         // Hack to ignore lingering A presses when you first enter the mode.
-        if pad.aa:
+        if pad.pressed_a:
             skunk.has_charged = true
         // spawn stinkbombs
         if not skunk.charging and skunk.has_charged and pad.a:

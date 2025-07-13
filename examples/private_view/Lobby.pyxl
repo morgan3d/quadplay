@@ -4,7 +4,7 @@ Lobby
 def process_input(player):
     with offset, scale, pos, gamepad, z in player:
         // Quit
-        if gamepad.qq:
+        if gamepad.pressed_q:
             if gamepad.index == 0:
                 // Host
                 stop_hosting()
@@ -14,7 +14,7 @@ def process_input(player):
                 disconnect_guest(gamepad.index)
                 return iterate.REMOVE
                 
-        if gamepad.aa and gamepad.index == 0:
+        if gamepad.pressed_a and gamepad.index == 0:
             // Start the game
             set_mode(Play) because "Host pressed ⓐ"
         

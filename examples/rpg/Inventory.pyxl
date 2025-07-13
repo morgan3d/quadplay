@@ -1,2 +1,2 @@
 drawInventory()
-if joy.qq or joy.bb: pop_mode("ⓟ or ⓑ")
+if joy.pressed_q or joy.pressed_b: pop_mode("ⓟ or ⓑ")

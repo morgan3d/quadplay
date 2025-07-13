@@ -1538,7 +1538,7 @@ function $pop_modeFrom$SystemMenu(callback) {
 ${sectionSeparator}
 const $frame = (function quadplay_main_loop() {
     try {
-        if (($gameMode.$name[0] !== '$') && ($goToSystemMenu || gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu, $goToSystemMenu); } $goToSystemMenu = false;
+        if (($gameMode.$name[0] !== '$') && ($goToSystemMenu || gamepad_array[0].$p_pressed || gamepad_array[1].$p_pressed || gamepad_array[2].$p_pressed || gamepad_array[3].$p_pressed)) { push_mode($SystemMenu, $goToSystemMenu); } $goToSystemMenu = false;
         $processFrameHooks();
         ${sectionTable.frame.jsCode}
         $show();

@@ -38,7 +38,7 @@ set_background(#BBC)
 frame
 ────────────────────────────────────────────────────────────────────────
 
-if joy.aa: morgan_mapping = not morgan_mapping
+if joy.pressed_a: morgan_mapping = not morgan_mapping
 draw_text({
     font: font, pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10), z: 1,
     color: #000,

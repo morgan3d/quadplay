@@ -40,8 +40,8 @@ for p < 4:
     const gamepad = gamepad_array[p]
     const color = sprite_pixel_color(sprite, ½ sprite.size)
 
-    player_status[p] = clamp(player_status[p] + gamepad.aa - gamepad.bb, 0, 2)
-    if gamepad.aa: play_accept_sound(gamepad.index)
+    player_status[p] = clamp(player_status[p] + gamepad.pressed_a - gamepad.pressed_b, 0, 2)
+    if gamepad.pressed_a: play_accept_sound(gamepad.index)
 
     let α = 100%
     

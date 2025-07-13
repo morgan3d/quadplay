@@ -19,7 +19,7 @@ of [<quadplay/>](manual.md.html).
   - `device_control("enable_feature", "custom_screen_size")`
   - `"timer"` format for `format_number()`
   - `utc_now()`
-  - `gamepad.xxyy`
+  - `gamepad.x_frames` and `gamepad.y_frames`
   - `CREDITS.version`
   - `set_random_seed()` and `make_random()` now allow a string as the seed
   - Clarified `local_time()` documentation
@@ -28,6 +28,10 @@ of [<quadplay/>](manual.md.html).
   - Added game.json `online_menu` option to disable the Online menu item in the System Menu for
     games that should not support Online play or use the Conduit API
   - New `QUADPLAY_INFO` global constant
+  - *Incompatible change*: Removed `gamepad.aa`, `gamepad.bb`, etc. and `touch.aa` aliases. 
+    Use the already existing `gamepad.a_pressed`, etc. instead. Left `gamepad.xx` and
+    `gamepad.yy` for now because `gamepad.x and |sign(gamepad.dx)|` is an awkward
+    alternative
 - Asset changes:
   - `deja-bold-15.font.json`
   - `novarese-20.font.json`

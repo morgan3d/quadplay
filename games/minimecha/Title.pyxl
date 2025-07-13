@@ -90,7 +90,7 @@ for p < 2:
         if not fadeout:
             selection_stack[size(selection_stack) - 1] = loop(last_value(selection_stack) + gamepad_array[p].yy, size(menu.child_array))
             
-            if gamepad_array[p].aa:
+            if gamepad_array[p].pressed_a:
                 const entry = menu.child_array[last_value(selection_stack)]
                 if size(entry.child_array) > 0:
                     // Enter the child menu

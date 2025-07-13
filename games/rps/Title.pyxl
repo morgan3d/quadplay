@@ -93,12 +93,12 @@ draw_choice("Start", 214, choice == CHOICE.START)
 
 for 1 ≤ p ≤ 4:
    const gamepad = gamepad_array[p - 1]
-   choice = clamp(choice + gamepad.yy + gamepad.qq, 0, 2)
+   choice = clamp(choice + gamepad.yy + gamepad.pressed_q, 0, 2)
 
-   if choice == CHOICE.START and (gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd):
+   if choice == CHOICE.START and (gamepad.pressed_a or gamepad.pressed_b or gamepad.pressed_c or gamepad.pressed_d):
       start_game()
 
-   if gamepad.yy or gamepad.qq: play_sound(sound1)
+   if gamepad.yy or gamepad.pressed_q: play_sound(sound1)
 
    if gamepad.xx:
       play_sound(sound2)

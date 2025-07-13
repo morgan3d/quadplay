@@ -241,7 +241,7 @@ set_vehicle(player, "hero")
 frame
 ────────────────────────────────────────────────────────────────────────
 
-if player.gamepad.qq:
+if player.gamepad.pressed_q:
    const types = ["hero", "car", "tank", "chopper"]   
    set_vehicle(player, types[(find(types, player.type) + 1) mod size(types)])
 

@@ -45,7 +45,7 @@ def processPuck(puck):
          vel = clone(owner.vel)
 
          // Controls
-         if owner.pad.aa:
+         if owner.pad.pressed_a:
             // Shoot
             if owner.pad.isAI and ξ < 25%:
                // Cheat aiming for AI
@@ -57,7 +57,7 @@ def processPuck(puck):
             play_sound({sound: shootAudioClip, pan: pos.x / 100, volume: 60% + ‖vel‖ / 200})
             owner = ∅
 
-         else if owner.pad.bb:
+         else if owner.pad.pressed_b:
             // Pass to teammate, leading the target. Keep the velocity much lower than
             // for shooting so that this doesn't get used as an aimbot cheat
             const delta = owner.teammate.pos - pos

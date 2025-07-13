@@ -171,7 +171,7 @@ def update_gameplay():
     // process user input
     let user_key_turned = joy.d
     let user_key_released = joy.released_d
-    let user_toggle_lights = joy.bb
+    let user_toggle_lights = joy.pressed_b
     let user_gas_pedal = joy.a
     let user_brake_pedal = joy.c
     let user_wheel = joy.y

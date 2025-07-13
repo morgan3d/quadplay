@@ -57,7 +57,7 @@ def simulate_view(view, gamepad, gamepad2):
     assert(view.z_fog_constant > 0)
     assert(view.perspective_constant > 0)
     
-    if gamepad.qq: 
+    if gamepad.pressed_q: 
         if view.control_scheme == "D-PAD":
             view.control_scheme = "DUAL D-PAD"
         else if view.control_scheme == "DUAL D-PAD":
@@ -131,7 +131,7 @@ def simulate_view(view, gamepad, gamepad2):
     if view.pos.z ≤ 32 and view.jump_vel ≤ 0:
         view.pos.z = 32
         view.jump_vel = 0
-        if gamepad.aa: view.jump_vel = +2
+        if gamepad.pressed_a: view.jump_vel = +2
         const move = ‖xy(old_pos - view.pos)‖
         if move > 0.5:
             if not view.walk_audio:

@@ -110,7 +110,7 @@ fire_arrow()
 frame
 ────────────────────────────────────────────────────────────────────────
 
-if gamepad_array[0].aa: fire_arrow()
+if gamepad_array[0].pressed_a: fire_arrow()
         
 iterate(arrow_array, arrow_compute_forces)
 physics_simulate(physics)

@@ -13,6 +13,7 @@ def avatar_save(avatar):
         sprite_index: avatar_sprite_to_linear_index(player.avatar.sprite)})
 
 
+
 def avatar_compute_color(sprite):
     const color = hsv(sprite.mean_color)
     color.s *= 130%

@@ -262,10 +262,10 @@ def player_process_input(player):
         if gamepad.xx: play_blip_sound(gamepad.index, player.pos)
         
         // Move UI
-        if gamepad.dd: player.ui_at_edge = not player.ui_at_edge
+        if gamepad.pressed_d: player.ui_at_edge = not player.ui_at_edge
         
         // Acivate register
-        if gamepad.aa:
+        if gamepad.pressed_a:
             const status = status_array[choice]
             let ok = true
             if status ≠ "locked":

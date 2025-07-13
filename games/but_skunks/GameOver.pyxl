@@ -18,7 +18,7 @@ set_volume(bgm_loops[2], sqrt(crossfade))
 // Handle input
 if not disable_input:
     for pad in gamepad_array: // any connected control can operate the menus
-        if pad.bb != 0:
+        if pad.pressed_b != 0:
             disable_input = true
             play_sound(SND_CURSOR_BACK)
             add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})

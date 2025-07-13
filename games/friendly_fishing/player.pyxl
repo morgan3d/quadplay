@@ -255,7 +255,7 @@ def player_aim(player):
         text: player.gamepad.prompt[if player.face.x > 0 then "[>]" else "[<]"], 
         pos: player.pos + xy(32, -8) * player.face}))
         
-    if player.gamepad.bb:
+    if player.gamepad.pressed_b:
         player.pull_back_audio = play_sound({sound: pull_back_sound, volume: 50%, pan: player.pos, playback_rate: 50%})
         player.action = player_cast
         player.rod_angle = ROD_ANGLE_MIN
@@ -344,7 +344,7 @@ def player_reel(player):
     // When there is no fish, pressing (a) immediately taps and reels in
     // the line. When there is a fish, the first press outside of a tap just holds
     // the line. Autoreel when FAR into overtime
-    if player.gamepad.aa or (line_frames_left < -60*8 and ξ < 5%):
+    if player.gamepad.pressed_a or (line_frames_left < -60*8 and ξ < 5%):
         if (not player.fish or (player.fish and player.last_press_mode_frame > mode_frames - player.tap_frames * 2)):
             player.tap = true
             if get_audio_status(player.reel_in_audio).state ≠ "PLAYING":

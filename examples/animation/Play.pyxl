@@ -76,8 +76,8 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
     if pos.y == GROUND_Y:
         if animation ≠ "land" and nextAnimation ≠ "land" and animation ≠ "attack":
             // On ground, we can jump and attack
-            if gamepad.aa: vel.y = -JUMP_SPEED
-            if gamepad.bb: nextAnimation = "attack"
+            if gamepad.pressed_a: vel.y = -JUMP_SPEED
+            if gamepad.pressed_b: nextAnimation = "attack"
     else:
         // Above ground
         force.y = GRAVITY * entity_mass(ninja)
@@ -96,7 +96,7 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
 
     // Change weapons (not allowed during the landing or attack animation)
     if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅:
-        weaponIndex = loop(weaponIndex + gamepad.cc - gamepad.dd, size(ninja.weaponArray))
+        weaponIndex = loop(weaponIndex + gamepad.pressed_c - gamepad.pressed_d, size(ninja.weaponArray))
     const newWeapon = ninja.weaponArray[weaponIndex]
     if weapon ≠ newWeapon:
         entity_remove_child(ninja, weapon)

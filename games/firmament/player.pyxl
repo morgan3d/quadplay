@@ -207,7 +207,7 @@ def player_select_ship_in_direction(player, selection_pos, selection_dir):
 
 def player_process_input(player)
 & with gamepad, selection in player:
-    if gamepad.dd or gamepad.qq:
+    if gamepad.pressed_d or gamepad.pressed_q:
         play_sound({sound: selection_sound, playback_rate: 50%})
         player_select_next_ship(player)
                     

@@ -136,10 +136,10 @@ frame
 ────────────────────────────────────────────────────────────────────────
 if mode_frames > fade_in_frames + slide_in_frames + 2:
    for control in gamepad_array:
-      if control.qq or control.$pp:
+      if control.pressed_q or control.$pp:
          play_sound($cancelUISound)
          close(∅)
-      else if control.aa or control.bb:
+      else if control.pressed_a or control.pressed_b:
          choose()
       else if control.yy:
          const prev = choice_index
@@ -197,7 +197,7 @@ for view in VIEW_ARRAY:
             play_sound($moveUISound)
        
         // Touch selection
-        if touch.aa and overlaps(touch, bounds):
+        if touch.pressed_a and overlaps(touch, bounds):
             choose()
    
         if active: $draw_system_menu_text({text: "✜", pos: xy(x - 40% line_height + 1, y + yOffset), x_align: "right", y_align: "center"}, true)

@@ -446,6 +446,47 @@ def board_selected_word(board):
         word += board.tile[s.x][s.y].letter
         
     return word
-
     
+    
+
+/* Draw a mini version of the game board
+   highlighting the selected word on
+   the Intermission mode screen */
+def board_draw_mini(board, pos)
+& preserving_transform:
+    set_transform(pos)
+            
+    let word = ""
+    for y < ROWS:
+        for x < COLS:
+            const tile = board.tile[x][y]
+            const letter = if tile.letter == "Q" then "Qu" else tile.letter
+            
+            if tile.selected: word += letter
+            
+            tile.pos = 12 xy(x - 1.5, y - 1.5)
+            
+            draw_disk(tile.pos, 5, if tile.selected then board.selection_color else #FFF)
+            
+            draw_text({
+                pos: tile.pos,
+                font: history_font,
+                color: if tile.selected then #FFF else #000,
+                text: letter})
+    
+    if size(board.selection) > 0:
+        // Draw word
+        draw_text({
+            font: history_font,
+            text: "\"" + word + "\"",
+            pos: xy(0, -31),
+            shadow: #000,
+            color: player.board.selection_color})
+            
+        // Draw connectors
+        for 1 ≤ i < size(board.selection):
+            const prev = board.selection[i - 1]
+            const curr = board.selection[i]
+            draw_line(board.tile[prev.x][prev.y].pos, board.tile[curr.x][curr.y].pos, board.selection_color, -1, 2)
+
     

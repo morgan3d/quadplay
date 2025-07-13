@@ -167,9 +167,9 @@ preserving_transform:
         
     if tau == 100%:
         for gamepad in gamepad_array:
-            if (gamepad.xx > 0 or gamepad.aa or gamepad.ff) and selected_column_index < 5:
+            if (gamepad.xx > 0 or gamepad.pressed_a or gamepad.pressed_f) and selected_column_index < 5:
                 ++selected_column_index
-            else if (gamepad.xx < 0 or gamepad.bb or gamepad.ee) and selected_column_index > 0:
+            else if (gamepad.xx < 0 or gamepad.pressed_b or gamepad.pressed_e) and selected_column_index > 0:
                 --selected_column_index
 
             const is_repeat_frame = (last_y_change < mode_frames - REPEAT_DELAY) and (mode_frames mod REPEAT_FREQUENCY == 0)
@@ -181,7 +181,7 @@ preserving_transform:
             if |gamepad.yy|: last_y_change = mode_frames
 
             // Quit
-            if gamepad.qq: pop_mode()
+            if gamepad.pressed_q: pop_mode()
 
             // Visit
             if gamepad.$pp:

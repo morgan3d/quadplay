@@ -261,7 +261,7 @@ def prompt_before_leaving_mode():
         size: button_size,
         text: "Ready",
     })
-    return gamepad.bb or next_button_pressed
+    return gamepad.pressed_b or next_button_pressed
 
 enter(turn_state_, object_elements_)
 ────────────────────────────────────────────────────────────────────────

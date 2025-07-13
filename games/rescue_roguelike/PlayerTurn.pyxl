@@ -102,7 +102,7 @@ def update_cursor_hover_with_gamepad(gamepad):
 def update_curr_drag_with_gamepad(gamepad):
     update_curr_drag()
     
-    if gamepad.bb:
+    if gamepad.pressed_b:
         curr_drag = {
             start_frame: mode_frames,
             start_pos: cursor_hover,
@@ -622,7 +622,7 @@ def handle_player_input(gamepad):
     const click = is_click_with_b()
     const long_press_ended = long_press and (touch.released_a or gamepad.released_b)
     const confirm = click or long_press_ended
-    const cancel = gamepad.aa
+    const cancel = gamepad.pressed_a
    
     let player_button_clicked = nil
     if player_current_unit_element:
@@ -634,13 +634,13 @@ def handle_player_input(gamepad):
 
     const menu_mode = not turn_state.show_ui
 
-    const cycle_action = gamepad.dd
+    const cycle_action = gamepad.pressed_d
     const toggle_action = player_button_clicked != nil
 
     // weird button.  oh well
     player_show_attack_order = not menu_mode and (player_show_attack_order or gamepad.e)
-    const undo_move = not menu_mode and (gamepad.qq or ui_buttons.undo_move.clicked)
-    const end_turn = not menu_mode and (gamepad.cc or ui_buttons.end_turn.clicked)
+    const undo_move = not menu_mode and (gamepad.pressed_q or ui_buttons.undo_move.clicked)
+    const end_turn = not menu_mode and (gamepad.pressed_c or ui_buttons.end_turn.clicked)
 
     if cancel:
         set_player_unit_element(∅)

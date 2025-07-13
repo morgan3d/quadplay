@@ -106,12 +106,12 @@ if manage_tabs or mode_frames > open_frames:
     // have gotten to this screen using a different
     // controller than the active one.
     for control in gamepad_array:
-        if not manage_tabs and (control.qq or control.$pp):
+        if not manage_tabs and (control.pressed_q or control.$pp):
             // Do NOT use "bb", which maps to enter on the keyboard
             // and may make players think they are executing a command
             play_sound($cancelUISound)
             pop_mode()
-        else if control.aa and not control.released_a:
+        else if control.pressed_a and not control.released_a:
             // Needed to check for simultaneous press and release
             // to avoid re-executing sleep on wake from the A button.
             choose()
@@ -148,7 +148,7 @@ if manage_tabs or mode_frames > open_frames:
                 play_sound($moveUISound)
                
             // Touch selection
-            if touch.aa and overlaps(touch, bounds):
+            if touch.pressed_a and overlaps(touch, bounds):
                 choose()
         
             if active:

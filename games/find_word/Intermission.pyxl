@@ -19,44 +19,23 @@ let end_time
 let unfound_word
 let unfound_word_array
 
-def points_order(A, B):
-    return B.points - A.points
-    
     
 def word_comparator(entry, word):
     return entry.word == word
         
-    
-def length_comparator(A, B):
-    return size(A) - size(B)
-
-
-def swap(array, i, j):
-    const temp = array[i]
-    array[i] = array[j]
-    array[j] = temp
-
-
-/* Draw the history of words found by the local player */
-def update_history()
-& preserving_transform:
-    set_clip(xy(0,0), xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y)) 
-    history_draw(player.history, xy(2, 1), SCREEN_SIZE.y - 22)
-
 
 
 def draw_award_background(color):
-    draw_corner_rect(xy(-28, -36), xy(69, 63), color)
+    draw_corner_rect(xy(-35, -36), xy(69, 63), color)
 
 
 
 /* Called from `update_awards()` when `stage` == `SUMMARY_STAGE` */
-def update_summary():
-    if mode_frames mod 400 == 50:
+def update_award_summary():
+    if mode_frames mod 380 == 60:
         // Choose the next unfound word
         show_word_in_board(pop(unfound_word_array))
-    
-    
+        
     draw_award_background(player.avatar.color)
     const shadow = 60% player.avatar.color
   
@@ -65,52 +44,28 @@ def update_summary():
         y_align: "baseline",
         shadow: shadow,
         color: #FFF}
+
+    draw_text({…args, text: "Summary", pos: xy(0, -27), x_align: "center"})
     
-    draw_text({
-        …args,
-        text: format_number(player.score, "commas"),
-        font: score_font,
-        pos: xy(20, -17),
-        x_align: "right"})
-        
-    draw_text({
-        …args,
-        text: "pts",
-        pos: xy(24, -22)})
+    draw_text({ …args, text: format_number(player.score, "commas"), font: score_font, pos: xy(14, -2), x_align: "right"})
+    draw_text({…args, text: "pts", pos: xy(18, -7)})
 
 
-    draw_text({
-        …args,
-        text: "Found",
-        pos: xy(-23, -10)})
-        
-    draw_text({
-        …args,
-        text: "" + size(player.history.list) + "/" + player.board.word_count,
-        pos: xy(36, -10),
-        x_align: "right"})
+    draw_text({…args, text: "Found", pos: xy(-29, 10)})
+    draw_text({…args, text: "" + size(player.history.list) + "/" + player.board.word_count, pos: xy(30, 10), x_align: "right"})
             
-    draw_text({
-        …args,
-        text: "Unique",
-        pos: xy(-23, 0)})
-        
-    draw_text({
-        …args,
-        text: player_competitor.num_unique,
-        pos: xy(36, 0),
-        x_align: "right"})
+    draw_text({…args, text: "Unique", pos: xy(-29, 20)})
+    draw_text({…args, text: player_competitor.num_unique, pos: xy(30, 20), x_align: "right"})
+
 
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best Unique, High Score, Most Words) */
 def update_awards()
 & preserving_transform:
-    set_transform(xy(SCREEN_SIZE.x - 95, 34))
+    set_transform(xy(SCREEN_SIZE.x - 88, 34))
 
-    todo("Start with summary")
-    
     if stage == SUMMARY_STAGE:
-        update_summary()
+        update_award_summary()
    
     todo("Implement Best Word award")
     todo("Implement Longest award")
@@ -136,42 +91,6 @@ def show_word_in_board(word):
     for index in player.board.selection:
         player.board.tile[index.x][index.y].selected = mode_frames
         
-
-
-/* Words shown on the mini board */
-def update_mini_board()
-& preserving_transform:
-    set_transform(xy(SCREEN_SIZE.x - 26, 36))
-            
-    
-    for y < ROWS:
-        for x < COLS:
-            const tile = player.board.tile[x][y]
-            tile.pos = 12 xy(x - 1.5, y - 1.5)
-            
-            draw_disk(tile.pos, 5, if tile.selected then player.board.selection_color else #FFF)
-            
-            draw_text({
-                pos: tile.pos,
-                font: history_font,
-                color: if tile.selected then #FFF else #000,
-                text: if tile.letter == "Q" then "Qu" else tile.letter})
-    
-    if size(player.board.selection) > 0:
-        // Draw word
-        draw_text({
-            font: history_font,
-            text: "\"" + unfound_word + "\"",
-            pos: xy(0, -31),
-            shadow: #000,
-            color: player.board.selection_color})
-            
-        // Draw connectors
-        for 1 ≤ i < size(player.board.selection):
-            const prev = player.board.selection[i - 1]
-            const curr = player.board.selection[i]
-            draw_line(player.board.tile[prev.x][prev.y].pos, player.board.tile[curr.x][curr.y].pos, player.board.selection_color, -1, 2)
-    
     
 
 /* Draw the ranked competitors and perform UI logic */
@@ -308,12 +227,17 @@ def analyze_competitors(competitor_array):
     sort(competitor_array, "score", true)
 
 
+
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
 board_deselect_all(player.board, player)
 //debug_print(player.board.word_list)
-sort(player.history.list, points_order)
+sort(player.history.list, "points", true)
+
+// Reset the scroll position because layout differs
+// from the main game
+player.history.scroll = 0
 
 if game_type == GLOBAL:
     end_time = next_global_game_utc_start_time()
@@ -326,7 +250,7 @@ for word in player.board.word_list:
 
 
 // Sort from shortest to longest to emphasize impressive words
-sort(unfound_word_array, length_comparator)
+sort(unfound_word_array, size_comparator)
 
 // Now swap some of the other words towards the back so that
 // the player also feels like they could have gotten these
@@ -364,8 +288,6 @@ insert_synthetic_competitors(competitor_array, 15)
 todo("Trim down when there are very many competitors, keeping the top 3, the bottom 3, and 3 around the player")
 
 
-todo("Mark unique words in history")
-
 analyze_competitors(competitor_array)
 
 stage = SUMMARY_STAGE
@@ -377,11 +299,11 @@ frame
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 61), xy(125, 2), #000, ∅, 20)
 
-update_history()
+history_update(player.history, {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)})
 
 update_awards()
 
-update_mini_board()
+board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
 
 update_leaderboard()
 
@@ -399,7 +321,7 @@ if game_type == SOLO:
         pos: pos,
         color: #FFF})
         
-    if (any_button_press(gamepad_array[0]) or (touch.aa and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
+    if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
         set_mode(GenerateBoard) because "Button press"
         
 else:

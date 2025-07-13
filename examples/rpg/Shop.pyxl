@@ -5,4 +5,4 @@ draw_sprite_corner_rect(uiSprite[10][15], xy(64, 22), xy(256, 78), 10)
 draw_text(smallFont, "Shop", xy(½ SCREEN_SIZE.x, 16), #626e77, ∅, ∅, "center", 0, 10)
 draw_text(font, "Yer money is no good here! This is no a REAL game where ye can buy stuff.", xy(67, 22), #626e77, ∅, ∅, -1, -1, 10, 256)
 
-if joy.cc or joy.bb: pop_mode("Press ⓑ or ⓒ")
+if joy.pressed_c or joy.pressed_b: pop_mode("Press ⓑ or ⓒ")

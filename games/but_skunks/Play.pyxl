@@ -701,10 +701,10 @@ iterate(active_skunks, itor_active_skunk_update_stun)
 iterate(enemies, itor_enemy_apply_stun)
 iterate(enemies, itor_active_skunk_update_stun) // not a copy/paste error
 // Check for level-ending conditions
-if size(boxes) == 0 or (DEBUG_CHEATS and joy.ee):
+if size(boxes) == 0 or (DEBUG_CHEATS and joy.pressed_e):
     // all boxes destroyed; move to next level
     add_frame_hook(fade_out, enter_interstitial_mode, 30, ∅, {})
-if bgm_now ≥ MAX_LEVEL_SECONDS or (DEBUG_CHEATS and joy.ff):
+if bgm_now ≥ MAX_LEVEL_SECONDS or (DEBUG_CHEATS and joy.pressed_f):
     add_frame_hook(fade_out, enter_gameover_mode, 30, ∅, {})
     
 // lighting

@@ -59,8 +59,8 @@ def update_button(pos, text, index):
     
     if ((not intro and
         mode_frames > 2 and 
-        ((touch.aa and overlaps(touch.xy, rect)) or
-         (selected and gamepad_array[0].aa)))
+        ((touch.pressed_a and overlaps(touch.xy, rect)) or
+         (selected and gamepad_array[0].pressed_a)))
          or DEBUG_INTERMISSION):
         game_type = index
         
@@ -144,7 +144,6 @@ set_hooks()
 fake_player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(fake_player.board, fake_player)
 
-
 def sound():
     play_sound(times_up_sound)
     
@@ -208,8 +207,8 @@ local:
     
     avatar_draw_large(player.avatar, pos)
     if (not intro and
-        ((touch.aa and overlaps(touch.xy, bounds)) or
-         (player.gamepad.aa and selected_index == AVATAR_EDITOR_INDEX))):
+        ((touch.pressed_a and overlaps(touch.xy, bounds)) or
+         (player.gamepad.pressed_a and selected_index == AVATAR_EDITOR_INDEX))):
         push_mode(AvatarEditor) because "Selected avatar"
     
 
@@ -220,6 +219,6 @@ if gamepad_array[0].xx or gamepad_array[0].yy:
     play_sound(select_tile_sound)
 
 
-if any_button_press() or touch.aa:
+if any_button_press() or touch.pressed_a:
     skip_intro()
 

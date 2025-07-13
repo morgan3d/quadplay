@@ -110,9 +110,9 @@ for info in player_info:
     const gamepad = gamepad_array[info.index]
     if selecting_map:
         // Selecting map
-        if gamepad.bb:
+        if gamepad.pressed_b:
             selecting_map = false
-        else if gamepad.aa:
+        else if gamepad.pressed_a:
             play_accept_sound(gamepad.index)
             map_source = map_array[map_choice]
             set_mode(Play, player_info, game_array[game_choice].type) because "Selected"
@@ -125,9 +125,9 @@ for info in player_info:
                 --map_scroll
     else:
         // Selecting game
-        if gamepad.bb:
+        if gamepad.pressed_b:
             set_mode(Title) because "Cancel"
-        else if gamepad.aa:
+        else if gamepad.pressed_a:
             play_accept_sound(gamepad.index)
             save_local("game_choice", game_choice)
             selecting_map = true

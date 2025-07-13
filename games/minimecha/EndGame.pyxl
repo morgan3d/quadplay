@@ -63,7 +63,7 @@ draw_text({
     z: DIALOG_Z})
 
 
-if mode_frames > 10 and (gamepad_array[0].aa or gamepad_array[1].aa):
+if mode_frames > 10 and (gamepad_array[0].pressed_a or gamepad_array[1].pressed_a):
     set_mode(Config) because "Pressed (a)"
     
     

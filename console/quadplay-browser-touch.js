@@ -47,8 +47,7 @@ function onTouchStartOrMove(event) {
             if (! tracker ||
                 !(tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen)) {
                 // New touch
-                QRuntime.touch.aa = (! QRuntime.touch.a) ? 1 : 0;
-                QRuntime.touch.pressed_a = QRuntime.touch.aa;
+                QRuntime.touch.pressed_a = (! QRuntime.touch.a) ? 1 : 0;
                 QRuntime.touch.a = 1;
                 QRuntime.touch.screen_dx = 0;
                 QRuntime.touch.screen_dy = 0;
@@ -61,7 +60,7 @@ function onTouchStartOrMove(event) {
             QRuntime.touch.screen_x = screen_coord.x;
             QRuntime.touch.screen_y = screen_coord.y;
             
-            if (QRuntime.touch.aa && document.getElementById('printTouchEnabled').checked) {
+            if (QRuntime.touch.pressed_a && document.getElementById('printTouchEnabled').checked) {
                 $systemPrint(`\ntouch.screen_xy = xy(${QRuntime.touch.screen_x}, ${QRuntime.touch.screen_y})`);
 
                 // Read the 32-bit color from the screen

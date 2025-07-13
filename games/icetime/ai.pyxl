@@ -30,7 +30,7 @@ def processAI(player):
    if |delta.y| > 10: aiPad.y = sign(delta.y)
    else: aiPad.y = 0
 
-   aiPad.aa = aiPad.a = aiPad.bb = aiPad.b = 0
+   aiPad.pressed_a = aiPad.a = aiPad.pressed_b = aiPad.b = 0
    
    if puck and (puck.owner == player):
       // I have the puck
@@ -39,8 +39,8 @@ def processAI(player):
           player.pos.y * player.vel.y ≤ 0 and // moving the correct way in Y
           ξ < 6%):
          // Shoot
-         aiPad.aa = aiPad.a = 1
+         aiPad.pressed_a = aiPad.a = 1
       else if ξ < 1.4%: 
          // Pass
-         aiPad.bb = aiPad.b = 1
+         aiPad.pressed_b = aiPad.b = 1
           

@@ -385,7 +385,7 @@ if bgm_loop_measure ≥ 24 and bgm_loop_measure < 32:
     set_post_effects(postfx)
 
 // Check for victory conditions
-if get_winner(player_scores) ≠ ∅ or (DEBUG_DEV_MODE and joy.ff):
+if get_winner(player_scores) ≠ ∅ or (DEBUG_DEV_MODE and joy.pressed_f):
     add_frame_hook(at_beat0_enter_gameover, nil, infinity, Play, {})
 
 // handle dpad input
@@ -401,7 +401,7 @@ if not disable_input:
     
     // Current player can push A to commit their move
     if player_types[current_player] == PLAYER_TYPE_HUMAN:
-        if gamepad_array[current_player].aa:
+        if gamepad_array[current_player].pressed_a:
             current_player_move_committed = true
     
     // CPU players enqueue their moves for future frames, so they don't just finish instantly

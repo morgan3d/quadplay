@@ -58,7 +58,7 @@ with commit_sound, cursor, color, gamepad in player:
         cursor = clamp(cursor + xy(gamepad.xx, gamepad.yy), xy(0, 0), xy(2, 2))
         play_sound(if equivalent(old_cursor, cursor) then bad_sound else move_sound, false, 80%)
 
-    let commit = gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd
+    let commit = gamepad.pressed_a or gamepad.pressed_b or gamepad.pressed_c or gamepad.pressed_d
     
     // Hover support for platforms with a mouse. See also touch.hover
     // and cursor-9x9.sprite.json
@@ -72,7 +72,7 @@ with commit_sound, cursor, color, gamepad in player:
                 device_control("set_mouse_cursor", "pointer")                
 
     // Touch screen support
-    if touch.aa:
+    if touch.pressed_a:
         const temp = screen_to_board(touch.xy)
         if in_bounds(temp):
             cursor = temp

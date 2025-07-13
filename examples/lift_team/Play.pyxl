@@ -169,7 +169,7 @@ for gamepad, force, vel, pos, unit in player in player_array:
         // Hover, countering gravity
         force.y += 0.001 * up_y() * entity_mass(player)
 
-        if gamepad.cc:
+        if gamepad.pressed_c:
             if state == FREE_STATE:
                 extend_hook()     
             else:

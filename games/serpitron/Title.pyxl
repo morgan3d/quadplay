@@ -71,7 +71,7 @@ for p < 4:
    const control = gamepad_array[p]
    
    // Force out [some players accidentally hit diagonal; let Y override in that case]
-   if control.bb or (control.xx < 0 and not control.y):
+   if control.pressed_b or (control.xx < 0 and not control.y):
       if state[p] == "ready":
          play_sound(blipAudioClip)
          state[p] = "choosing"
@@ -79,11 +79,11 @@ for p < 4:
          state[p] = "out"
          play_sound(hitAudioClip)
    
-   if (control.aa or (control.xx > 0 and not control.y)) and state[p] == "choosing":
+   if (control.pressed_a or (control.xx > 0 and not control.y)) and state[p] == "choosing":
       play_sound(smallGrowAudioClip)
       state[p] = "ready"
 
-   if (control.yy and state[p] != "choosing") or ((control.aa or (control.xx > 0 and not control.y)) and state[p] == "out"):
+   if (control.yy and state[p] != "choosing") or ((control.pressed_a or (control.xx > 0 and not control.y)) and state[p] == "out"):
       // A or Y
       // Enter choosing mode with the current color, making sure it isn't already taken
       state[p] = "choosing"
@@ -131,7 +131,7 @@ for p < 4:
    // Update collective states
    if state[p] == "ready": anyReady = true
    if state[p] == "choosing": noneChoosing = false
-   anyQuit = anyQuit or control.qq
+   anyQuit = anyQuit or control.pressed_q
 
 
 // Don't allow quit or ready right after the mode was entered in

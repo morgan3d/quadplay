@@ -7304,9 +7304,9 @@ function set_pause_menu(...options) {
 
 function any_button_press(gamepad) {
     if (gamepad === undefined) {
-        return any_button_press(gamepad_array[0]) || any_button_press(gamepad_array[1]) || any_button_press(gamepad_array[2]) || any_button_press(gamepad_array[3]) || touch.aa;
+        return any_button_press(gamepad_array[0]) || any_button_press(gamepad_array[1]) || any_button_press(gamepad_array[2]) || any_button_press(gamepad_array[3]) || touch.pressed_a;
     } else {
-        return gamepad.aa || gamepad.bb || gamepad.cc || gamepad.dd || gamepad.ee || gamepad.ff || gamepad.qq;
+        return gamepad.pressed_a || gamepad.pressed_b || gamepad.pressed_c || gamepad.pressed_d || gamepad.pressed_e || gamepad.pressed_f || gamepad.pressed_q;
     }
 }
 

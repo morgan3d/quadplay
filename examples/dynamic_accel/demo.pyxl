@@ -148,10 +148,10 @@ def update_demo_ui(last_vel):
         frames_joy.x = 0
     last_joy.x = sign(joy.x)
 
-    if joy.aa:
+    if joy.pressed_a:
         DRAW_MBLUR = not DRAW_MBLUR
 
-    if joy.bb:
+    if joy.pressed_b:
         CURRENT_SPRITE_SIZE_INDEX = loop(
             CURRENT_SPRITE_SIZE_INDEX+1,
             size(SPRITE_SIZES)

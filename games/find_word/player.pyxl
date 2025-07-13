@@ -1,5 +1,6 @@
 
-/* Constructs a new player with an uninitialized board */
+/* Constructs a new player with an uninitialized board. Loads
+   their avatar from local storage or creates a random one. */
 def make_player():
             
     let avatar_data = load_local("avatar")
@@ -9,7 +10,7 @@ def make_player():
             sprite_index: random_integer(0, AVATAR_SPRITE_COUNT - 1),
             name: ""}
 
-        // Generate a random nam
+        // Generate a random name
         while avatar_data.name == "" or sensitive[lowercase(avatar_data.name)]:
             avatar_data.name = ""
             for i < 3:
@@ -34,39 +35,13 @@ def make_player():
         background_color: BOARD_COLOR,
         
         gamepad: gamepad_array[0],
-        
-        // Due to finger on history
-        drag_start: {
-            // Position at which the current drag started,
-            // ∅ if not in a drag
-            pos: ∅,
-            
-            // history.scroll when the drag started
-            scroll: ∅
-        },
-                
+                        
         // Q-encoded upper case words that have already been found
         // and are represented in history.list
         already_found: {},
         
         // Used for display.
-        history: {
-            // Each entry is {text, word, tiles, points, color, emphasize_frame, pos}.
-            // `pos` is computed as a side effect of draw history
-            // `word` is Q-encoded, text may contain arbitrary characters
-            list: [],
-            
-            // Auto computed and overriden on new word spawn or resize,
-            // but can be manually affected by the player
-            scroll: 0,
-
-            // Scroll computation resets when screen size changes.
-            // This was the size it was computed for.
-            scroll_screen_size: xy(0, 0),
-            
-            // Scroll computation resets when the list size changes.
-            // This was the size it was computed for.
-            scroll_history_size: 0},
+        history: make_history(),
         
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
@@ -74,7 +49,6 @@ def make_player():
         
         // Where the cursor is
         cursor_tile_index: xy(0, 0)}
-
 
 
 
@@ -218,7 +192,7 @@ def _player_update_rotate_button(player, board_pos):
     if player.using_gamepad:
         draw_text({font: button_prompt_font, text: player.gamepad.prompt["(d)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
 
-    if (touch.aa and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.ff or joy.dd:
+    if (touch.pressed_a and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.pressed_f or joy.pressed_d:
         push_mode(Rotate) because "Rotate button"
 
 
@@ -280,9 +254,8 @@ def draw_timer(board_pos):
 def _player_update_cursor(player)
 & with cursor_tile_index, board, gamepad in player:
 
-    // Movement
     // Move on discrete input
-    const target = cursor_tile_index + gamepad.xxyy
+    const target = cursor_tile_index + gamepad.xy * |sign(gamepad.dxy)|
     
     // Bounds are initially the whole board
     let lo = xy(0, 0)    
@@ -298,7 +271,7 @@ def _player_update_cursor(player)
     cursor_tile_index = clamp(target, lo, hi)
 
     // Buttons
-    if gamepad.aa:
+    if gamepad.pressed_a:
         if (equivalent(cursor_tile_index, last_value(board.selection)) or
             equivalent(cursor_tile_index, penultimate_value(board.selection))):
             // Remove from selection. Allow this to happen by re-selecting
@@ -308,7 +281,7 @@ def _player_update_cursor(player)
             // Add to selection
             board_select(board, cursor_tile_index, player)
     
-    if gamepad.bb:
+    if gamepad.pressed_b:
         // End selection
         board_deselect_all(board, player)
             
@@ -319,7 +292,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     // Track most recent UI method
     if touch.pressed_a:
         player.using_gamepad = false
-    else if player.gamepad.aa or player.gamepad.bb or player.gamepad.dx or player.gamepad.dy:
+    else if player.gamepad.pressed_a or player.gamepad.pressed_b or player.gamepad.dx or player.gamepad.dy:
         player.using_gamepad = true
     
     if not player.using_gamepad and not touch.a and size(player.board.selection) > 0:
@@ -331,7 +304,7 @@ def player_update(player, angle default 0°, allow_selection default false):
     if (touch.released_a or 
     
         // Tap B to cancel selection
-        player.gamepad.bb or
+        player.gamepad.pressed_b or
         
         // If not selecting, make sure it is empty
         not allow_selection):
@@ -374,77 +347,31 @@ def player_update(player, angle default 0°, allow_selection default false):
     if allow_selection:
         _player_update_rotate_button(player, board_pos)
         
-    _player_update_history(player, board_pos)
-    draw_timer(board_pos)
 
-
-
-/* `true` if in landscape layout mode */
-def landscape():
-    return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
-
-
-
-/* Draw the word history and manage touch dragging */
-def _player_update_history(player, board_pos)
-& preserving_transform
-& with history in player:
-    
-    todo("Generalize to support the Intermission listing")
-    
-    let list_rect
+    let history_rect
     if landscape():
-        list_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
+        history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
     else:
-        list_rect = {corner: xy(1, 0), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 32)}
-    
-    set_clip(list_rect)
-    
-    // Show the words left
+        history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 32)}
+    history_update(player.history, history_rect)
+
+    // Show the words left at the bottom of the history.
+    // use in_waiting_room instead of get_game_mode because
+    // all modes push into Rotate
     if game_type == SOLO or in_waiting_room:
-        // Don't scroll this, draw it first
         draw_text({
-            pos: list_rect.corner + list_rect.size - xy(2, 1),
+            pos: history_rect.corner + history_rect.size - xy(2, 1),
             font: history_font,
             text: "" + size(history.list) + "/" + player.board.word_count,
             color: #DDD,
             x_align: "right",
             y_align: "bottom"})
-
-    if not equivalent(SCREEN_SIZE, history.scroll_screen_size):
-        // Reset on window change
-        history.scroll = 0
-
-    const pos = xy(3, 2)
-    let max_width
     
-    preserving_transform:
-        set_transform(list_rect.corner - xy(history.scroll, 0))
-        max_width = history_draw(history, pos, list_rect.size.y)
-
-    const overflow = pos.x + max_width - list_rect.size.x + 1
-
-    if not player.drag_start.pos:
-        // Start drag
-        if touch.aa and overlaps(touch.xy, list_rect):
-            player.drag_start.pos = xy(touch.xy)
-            player.drag_start.scroll = history.scroll
-    else if touch.a:
-        // Continue drag
-        history.scroll = clamp(player.drag_start.scroll + player.drag_start.pos.x - touch.x, 0, overflow)
-    else:
-        // End drag
-        player.drag_start.pos = ∅
     
-    if not player.drag_start.pos and (not equivalent(SCREEN_SIZE, history.scroll_screen_size) or history.scroll_history_size ≠ size(history.list)):
-        history.scroll_screen_size = xy(SCREEN_SIZE)
-        history.scroll_history_size = size(history.list)
-        // Set the scroll to whatever it needs to be to keep the 
-        // most recent words on screen
-        history.scroll = max(history.scroll, overflow)
-    
-    if overflow < 0:
-        history.scroll = 0
+    draw_timer(board_pos)
+
+
+
 
 
 
@@ -485,7 +412,7 @@ def player_update_board(player, pos, angle, allow_selection)
 
     // Store store this before selection changes so that the same
     // button can be used to start and end selection
-    const cancel_gamepad_selection = gamepad.bb        
+    const cancel_gamepad_selection = gamepad.pressed_b        
     
     // Save the selection color before iteration so that
     // it does not change within a frame, as this is modified
@@ -507,7 +434,7 @@ def player_update_board(player, pos, angle, allow_selection)
                 // Touch selection                
                 if touch.a and overlaps(tile_center, touch.xy):
                     player.cursor_tile_index = xy(index)
-                    if touch.aa and (size(board.selection) == 0):
+                    if touch.pressed_a and (size(board.selection) == 0):
                         
                         // Start selection
                         board_select(board, index, player)
@@ -573,6 +500,7 @@ def player_update_board(player, pos, angle, allow_selection)
             prev_pos = pos
 
 
+
 /* If board_string is specified it should be of the form "AAAA BBBB CCCC DDDD" */
 def player_reset(player, game_type, board_string default ∅):
     player.score = 0
@@ -595,136 +523,6 @@ def player_reset(player, game_type, board_string default ∅):
     else:
         _player_find_good_board(player, game_type)
     
-
-
-/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
-def _player_find_good_board(player, game_type):
-    let done = false
-    let seed_word
-    let word_array
-    
-    // Construct the rng based on the time. This will
-    // cause players within the same window to be more likely
-    // to have the same board. Temporary prior to investing
-    // multiplayer servers.
-    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG_BOARD_SEARCH then 
-            (10 utc_now())
-        else
-            // Use the seed for the curent game period, but look a few
-            // seconds into the future in case this player is joining early
-            // to make it robust
-            ⌊1 + (utc_now() + 10) / GLOBAL_PERIOD⌋)
-    
-    const board_rng = make_random(rng_seed)
-    
-    for i < BOARD_SEARCH.RETRIES:
-        if i > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
-
-        // Search for a not-sensitive seed word to use
-        seed_word = random_safe_word(board_rng)
-        
-        // Loop for shuffling
-        for j < BOARD_SEARCH.SHUFFLE_RETRIES:
-            board_reset(player.board, seed_word, j)
-            word_array = board_find_all_words(player.board)
-        
-            if i == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
-                // Last try, so just give up and accept the board
-                if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted " + seed_word)
-                done = true
-                break
-    
-            if board_has_obvious_sensitive_word(player.board):
-                if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
-                continue
-    
-            if size(word_array) < BOARD_SEARCH.MIN_WORDS:
-                // Not enough words to even examine the board
-                if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
-                continue
-    
-            // Examine the actual words to see if there are enough good ones   
-    
-            // If a valuable letter appears, ensure that it is used in 
-            // at least two words. First find high point value letters.
-            const valuable_letter_table = {}
-            for col in player.board.tile:
-                for tile in col:
-                    if LETTER_POINT_TABLE[tile.letter] ≥ 4:
-                        valuable_letter_table[tile.letter] = 0
-            
-            const valuable_letters = keys(valuable_letter_table)
-            const valuable_letter_long_count = keys(valuable_letter_table)
-        
-            // Iterate through words, rating them for each criterion
-            let short_word_count = 0
-            let long_word_count = 0
-            let very_long_word_count = 0
-            for word in word_array:
-                if size(word) ≤ 4:
-                    ++short_word_count
-                if size(word) ≥ 5 and size(word) < 7:
-                    ++long_word_count
-                if size(word) ≥ 7:
-                    ++very_long_word_count
-                    
-                if size(word) ≥ 5:
-                    ++long_word_count
-                    
-                for letter in valuable_letters:
-                    if contains(word, letter):
-                        ++valuable_letter_table[letter]
-                        
-                        if size(word) ≥ 5:
-                            ++valuable_letter_long_count[letter]
-            
-            if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + short_word_count + " short words")        
-                continue
-            
-            if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + long_word_count + " long words")        
-                continue
-            
-            if very_long_word_count < BOARD_SEARCH.MIN_VERY_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
-                continue
-            
-            // See if we used the valuable letters
-            let used_valuable_letters = true
-            let used_valuable_letters_in_long_words = true
-            for count at letter in valuable_letter_table:
-                if count < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
-                    used_valuable_letters = false
-                    
-                if valuable_letter_long_count[letter] < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
-                    used_valuable_letters_in_long_words = false
-                    
-            if not used_valuable_letters:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
-                continue
-            
-            if not used_valuable_letters_in_long_words:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
-                continue
-    
-            // Success!
-            done = true
-            break
-    
-        if done:
-            // Stop early as we have a good board
-            if DEBUG_BOARD_SEARCH: debug_print("Accepted board")
-            break
-        else:
-            // Try again
-            seed_word = ∅
-    
-    player.board.word_list = word_array
-    player.board.word_count = size(word_array)
-    if DEBUG_BOARD_SEARCH:
-        debug_print(player.board.word_list)
-
 
 
 /* Rotates the board and cursor */

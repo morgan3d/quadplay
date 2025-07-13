@@ -40,7 +40,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 // Handle input
 if not disable_input:
-    if gamepad_array[0].bb != 0:
+    if gamepad_array[0].pressed_b != 0:
         disable_input = true
         play_sound(CURSOR_BACK_SOUND)
         add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})

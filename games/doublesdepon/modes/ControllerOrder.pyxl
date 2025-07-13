@@ -68,7 +68,7 @@ preserving_transform:
 
     const justUsed = []
     for idx in unusedInputs:
-        if gamepad_array[idx].aa:
+        if gamepad_array[idx].pressed_a:
             push(usedInputs, idx)
             push(justUsed, idx)
 
@@ -88,11 +88,11 @@ preserving_transform:
 
     // reset or finish
     for i < 4:
-        if gamepad_array[i].dd:
+        if gamepad_array[i].pressed_d:
             remove_all(usedInputs)
             remove_all(unusedInputs)
             extend(unusedInputs, [0, 1, 2, 3])
-        else if gamepad_array[i].bb:
+        else if gamepad_array[i].pressed_b:
             remove_all(JoyIdxMapping_)
             extend(JoyIdxMapping_, usedInputs)
             extend(JoyIdxMapping_, unusedInputs)

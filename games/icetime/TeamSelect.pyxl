@@ -47,7 +47,7 @@ def drawSide(teamIndex):
       if team.ready:
          draw_text({font:scoreFont, text:"ⓑChange", pos:xy(x + 2, y), color:#0, shadow:#0242, x_align: "left", y_align: "baseline"})
          draw_text({font:scoreFont, text:"Ready!", pos:xy(x + 66, y), color:infoColor, x_align: "left", y_align: "baseline"})
-         for p < 2: if controlPadArray[2 teamIndex + p].bb: team.ready = false
+         for p < 2: if controlPadArray[2 teamIndex + p].pressed_b: team.ready = false
             
       else:
          draw_text({font: scoreFont, text:"←", pos:xy(x + ½ width - 25, 12), color:#0, x_align:"center", shadow:#0242, x_align: "left", y_align: "baseline"})
@@ -61,8 +61,8 @@ def drawSide(teamIndex):
             const control = controlPadArray[2 teamIndex + p]
             // Swap
             if control.yy: const temp = team.roster[0]; team.roster[0] = team.roster[1]; team.roster[1] = temp
-            if control.bb: set_mode(Title) because "Press ⓑ"
-            if control.aa: team.ready = true
+            if control.pressed_b: set_mode(Title) because "Press ⓑ"
+            if control.pressed_a: team.ready = true
             if control.xx:
                const otherIndex = 1 - teamIndex;
                let nextLeagueIndex = loop(team.leagueIndex + control.xx, size(league))

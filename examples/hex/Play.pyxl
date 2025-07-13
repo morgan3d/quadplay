@@ -60,6 +60,6 @@ for 0 ≤ y < grid.size.y:
 
 draw_point(touch.xy, #000)
 
-if touch.aa:
+if touch.pressed_a:
     play_sound(blip_sound)
     selected = screen_to_grid(touch.xy)

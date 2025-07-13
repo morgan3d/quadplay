@@ -90,7 +90,7 @@ if (not (equivalent(touch_pos, last_touch_position))):
 else:
     target_position += 2*joy.xy
 
-if joy.aa:
+if joy.pressed_a:
     todo("here")
 
 debug_watch(controlled_ball.pos)

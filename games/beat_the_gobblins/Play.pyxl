@@ -727,7 +727,7 @@ def update_player():
         PLAYER.jolt = 0
 
     // sword swing
-    if PLAYER.taking_input and (joy.aa or joy.bb or joy.cc or joy.dd):
+    if PLAYER.taking_input and (joy.pressed_a or joy.pressed_b or joy.pressed_c or joy.pressed_d):
         start_swing_sword(PLAYER.pos, PLAYER.player_dir)
 
     for en in enemies:

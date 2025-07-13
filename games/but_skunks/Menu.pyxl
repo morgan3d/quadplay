@@ -53,7 +53,7 @@ if not disable_input:
         
         // Handle menu selection
         const sheet = skunk_sprite
-        if pad.aa ≠ 0:
+        if pad.pressed_a ≠ 0:
             if current_menu_item == MENU_NEW_GAME_1P:
                 disable_input = true
                 play_sound(SND_CURSOR_ACCEPT)

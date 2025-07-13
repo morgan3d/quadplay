@@ -35,7 +35,7 @@ dice_update(dice)
 const t = dice_roll_time(dice)
 
 // Force a specific result on a static die
-if joy.aa:
+if joy.pressed_a:
     die_set_result_index(die, n)
 `````````````````
 

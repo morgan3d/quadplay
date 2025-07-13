@@ -108,7 +108,7 @@ if mode_frames ≥ TITLE_LOCKOUT_FRAMES:
 	
         any_reset = any_reset or gamepad.e or gamepad.f
             
-        if gamepad.aa or gamepad.bb:
+        if gamepad.pressed_a or gamepad.pressed_b:
             save_local("num_bots", num_bots)
             save_local("num_players", num_players)
             set_mode(Play, num_players, num_bots, score) because "Press (a)"

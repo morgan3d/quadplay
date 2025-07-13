@@ -69,7 +69,7 @@ draw_text({font: tinyFont, text: "by Casual Effects", pos: xy(SCREEN_SIZE.x / 2,
 // Spin animation in the intro
 if mode_frames < 72:
    selection += mid(12%, 12% - mode_frames * 0.2%, 2%)
-else if gamepad_array[0].aa or gamepad_array[0].bb:
+else if gamepad_array[0].pressed_a or gamepad_array[0].pressed_b:
    if choice == "Quit": quit_game()
    else if choice == "Rules": set_mode(Rules)
    else if choice == "Credits": set_mode(Credits)

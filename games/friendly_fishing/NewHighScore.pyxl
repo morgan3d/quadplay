@@ -40,9 +40,9 @@ for player in player_array:
         if mode_frames > 45:
             const gamepad = player.gamepad
             
-            if gamepad.aa and player.active_letter < 3 and player.name ≠ "   ":
+            if gamepad.pressed_a and player.active_letter < 3 and player.name ≠ "   ":
                 ++player.active_letter 
-            else if gamepad.bb and player.active_letter > 0:
+            else if gamepad.pressed_b and player.active_letter > 0:
                 --player.active_letter
                             
             if player.active_letter < 3:

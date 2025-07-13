@@ -152,7 +152,7 @@ for view at view_index in VIEW_ARRAY:
        const control = gamepad_array[p]
     
        // Allow any controller to quit
-       if control.$pp or control.qq:
+       if control.$pp or control.pressed_q:
           pop_mode() because "Pressed P or Q"
     
     

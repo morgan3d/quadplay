@@ -60,7 +60,7 @@ draw_sprite_demo(
 )
 debug_watch(loop_anim_entity)
 
-if joy.aa:
+if joy.pressed_a:
     once_anim_entity = anim_entity_make(
         driz_ent,
         driz.atk_2,

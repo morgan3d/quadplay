@@ -46,7 +46,7 @@ if joy.x:
     pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
 
 
-if joy.aa:
+if joy.pressed_a:
     // Apply a displacement!
     //---------------------------------------------------
     displace_bouncer(x_bouncer, 2)

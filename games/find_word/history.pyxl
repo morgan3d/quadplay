@@ -1,5 +1,36 @@
+/* List of words found by a `player`. */
+def make_history():
+    return {
+        // Each entry is {text, word, tiles, points, color, emphasize_frame, pos}.
+        // `pos` is computed as a side effect of draw history
+        // `word` is Q-encoded, text may contain arbitrary characters
+        list: [],
+        
+        // Auto computed and overriden on new word spawn or resize,
+        // but can be manually affected by the player
+        scroll: 0,
 
-/* Mutates `pos`, returns `max_width`. Called from `_player_update()`. */
+        // Scroll computation resets when screen size changes.
+        // This was the size it was computed for.
+        scroll_screen_size: xy(0, 0),
+        
+        // Scroll computation resets when the list size changes.
+        // This was the size it was computed for.
+        scroll_history_size: 0,
+        
+        // Due to finger on history
+        drag_start: {
+            // Position at which the current drag started,
+            // ∅ if not in a drag
+            pos: ∅,
+            
+            // history.scroll when the drag started
+            scroll: ∅
+        }
+    }
+
+
+/* Mutates `pos`, returns `max_width`. Called from `history_update()`. */
 def history_draw(history, pos, max_height):
     
     const start_y = pos.y
@@ -49,4 +80,49 @@ def history_draw(history, pos, max_height):
         pos.y += history_font.line_height + 1
         
     return max_width
+    
+
+
+/* Draw the word history and manage touch dragging */
+def history_update(history, list_rect)
+& with drag_start, scroll_screen_size, scroll_history_size in history
+& preserving_transform:
+    
+    set_clip(list_rect)
+    
+    if not equivalent(SCREEN_SIZE, scroll_screen_size):
+        // Reset on window change
+        history.scroll = 0
+
+    const pos = xy(3, 2)
+    let max_width
+    
+    preserving_transform:
+        set_transform(list_rect.corner - xy(history.scroll, 0))
+        max_width = history_draw(history, pos, list_rect.size.y)
+
+    const overflow = pos.x + max_width - list_rect.size.x + 1
+
+    if not drag_start.pos:
+        // Start drag
+        if touch.pressed_a and overlaps(touch.xy, list_rect):
+            drag_start.pos = xy(touch.xy)
+            drag_start.scroll = history.scroll
+    else if touch.a:
+        // Continue drag
+        history.scroll = clamp(drag_start.scroll + drag_start.pos.x - touch.x, 0, overflow)
+    else:
+        // End drag
+        drag_start.pos = ∅
+    
+    if not drag_start.pos and (not equivalent(SCREEN_SIZE, scroll_screen_size) or scroll_history_size ≠ size(history.list)):
+        scroll_screen_size = xy(SCREEN_SIZE)
+        scroll_history_size = size(history.list)
+        // Set the scroll to whatever it needs to be to keep the 
+        // most recent words on screen
+        history.scroll = max(history.scroll, overflow)
+    
+    if overflow < 0:
+        history.scroll = 0
+
         

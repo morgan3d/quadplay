@@ -37,7 +37,7 @@ def update_cursor_hover_with_gamepad(gamepad):
 def update_curr_drag_with_b(gamepad):
     update_curr_drag()
     
-    if gamepad.bb:
+    if gamepad.pressed_b:
         curr_drag = {
             start_frame: mode_frames,
             start_pos: cursor_hover,
@@ -69,7 +69,7 @@ def handle_input(gamepad):
     const long_press_ended = long_press and (touch.released_a or gamepad.released_b)
     const confirm = click or long_press_ended
     
-    const toggle_attack = gamepad.ff or button_clicked({
+    const toggle_attack = gamepad.pressed_f or button_clicked({
         corner: xy(255, 155),
         size: xy(50, 20),
         text: "Attack",
