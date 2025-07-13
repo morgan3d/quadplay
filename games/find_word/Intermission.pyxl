@@ -1,7 +1,6 @@
 Intermission
 ════════════════════════════════════════════════════════════════════════
 
-todo("** Make best rare award not require uniqueness -> Lowest found. Mark 'rare' as less than 1/6")
 todo("** Make most rare award (requires tracking rareness to show off the words)")
 
 todo("* Make SOLO version")

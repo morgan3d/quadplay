@@ -13,8 +13,10 @@ let best_rare_winner
 let longest_winner
 let most_words_winner
 
+todo("** Make best rare award not require uniqueness -> Lowest found. Mark 'rare' as less than 1/6")
 
-
+/* Generate a stable set of synthetic competitors with a range of abilities, and 
+   produce their scores and word lists for the current `player.board`. */
 def insert_synthetic_competitors(competitor_array, num_competitors):
 
     // Make the competitors stable in their personalities by using a fixed

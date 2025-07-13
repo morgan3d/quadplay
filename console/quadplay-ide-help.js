@@ -16,7 +16,15 @@ function updateProgramDocumentation() {
     }
     
     // Markdeep source for the help pane
-    let mdSource = `\n      **${gameSource.json.title} Script Documentation**\n     ${gameSource.json.developer}\n\n`;
+    let mdSource = `<meta charset="utf-8">\n      **${gameSource.json.title} Globals Documentation**\n     ${gameSource.json.developer}\n\n`;
+
+    mdSource += '# Constants\n\n';
+
+    if (gameSource.json && gameSource.json.constants) {
+        for (const [name, entry] of Object.entries(gameSource.json.constants)) {
+            mdSource += `\`${name}\`\n:  ${entry.description || entry.type || ''}\n\n`;
+        }
+    }
 
     documentationProgramAPIOverloads = {};
     
