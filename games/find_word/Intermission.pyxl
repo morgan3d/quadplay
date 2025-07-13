@@ -4,8 +4,7 @@ Intermission
 todo("* Make SOLO version")
 todo("Force GLOBAL to SOLO version when nobody else is there")
 
-const SUMMARY_STAGE = 0
-
+// Cycle through the award stages. See `STAGE`
 let stage
 
 
@@ -15,28 +14,32 @@ const competitor_array = []
 
 let player_competitor
 
+
+// Competitors winning each award
+let best_word_winner
+let best_unique_winner
+let longest_winner
+let most_words_winner
+
 let end_time
-let unfound_word
+
+/* Words *not* found by the local player. Q-decoded. */
 let unfound_word_array
 
-    
-def word_comparator(entry, word):
-    return entry.word == word
-        
 
-
-def draw_award_background(color):
-    draw_corner_rect(xy(-35, -36), xy(69, 63), color)
-
-
-
-/* Called from `update_awards()` when `stage` == `SUMMARY_STAGE` */
-def update_award_summary():
+/*
     if mode_frames mod 380 == 60:
         // Choose the next unfound word
         show_word_in_board(pop(unfound_word_array))
-        
-    draw_award_background(player.avatar.color)
+        */
+
+
+/* Called from `draw_awards()` when `stage` == `STAGE.SUMMARY` */
+def draw_award_summary()
+& preserving_transform:
+    draw_corner_rect(xy(-35, -36), xy(125, 63), player.avatar.color)
+    avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF)
+
     const shadow = 60% player.avatar.color
   
     const args = {font: history_font,
@@ -45,53 +48,90 @@ def update_award_summary():
         shadow: shadow,
         color: #FFF}
 
-    draw_text({…args, text: "Summary", pos: xy(0, -27), x_align: "center"})
+    draw_text({…args, text: "Summary", pos: xy(31, -27), x_align: "center"})
     
-    draw_text({ …args, text: format_number(player.score, "commas"), font: score_font, pos: xy(14, -2), x_align: "right"})
-    draw_text({…args, text: "pts", pos: xy(18, -7)})
+    compose_transform(xy(55, 0))
+    draw_text({ …args, text: format_number(player.score, "commas"), font: score_font, pos: xy(14, -5), x_align: "right"})
+    draw_text({…args, text: "pts", pos: xy(18, -10)})
 
+    const x = -46
+    draw_text({…args, text: "Found", pos: xy(x, 5)})
+    draw_text({…args, text: "" + size(player.history.list) + "/" + player.board.word_count, pos: xy(30, 5), x_align: "right"})
+    
+    if game_type == GLOBAL:
+        draw_text({…args, text: "Unique", pos: xy(x, 14)})
+        draw_text({…args, text: player_competitor.num_unique, pos: xy(30, 14), x_align: "right"})
 
-    draw_text({…args, text: "Found", pos: xy(-29, 10)})
-    draw_text({…args, text: "" + size(player.history.list) + "/" + player.board.word_count, pos: xy(30, 10), x_align: "right"})
-            
-    draw_text({…args, text: "Unique", pos: xy(-29, 20)})
-    draw_text({…args, text: player_competitor.num_unique, pos: xy(30, 20), x_align: "right"})
+    draw_text({…args, text: "Longest", pos: xy(x, 23)})
+    draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 23), x_align: "right"})
 
 
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best Unique, High Score, Most Words) */
-def update_awards()
+def draw_awards()
 & preserving_transform:
     set_transform(xy(SCREEN_SIZE.x - 88, 34))
 
-    if stage == SUMMARY_STAGE:
-        update_award_summary()
+    if stage == STAGE.SUMMARY:
+        draw_award_summary()
    
-    todo("Implement Best Word award")
-    todo("Implement Longest award")
-    todo("Implement Best Unique award")
-    todo("Implement High Score award")
-    todo("Implement Most Words award")    
-
-    if false:
-        const avatar = player.avatar    
-        draw_text({font: history_font, text: "Best Word", color: #FFF, shadow: #000, pos: xy(0, -29), z: 2})
-        avatar_draw_large(avatar, xy(0, -4))    
-
-
-
-def show_word_in_board(word):
-    // Select this word
-    unfound_word = word
-    board_deselect_all(player.board)
-    player.board.selection = board_find_unencoded_word(player.board, word)
-    player.board.selection_color = #E1B
-    
-    // Select these letters
-    for index in player.board.selection:
-        player.board.tile[index.x][index.y].selected = mode_frames
+    else if stage == STAGE.BEST_WORD:
+        draw_word_award("Best Word", best_word_winner)
+   
+    else if stage == STAGE.LONGEST:
+        draw_word_award("Longest", longest_winner)
         
+    else if stage == STAGE.BEST_UNIQUE:
+        draw_word_award("Best Unique", best_unique_winner)
     
+    else if stage == STAGE.MOST_WORDS:
+        draw_most_words_award(most_words_winner)
+
+
+
+/* Used for best_word, longest, The title is used to compute the field */
+def draw_word_award(title, winner):
+    const field = replace(lowercase(title), {" ": "_"})
+    
+    draw_corner_rect(xy(-35, -24), xy(69, 37), winner.avatar.color)
+
+    draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
+    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(32, -29), z: 2})
+
+    avatar_draw_large(winner.avatar, xy(0, -5), false)
+    show_word_in_board(winner[field + "_text"])
+    board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
+
+
+
+def draw_most_words_award(winner):
+    ++draw_most_words_award.frames
+    player.board.selection_color = #E1B
+
+    draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
+    draw_corner_rect(xy(-35, -24), xy(69, 37), winner.avatar.color)
+    avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color)
+
+    const FRAMES_PER_WORD = 15
+    show_word_in_board(array_value(winner.word_list, draw_most_words_award.frames / FRAMES_PER_WORD, "loop"))
+    board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
+
+
+
+/* word is Q-decoded */
+def show_word_in_board(word):
+    assert(word)
+    if q_decode(board_selected_word(player.board)) ≠ word:
+        board_deselect_all(player.board)
+        player.board.selection = board_find_unencoded_word(player.board, word)
+        player.board.selection_color = #E1B
+        
+        // Select these letters
+        for index in player.board.selection:
+            // Need +1 because this can be selected on frame 0
+            player.board.tile[index.x][index.y].selected = mode_frames + 1
+        
+
 
 /* Draw the ranked competitors and perform UI logic */
 def update_leaderboard()
@@ -146,11 +186,7 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
                 // Weigh the probability towards capital letters,
                 // and always start with a capital letter
                 name: random_value(ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) + random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng)},
-            score: 0,
-            best_word_text: "",
-            best_word_points: 0,
-            longest_word_text: "",
-            longest_word_size: 0}
+            score: 0}
         
         // Make stable how good this player is overall, and then add noise per game
         const words_found = random_integer(5, 10) + random_integer(1, 20, rng)
@@ -166,8 +202,11 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
             word_set[random_value(player.history.list).word] = 1
             
         competitor.word_list = keys(word_set)
-        
+                
+        // Remove sensitive words from computer players
         iterate(competitor.word_list, remove_sensitive)
+        
+        sort(competitor.word_list, size_comparator)
         
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
@@ -176,12 +215,36 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
 
 
 
+/* Convert the local player into a competitor */
+def add_player_competitor():
+    player_competitor = {
+        avatar: player.avatar,
+        score: player.score,
+        word_list: []}
+    
+    for entry in player.history.list:
+        push(player_competitor.word_list, entry.word)
+        
+    push(competitor_array, player_competitor)
+    
+
+
 def analyze_competitors(competitor_array):
-    // How many players have each word
+    // How many players have each word; used for 
+    // finding unique words
     const count = {}
     
     // Compute everyone's best results
     for competitor in competitor_array:
+        
+        // Censor names by slicing off the 2nd letter, if inappropriate,
+        // and replacing common letter substitutions to prevent casual
+        // looks-like thwarting
+        if sensitive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
+            competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
+
+        competitor.best_word_points = 0
+        competitor.longest_size = 0
         for word in competitor.word_list:
             // Increment the count
             count[word] = (count[word] default 0) + 1
@@ -194,11 +257,11 @@ def analyze_competitors(competitor_array):
                 competitor.best_word_text = text
                 competitor.text = text
         
-            if (size(text) > competitor.longest_word_size) or (size(text) == competitor.longest_word_size and text > competitor.longest_word_text):
-                competitor.longest_word_size = size(text)
-                competitor.longest_word_text = text
+            if (size(text) > competitor.longest_size) or (size(text) == competitor.longest_size and text > competitor.longest_text):
+                competitor.longest_size = size(text)
+                competitor.longest_text = text
     
-    // Now find the best unique
+    // Find the best unique word for each competitor
     for competitor in competitor_array:
     
         competitor.num_unique = 0
@@ -217,14 +280,34 @@ def analyze_competitors(competitor_array):
                     competitor.best_unique_points = points
                     competitor.best_unique_text = text
     
-    
-    // Update the history for the player competitor
+    // Update the history unique fields for the player competitor
+    // as these are used for display. We don't need this for others
     for entry in player.history.list:
         if count[entry.word] == 1:
             entry.unique = true
     
-    // Rank all competitors    
+    // Rank all competitors by score
     sort(competitor_array, "score", true)
+        
+    // Find the winner in each category. Ties are broken
+    // by total score by running in order after that sort
+    best_word_winner = competitor_array[0]
+    best_unique_winner  = competitor_array[0]
+    longest_winner = competitor_array[0]
+    most_words_winner = competitor_array[0]
+    
+    for competitor in competitor_array:
+        if competitor.best_word_points > best_word_winner.best_word_points:
+            best_word_winner = competitor
+            
+        if competitor.best_unique_points > best_unique_winner.best_unique_points:
+            best_unique_winner = competitor
+
+        if competitor.longest_size > longest_winner.longest_size:
+            longest_winner = competitor
+
+        if size(competitor.word_list) > size(most_words_winner.word_list):
+            most_words_winner = competitor
 
 
 
@@ -232,8 +315,9 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
 board_deselect_all(player.board, player)
-//debug_print(player.board.word_list)
 sort(player.history.list, "points", true)
+
+draw_most_words_award.frames = 0
 
 // Reset the scroll position because layout differs
 // from the main game
@@ -245,7 +329,8 @@ if game_type == GLOBAL:
 
 unfound_word_array = []
 for word in player.board.word_list:
-    if not sensitive[lowercase(word)] and not contains(player.history.list, word, word_comparator):
+    // Do not use player.already_found
+    if not sensitive[lowercase(word)] and not player.already_found[q_encode(word)]:
         push(unfound_word_array, word)
 
 
@@ -258,26 +343,9 @@ if size(unfound_word_array) > 10:
     for i < 3:
         swap(unfound_word_array, random_integer(0, size(unfound_word_array) - 8), size(unfound_word_array) - 1 - random_integer(1, 6))
 
-board_deselect_all(player.board)
 
-// Convert the local player into a competitor
 resize(competitor_array, 0)
-player_competitor = {
-    avatar: player.avatar,
-    score: player.score,
-    best_unique_text: "",
-    best_unique_points: 0,
-    num_unique: 0,
-    best_word_text: "",
-    best_word_points: 0,
-    longest_word_text: "",
-    longest_word_size: 0,
-    word_list: []}
-
-for entry in player.history.list:
-    push(player_competitor.word_list, entry.word)
-    
-push(competitor_array, player_competitor)
+add_player_competitor()
 
                     
 todo("Use real players in a GLOBAL game")
@@ -287,13 +355,17 @@ insert_synthetic_competitors(competitor_array, 15)
 
 todo("Trim down when there are very many competitors, keeping the top 3, the bottom 3, and 3 around the player")
 
-
 analyze_competitors(competitor_array)
 
-stage = SUMMARY_STAGE
-    
+stage = STAGE.SUMMARY
+
+
 frame
 ────────────────────────────────────────────────────────────────────────
+
+// Cycle through awards, giving equal time to each
+if game_type == GLOBAL:
+    stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
@@ -301,9 +373,7 @@ draw_corner_rect(xy(SCREEN_SIZE.x - 125, 61), xy(125, 2), #000, ∅, 20)
 
 history_update(player.history, {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)})
 
-update_awards()
-
-board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
+draw_awards()
 
 update_leaderboard()
 

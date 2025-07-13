@@ -30,7 +30,7 @@ if mode_frames == 1:
     player_reset(player, game_type, if DEBUG_INTERMISSION then "HEMI SAVF ELOO AHTE" else ∅)
     
     if DEBUG_HISTORY or DEBUG_INTERMISSION:
-        for i < 60:
+        for i < 35:
             const word = q_encode(player.board.word_list[i])
             player_add_to_history(player, word, score_word(word))
     

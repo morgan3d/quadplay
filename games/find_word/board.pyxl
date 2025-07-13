@@ -32,7 +32,10 @@ def make_board():
         selection: [],
         
         // Chosen based on the point value of the current word in _check
-        selection_color: TILE_CENTER_SELECTED_COLOR        
+        selection_color: TILE_CENTER_SELECTED_COLOR,
+        
+        // Q-decoded. Identified by `board_search()`
+        word_list: []
     }
     
     return board
@@ -456,13 +459,10 @@ def board_draw_mini(board, pos)
 & preserving_transform:
     set_transform(pos)
             
-    let word = ""
     for y < ROWS:
         for x < COLS:
             const tile = board.tile[x][y]
             const letter = if tile.letter == "Q" then "Qu" else tile.letter
-            
-            if tile.selected: word += letter
             
             tile.pos = 12 xy(x - 1.5, y - 1.5)
             
@@ -475,10 +475,12 @@ def board_draw_mini(board, pos)
                 text: letter})
     
     if size(board.selection) > 0:
+        const word = q_decode(board_selected_word(board))
+        
         // Draw word
         draw_text({
             font: history_font,
-            text: "\"" + word + "\"",
+            text: word,
             pos: xy(0, -31),
             shadow: #000,
             color: player.board.selection_color})

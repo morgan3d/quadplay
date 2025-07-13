@@ -48,7 +48,7 @@
         "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
         "giant_score_font": "quad://fonts/novarese-20.font.json"
     },
-    "version": "0.107",
+    "version": "0.110",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -626,6 +626,22 @@
             "format": "0",
             "quantum": 1
         },
+        "LOOKS_LIKE": {
+            "type": "raw",
+            "description": "Common number substitutions used to thwart keyword safety checks",
+            "value": {
+                "0": "O",
+                "1": "I",
+                "2": "Z",
+                "3": "E",
+                "4": "A",
+                "5": "S",
+                "6": "G",
+                "8": "B",
+                "9": "g",
+                "!": "I"
+            }
+        },
         "BUTTON_REPEAT_PERIOD": {
             "type": "number",
             "value": "15",
@@ -634,6 +650,17 @@
             "max": 128,
             "format": "0",
             "quantum": 1
+        },
+        "STAGE": {
+            "type": "raw",
+            "value": {
+                "SUMMARY": 0,
+                "BEST_WORD": 1,
+                "MOST_WORDS": 2,
+                "BEST_UNIQUE": 3,
+                "LONGEST": 4
+            },
+            "description": "Constants for intermission awards stages"
         }
     },
     "screenshot_tag": "find_word",

@@ -22,17 +22,25 @@ def avatar_compute_color(sprite):
         
         
         
-def avatar_draw_large(avatar, pos):
-    draw_disk(pos - xy(0, 1), 20, avatar.color)
-    const sprite = avatar.sprite.x_flipped
+def avatar_draw_large(avatar, pos, background default true, color):
+    if background: draw_disk(pos - xy(0, 1), 20, avatar.color)
+    let sprite = avatar.sprite
+    
+    if ⌊(game_frames + 15) / 30⌋ mod 2:
+        sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
+
+    sprite = sprite.x_flipped
     
     // Outline
     for -1 ≤ dx ≤ +1:
         if dx ≠ 0:
             draw_sprite({sprite: sprite, scale: 200%, override_color: #000, pos: pos + xy(dx, -1)})
             draw_sprite({sprite: sprite, scale: 200%, override_color: #000, pos: pos + xy(0, dx - 1)})
+    
     draw_sprite({sprite: sprite, scale: 200%, pos: pos + xy(0, -1)})
-    draw_text({font: score_font, text: avatar.name, color: avatar.color, pos: pos + xy(0, 26)})
+    
+    color = color default (if background then avatar.color else player.board.selection_color)
+    draw_text({font: score_font, text: avatar.name, color: color, shadow: #000, pos: pos + xy(0, 26)})
 
 
 

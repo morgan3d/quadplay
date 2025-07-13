@@ -124,5 +124,7 @@ def history_update(history, list_rect)
     
     if overflow < 0:
         history.scroll = 0
+        
+        
 
         
