@@ -136,14 +136,16 @@ def show_word_in_board(word):
 
 
 /* Draw the ranked competitors and perform UI logic */
-def update_leaderboard()
+def draw_leaderboard()
 & preserving_transform:
     set_clip(xy(0, 0), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 22))
     set_transform(xy(SCREEN_SIZE.x - 110, 72))
 
+    draw_text({text: "Global Scoreboard", pos: xy(55, -5), x_align: "center", font: history_font, color: #E1B, shadow: #000})
+    
     const RANK_SPACING_Y = 16
     for competitor at i in competitor_array:
-        const pos = xy(-3, i * RANK_SPACING_Y)
+        const pos = xy(-3, i * RANK_SPACING_Y + 8)
                 
         const me = competitor == player_competitor
 
@@ -355,7 +357,7 @@ todo("Use real players in a GLOBAL game")
 // Make some bogus competitors for testing purposes
 insert_synthetic_competitors(competitor_array, 15)
 
-todo("Trim down when there are very many competitors, keeping the top 4, the bottom 4, and 3 around the player")
+todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")
 
 analyze_competitors(competitor_array)
 
@@ -377,7 +379,7 @@ history_update(player.history, {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, 
 
 draw_awards()
 
-update_leaderboard()
+draw_leaderboard()
 
             
 // Button/timer
