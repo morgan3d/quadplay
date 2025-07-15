@@ -126,7 +126,7 @@ def draw_most_words_award(winner):
     player.board.selection_color = #E1B
 
     draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
-    draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
+    draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, "most_words", winner.avatar.color)
     avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color)
 
     show_word_in_board(array_value(winner.word_list, draw_most_words_award.frames / MOST_WORDS_AWARD_FRAMES_PER_WORD, "loop"))
