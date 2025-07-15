@@ -22,6 +22,7 @@
         "GenerateBoard",
         "Play",
         "Rotate",
+        "GatherGlobalResults",
         "Intermission"
     ],
     "start_mode": "Title",
@@ -52,7 +53,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.128",
+    "version": "0.130",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -499,14 +500,14 @@
             "quantum": 0.5,
             "description": "Game time"
         },
-        "GLOBAL_INTERMISSION_TIME_MINUTES": {
+        "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
-            "value": "0.50",
-            "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES exactly",
-            "min": 0.15,
-            "max": 2,
-            "format": "0.00",
-            "quantum": 0.05
+            "value": "30",
+            "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_SECONDS + GLOBAL_GAME_TIME_MINUTES exactly",
+            "min": 1,
+            "max": 240,
+            "format": "0",
+            "quantum": 1
         },
         "WAITING_ROOM_BACKGROUND_COLOR": {
             "type": "rgb",
@@ -681,6 +682,15 @@
             "value": "30",
             "min": 1,
             "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "GATHER_FRAMES": {
+            "type": "number",
+            "value": "120",
+            "description": "How many frames GatherGlobalResults runs for",
+            "min": 0,
+            "max": 260,
             "format": "0",
             "quantum": 1
         }

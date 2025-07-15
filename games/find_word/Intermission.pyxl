@@ -314,7 +314,7 @@ if game_type == SOLO:
         color: #FFF})
         
     if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
-        set_mode(GenerateBoard) because "Button press"
+        set_mode(GenerateBoard) because "SOLO and button"
         
 else:
     // Countdown
@@ -333,5 +333,5 @@ else:
         color: #FFF})
     
     if utc_time ≥ end_time:
-        set_mode(GenerateBoard) because "Global timer"
+        set_mode(GenerateBoard) because "GLOBAL and timer"
 

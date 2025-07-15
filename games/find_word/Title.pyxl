@@ -94,7 +94,7 @@ def update_button(pos, text, index):
             in_waiting_room = true
         
         play_sound(blip_sound)
-        set_mode(GenerateBoard) because "Button"
+        set_mode(GenerateBoard) because "Chose game type"
         
 
 

@@ -55,7 +55,10 @@ if time_left > 0.1 and time_left < 5.5:
     
 if time_left ≤ 0 or DEBUG_INTERMISSION:
     play_sound(times_up_sound)
-    set_mode(Intermission) because "Timer"
+    if game_type == SOLO:
+        set_mode(Intermission) because "SOLO and timer"
+    else:
+        set_mode(GatherGlobalResults) because "GLOBAL and timer"
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"

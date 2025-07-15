@@ -36,7 +36,7 @@ if mode_frames == 1:
             player_add_to_history(player, word, score_word(word))
     
     if in_waiting_room:
-        set_mode(WaitingRoom) because "No global in progress"
+        set_mode(WaitingRoom) because "No GLOBAL in progress"
     else:
         set_mode(Play)
     
