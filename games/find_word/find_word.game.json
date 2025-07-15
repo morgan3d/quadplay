@@ -50,7 +50,7 @@
         "logo_sprite": "logo.sprite.json",
         "sensitive_source": "quad://data/english_sensitive_table.data.json"
     },
-    "version": "0.118",
+    "version": "0.119",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

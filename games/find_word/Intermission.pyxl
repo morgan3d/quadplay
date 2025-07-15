@@ -7,6 +7,10 @@ todo("* Make SOLO version")
 // Cycle through the award stages. See `STAGE`
 let stage
 
+/* Stage from the previous frame, used for detecting stage
+   changes to play sounds */
+let prev_stage
+
 /* Wall clock time in seconds ala `utc_now()` when the Intermission ends
    for a `GLOBAL` game. */
 let end_time
@@ -77,8 +81,16 @@ def draw_awards()
 
 
 
+def maybe_player_award_sound(winner):
+    if player_competitor == winner and stage ≠ prev_stage:
+        todo("Play sound if the player is the winner")
+
+
+
 /* Used for best_word, longest, The title is used to compute the field */
 def draw_word_award(title, winner):
+    maybe_player_award_sound(winner)
+        
     const field = replace(lowercase(title), {" ": "_"})
         
     draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
@@ -109,6 +121,7 @@ def draw_award_background(rect, field, color)
 
 
 def draw_most_words_award(winner):
+    maybe_player_award_sound(winner)
     ++draw_most_words_award.frames
     player.board.selection_color = #E1B
 
@@ -234,16 +247,15 @@ todo("* Trim down when there are very many competitors, keeping the top 2, the b
 competitor_analyze(competitor_array)
 
 stage = STAGE.SUMMARY
-
+prev_stage = -1
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
 // Cycle through awards, giving equal time to each
 if game_type == GLOBAL or DEBUG_INTERMISSION:
+    prev_stage = stage
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
-
-stage = STAGE.BEST_WORD
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)

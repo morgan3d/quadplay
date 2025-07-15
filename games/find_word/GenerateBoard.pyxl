@@ -22,7 +22,7 @@ set_background(#000)
 // the next mode.
 
 draw_text({
-    text: "Creating board…",
+    text: "Generating board…",
     font: score_font,
     color: #F3C,
     pos: ½ SCREEN_SIZE})
