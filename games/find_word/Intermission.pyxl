@@ -52,7 +52,7 @@ def draw_award_summary()
     draw_text({…args, text: "" + size(player.history.list) + "/" + player.board.word_count, pos: xy(30, 5), x_align: "right"})
     
     if game_type == GLOBAL:
-        draw_text({…args, text: "rare", pos: xy(x, 14)})
+        draw_text({…args, text: "Rare Words", pos: xy(x, 14)})
         draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 14), x_align: "right"})
 
     draw_text({…args, text: "Longest", pos: xy(x, 23)})
@@ -117,7 +117,7 @@ def draw_award_background(rect, field, color)
     
     const badge_color = 92% color
     set_clip(transform_cs_to_ss(rect.corner), rect.size)
-    draw_text({color: badge_color, text: badge_background, pos: xy(-36, -26), y_align: "top", x_align: "left"})
+    draw_text({font: leaderboard_font, color: badge_color, text: badge_background, pos: xy(-36, -26), y_align: "top", x_align: "left"})
 
 
 
@@ -273,7 +273,27 @@ if game_type == GLOBAL or DEBUG_INTERMISSION:
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 61), xy(125, 2), #000, ∅, 20)
 
-history_update(player.history, {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)})
+const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)}
+history_update(player.history, history_rect)
+
+// Show the board so that it can appear in screenshots
+const α = max(0%, 100% - max(mode_frames - 360, 0) / 60)
+if stage == STAGE.SUMMARY and α > 0%
+& preserving_transform:
+    set_transform(history_rect.corner + history_rect.size - xy(46, 42))
+    const history_tile_color = rgba(.8, .8, .8, α)
+    const history_board_color = rgba(0, 0, 0, α)
+    for x < COLS:
+        for y < ROWS:
+            const tile = player.board.tile[x][y]
+            const letter = if tile.letter == "Q" then "Qu" else tile.letter
+            const pos = 11 xy(x, y)
+            draw_disk(pos, 5, history_tile_color)
+            draw_text({
+                font: history_font, 
+                pos: pos,
+                text: letter,
+                color: history_board_color})
 
 draw_awards()
 

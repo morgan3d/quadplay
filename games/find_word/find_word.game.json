@@ -52,7 +52,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.127",
+    "version": "0.128",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -501,7 +501,7 @@
         },
         "GLOBAL_INTERMISSION_TIME_MINUTES": {
             "type": "number",
-            "value": "0.60",
+            "value": "0.55",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_MINUTES + GLOBAL_GAME_TIME_MINUTES exactly",
             "min": 0.15,
             "max": 2,

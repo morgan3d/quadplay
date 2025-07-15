@@ -49,6 +49,7 @@ for letter at index in DECIMAL_TO_BASE36:
     BASE36_TO_DECIMAL[letter] = index;
     
 
+
 /* Computes and returns all n-tile sequences that are possible on this board. 
    Used by the solver.
    
