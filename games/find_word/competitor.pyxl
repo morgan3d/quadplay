@@ -16,8 +16,7 @@ let most_words_winner
 
 /* Generate a stable set of synthetic competitors with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
-def insert_synthetic_competitors(competitor_array, num_competitors):
-
+def insert_synthetic_competitors(competitor_array, target_count):
     // Make the competitors stable in their personalities by using a fixed
     // rng for anything specific to the competitor generation. Do not use
     // this rng for word selection.
@@ -29,8 +28,9 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
         if dictionary[word]:
             word_table[word] = 1
     
-    for i < num_competitors:
-        
+    let hour = local_time().hours
+    
+    while size(competitor_array) < target_count:
         const sprite = avatar_sprite_from_linear_index(random_integer(0, AVATAR_SPRITE_COUNT - 1, rng))
         
         const competitor = {
@@ -40,6 +40,17 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
                 name: make_random_name(rng)},
             score: 0}
 
+        // Is this particular competitor available right now? Choose stable random
+        // hours that they play
+        const first_hour = random_integer(0, 23, rng)
+        const last_hour  = (random_integer(1, 12, rng) + first_hour) mod 24
+        
+        if last_hour > first_hour:
+            if hour < first_hour or hour > last_hour: continue
+        else:
+            // Play hours wrapped around the clock
+            if hour > last_hour and hour < first_hour: continue
+        
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
         const competitor_base_percentage = rng(2%^⅓, 29%^⅓)³
@@ -68,11 +79,12 @@ def insert_synthetic_competitors(competitor_array, num_competitors):
             ++tries
             maybe_add_word(random_value(player.board.word_list))
             
-        // Steal some words from the player
-        tries = 0
-        while size(word_set) < words_found and tries < 2 words_found:
-            ++tries
-            maybe_add_word(random_value(player.history.list).word)
+        // Steal some words from the player (if the player had any words)
+        if player.history.list:
+            tries = 0
+            while size(word_set) < words_found and tries < 2 words_found:
+                ++tries
+                maybe_add_word(random_value(player.history.list).word)
         
         
         competitor.word_list = keys(word_set)

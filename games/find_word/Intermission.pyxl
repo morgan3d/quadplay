@@ -59,6 +59,7 @@ def draw_award_summary()
     draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 23), x_align: "right"})
 
 
+
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
 & preserving_transform:
@@ -251,7 +252,7 @@ add_player_competitor()
 todo("Use real players in a GLOBAL game")
 
 // Make some bogus competitors for testing purposes
-insert_synthetic_competitors(competitor_array, 11)
+insert_synthetic_competitors(competitor_array, 15)
 
 todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")
 
