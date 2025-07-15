@@ -47,10 +47,10 @@ def insert_synthetic_competitors(competitor_array, target_count):
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
         const base_ability = max(2%, rng(2%^⅓, 35%^⅓)³ + match_shift)
-        const find_percentage = min(30%, random(3%^⅓, 30%^⅓)³ + base_ability)
-        const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 8, 65)
+        const find_percentage = min(28%, random(3%^⅓, 30%^⅓)³ + base_ability)
+        const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 8, 60)
         
-        const short_word_preference = rng(0%, 90%)
+        const short_word_preference = max(100% - 4 base_ability, rng(0%, 90%))
 
         // Is this particular competitor available right now? Choose stable random
         // hours that they play
@@ -73,7 +73,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if not word_set[word] and ξ ≤ (2.6 base_ability + 25%) / pow(max(size(word) - 2, 1), 0.4 + 3.0 short_word_preference):
+            if not word_set[word] and ξ ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 2.9 short_word_preference):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
@@ -82,21 +82,21 @@ def insert_synthetic_competitors(competitor_array, target_count):
         
         // Pick up a bunch of cheap words first
         let tries = 0
-        while size(word_set) < 33% words_found and tries < 2 words_found:
+        while size(word_set) < max(10%, short_word_preference) * words_found and tries < 2 words_found:
             ++tries
             const word = random_value(player.board.word_list)
             if size(word) < 5:
                 maybe_add_word()
         
         tries = 0
-        while size(word_set) < 82% words_found and tries < 2 words_found:
+        while size(word_set) < 80% words_found and tries < 2 words_found:
             ++tries
             maybe_add_word(random_value(player.board.word_list))
             
         // Steal some words from the player (if the player had any words)
         if player.history.list:
             tries = 0
-            while size(word_set) < words_found and tries < 2 words_found:
+            while size(word_set) < words_found and tries < words_found:
                 ++tries
                 maybe_add_word(random_value(player.history.list).word)
         

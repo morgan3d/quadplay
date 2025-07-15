@@ -252,7 +252,7 @@ add_player_competitor()
 todo("Use real players in a GLOBAL game")
 
 // Make some bogus competitors for testing purposes
-insert_synthetic_competitors(competitor_array, 15)
+insert_synthetic_competitors(competitor_array, ⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(8, 15))
 
 todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")
 
