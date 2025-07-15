@@ -195,9 +195,9 @@ def competitor_assign_awards(competitor_array):
         if size(competitor.word_list) > size(most_words_winner.word_list):
             most_words_winner = competitor
 
-    best_word_winner.badges += BADGE_TABLE.best_word
-    longest_winner.badges   += BADGE_TABLE.longest
+    // Put in the same order as the award stages
+    best_word_winner.badges  += BADGE_TABLE.best_word
     most_words_winner.badges += BADGE_TABLE.most_words
     best_rare_winner.badges  += BADGE_TABLE.best_rare
-    
+    longest_winner.badges    += BADGE_TABLE.longest
 

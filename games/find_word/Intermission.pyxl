@@ -83,7 +83,7 @@ def draw_awards()
 
 def maybe_player_award_sound(winner):
     if player_competitor == winner and stage ≠ prev_stage:
-        todo("Play sound if the player is the winner")
+        play_sound(award_sound)
 
 
 
@@ -163,6 +163,7 @@ def draw_leaderboard()
     
     const RANK_SPACING_Y = 16
     const alt = ⌊mode_frames / 30⌋ mod 2
+    
     for competitor at i in competitor_array:
         const pos = xy(-3, i * RANK_SPACING_Y + 8)
                 
@@ -174,31 +175,39 @@ def draw_leaderboard()
             
         // Animate sprite
         let sprite = competitor.avatar.sprite
-        if alt:
-            sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
+        
+        if alt: sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
          
         draw_sprite(sprite.x_flipped, pos - xy(1, 0))
         
-        const shadow = if me then 60% competitor.avatar.color else ∅
+        const text_args = {
+                font: leaderboard_font,
+                shadow: if me then 60% competitor.avatar.color else ∅,
+                x_align: "left",
+                color: #FFF}
         
-        draw_text({
-            font: leaderboard_font,
+        draw_text({…text_args,
             text: competitor.avatar.name,
-            pos: pos + xy(17, 0),
-            shadow: shadow,
+            pos: pos + xy(8, 0),
             color: if me then #FFF else competitor.avatar.color})
         
-        if size(competitor.badges) > 0:
-            draw_text({
-                font: leaderboard_font,
+        const badges = competitor.badges
+        if size(badges) > 2:
+                
+            draw_text({…text_args,
+                text: slice(competitor.badges, 0, 2),
+                pos: pos + xy(27, alt - 1 - 4)})
+            draw_text({…text_args,
+                text: slice(competitor.badges, 2),
+                pos: pos + xy(27, alt - 1 + 4)})
+                
+        else if size(badges) > 0:
+            draw_text({…text_args,
                 text: competitor.badges,
-                pos: pos + xy(27, alt - 1),
-                shadow: shadow,
-                x_align: "left",
-                color: #FFF})
+                pos: pos + xy(27, alt - 1)})
             
-        draw_text({text: format_number(competitor.score, "commas"), font: leaderboard_font, pos: pos + xy(60, 0), x_align: "right", shadow: shadow, color: #FFF})
-        draw_text({font: history_font, text: competitor.text, x_align: "right", pos: pos + xy(110, 0), shadow: shadow, color: #FFF})
+        draw_text({…text_args, text: format_number(competitor.score, "commas"), pos: pos + xy(60, 0), x_align: "right"})
+        draw_text({…text_args, font: history_font, text: competitor.text, x_align: "right", pos: pos + xy(110, 0)})
 
 
 

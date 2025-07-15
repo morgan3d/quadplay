@@ -49,9 +49,10 @@
         "giant_score_font": "quad://fonts/novarese-20.font.json",
         "logo_sprite": "logo.sprite.json",
         "sensitive_source": "quad://data/english_sensitive_table.data.json",
-        "leaderboard_font": "quad://fonts/deja-8.font.json"
+        "leaderboard_font": "quad://fonts/deja-8.font.json",
+        "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.122",
+    "version": "0.123",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
