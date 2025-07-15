@@ -177,9 +177,9 @@ def competitor_assign_awards(competitor_array):
     
     // Find the winner in each category. Ties are broken
     // by total score by running in order after that sort
-    best_word_winner = competitor_array[0]
+    best_word_winner  = competitor_array[0]
     best_rare_winner  = competitor_array[0]
-    longest_winner = competitor_array[0]
+    longest_winner    = competitor_array[0]
     most_words_winner = competitor_array[0]
     
     for competitor in competitor_array:
@@ -196,8 +196,8 @@ def competitor_assign_awards(competitor_array):
             most_words_winner = competitor
 
     best_word_winner.badges += BADGE_TABLE.best_word
-    longest_winner.badges += BADGE_TABLE.longest
-    most_words_winner.bages += BADGE_TABLE.most_words
-    best_rare_winner.bages += BADGE_TABLE.best_rare
+    longest_winner.badges   += BADGE_TABLE.longest
+    most_words_winner.badges += BADGE_TABLE.most_words
+    best_rare_winner.badges  += BADGE_TABLE.best_rare
     
 

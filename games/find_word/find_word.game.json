@@ -48,7 +48,8 @@
         "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
         "giant_score_font": "quad://fonts/novarese-20.font.json",
         "logo_sprite": "logo.sprite.json",
-        "sensitive_source": "quad://data/english_sensitive_table.data.json"
+        "sensitive_source": "quad://data/english_sensitive_table.data.json",
+        "leaderboard_font": "quad://fonts/deja-8.font.json"
     },
     "version": "0.121",
     "min_players": 1,

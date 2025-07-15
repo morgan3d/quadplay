@@ -182,6 +182,7 @@ def draw_leaderboard()
         const shadow = if me then 60% competitor.avatar.color else ∅
         
         draw_text({
+            font: leaderboard_font,
             text: competitor.avatar.name,
             pos: pos + xy(17, 0),
             shadow: shadow,
@@ -189,13 +190,14 @@ def draw_leaderboard()
         
         if size(competitor.badges) > 0:
             draw_text({
+                font: leaderboard_font,
                 text: competitor.badges,
-                pos: pos + xy(27, alt),
+                pos: pos + xy(27, alt - 1),
                 shadow: shadow,
                 x_align: "left",
                 color: #FFF})
             
-        draw_text({text: format_number(competitor.score, "commas"), pos: pos + xy(60, 0), x_align: "right", shadow: shadow, color: #FFF})
+        draw_text({text: format_number(competitor.score, "commas"), font: leaderboard_font, pos: pos + xy(60, 0), x_align: "right", shadow: shadow, color: #FFF})
         draw_text({font: history_font, text: competitor.text, x_align: "right", pos: pos + xy(110, 0), shadow: shadow, color: #FFF})
 
 
