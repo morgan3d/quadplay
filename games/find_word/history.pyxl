@@ -3,7 +3,7 @@ def make_history():
     return {
         // Each entry is {text, word, tiles, points, color, emphasize_frame, pos}.
         // `pos` is computed as a side effect of draw history
-        // `word` is Q-encoded, text may contain arbitrary characters
+        // `word` is Q-encoded, `text` may contain arbitrary characters
         list: [],
         
         // Auto computed and overriden on new word spawn or resize,
