@@ -116,10 +116,10 @@ def swap(array, i, j):
 /* Weigh the probability towards capital letters,
    and always start with a capital letter */
 def make_random_name(rng default random):
-    return (
+    return replace(
         random_value(ALPHABET, rng) +
         random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) +
-        random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng))
+        random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng), " ", "O")
 
 
 

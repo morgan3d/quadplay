@@ -51,6 +51,7 @@ def avatar_sprite_to_linear_index(sprite):
     return index
 
 
+
 /* Inverse of `avatar_sprite_to_linear_index()` */
 def avatar_sprite_from_linear_index(index):
     assert(index ≥ 0 and index < AVATAR_SPRITE_COUNT)
