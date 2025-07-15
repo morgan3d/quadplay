@@ -39,8 +39,8 @@ def insert_synthetic_competitors(competitor_array, target_count):
     if player.history:
         for i < min(3, size(player.history.list)):
             const entry = player.history.list[i]
-            if entry.points > 35 and ξ < 50%:
-                protect[player.history.list.word] = 1
+            if entry.points > 32 and ξ < min(90%, 30% + entry.points / 100):
+                protect[entry.word] = 1
     
     while size(competitor_array) < target_count:
         const sprite = avatar_sprite_from_linear_index(random_integer(0, AVATAR_SPRITE_COUNT - 1, rng))
@@ -81,7 +81,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if not word_set[word] and not protect[word] and ξ ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 2.9 short_word_preference):
+            if not word_set[word] and not protect[word] and ξ ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
