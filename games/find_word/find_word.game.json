@@ -51,7 +51,7 @@
         "sensitive_source": "quad://data/english_sensitive_table.data.json",
         "leaderboard_font": "quad://fonts/deja-8.font.json"
     },
-    "version": "0.121",
+    "version": "0.122",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
