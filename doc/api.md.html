@@ -4769,10 +4769,11 @@ The key concepts in this API are:
 
 *Group*
 : A network clique of nodes that can broadcast to each other. Think of this 
-  like a global radio channel. When connected to
-  a group, each node has a single conduit on which it sends and receives messages. It 
-  can only broadcast to everyone on in the group, but when receiving messages knows
-  the ID of the node that sent to it.
+  like a global radio channel where everyone can send and receive. When connected to
+  a group, each node holds a single group conduit on which it sends and receives messages. It 
+  can only broadcast to everyone on in the group and not send individual messages. 
+  However, when receiving messages it does know
+  the ID of the node that sent that message to the group.
 
 *netid*
 : A virtual address by which a node or group is identified. These are strings
@@ -4823,9 +4824,10 @@ in game jams.
 A conduit has the following properties:
 
 `conduit.status`
-: - `"pending"` - in the process of connecting. Messages sent or received will be queued while awaiting the full handshake.
-  - `"ok"` - the connection is open and stable.
-  - `"closed"` - the connection has been terminated on one or both sides.
+: - `"pending"` - in the process of connecting the conduit. Messages sent or received will be queued while awaiting the full handshake.
+  - `"ok"` - the conduit is open and stable.
+  - `"closed"` - the conduit has been terminated on one or both sides.
+  - `"offline"` - the conduit could not be connected because there is no internet connection on this node (or, in rare cases, the servers that initally broker the P2P connections are offline or overloaded).
 
 `conduit.netid`
 : The `netid` of the group or node being communicated with through this conduit.
@@ -4835,8 +4837,9 @@ The functions in the conduit API are:
 `make_conduit(id default "group_netid 0000", join_message default nil)`
 : Create a connection to one or more nodes on the network. `id`
   is a string. `join_message` is an arbitrary object to send
-  immediately after the connection succeeds, which may be before
-  the next frame.
+  immediately after the connection succeeds, which may occur before
+  the next frame. The message is serialized before the function returns
+  and so may safely be mutated by the caller afterwards.
 
   If `id` begins with the string `"group_netid"`, then the conduit
   communicates many-to-many with all nodes in that group that are running the same game loaded
@@ -4849,7 +4852,7 @@ The functions in the conduit API are:
 
   If `id` begins with the string `"node_netid"`, then the conduit communicates
   one-to-one with a single node that was calling `conduit_listen()`. You must
-  have obtained that net_id through some side band, or chosen to make it
+  have obtained that netid through some side band, or chosen to make it
   fixed if you are connecting to a server.
 
 `get_node_netid()`
@@ -4857,12 +4860,15 @@ The functions in the conduit API are:
   unless `set_node_netid()` has been called.
 
 `conduit_send(conduit, message)`
-: Send this message, which can be any serializable message. 
-  TODO: how does the serializer do with DAGs? with cycles? With functions? With quadplay structures?
+: Send this message, which can be any serializable message. If `conduit` is a group conduit,
+  every node in the group will receive the message.
 
 `conduit_iterate(conduit, message_handler, leave_handler)`
 : Iterate through all incoming messages. For each, invokes `message_handler(message, node_netid, conduit)`.
-  `leave_handler(node_netid, conduit)` is called when a node closes their side of the conduit.
+  It is the caller's responsibility to recognize nodes that have newly appeared on a group 
+  conduit from their IDs. Maintaining a table mapping node_netids to 
+  Calls `leave_handler(node_netid, conduit)` for each node that has closed their
+  side of the conduit or left the group.
 
 `conduit_close(conduit)`
 : Close this connection immediately. This is faster and conserves resources compared to

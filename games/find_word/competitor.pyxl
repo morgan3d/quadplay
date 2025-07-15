@@ -1,7 +1,7 @@
 /* Information about other players online (or virtual ones) used by Intermission */
 
 
-/* `{avatar, score, word_list, representative_text}`
+/* `{avatar, score, word_list, representative_text, badges}`
    `word_list` is Q-encoded */
 const competitor_array = []
 
@@ -12,6 +12,7 @@ let best_word_winner
 let best_rare_winner
 let longest_winner
 let most_words_winner
+
 
 /* Generate a stable set of synthetic competitors with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
@@ -103,13 +104,14 @@ def add_player_competitor():
 
 
 /* Called from `Intermission.enter` */
-def analyze_competitors(competitor_array):
+def competitor_analyze(competitor_array):
     // How many players have each word; used for 
     // identifying rare words
     const count = {}
     
     // Compute everyone's best results
     for competitor in competitor_array:
+        competitor.badges = ""
         
         // Censor names by slicing off the 2nd letter, if inappropriate,
         // and replacing common letter substitutions to prevent casual
@@ -163,9 +165,16 @@ def analyze_competitors(competitor_array):
         if count[entry.word] <= rare_threshold:
             entry.rare = true
     
+    competitor_assign_awards(competitor_array)
+    
+    
+    
+/* Helper for `competitor_analyze()`. Sets the `_winner` globals
+   and assigns the `competitor.badges` strings. */
+def competitor_assign_awards(competitor_array):
     // Rank all competitors by score
     sort(competitor_array, "score", true)
-            
+    
     // Find the winner in each category. Ties are broken
     // by total score by running in order after that sort
     best_word_winner = competitor_array[0]
@@ -185,3 +194,10 @@ def analyze_competitors(competitor_array):
 
         if size(competitor.word_list) > size(most_words_winner.word_list):
             most_words_winner = competitor
+
+    best_word_winner.badges += BADGE_TABLE.best_word
+    longest_winner.badges += BADGE_TABLE.longest
+    most_words_winner.bages += BADGE_TABLE.most_words
+    best_rare_winner.bages += BADGE_TABLE.best_rare
+    
+

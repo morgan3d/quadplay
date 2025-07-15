@@ -50,7 +50,7 @@
         "logo_sprite": "logo.sprite.json",
         "sensitive_source": "quad://data/english_sensitive_table.data.json"
     },
-    "version": "0.117",
+    "version": "0.118",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -142,6 +142,16 @@
                 "EEINSU",
                 "HIMNQA"
             ]
+        },
+        "BADGE_TABLE": {
+            "type": "raw",
+            "value": {
+                "most_rare": "★",
+                "best_word": "♦",
+                "most_words": "§",
+                "best_rare": "☆",
+                "longest": "▶"
+            }
         },
         "LETTER_POINT_TABLE": {
             "type": "raw",

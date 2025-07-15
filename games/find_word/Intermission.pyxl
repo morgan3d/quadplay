@@ -2,7 +2,6 @@ Intermission
 ════════════════════════════════════════════════════════════════════════
 
 todo("* Make SOLO version")
-todo("Force GLOBAL to SOLO version when nobody else is there")
 
 
 // Cycle through the award stages. See `STAGE`
@@ -60,7 +59,7 @@ def draw_award_summary()
 def draw_awards()
 & preserving_transform:
     set_transform(xy(SCREEN_SIZE.x - 88, 34))
-
+    
     if stage == STAGE.SUMMARY:
         draw_award_summary()
    
@@ -81,8 +80,8 @@ def draw_awards()
 /* Used for best_word, longest, The title is used to compute the field */
 def draw_word_award(title, winner):
     const field = replace(lowercase(title), {" ": "_"})
-    
-    draw_corner_rect(xy(-35, -24), xy(69, 37), winner.avatar.color)
+        
+    draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
 
     draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
     draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(32, -29), z: 2})
@@ -93,12 +92,28 @@ def draw_word_award(title, winner):
 
 
 
+def draw_award_background(rect, field, color)
+& preserving_transform:
+    
+    draw_corner_rect(rect.corner, rect.size, color)
+    let badge_background = BADGE_TABLE[field]
+    for i < 4:
+        badge_background += badge_background
+    for i < 2:
+        badge_background += "\n" + badge_background
+    
+    const badge_color = 92% color
+    set_clip(transform_cs_to_ss(rect.corner), rect.size)
+    draw_text({color: badge_color, text: badge_background, pos: xy(-36, -26), y_align: "top", x_align: "left"})
+
+
+
 def draw_most_words_award(winner):
     ++draw_most_words_award.frames
     player.board.selection_color = #E1B
 
     draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
-    draw_corner_rect(xy(-35, -24), xy(69, 37), winner.avatar.color)
+    draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
     avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color)
 
     show_word_in_board(array_value(winner.word_list, draw_most_words_award.frames / MOST_WORDS_AWARD_FRAMES_PER_WORD, "loop"))
@@ -134,6 +149,7 @@ def draw_leaderboard()
     draw_text({text: "Global Scoreboard", pos: xy(55, -5), x_align: "center", font: history_font, color: #E1B, shadow: #000})
     
     const RANK_SPACING_Y = 16
+    const alt = ⌊mode_frames / 30⌋ mod 2
     for competitor at i in competitor_array:
         const pos = xy(-3, i * RANK_SPACING_Y + 8)
                 
@@ -145,20 +161,28 @@ def draw_leaderboard()
             
         // Animate sprite
         let sprite = competitor.avatar.sprite
-        if ⌊mode_frames / 30⌋ mod 2:
+        if alt:
             sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
          
-        draw_sprite(sprite.x_flipped, pos)
+        draw_sprite(sprite.x_flipped, pos - xy(1, 0))
         
         const shadow = if me then 60% competitor.avatar.color else ∅
         
         draw_text({
             text: competitor.avatar.name,
-            pos: pos + xy(18, 0),
+            pos: pos + xy(17, 0),
             shadow: shadow,
             color: if me then #FFF else competitor.avatar.color})
+        
+        if size(competitor.badges) > 0:
+            draw_text({
+                text: competitor.badges,
+                pos: pos + xy(27, alt),
+                shadow: shadow,
+                x_align: "left",
+                color: #FFF})
             
-        draw_text({text: format_number(competitor.score, "commas"), pos: pos + xy(59, 0), x_align: "right", shadow: shadow, color: #FFF})
+        draw_text({text: format_number(competitor.score, "commas"), pos: pos + xy(60, 0), x_align: "right", shadow: shadow, color: #FFF})
         draw_text({font: history_font, text: competitor.text, x_align: "right", pos: pos + xy(110, 0), shadow: shadow, color: #FFF})
 
 
@@ -207,7 +231,7 @@ insert_synthetic_competitors(competitor_array, 11)
 
 todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")
 
-analyze_competitors(competitor_array)
+competitor_analyze(competitor_array)
 
 stage = STAGE.SUMMARY
 
@@ -218,6 +242,8 @@ frame
 // Cycle through awards, giving equal time to each
 if game_type == GLOBAL or DEBUG_INTERMISSION:
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
+
+stage = STAGE.BEST_WORD
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
