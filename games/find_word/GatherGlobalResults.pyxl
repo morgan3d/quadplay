@@ -1,0 +1,20 @@
+GatherGlobalResults
+════════════════════════════════════════════════════════════════════════
+
+todo("Actually gather those results...")
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(GLOBAL_BACKGROUND_COLOR)
+
+draw_text({
+    text: "Gathering Global Scores…",
+    font: score_font,
+    color: #F3C,
+    pos: ½ SCREEN_SIZE})
+
+draw_corner_rect(xy(0, ⅔ SCREEN_SIZE.y), xy(SCREEN_SIZE.x * mode_frames / GATHER_FRAMES, 12), #FFF)
+    
+if mode_frames ≥ GATHER_FRAMES:
+    set_mode(Intermission) because "Timer"
+
