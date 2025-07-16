@@ -1,0 +1,24 @@
+SoloIntermission
+════════════════════════════════════════════════════════════════════════
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
+const size = xy(150, 17)
+draw_rect(pos - xy(0, 1), size, #0F0, #FFF)
+draw_text({
+    font: score_font,
+    text: "Start New Game",
+    outline: #090,
+    pos: pos,
+    color: #FFF})
+    
+if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
+    set_mode(GenerateBoard) because "Button"
+

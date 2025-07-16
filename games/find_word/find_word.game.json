@@ -22,8 +22,9 @@
         "GenerateBoard",
         "Play",
         "Rotate",
+        "SoloIntermission",
         "GatherGlobalResults",
-        "Intermission"
+        "GlobalIntermission"
     ],
     "start_mode": "Title",
     "docs": [

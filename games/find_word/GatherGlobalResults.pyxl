@@ -16,5 +16,5 @@ draw_text({
 draw_corner_rect(xy(0, ⅔ SCREEN_SIZE.y), xy(SCREEN_SIZE.x * mode_frames / GATHER_FRAMES, 12), #FFF)
     
 if mode_frames ≥ GATHER_FRAMES:
-    set_mode(Intermission) because "Timer"
+    set_mode(GlobalIntermission) because "Timer"
 
