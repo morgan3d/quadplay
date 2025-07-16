@@ -1,13 +1,38 @@
 GatherGlobalResults
 ════════════════════════════════════════════════════════════════════════
 
+const color = #F3C
+
 todo("Actually gather the global results from real players...")
+
+def draw_arc(pos, radius, start, stop, color):
+    const N = 10
+    let prev = pos + angle_to_xy(start) * radius
+    for i < N:
+        const θ = lerp(start, stop, i / (N - 1),)
+        const curr = pos + radius * angle_to_xy(θ)
+        draw_line(prev, curr, color)
+        prev = curr
+
+
+def draw_globe(pos, radius):
+    draw_disk(pos, radius, ∅, color)
+    
+    const parallels = 7
+    for 0 < p < parallels:
+        const θ = 180° (p + 1) / (parallels + 1) 
+        draw_arc(pos, xy(1, cos θ) * radius, 12°, 168°, color)
+    
+    const meridians = 15
+    for m < meridians:
+        const ϕ = loop(360° * m / meridians + 1° game_frames, 360°)
+        if ϕ < 180°:
+            draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, color)
 
 frame
 ────────────────────────────────────────────────────────────────────────
 set_background(GLOBAL_BACKGROUND_COLOR)
 
-const color = #F3C
 draw_text({
     text: "Gathering Global Scores…",
     font: score_font,
@@ -15,8 +40,10 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 const y = ½ SCREEN_SIZE.y + 20
-draw_corner_rect(xy(⅕ SCREEN_SIZE.x, y), xy(⅗ SCREEN_SIZE.x * mode_frames / GATHER_FRAMES, 12), color)
-draw_corner_rect(xy(⅕ SCREEN_SIZE.x, y), xy(⅗ SCREEN_SIZE.x, 12), ∅, #FFF)
-    
+draw_corner_rect(xy(⅕ SCREEN_SIZE.x, y), xy(⅗ SCREEN_SIZE.x * min(mode_frames / GATHER_FRAMES, 100%), 10), color)
+draw_corner_rect(xy(⅕ SCREEN_SIZE.x, y), xy(⅗ SCREEN_SIZE.x, 10), ∅, color)
+
+draw_globe(xy(½ SCREEN_SIZE.x, ⅖ SCREEN_SIZE.y - 19), 20)
+
 if mode_frames ≥ GATHER_FRAMES:
     set_mode(GlobalIntermission) because "Timer"
