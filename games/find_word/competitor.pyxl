@@ -102,7 +102,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
             maybe_add_word(random_value(player.board.word_list))
             
         // Steal some words from the player (if the player had any words)
-        if player.history.list:
+        if size(player.history.list) > 0:
             tries = 0
             while size(word_set) < words_found and tries < words_found:
                 ++tries

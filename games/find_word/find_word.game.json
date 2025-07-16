@@ -54,7 +54,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.132",
+    "version": "0.133",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

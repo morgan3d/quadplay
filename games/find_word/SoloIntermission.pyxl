@@ -51,6 +51,9 @@ if size(unfound_word_array) > 10:
 
 frame
 ────────────────────────────────────────────────────────────────────────
+todo("Show score")
+todo("Show word count")
+todo("Add text around unfound words")
 
 if mode_frames mod 380 == 60:
     // Choose the next unfound word

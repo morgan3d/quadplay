@@ -1,9 +1,6 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
 
-todo("* Make SOLO version")
-
-
 // Cycle through the award stages. See `STAGE`
 let stage
 
