@@ -37,13 +37,14 @@ draw_text({
     text: "Gathering Global Scores…",
     font: score_font,
     color: color,
+    y_align: "center",
     pos: ½ SCREEN_SIZE})
 
 const y = ½ SCREEN_SIZE.y + 20
 draw_corner_rect(xy(⅕ SCREEN_SIZE.x, y), xy(⅗ SCREEN_SIZE.x * min(mode_frames / GATHER_FRAMES, 100%), 10), color)
 draw_corner_rect(xy(⅕ SCREEN_SIZE.x, y), xy(⅗ SCREEN_SIZE.x, 10), ∅, color)
 
-draw_globe(xy(½ SCREEN_SIZE.x, ⅖ SCREEN_SIZE.y - 19), 20)
+draw_globe(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y - 40), 20)
 
 if mode_frames ≥ GATHER_FRAMES:
     set_mode(GlobalIntermission) because "Timer"
