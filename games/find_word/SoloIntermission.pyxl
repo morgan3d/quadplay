@@ -4,6 +4,8 @@ SoloIntermission
 /* Words *not* found by the local player. Q-decoded. */
 let unfound_word_array
 
+/* Q-decoded */
+let shown_array
 
 def update_button():
     const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
@@ -22,6 +24,7 @@ def update_button():
 
 enter
 ────────────────────────────────────────────────────────────────────────
+shown_array = []
 unfound_word_array = []
 for word in player.board.word_list:
     // Do not use player.already_found
@@ -42,8 +45,6 @@ if size(unfound_word_array) > 10:
 
 frame
 ────────────────────────────────────────────────────────────────────────
-todo("Add UI text around unfound words")
-
 draw_text({
     font: giant_score_font,
     text: format_number(player.score, "commas") + "{font:score_font pts}",
@@ -61,16 +62,27 @@ draw_text({
     color: #FFF})
 
 
-if mode_frames mod 380 == 60:
+if mode_frames mod 380 == 60 and size(unfound_word_array) > 0:
     // Choose the next unfound word
-    board_select_word(player.board, pop(unfound_word_array))
+    const word = pop(unfound_word_array)
+    board_select_word(player.board, word)
+    if size(shown_array) > 15:
+        remove_all(shown_array)
+        push(shown_array, "")
+    push(shown_array, word)
 
 
-board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
-
-const history_rect = {corner: xy(1, 50), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 72)}
+const history_rect = {corner: xy(1, 50), size: xy(SCREEN_SIZE.x - 70, SCREEN_SIZE.y - 72)}
 history_update(player.history, history_rect)
 
+draw_corner_rect(history_rect.corner + xy(history_rect.size.x + 1, 0), xy(2, history_rect.size.y), #000) 
+
+local:
+    const pos = history_rect.corner + xy(history_rect.size.x + 38, 35)
+    board_draw_mini(player.board, pos)
+    
+    for i < size(shown_array) - 1:
+        draw_text({pos: pos + xy(0, 32 + 9i), color: #B7A, text: shown_array[i], font: history_font})
 
 update_button()
 

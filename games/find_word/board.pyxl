@@ -466,8 +466,8 @@ def board_draw_mini(board, pos)
             tile.pos = 12 xy(x - 1.5, y - 1.5)
             
             // Pulse when just selected
-            const radius = if tile.selected and (tile.selected > game_frames - 12) then 6 else 5
-            draw_disk(tile.pos, radius, if tile.selected then board.selection_color else #FFF)
+            const radius = if tile.selected and (tile.selected ≥ game_frames - 16) then 6 else 5
+            draw_disk(tile.pos, radius, if tile.selected then (if |game_frames - tile.selected - 6| ≤ 7 then #FFF else board.selection_color) else #FFF)
             
             draw_text({
                 pos: tile.pos,
@@ -511,7 +511,7 @@ def board_select_word(board, word, color default #E1B):
         return
     
     // Select these letters
-    for index in board.selection:
-        board.tile[index.x][index.y].selected = game_frames
+    for index at i in board.selection:
+        board.tile[index.x][index.y].selected = game_frames + 2 i
         
 
