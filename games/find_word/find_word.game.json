@@ -454,15 +454,15 @@
             "value": {
                 "r": {
                     "type": "number",
-                    "value": "38%"
+                    "value": "25%"
                 },
                 "g": {
                     "type": "number",
-                    "value": "27%"
+                    "value": "14%"
                 },
                 "b": {
                     "type": "number",
-                    "value": "40%"
+                    "value": "25%"
                 }
             },
             "description": "For game_type == SOLO"

@@ -4,6 +4,6 @@
     "char_size":      {"x": 29, "y": 40},
     "char_min_width": 4,
     "letter_spacing": {"x": 4, "y": 8},
-    "baseline":      42,
+    "baseline":      33,
     "format":        "20211015"
 }

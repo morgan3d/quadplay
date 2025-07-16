@@ -22,15 +22,6 @@ def update_button():
 
 enter
 ────────────────────────────────────────────────────────────────────────
-set_background(#333)
-board_deselect_all(player.board, player)
-sort(player.history.list, "points", true)
-// Reset the scroll position because layout differs
-// from the main game
-player.history.scroll = 0
-
-
-
 unfound_word_array = []
 for word in player.board.word_list:
     // Do not use player.already_found
@@ -55,6 +46,15 @@ todo("Show score")
 todo("Show word count")
 todo("Add text around unfound words")
 
+draw_text({
+    font: giant_score_font,
+    text: format_number(player.score, "commas") + "{font:score_font pts}",
+    pos: xy(½ SCREEN_SIZE.x, 36),
+    y_align: "baseline",
+    markup: true,
+    color: #FFF})
+
+
 if mode_frames mod 380 == 60:
     // Choose the next unfound word
     board_select_word(player.board, pop(unfound_word_array))
@@ -62,7 +62,7 @@ if mode_frames mod 380 == 60:
 
 board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
 
-const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)}
+const history_rect = {corner: xy(1, 60), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 82)}
 history_update(player.history, history_rect)
 
 

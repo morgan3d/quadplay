@@ -3,6 +3,6 @@
     "license":       "by Morgan McGuire, 2022",
     "char_size":      {"x": 16, "y": 20},
     "letter_spacing": {"x": 2, "y": 4},
-    "baseline":      21,
+    "baseline":      16,
     "format":        "20211015"
 }
