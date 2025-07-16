@@ -55,6 +55,13 @@ if time_left > 0.1 and time_left < 5.5:
     
 if time_left ≤ 0 or DEBUG_INTERMISSION:
     play_sound(times_up_sound)
+    
+    board_deselect_all(player.board, player)
+    sort(player.history.list, "points", true)
+    // Reset the scroll position because layout differs
+    // from the main game during intermission
+    player.history.scroll = 0
+    
     if game_type == SOLO:
         set_mode(SoloIntermission) because "SOLO and timer"
     else:

@@ -453,9 +453,7 @@ def board_selected_word(board):
     
     
 
-/* Draw a mini version of the game board
-   highlighting the selected word on
-   the Intermission mode screen */
+/* Draw a mini version of the game board on the intermission modes. */
 def board_draw_mini(board, pos)
 & preserving_transform:
     set_transform(pos)
@@ -494,4 +492,26 @@ def board_draw_mini(board, pos)
             const curr = board.selection[i]
             draw_line(board.tile[prev.x][prev.y].pos, board.tile[curr.x][curr.y].pos, board.selection_color, -1, 2)
 
+
+
+/* Force a selection in the intermission modes.
+   `word` is Q-decoded. Does not select if already selected,
+   so that pulse animation works */
+def board_select_word(board, word, color default #E1B):
+    assert(word)
+    if q_decode(board_selected_word(board)) == word: return
+
+    board_deselect_all(player.board)
+    board.selection = board_find_unencoded_word(board, word)
+    board.selection_color = color
+
+    if not board.selection:
+        // Bug workaround for rare crash
+        debug_print(word)
+        return
     
+    // Select these letters
+    for index in board.selection:
+        board.tile[index.x][index.y].selected = game_frames
+        
+

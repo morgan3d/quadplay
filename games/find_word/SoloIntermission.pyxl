@@ -1,24 +1,67 @@
 SoloIntermission
 ════════════════════════════════════════════════════════════════════════
 
+/* Words *not* found by the local player. Q-decoded. */
+let unfound_word_array
+
+
+def update_button():
+    const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
+    const size = xy(150, 17)
+    draw_rect(pos - xy(0, 1), size, #0F0, #FFF)
+    draw_text({
+        font: score_font,
+        text: "Start New Game",
+        outline: #090,
+        pos: pos,
+        color: #FFF})
+        
+    if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
+        set_mode(GenerateBoard) because "Button"
+    
 
 enter
 ────────────────────────────────────────────────────────────────────────
+set_background(#333)
+board_deselect_all(player.board, player)
+sort(player.history.list, "points", true)
+// Reset the scroll position because layout differs
+// from the main game
+player.history.scroll = 0
+
+
+
+unfound_word_array = []
+for word in player.board.word_list:
+    // Do not use player.already_found
+    if not sensitive[lowercase(word)] and not player.already_found[q_encode(word)]:
+        push(unfound_word_array, word)
+
+
+// Sort from shortest to longest to emphasize impressive words
+sort(unfound_word_array, size_comparator)
+
+// Now swap some of the other words towards the back so that
+// the player also feels like they could have gotten these
+if size(unfound_word_array) > 10:
+    for i < 3:
+        swap(unfound_word_array, random_integer(0, size(unfound_word_array) - 8), size(unfound_word_array) - 1 - random_integer(1, 6))
 
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
-const size = xy(150, 17)
-draw_rect(pos - xy(0, 1), size, #0F0, #FFF)
-draw_text({
-    font: score_font,
-    text: "Start New Game",
-    outline: #090,
-    pos: pos,
-    color: #FFF})
-    
-if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
-    set_mode(GenerateBoard) because "Button"
+
+if mode_frames mod 380 == 60:
+    // Choose the next unfound word
+    board_select_word(player.board, pop(unfound_word_array))
+
+
+board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
+
+const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)}
+history_update(player.history, history_rect)
+
+
+update_button()
 

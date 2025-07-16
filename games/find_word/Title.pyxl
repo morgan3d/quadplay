@@ -14,7 +14,7 @@ const fake_player = make_player()
 /* Value for selected_index */
 const AVATAR_EDITOR_INDEX = 2
 
-let selected_index = GLOBAL
+let selected_index = if DEBUG_INTERMISSION then SOLO else GLOBAL
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
