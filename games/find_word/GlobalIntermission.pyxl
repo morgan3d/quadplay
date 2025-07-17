@@ -198,7 +198,7 @@ def update_countdown():
         pos: timer_pos,
         color: #FFF})
     
-    if utc_time ≥ end_time:
+    if utc_time ≥ end_time and not DEBUG_INTERMISSION:
         set_mode(GenerateBoard) because "Timer"
     
 

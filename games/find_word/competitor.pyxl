@@ -13,10 +13,27 @@ let best_rare_winner
 let longest_winner
 let most_words_winner
 
-
 /* Generate a stable set of synthetic competitors with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_synthetic_competitors(competitor_array, target_count):
+    const avatar_set = [
+        {name: "Moo", sprite: avatar_sprite[34][22]},
+        {name: "411", sprite: avatar_sprite[24][18]},
+        {name: "o_o", sprite: avatar_sprite[20][14]},
+        {name: "AMS", sprite: avatar_sprite[37][14]},
+        {name: "NT",  sprite: avatar_sprite[17][6]},
+        {name: "Bob", sprite: avatar_sprite[28][26]},
+        {name: "I♥U", sprite: avatar_sprite[3][20]},
+        {name: "THX", sprite: avatar_sprite[13][4]},
+        {name: "jen", sprite: avatar_sprite[39][8]},
+        {name: "RLL", sprite: avatar_sprite[33][24]},
+        {name: "CJ",  sprite: avatar_sprite[39][24]},
+        {name: "TTT", sprite: avatar_sprite[39][16]},
+        {name: "HCD", sprite: avatar_sprite[39][2]},
+        {name: "GEW", sprite: avatar_sprite[39][2]},
+        {name: "jr",  sprite: avatar_sprite[9][18]}
+        ]
+    
     // Make the competitors stable in their personalities by using a fixed
     // rng for anything specific to the competitor generation. Do not use
     // this rng for word selection.
@@ -42,15 +59,15 @@ def insert_synthetic_competitors(competitor_array, target_count):
             if entry.points > 32 and ξ < min(90%, 30% + entry.points / 100):
                 protect[entry.word] = 1
     
+    let c = 0
     while size(competitor_array) < target_count:
         const sprite = avatar_sprite_from_linear_index(random_integer(0, AVATAR_SPRITE_COUNT - 1, rng))
         
         const competitor = {
-            avatar: {
-                sprite: sprite, 
-                color: avatar_compute_color(sprite), 
-                name: make_random_name(rng)},
-            score: 0}        
+            avatar: avatar_set[c],
+            score: 0}
+        ++c
+        competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible

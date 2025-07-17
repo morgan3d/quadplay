@@ -54,7 +54,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.138",
+    "version": "0.139",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -660,7 +660,7 @@
         },
         "BUTTON_REPEAT_PERIOD": {
             "type": "number",
-            "value": "15",
+            "value": "10",
             "description": "Frames to wait after BUTTON_REPEAT_DELAY for each subsequent touch/button repeat",
             "min": 1,
             "max": 128,
