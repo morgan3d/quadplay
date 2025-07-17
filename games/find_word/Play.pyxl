@@ -19,7 +19,7 @@ else:
     
     end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
 
-    assert(end_time > utc_time + GLOBAL_JOIN_MIN_REMAINING_TIME - 1,
+    assert(end_time > utc_time + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION,
         "The game should not end so soon")
 
 set_background(if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR

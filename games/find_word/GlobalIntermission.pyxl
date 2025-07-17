@@ -30,8 +30,7 @@ def draw_award_summary()
     draw_text({…args, text: "Summary", pos: xy(31, -27), x_align: "center"})
     
     compose_transform(xy(55, 0))
-    draw_text({ …args, text: format_number(player.score, "commas"), font: score_font, pos: xy(14, -5), x_align: "right"})
-    draw_text({…args, text: "pts", pos: xy(18, -10)})
+    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(10, -8), x_align: "right", markup: true})
 
     const x = -46
     draw_text({…args, text: "Found", pos: xy(x, 5)})
@@ -50,6 +49,9 @@ def draw_award_summary()
 def draw_awards()
 & preserving_transform:
     set_transform(xy(SCREEN_SIZE.x - 88, 34))
+    if stage ≠ prev_stage and mode_frames > 10:
+        play_sound(word_sound)
+
     
     if stage == STAGE.SUMMARY:
         draw_award_summary()
@@ -117,6 +119,7 @@ def draw_most_words_award(winner):
     avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color)
 
     board_select_word(player.board, array_value(winner.word_list, draw_most_words_award.frames / MOST_WORDS_AWARD_FRAMES_PER_WORD, "loop"))
+
     board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
 
 
@@ -220,7 +223,7 @@ todo("* Trim down when there are very many competitors, keeping the top 2, the b
 competitor_analyze(competitor_array)
 
 stage = STAGE.SUMMARY
-prev_stage = -1
+prev_stage = stage
 
 
 

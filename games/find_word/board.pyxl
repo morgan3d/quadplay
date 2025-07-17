@@ -377,7 +377,7 @@ def _index_to_pos(index):
 
 
 /* Add the `xy()` value `index` to the current selection, playing sounds
-   as appropriate */
+   as appropriate.  */
 def board_select(board, index, player):
     const tile = board.tile[index.x][index.y]
     assert(not tile.selected)
@@ -387,7 +387,6 @@ def board_select(board, index, player):
     // Pan sound with position
     if not player_selection_change_callback(player):
         _board_play_sound(select_tile_sound, 85%, 100%, index)
-
 
 
 def board_deselect_last(board, player):
@@ -513,5 +512,6 @@ def board_select_word(board, word, color default #E1B):
     // Select these letters
     for index at i in board.selection:
         board.tile[index.x][index.y].selected = game_frames + 2 i
-        
+    
+    play_sound(blip_sound)
 
