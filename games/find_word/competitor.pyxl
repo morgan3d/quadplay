@@ -71,7 +71,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const base_ability = max(2%, rng(2%^⅓, 35%^⅓)³ + match_shift)
+        const base_ability = max(2%, rng()³ * 35% + match_shift)
         const find_percentage = min(28%, random(3%^⅓, 30%^⅓)³ + base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 8, 60)
         
