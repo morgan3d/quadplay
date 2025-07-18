@@ -87,7 +87,7 @@ function $gpu_set_texture(spritesheetArray, fontArray) {
 
 
 function $gpu_resize_framebuffer(w, h) {
-    $gpu_execute.prevHash = $gpu_execute.prevCommandListLength = undefined;
+    $gpu_execute.prevHash0 = $gpu_execute.prevHash1 = $gpu_execute.prevCommandListLength = undefined;
     $SCREEN_WIDTH = w;
     $SCREEN_HEIGHT = h;
     $screen = new Uint16Array(w * h);
@@ -99,87 +99,87 @@ function $square(x) { return x * x; }
 /** Used by gpu_execute() */
 function $zSort(a, b) { return a.z - b.z; }
 
-// Precomputed FNV-1a hashes for opcode names
-const $HASH_REC = 0x7e7e6e2b; // hashString('REC')
-const $HASH_CIR = 0x7e7e6e1d; // hashString('CIR')
-const $HASH_LIN = 0x7e7e6e3b; // hashString('LIN')
-const $HASH_SPN = 0x7e7e6e4b; // hashString('SPN')
-const $HASH_PIX = 0x7e7e6e2d; // hashString('PIX')
-const $HASH_SPR = 0x7e7e6e5b; // hashString('SPR')
-const $HASH_TXT = 0x7e7e6e6b; // hashString('TXT')
-const $HASH_PLY = 0x7e7e6e7b; // hashString('PLY')
+/* endIndex is exclusive */
+function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16, beginIndex, endIndex) {
+    // Precomputed FNV-1a hashes for opcode names
+    const $HASH_REC = 0x7e7e6e2b; // hashString('REC')
+    const $HASH_CIR = 0x7e7e6e1d; // hashString('CIR')
+    const $HASH_LIN = 0x7e7e6e3b; // hashString('LIN')
+    const $HASH_SPN = 0x7e7e6e4b; // hashString('SPN')
+    const $HASH_PIX = 0x7e7e6e2d; // hashString('PIX')
+    const $HASH_SPR = 0x7e7e6e5b; // hashString('SPR')
+    const $HASH_TXT = 0x7e7e6e6b; // hashString('TXT')
+    const $HASH_PLY = 0x7e7e6e7b; // hashString('PLY')
 
-function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16) {
-    let hash = 0x811c9dc5;
-    function fnv1a(val) {
-        hash ^= val >>> 0;
-        hash = (hash * 0x01000193) >>> 0;
+    let hashValue = 0x811c9dc5;
+ 
+    // fnv1a hash 32-bit of this integer
+    function hash(val) {
+        hashValue ^= val >>> 0;
+        hashValue = (hashValue * 0x01000193) >>> 0;
     }
 
-    function hashInteger(n) {
-        fnv1a(n | 0);
+    // MurmurHash3 32-bit
+    function murmurhash3_32_add(k) {
+        k = Math.imul(k, 0xcc9e2d51);
+        k = (k << 15) | (k >>> 17);
+        k = Math.imul(k, 0x1b873593);
+        hashValue ^= k;
+        hashValue = (hashValue << 13) | (hashValue >>> 19);
+        hashValue = (Math.imul(hashValue, 5) + 0xe6546b64) >>> 0;
     }
 
-    function hashBool(n) {
-        fnv1a(n | 0);
-    }
+    function hashInteger(n) { hash(n | 0); }
+    function hashBool(n) { hash(n | 0); }
+    function hashNumber(n) { hash((n * 256) | 0); }
+    function hashString(s) { for (let i = 0; i < s.length; ++i) { hash(s.charCodeAt(i)); } }
+    function hashCommand(cmd) {
+        hashNumber(cmd.z);
 
-    // Capture at up to 1/256 precision; really only about 0.75 is needed
-    function hashNumber(n) {
-        fnv1a((n * 256) | 0);
-    }
-
-    function hashString(s) {
-        for (let i = 0; i < s.length; ++i) {
-            fnv1a(s.charCodeAt(i));
-        }
-    }
-
-    function hashCommand(obj) {
-        switch (obj.opcode) {
+        switch (cmd.opcode) {
             case 'REC':
-                fnv1a($HASH_REC);
-                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
-                for (let i = 0; i < obj.data.length; ++i) {
-                    let r = obj.data[i];
+                hash($HASH_REC);
+                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
+                for (let i = 0; i < cmd.data.length; ++i) {
+                    let r = cmd.data[i];
                     hashInteger(r.x1); hashInteger(r.y1); hashInteger(r.x2); hashInteger(r.y2);
                     hashInteger(r.outline); hashInteger(r.fill);
                 }
                 break;
 
             case 'CIR':
-                fnv1a($HASH_CIR);
-                hashNumber(obj.x); hashNumber(obj.y); hashNumber(obj.radius);
-                hashInteger(obj.color); hashInteger(obj.outline);
-                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                hash($HASH_CIR);
+                hashNumber(cmd.x); hashNumber(cmd.y); hashNumber(cmd.radius);
+                hashInteger(cmd.color); hashInteger(cmd.outline);
+                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
                 break;
 
             case 'LIN':
-                fnv1a($HASH_LIN);
-                hashNumber(obj.x1); hashNumber(obj.y1); hashNumber(obj.x2); hashNumber(obj.y2);
-                hashInteger(obj.color);
-                hashNumber(obj.open1); hashNumber(obj.open2);
-                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                hash($HASH_LIN);
+                hashNumber(cmd.x1); hashNumber(cmd.y1); hashNumber(cmd.x2); hashNumber(cmd.y2);
+                hashInteger(cmd.color);
+                hashNumber(cmd.open1); hashNumber(cmd.open2);
+                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
                 break;
 
             case 'SPN':
-                fnv1a($HASH_SPN);
-                for (let i = 0; i < obj.data.length; ++i) { hashInteger(obj.data[i]); }
-                hashInteger(obj.data_length);
-                hashInteger(obj.dx); hashInteger(obj.dy); hashInteger(obj.x); hashInteger(obj.y);
+                hash($HASH_SPN);
+                for (let i = 0; i < cmd.data.length; ++i) { hashInteger(cmd.data[i]); }
+                hashInteger(cmd.data_length);
+                hashInteger(cmd.dx); hashInteger(cmd.dy); hashInteger(cmd.x); hashInteger(cmd.y);
                 break;
 
             case 'PIX':
-                fnv1a($HASH_PIX);
-                for (let i = 0; i < obj.data.length; ++i) { hashInteger(obj.data[i]); }
-                if ('data_length' in obj) { hashInteger(obj.data_length); }
+                hash($HASH_PIX);
+                for (let i = 0; i < cmd.data.length; ++i) { hashInteger(cmd.data[i]); }
+                if ('data_length' in cmd) { hashInteger(cmd.data_length); }
                 break;
 
             case 'SPR':
-                fnv1a($HASH_SPR);
-                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
-                for (let i = 0; i < obj.data.length; ++i) {
-                    const s = obj.data[i];
+                hash($HASH_SPR);
+                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
+                for (let i = 0; i < cmd.data.length; ++i) {
+                    const s = cmd.data[i];
                     hashNumber(s.x); hashNumber(s.y);
                     hashNumber(s.cornerX); hashNumber(s.cornerY); hashInteger(s.sizeX); hashInteger(s.sizeY);
                     hashNumber(s.angle); hashNumber(s.scaleX); hashNumber(s.scaleY);
@@ -192,36 +192,39 @@ function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundCol
                 break;
 
             case 'TXT':
-                fnv1a($HASH_TXT);
-                hashNumber(obj.x); hashNumber(obj.y);
-                hashInteger(obj.width); hashInteger(obj.height);
-                hashInteger(obj.color); hashInteger(obj.outline); hashInteger(obj.shadow);
-                hashString(obj.str);
-                hashInteger(obj.fontIndex);
-                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                hash($HASH_TXT);
+                hashNumber(cmd.x); hashNumber(cmd.y);
+                hashInteger(cmd.width); hashInteger(cmd.height);
+                hashInteger(cmd.color); hashInteger(cmd.outline); hashInteger(cmd.shadow);
+                hashString(cmd.str);
+                hashInteger(cmd.fontIndex);
+                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
                 break;
 
             case 'PLY':
-                fnv1a($HASH_PLY);
-                for (let i = 0; i < obj.points.length; ++i) { hashNumber(obj.points[i]); }
-                hashInteger(obj.color); hashInteger(obj.outline);
-                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                hash($HASH_PLY);
+                for (let i = 0; i < cmd.points.length; ++i) { hashNumber(cmd.points[i]); }
+                hashInteger(cmd.color); hashInteger(cmd.outline);
+                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
                 break;
 
             default:
-                throw new Error('Unknown graphics opcode in $hashCommandList: ' + obj.opcode);
+                throw new Error('Unknown graphics opcode in $hashCommandList: ' + cmd.opcode);
         }
     }
-    hashInteger(backgroundSpritesheetIndex);
-    hashInteger(backgroundColor16);
-    hashInteger($SCREEN_WIDTH);
-    hashInteger($SCREEN_HEIGHT);
+    
+    if (beginIndex === 0) {
+        hashInteger(backgroundSpritesheetIndex);
+        hashInteger(backgroundColor16);
+        hashInteger($SCREEN_WIDTH);
+        hashInteger($SCREEN_HEIGHT);
+    }
 
-    for (let i = 0; i < commandList.length; ++i) {
+    for (let i = beginIndex; i < endIndex; ++i) {
         hashCommand(commandList[i]);
     }
 
-    return hash >>> 0;
+    return hashValue >>> 0;
 }
 
 
@@ -229,28 +232,38 @@ function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundCol
 function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16) {
     const startTime = performance.now();
     
-    // Sort first, before hashing. This allows us to ignore the z field when hashing.
-    // The work of an unnecessary sort is small in the case where we can skip a whole
-    // frame, so this is a good tradeoff.
-    commandList.sort($zSort);
+    const DUPLICATED_FRAME_OPTIMIZATION = true;
 
     let doWork = true;
 
-    if (commandList.length !== $gpu_execute.prevCommandListLength) {
-        // There is a different number of commands, so obviously something changed.
-        // Don't waste time computing a hash. This case will also be forced on a framebuffer
-        // resize that resets the prevCommandListLength to undefined.
-        $gpu_execute.prevCommandListLength = commandList.length;
-        // The hash is unknown because we did not compute it
-        $gpu_execute.prevHash = undefined;
-    } else {
-        const currHash = $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16);
-        doWork = (currHash !== $gpu_execute.prevHash);
-        $gpu_execute.prevHash = currHash;
+    if (DUPLICATED_FRAME_OPTIMIZATION) {
+        if (commandList.length !== $gpu_execute.prevCommandListLength) {
+            // There is a different number of commands, so obviously something changed.
+            // Don't waste time computing a hash. This case will also be forced on a framebuffer
+            // resize that resets the prevCommandListLength to undefined.
+            $gpu_execute.prevCommandListLength = commandList.length;
+            // The hash is unknown because we did not compute it
+            $gpu_execute.prevHash0 = $gpu_execute.prevHash1 = undefined;
+        } else {
+            // Split the commandList in half for early out if we determine the hash
+            // is going to be different
+            const mid = (commandList.length >> 1);
+            const currHash0 = $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16, 0, mid);
+            doWork = (currHash0 !== $gpu_execute.prevHash0);
+            $gpu_execute.prevHash0 = currHash0;
+            if (! doWork) {
+                const currHash1 = $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16, mid, commandList.length);
+                doWork = (currHash1 !== $gpu_execute.prevHash1);
+                $gpu_execute.prevHash1 = currHash1;
+            } else {
+                $gpu_execute.prevHash1 = undefined;
+            }
+        }
     }
-
     if (doWork) {
-        // clear the screen
+        commandList.sort($zSort);
+
+        // Clear the screen
         if (backgroundSpritesheetIndex !== undefined) {
             // Image background
             $screen.set($spritesheetArray[backgroundSpritesheetIndex].$uint16Data);
@@ -258,8 +271,7 @@ function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16
             // Color background (force alpha = 1)
             $screen.fill(backgroundColor16, 0, $screen.length);
         }
-
-        // Eval draw list
+        
         for (let i = 0; i < commandList.length; ++i) {
             const cmd = commandList[i];
             $executeTable[cmd.opcode](cmd);
@@ -285,7 +297,7 @@ function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16
             }
         }
     } else {
-        //$console.log("No rendering needed this frame");
+        $console.log("No rendering needed this frame");
     }
     
     if ($is_web_worker) {
