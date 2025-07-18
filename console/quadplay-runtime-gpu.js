@@ -141,7 +141,15 @@ function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16
     
     if ($is_web_worker) {
         // console.log('Transferring updateImageData back to CPU thread');
-        postMessage({type: 'submitFrame', gpuTime: performance.now() - startTime, updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
+
+        // Transfer the underlying ArrayBuffer for the framebuffer to avoid copy and allocation
+        postMessage(
+            {type: 'submitFrame', gpuTime: performance.now() - startTime, updateImageData: $updateImageData, updateImageData32: $updateImageData32}, 
+            [$updateImageData32.buffer]);
+
+        // Mark these as null since the ArrayBuffer has been transferred. This will
+        // allow us to get an error if something is out of sync and the buffer has
+        // not been transferred back before the next renderingpass.
         $updateImageData = null;
         $updateImageData32 = null;
     } else {

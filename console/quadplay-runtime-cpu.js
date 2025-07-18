@@ -13,6 +13,9 @@ var $GPU;
 if ($THREADED_GPU) {
     $GPU = new Worker('quadplay-runtime-gpu.js');
     $GPU.onmessage = function (event) {
+        // This message handler runs on the main "quadplay CPU" thread, within
+        // the $QRuntime scope context.
+
         if (event.data.type !== 'submitFrame') {
             $console.log('Unknown message received from GPU: ', event);
             return;
@@ -29,12 +32,12 @@ if ($THREADED_GPU) {
             const startTime = performance.now();
 
             // Unfortunately, JavaScript APIs force us to make a copy here via
-            // the ImageData constructor. There does not appear to be a way
-            // to make it share a view of the buffer.
-            $updateImageData = new ImageData(new Uint8ClampedArray($updateImageData32.buffer),
-                                             $updateImageData.width,
-                                             $updateImageData.height);
+            // the set() method or the ImageData constructor. There does not appear to be a way
+            // to make it share a view of the buffer that has been transferred, and ImageData
+            // is not Transferrable. Use the set() method so that we are not allocating memory.
             
+            $updateImageData.data.set(new Uint8ClampedArray($updateImageData32.buffer));
+
             $submitFrame($updateImageData, $updateImageData32, event.data.gpuTime);
             
             // This will typically measure a cost about 1/20 ms on a

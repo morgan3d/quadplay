@@ -191,7 +191,7 @@ Profiler.prototype.endFrame = function(newPhysicsTime, newGraphicsTime, newLogic
         const graphicsTime = this.smoothGraphicsTime.get();
         const fixedCPUTime = logicTime + physicsTime;
 
-        console.assert(! isNaN(this.smoothGPUTime.get()));
+        console.assert(! ($THREADED_GPU && isNaN(this.smoothGPUTime.get())));
 
         // Values that can be affected by changing the graphics rate
         const variableCPUTime = graphicsTime;

@@ -2336,8 +2336,10 @@ if (jsCode) {
    fast path, we draw directly to the screen Canvas and do not use this one. */
 let updateImage = document.createElement('canvas');
 
-// updateImageData.data is a Uint8Clamped RGBA buffer
+/* ImageData from context.createImageData. updateImageData.data is a Uint8Clamped RGBA buffer */
 let updateImageData;
+
+/* Uint32 view of updateImageData buffer */
 let updateImageData32;
 
 let error = document.getElementById('error');
@@ -2381,6 +2383,10 @@ function setFramebufferSize(w, h, privateScreen, preserveImage) {
     updateImage.width  = w;
     updateImage.height = h;
     updateImageData = ctx.createImageData(w, h);
+
+    // Check that there are no extra padding bytes in the allocated framebuffer
+    console.assert(updateImageData.data.byteOffset === 0 && updateImageData.data.byteLength === updateImageData.data.buffer.byteLength);
+
     updateImageData32 = new Uint32Array(updateImageData.data.buffer);
     QRuntime.$updateImageData = updateImageData;
     QRuntime.$updateImageData32 = updateImageData32;

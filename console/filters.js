@@ -90,14 +90,16 @@ EuroFilter.prototype.update = function (x, dt) {
         return;
     }
     
-    console.assert(dt !== 0);
+    console.assert(dt !== 0 && ! isNaN(dt));
     // Filter the derivative
     const dx = (x - param.smoothValue) / dt;
     param.smoothDerivative = smoothLerp(dx, param.smoothDerivative, dt, param.derivativeCutoff);
 
     // Filter the value
     const cutoff = param.minCutoff + Math.abs(param.smoothDerivative) * param.speed;
+    console.assert(! isNaN(cutoff) && cutoff !== Infinity && cutoff > 0 && dt > 0);
     param.smoothValue = smoothLerp(x, param.smoothValue, dt, cutoff);
+    console.assert(! isNaN(param.smoothValue));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +117,7 @@ EMWAFilter.prototype.get = function() { return this._smoothValue; }
 
 EMWAFilter.prototype.update = function(value, dt) {
     if (dt === undefined) { dt = 1; }
+
     if (this._smoothValue === undefined || isNaN(this._smoothValue) || dt <= 0 || dt === Infinity) {
         this._smoothValue = value;
         return;
@@ -122,4 +125,5 @@ EMWAFilter.prototype.update = function(value, dt) {
 
     const h = Math.pow(this._hysteresis, 1 / dt);
     this._smoothValue = this._smoothValue * h + value * (1 - h);
+    console.assert(! isNaN(this._smoothValue));
 }
