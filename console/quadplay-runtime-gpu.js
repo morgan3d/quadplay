@@ -87,6 +87,7 @@ function $gpu_set_texture(spritesheetArray, fontArray) {
 
 
 function $gpu_resize_framebuffer(w, h) {
+    $gpu_execute.prevHash = $gpu_execute.prevCommandListLength = undefined;
     $SCREEN_WIDTH = w;
     $SCREEN_HEIGHT = h;
     $screen = new Uint16Array(w * h);
@@ -98,45 +99,193 @@ function $square(x) { return x * x; }
 /** Used by gpu_execute() */
 function $zSort(a, b) { return a.z - b.z; }
 
+// Precomputed FNV-1a hashes for opcode names
+const $HASH_REC = 0x7e7e6e2b; // hashString('REC')
+const $HASH_CIR = 0x7e7e6e1d; // hashString('CIR')
+const $HASH_LIN = 0x7e7e6e3b; // hashString('LIN')
+const $HASH_SPN = 0x7e7e6e4b; // hashString('SPN')
+const $HASH_PIX = 0x7e7e6e2d; // hashString('PIX')
+const $HASH_SPR = 0x7e7e6e5b; // hashString('SPR')
+const $HASH_TXT = 0x7e7e6e6b; // hashString('TXT')
+const $HASH_PLY = 0x7e7e6e7b; // hashString('PLY')
+
+function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16) {
+    let hash = 0x811c9dc5;
+    function fnv1a(val) {
+        hash ^= val >>> 0;
+        hash = (hash * 0x01000193) >>> 0;
+    }
+
+    function hashInteger(n) {
+        fnv1a(n | 0);
+    }
+
+    function hashBool(n) {
+        fnv1a(n | 0);
+    }
+
+    // Capture at up to 1/256 precision; really only about 0.75 is needed
+    function hashNumber(n) {
+        fnv1a((n * 256) | 0);
+    }
+
+    function hashString(s) {
+        for (let i = 0; i < s.length; ++i) {
+            fnv1a(s.charCodeAt(i));
+        }
+    }
+
+    function hashCommand(obj) {
+        switch (obj.opcode) {
+            case 'REC':
+                fnv1a($HASH_REC);
+                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                for (let i = 0; i < obj.data.length; ++i) {
+                    let r = obj.data[i];
+                    hashInteger(r.x1); hashInteger(r.y1); hashInteger(r.x2); hashInteger(r.y2);
+                    hashInteger(r.outline); hashInteger(r.fill);
+                }
+                break;
+
+            case 'CIR':
+                fnv1a($HASH_CIR);
+                hashNumber(obj.x); hashNumber(obj.y); hashNumber(obj.radius);
+                hashInteger(obj.color); hashInteger(obj.outline);
+                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                break;
+
+            case 'LIN':
+                fnv1a($HASH_LIN);
+                hashNumber(obj.x1); hashNumber(obj.y1); hashNumber(obj.x2); hashNumber(obj.y2);
+                hashInteger(obj.color);
+                hashNumber(obj.open1); hashNumber(obj.open2);
+                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                break;
+
+            case 'SPN':
+                fnv1a($HASH_SPN);
+                for (let i = 0; i < obj.data.length; ++i) { hashInteger(obj.data[i]); }
+                hashInteger(obj.data_length);
+                hashInteger(obj.dx); hashInteger(obj.dy); hashInteger(obj.x); hashInteger(obj.y);
+                break;
+
+            case 'PIX':
+                fnv1a($HASH_PIX);
+                for (let i = 0; i < obj.data.length; ++i) { hashInteger(obj.data[i]); }
+                if ('data_length' in obj) { hashInteger(obj.data_length); }
+                break;
+
+            case 'SPR':
+                fnv1a($HASH_SPR);
+                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                for (let i = 0; i < obj.data.length; ++i) {
+                    const s = obj.data[i];
+                    hashNumber(s.x); hashNumber(s.y);
+                    hashNumber(s.cornerX); hashNumber(s.cornerY); hashInteger(s.sizeX); hashInteger(s.sizeY);
+                    hashNumber(s.angle); hashNumber(s.scaleX); hashNumber(s.scaleY);
+                    hashInteger(s.spritesheetIndex);
+                    hashNumber(s.opacity);
+                    hashInteger(s.override_color);
+                    hashBool(s.multiply);
+                    hashBool(s.hasAlpha);
+                }
+                break;
+
+            case 'TXT':
+                fnv1a($HASH_TXT);
+                hashNumber(obj.x); hashNumber(obj.y);
+                hashInteger(obj.width); hashInteger(obj.height);
+                hashInteger(obj.color); hashInteger(obj.outline); hashInteger(obj.shadow);
+                hashString(obj.str);
+                hashInteger(obj.fontIndex);
+                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                break;
+
+            case 'PLY':
+                fnv1a($HASH_PLY);
+                for (let i = 0; i < obj.points.length; ++i) { hashNumber(obj.points[i]); }
+                hashInteger(obj.color); hashInteger(obj.outline);
+                hashInteger(obj.clipX1); hashInteger(obj.clipY1); hashInteger(obj.clipX2); hashInteger(obj.clipY2);
+                break;
+
+            default:
+                throw new Error('Unknown graphics opcode in $hashCommandList: ' + obj.opcode);
+        }
+    }
+    hashInteger(backgroundSpritesheetIndex);
+    hashInteger(backgroundColor16);
+    hashInteger($SCREEN_WIDTH);
+    hashInteger($SCREEN_HEIGHT);
+
+    for (let i = 0; i < commandList.length; ++i) {
+        hashCommand(commandList[i]);
+    }
+
+    return hash >>> 0;
+}
+
+
+// Stores on itself the .prevHash and .prevCommandListLength to identify duplicate frames
 function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16) {
     const startTime = performance.now();
     
-    // clear the screen
-    if (backgroundSpritesheetIndex !== undefined) {
-        // Image background
-        $screen.set($spritesheetArray[backgroundSpritesheetIndex].$uint16Data);
-    } else {
-        // Color background (force alpha = 1)
-        $screen.fill(backgroundColor16, 0, $screen.length);
-    }
-
-    // Sort
+    // Sort first, before hashing. This allows us to ignore the z field when hashing.
+    // The work of an unnecessary sort is small in the case where we can skip a whole
+    // frame, so this is a good tradeoff.
     commandList.sort($zSort);
-    
-    // Eval draw list
-    for (let i = 0; i < commandList.length; ++i) {
-        const cmd = commandList[i];
-        $executeTable[cmd.opcode](cmd);
+
+    let doWork = true;
+
+    if (commandList.length !== $gpu_execute.prevCommandListLength) {
+        // There is a different number of commands, so obviously something changed.
+        // Don't waste time computing a hash. This case will also be forced on a framebuffer
+        // resize that resets the prevCommandListLength to undefined.
+        $gpu_execute.prevCommandListLength = commandList.length;
+        // The hash is unknown because we did not compute it
+        $gpu_execute.prevHash = undefined;
+    } else {
+        const currHash = $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16);
+        doWork = (currHash !== $gpu_execute.prevHash);
+        $gpu_execute.prevHash = currHash;
     }
 
-    {
-        // Convert 16-bit to 32-bit
-        const dst32 = $updateImageData32;
-        const src32 = $screen32;
-        const N = src32.length;
-        for (let s = 0, d = 0; s < N; ++s) {
-            // Read two 16-bit pixels at once
-            let src = src32[s];
-            
-            // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
-            // read color channels, as the alpha channel is overwritten with fully
-            // opaque.
-            let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
-            
-            C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = 0xff000000 | C | (C << 4); ++d;
+    if (doWork) {
+        // clear the screen
+        if (backgroundSpritesheetIndex !== undefined) {
+            // Image background
+            $screen.set($spritesheetArray[backgroundSpritesheetIndex].$uint16Data);
+        } else {
+            // Color background (force alpha = 1)
+            $screen.fill(backgroundColor16, 0, $screen.length);
         }
+
+        // Eval draw list
+        for (let i = 0; i < commandList.length; ++i) {
+            const cmd = commandList[i];
+            $executeTable[cmd.opcode](cmd);
+        }
+
+        {
+            // Convert 16-bit to 32-bit
+            const dst32 = $updateImageData32;
+            const src32 = $screen32;
+            const N = src32.length;
+            for (let s = 0, d = 0; s < N; ++s) {
+                // Read two 16-bit pixels at once
+                let src = src32[s];
+                
+                // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
+                // read color channels, as the alpha channel is overwritten with fully
+                // opaque.
+                let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+                dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
+                
+                C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+                dst32[d] = 0xff000000 | C | (C << 4); ++d;
+            }
+        }
+    } else {
+        //$console.log("No rendering needed this frame");
     }
     
     if ($is_web_worker) {
@@ -743,12 +892,13 @@ function $executePIX(cmd) {
     // and converted to integers.
     
     const data = cmd.data;
-    const N = (cmd.data_length !== undefined) ? cmd.data_length : data.length;
+    const N = data.length;// (cmd.data_length !== undefined) ? cmd.data_length : data.length;
+    
+    console.assert(! cmd.data_length);
 
     // There's surprisingly no performance advantage for tracking
     // whether blending is needed anywhere in the array during
     // submission and extracting that case into a no-blend tiny loop
-    // below.
     for (let p = 0; p < N; p += 2) {
         const color = data[p + 1];
         
@@ -1288,3 +1438,62 @@ var $executeTable = Object.freeze({
     PLY : $executePLY,
     SPN : $executeSPN
 });
+
+//
+// Command structure for each opcode, as used by $execute* functions:
+//
+// REC (Rectangle batch):
+//   - opcode: 'REC'
+//   - clipX1, clipY1, clipX2, clipY2
+//   - data: Array of { x1, y1, x2, y2, outline, fill }
+//
+// CIR (Circle):
+//   - opcode: 'CIR'
+//   - x, y, radius
+//   - color, outline
+//   - clipX1, clipY1, clipX2, clipY2
+//
+// LIN (Line):
+//   - opcode: 'LIN'
+//   - x1, y1, x2, y2
+//   - color
+//   - open1, open2
+//   - clipX1, clipY1, clipX2, clipY2
+//
+// SPN (Span, run-length encoded):
+//   - opcode: 'SPN'
+//   - data: Uint16Array
+//   - data_length: number
+//   - dx, dy, x, y
+//
+// PIX (Pixel batch):
+//   - opcode: 'PIX'
+//   - data: Array or TypedArray (pairs: [offset, color])
+//
+// SPR (Sprite batch):
+//   - opcode: 'SPR'
+//   - clipX1, clipY1, clipX2, clipY2
+//   - data: Array of sprite commands, each with:
+//       - x, y
+//       - cornerX, cornerY, sizeX, sizeY
+//       - angle, scaleX, scaleY
+//       - spritesheetIndex
+//       - opacity, override_color, multiply, hasAlpha
+//
+// TXT (Text):
+//   - opcode: 'TXT'
+//   - x, y
+//   - width, height
+//   - color, outline, shadow
+//   - str (string)
+//   - fontIndex
+//   - clipX1, clipY1, clipX2, clipY2
+//
+// PLY (Polygon):
+//   - opcode: 'PLY'
+//   - points: Array of [x0, y0, x1, y1, ...]
+//   - color, outline
+//   - clipX1, clipY1, clipX2, clipY2
+//
+// All commands have a 'z' field for sorting, but it is not used in rendering.
+//
