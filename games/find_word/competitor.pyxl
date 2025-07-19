@@ -94,7 +94,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
         // Is this particular competitor available right now? Choose stable random
         // hours that they play
         const first_hour = random_integer(0, 23, competitor_rng)
-        const last_hour  = (random_integer(1, 12, competitor_rng) + first_hour) mod 24
+        const last_hour  = (random_integer(4, 14, competitor_rng) + first_hour) mod 24
         
         if last_hour > first_hour:
             if hour < first_hour or hour > last_hour: continue
