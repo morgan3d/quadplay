@@ -326,19 +326,32 @@ def board_has_obvious_sensitive_word(board):
 def board_reset(board, seed_word, permute_number default 0):
     board.seed = seed_word + "-" + permute_number
     const rnd = make_random(seed_word)
-        
+    
     // Shuffle the sets themselves
     assert(ROWS * COLS == size(LETTER_SET_ARRAY), "Distribution does not have enough tile sets")
+
+    // If true, choose using the word dice algorithm with the
+    // standard dice set. If false, choose using sampling from 
+    // a bag of tiles without replacement.
+    const dice = rnd() < 90%
+        
     const distribution = shuffled(LETTER_SET_ARRAY, rnd)
+    let letter_bag = split("AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUVVWWXYYZ")
     
     const flat_array = []
     for y < ROWS:
         for x < COLS:
             const tile = board.tile[x][y]
-            tile.letter = random_value(pop(distribution), rnd)
+            if dice:
+                tile.letter = random_value(pop(distribution), rnd)
+            else:
+                tile.letter = random_value(letter_bag, rnd)
+                fast_remove_value(letter_bag, tile.letter)
+                
             tile.selected = 0
             // Store for shuffling below
             push(flat_array, tile)
+        
     
     if permute_number > 0:
         shuffle(flat_array, make_random(permute_number))

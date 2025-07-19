@@ -52,7 +52,6 @@ def draw_awards()
     if stage ≠ prev_stage and mode_frames > 10:
         play_sound(word_sound)
 
-    
     if stage == STAGE.SUMMARY:
         draw_award_summary()
    
@@ -260,7 +259,15 @@ if stage == STAGE.SUMMARY and α > 0%
                 pos: pos,
                 text: letter,
                 color: history_board_color})
-
+else:
+    draw_text({
+        font: history_font, 
+        pos: history_rect.corner + history_rect.size,
+        text: "Found " + size(player.history.list) + "/" + player.board.word_count,
+        x_align: "right",
+        y_align: "bottom",
+        color: #DDD})
+    
 draw_awards()
 
 draw_leaderboard()
