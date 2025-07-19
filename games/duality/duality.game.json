@@ -1,7 +1,7 @@
 {
     "title": "Duality",
-    "developer": "CasualEffects",
-    "copyright": "©2021-2025 Morgan McGuire",
+    "developer": "SHMUEL",
+    "copyright": "©2021-2025 Factory 797",
     "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
     "packages": [],
     "scripts": [
@@ -32,9 +32,10 @@
         "mask_sprite": "mask.sprite.json",
         "alarm_sound": "quad://sounds/powerup-07.sound.json",
         "end_game_sound": "quad://sounds/wild-08.sound.json",
-        "paddle_bounce_alt_sound": "quad://sounds/jump-09.sound.json"
+        "paddle_bounce_alt_sound": "quad://sounds/jump-09.sound.json",
+        "logo_sprite": "logo.sprite.json"
     },
-    "version": 0,
+    "version": "1",
     "min_players": 1,
     "max_players": 2,
     "cooperative": false,
@@ -331,5 +332,9 @@
         }
     },
     "screenshot_tag": "Duality",
-    "y_up": true
+    "y_up": true,
+    "online_menu": true,
+    "show_start_animation": true,
+    "show_controls_button": true,
+    "mobile_touch_gamepad": true
 }

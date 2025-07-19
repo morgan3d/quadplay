@@ -176,15 +176,10 @@ def draw_title(α default 0%):
         set_clip(xy(world_array[1].paddle.pos.x + ½ SCREEN_SIZE.x, 0), SCREEN_SIZE)
         draw_sprite({sprite: ty_sprite, pos: title_ty_pos, override_color: color_array[1], override_blend: "multiply"})
     
-    // Fade text out
-    draw_text({
-        font: title_font, 
-        text: "a quadplay game\nby CasualEffects", 
-        pos: xy(-20, 47), 
-        color: rgba(color_array[0], 100% - α),
-        x_align: "right",
-        y_align: "bottom"})
         
+    draw_sprite({sprite: logo_sprite, pos: xy(72, 68), opacity: 100% - α})
+        
+    // Fade text out
     draw_text({
         font: title_font, 
         text: "1 player\n1 player hard\n2 player\nexit", 
