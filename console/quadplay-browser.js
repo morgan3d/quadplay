@@ -1109,6 +1109,7 @@ function rgbaToCSSFillStyle(color) {
     return `rgba(${color.r*255}, ${color.g*255}, ${color.b*255}, ${color.a})`;
 }
 
+
 /* Invoked as QRuntime.$submitFrame(). May not actually be invoked
    every frame if running below framerate due to missed frames or
    graphics framerate scaling.

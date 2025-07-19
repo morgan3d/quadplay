@@ -87,7 +87,6 @@ function $gpu_set_texture(spritesheetArray, fontArray) {
 
 
 function $gpu_resize_framebuffer(w, h) {
-    $gpu_execute.prevHash0 = $gpu_execute.prevHash1 = $gpu_execute.prevCommandListLength = undefined;
     $SCREEN_WIDTH = w;
     $SCREEN_HEIGHT = h;
     $screen = new Uint16Array(w * h);
@@ -99,205 +98,44 @@ function $square(x) { return x * x; }
 /** Used by gpu_execute() */
 function $zSort(a, b) { return a.z - b.z; }
 
-/* endIndex is exclusive */
-function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16, beginIndex, endIndex) {
-    // Precomputed FNV-1a hashes for opcode names
-    const $HASH_REC = 0x7e7e6e2b; // hashString('REC')
-    const $HASH_CIR = 0x7e7e6e1d; // hashString('CIR')
-    const $HASH_LIN = 0x7e7e6e3b; // hashString('LIN')
-    const $HASH_SPN = 0x7e7e6e4b; // hashString('SPN')
-    const $HASH_PIX = 0x7e7e6e2d; // hashString('PIX')
-    const $HASH_SPR = 0x7e7e6e5b; // hashString('SPR')
-    const $HASH_TXT = 0x7e7e6e6b; // hashString('TXT')
-    const $HASH_PLY = 0x7e7e6e7b; // hashString('PLY')
-
-    let hashValue = 0x811c9dc5;
- 
-    // fnv1a hash 32-bit of this integer
-    function hash(val) {
-        hashValue ^= val >>> 0;
-        hashValue = (hashValue * 0x01000193) >>> 0;
-    }
-
-    // MurmurHash3 32-bit
-    function murmurhash3_32_add(k) {
-        k = Math.imul(k, 0xcc9e2d51);
-        k = (k << 15) | (k >>> 17);
-        k = Math.imul(k, 0x1b873593);
-        hashValue ^= k;
-        hashValue = (hashValue << 13) | (hashValue >>> 19);
-        hashValue = (Math.imul(hashValue, 5) + 0xe6546b64) >>> 0;
-    }
-
-    function hashInteger(n) { hash(n | 0); }
-    function hashBool(n) { hash(n | 0); }
-    function hashNumber(n) { hash((n * 256) | 0); }
-    function hashString(s) { for (let i = 0; i < s.length; ++i) { hash(s.charCodeAt(i)); } }
-    function hashCommand(cmd) {
-        hashNumber(cmd.z);
-
-        switch (cmd.opcode) {
-            case 'REC':
-                hash($HASH_REC);
-                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
-                for (let i = 0; i < cmd.data.length; ++i) {
-                    let r = cmd.data[i];
-                    hashInteger(r.x1); hashInteger(r.y1); hashInteger(r.x2); hashInteger(r.y2);
-                    hashInteger(r.outline); hashInteger(r.fill);
-                }
-                break;
-
-            case 'CIR':
-                hash($HASH_CIR);
-                hashNumber(cmd.x); hashNumber(cmd.y); hashNumber(cmd.radius);
-                hashInteger(cmd.color); hashInteger(cmd.outline);
-                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
-                break;
-
-            case 'LIN':
-                hash($HASH_LIN);
-                hashNumber(cmd.x1); hashNumber(cmd.y1); hashNumber(cmd.x2); hashNumber(cmd.y2);
-                hashInteger(cmd.color);
-                hashNumber(cmd.open1); hashNumber(cmd.open2);
-                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
-                break;
-
-            case 'SPN':
-                hash($HASH_SPN);
-                for (let i = 0; i < cmd.data.length; ++i) { hashInteger(cmd.data[i]); }
-                hashInteger(cmd.data_length);
-                hashInteger(cmd.dx); hashInteger(cmd.dy); hashInteger(cmd.x); hashInteger(cmd.y);
-                break;
-
-            case 'PIX':
-                hash($HASH_PIX);
-                for (let i = 0; i < cmd.data.length; ++i) { hashInteger(cmd.data[i]); }
-                if ('data_length' in cmd) { hashInteger(cmd.data_length); }
-                break;
-
-            case 'SPR':
-                hash($HASH_SPR);
-                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
-                for (let i = 0; i < cmd.data.length; ++i) {
-                    const s = cmd.data[i];
-                    hashNumber(s.x); hashNumber(s.y);
-                    hashNumber(s.cornerX); hashNumber(s.cornerY); hashInteger(s.sizeX); hashInteger(s.sizeY);
-                    hashNumber(s.angle); hashNumber(s.scaleX); hashNumber(s.scaleY);
-                    hashInteger(s.spritesheetIndex);
-                    hashNumber(s.opacity);
-                    hashInteger(s.override_color);
-                    hashBool(s.multiply);
-                    hashBool(s.hasAlpha);
-                }
-                break;
-
-            case 'TXT':
-                hash($HASH_TXT);
-                hashNumber(cmd.x); hashNumber(cmd.y);
-                hashInteger(cmd.width); hashInteger(cmd.height);
-                hashInteger(cmd.color); hashInteger(cmd.outline); hashInteger(cmd.shadow);
-                hashString(cmd.str);
-                hashInteger(cmd.fontIndex);
-                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
-                break;
-
-            case 'PLY':
-                hash($HASH_PLY);
-                for (let i = 0; i < cmd.points.length; ++i) { hashNumber(cmd.points[i]); }
-                hashInteger(cmd.color); hashInteger(cmd.outline);
-                hashInteger(cmd.clipX1); hashInteger(cmd.clipY1); hashInteger(cmd.clipX2); hashInteger(cmd.clipY2);
-                break;
-
-            default:
-                throw new Error('Unknown graphics opcode in $hashCommandList: ' + cmd.opcode);
-        }
-    }
-    
-    if (beginIndex === 0) {
-        hashInteger(backgroundSpritesheetIndex);
-        hashInteger(backgroundColor16);
-        hashInteger($SCREEN_WIDTH);
-        hashInteger($SCREEN_HEIGHT);
-    }
-
-    for (let i = beginIndex; i < endIndex; ++i) {
-        hashCommand(commandList[i]);
-    }
-
-    return hashValue >>> 0;
-}
-
 
 // Stores on itself the .prevHash and .prevCommandListLength to identify duplicate frames
 function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16) {
     const startTime = performance.now();
-    
-    const DUPLICATED_FRAME_OPTIMIZATION = true;
+    commandList.sort($zSort);
 
-    let doWork = true;
-
-    if (DUPLICATED_FRAME_OPTIMIZATION) {
-        if (commandList.length !== $gpu_execute.prevCommandListLength) {
-            // There is a different number of commands, so obviously something changed.
-            // Don't waste time computing a hash. This case will also be forced on a framebuffer
-            // resize that resets the prevCommandListLength to undefined.
-            $gpu_execute.prevCommandListLength = commandList.length;
-            // The hash is unknown because we did not compute it
-            $gpu_execute.prevHash0 = $gpu_execute.prevHash1 = undefined;
-        } else {
-            // Split the commandList in half for early out if we determine the hash
-            // is going to be different
-            const mid = (commandList.length >> 1);
-            const currHash0 = $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16, 0, mid);
-            doWork = (currHash0 !== $gpu_execute.prevHash0);
-            $gpu_execute.prevHash0 = currHash0;
-            if (! doWork) {
-                const currHash1 = $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundColor16, mid, commandList.length);
-                doWork = (currHash1 !== $gpu_execute.prevHash1);
-                $gpu_execute.prevHash1 = currHash1;
-            } else {
-                $gpu_execute.prevHash1 = undefined;
-            }
-        }
-    }
-    if (doWork) {
-        commandList.sort($zSort);
-
-        // Clear the screen
-        if (backgroundSpritesheetIndex !== undefined) {
-            // Image background
-            $screen.set($spritesheetArray[backgroundSpritesheetIndex].$uint16Data);
-        } else {
-            // Color background (force alpha = 1)
-            $screen.fill(backgroundColor16, 0, $screen.length);
-        }
-        
-        for (let i = 0; i < commandList.length; ++i) {
-            const cmd = commandList[i];
-            $executeTable[cmd.opcode](cmd);
-        }
-
-        {
-            // Convert 16-bit to 32-bit
-            const dst32 = $updateImageData32;
-            const src32 = $screen32;
-            const N = src32.length;
-            for (let s = 0, d = 0; s < N; ++s) {
-                // Read two 16-bit pixels at once
-                let src = src32[s];
-                
-                // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
-                // read color channels, as the alpha channel is overwritten with fully
-                // opaque.
-                let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-                dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
-                
-                C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-                dst32[d] = 0xff000000 | C | (C << 4); ++d;
-            }
-        }
+    // Clear the screen
+    if (backgroundSpritesheetIndex !== undefined) {
+        // Image background
+        $screen.set($spritesheetArray[backgroundSpritesheetIndex].$uint16Data);
     } else {
-        $console.log("No rendering needed this frame");
+        // Color background (force alpha = 1)
+        $screen.fill(backgroundColor16, 0, $screen.length);
+    }
+    
+    for (let i = 0; i < commandList.length; ++i) {
+        const cmd = commandList[i];
+        $executeTable[cmd.opcode](cmd);
+    }
+
+    {
+        // Convert 16-bit to 32-bit
+        const dst32 = $updateImageData32;
+        const src32 = $screen32;
+        const N = src32.length;
+        for (let s = 0, d = 0; s < N; ++s) {
+            // Read two 16-bit pixels at once
+            let src = src32[s];
+            
+            // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
+            // read color channels, as the alpha channel is overwritten with fully
+            // opaque.
+            let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
+            
+            C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | C | (C << 4); ++d;
+        }
     }
     
     if ($is_web_worker) {
