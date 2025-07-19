@@ -238,7 +238,7 @@ if game_type == GLOBAL or DEBUG_INTERMISSION:
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 61), xy(125, 2), #000, ∅, 20)
 
-const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 120, SCREEN_SIZE.y - 22)}
+const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 125, SCREEN_SIZE.y - 22)}
 history_update(player.history, history_rect)
 
 // Show the board so that it can appear in screenshots
@@ -262,7 +262,7 @@ if stage == STAGE.SUMMARY and α > 0%
 else:
     draw_text({
         font: history_font, 
-        pos: history_rect.corner + history_rect.size - xy(10, 0),
+        pos: history_rect.corner + history_rect.size - xy(5, 0),
         text: "Found " + size(player.history.list) + "/" + player.board.word_count,
         x_align: "right",
         y_align: "bottom",
