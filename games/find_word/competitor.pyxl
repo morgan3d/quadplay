@@ -31,7 +31,11 @@ def insert_synthetic_competitors(competitor_array, target_count):
         {name: "TTT", sprite: avatar_sprite[39][16]},
         {name: "HCD", sprite: avatar_sprite[39][2]},
         {name: "GEW", sprite: avatar_sprite[39][2]},
-        {name: "jr",  sprite: avatar_sprite[9][18]}
+        {name: "jr",  sprite: avatar_sprite[9][18]},
+        {name: "FLA",  sprite: avatar_sprite[9][16]},
+        {name: "Lou",  sprite: avatar_sprite[8][18]},
+        {name: "RON",  sprite: avatar_sprite[8][16]},
+        {name: "PO8",  sprite: avatar_sprite[21][2]}
         ]
     
     // Make the competitors stable in their personalities by using a fixed
@@ -68,10 +72,14 @@ def insert_synthetic_competitors(competitor_array, target_count):
                 */
     
     let c = 0
-    while size(competitor_array) < target_count:        
+    while size(competitor_array) < target_count:    
         const competitor = {
             avatar: avatar_set[c],
             score: 0}
+            
+        // Ran out!
+        if not competitor.avatar: return
+        
         ++c
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
         
