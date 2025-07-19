@@ -126,3 +126,52 @@ def _player_find_good_board(player, game_type):
     if DEBUG_BOARD_SEARCH:
         debug_print(player.board.word_list)
 
+
+
+/* Chooses a random letter for each tile, and then 
+   permutes the result into pattern `seed_number`.
+   This process is entirely deterministic based on
+   the input. */
+def board_reset(board, seed_word, permute_number default 0):
+    board.seed = seed_word + "-" + permute_number
+    const rnd = make_random(seed_word)
+    
+    // Shuffle the sets themselves
+    assert(ROWS * COLS == size(LETTER_SET_ARRAY), "Distribution does not have enough tile sets")
+
+    // If true, choose using the word dice algorithm with the
+    // standard dice set. If false, choose using sampling from 
+    // a bag of tiles without replacement.
+    const dice = rnd() < 85%
+    if DEBUG_BOARD_SEARCH:
+        debug_print("Using " + (if dice then "DICE" else "TILE") + " generator")
+
+        
+    const distribution = shuffled(LETTER_SET_ARRAY, rnd)
+    let letter_bag = split(LETTER_BAG)
+    
+    const flat_array = []
+    for y < ROWS:
+        for x < COLS:
+            const tile = board.tile[x][y]
+            if dice:
+                tile.letter = random_value(pop(distribution), rnd)
+            else:
+                tile.letter = random_value(letter_bag, rnd)
+                fast_remove_value(letter_bag, tile.letter)
+                
+            tile.selected = 0
+            // Store for shuffling below
+            push(flat_array, tile)
+        
+    
+    if permute_number > 0:
+        shuffle(flat_array, make_random(permute_number))
+        // Put back
+        for y < ROWS:
+            for x < COLS:
+                board.tile[x][y] = flat_array[x + y * COLS]
+    
+    if DEBUG_BOARD_SEARCH: debug_print(board_to_string(board))
+
+

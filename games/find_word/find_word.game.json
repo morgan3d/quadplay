@@ -54,7 +54,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.148",
+    "version": "0.150",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -146,6 +146,10 @@
                 "EEINSU",
                 "HIMNQA"
             ]
+        },
+        "LETTER_BAG": {
+            "type": "string",
+            "value": "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUVVWWXYYZ"
         },
         "BADGE_TABLE": {
             "type": "raw",
@@ -311,7 +315,7 @@
                 "MIN_WORDS": {
                     "description": "including long words",
                     "type": "number",
-                    "value": "90",
+                    "value": "75",
                     "min": 0,
                     "max": 200,
                     "format": "0",
@@ -337,7 +341,7 @@
                 "MIN_VERY_LONG_WORDS": {
                     "description": "7+ letters",
                     "type": "number",
-                    "value": "7",
+                    "value": "8",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -346,7 +350,7 @@
                 "SHUFFLE_RETRIES": {
                     "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
                     "type": "number",
-                    "value": "18",
+                    "value": "19",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -355,7 +359,7 @@
                 "MIN_VALUABLE_LETTER_USES": {
                     "description": "How many times every good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
                     "type": "number",
-                    "value": "10",
+                    "value": "12",
                     "min": 0,
                     "max": 20,
                     "format": "0",
@@ -364,7 +368,7 @@
                 "MIN_VALUABLE_LETTER_LONG_WORDS": {
                     "description": "How many times every good letter (such as Q) must be used in 5+ letter words longer than 5 letters. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
                     "type": "number",
-                    "value": "4",
+                    "value": "3",
                     "min": 0,
                     "max": 20,
                     "format": "0",
@@ -503,7 +507,7 @@
         },
         "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
-            "value": "25",
+            "value": "23",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_SECONDS + GLOBAL_GAME_TIME_MINUTES exactly",
             "min": 1,
             "max": 240,
@@ -533,7 +537,7 @@
         },
         "GLOBAL_JOIN_MIN_REMAINING_TIME": {
             "type": "number",
-            "value": "30",
+            "value": "20",
             "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
             "min": 0,
             "max": 120,
