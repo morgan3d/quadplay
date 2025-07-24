@@ -54,7 +54,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.154",
+    "version": "0.158",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -156,9 +156,9 @@
             "value": {
                 "most_rare": "★",
                 "best_word": "♦",
-                "most_words": "§",
                 "best_rare": "☆",
-                "longest": "▶"
+                "longest": "▶",
+                "most_words": "§"
             }
         },
         "LETTER_POINT_TABLE": {
@@ -676,27 +676,27 @@
             "value": {
                 "SUMMARY": 0,
                 "BEST_WORD": 1,
-                "MOST_WORDS": 2,
-                "MOST_WORDS2": 3,
-                "BEST_RARE": 4,
-                "LONGEST": 5
+                "BEST_RARE": 2,
+                "LONGEST": 3,
+                "MOST_WORDS": 4,
+                "MOST_WORDS2": 5
             },
             "description": "Constants for intermission awards stages"
         },
         "MOST_WORDS_AWARD_FRAMES_PER_WORD": {
             "type": "number",
-            "value": "30",
+            "value": "24",
             "min": 1,
             "max": 128,
             "format": "0",
             "quantum": 1
         },
-        "GATHER_FRAMES": {
+        "GATHER_TIME_SECONDS": {
             "type": "number",
-            "value": "120",
-            "description": "How many frames GatherGlobalResults runs for",
+            "value": "3",
+            "description": "How many seconds GatherGlobalResults runs for",
             "min": 0,
-            "max": 260,
+            "max": 15,
             "format": "0",
             "quantum": 1
         }

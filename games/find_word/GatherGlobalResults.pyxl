@@ -40,9 +40,15 @@ insert_synthetic_competitors(competitor_array, ⌊4 noise(1, local_time().month 
 
 todo("Actually gather the global results from real players...")
 
+end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
+const utc_time = utc_now()
+const start_time = end_time - GATHER_TIME_SECONDS
+const τ = min((utc_time - start_time) / GATHER_TIME_SECONDS, 100%)
+
 set_background(GLOBAL_BACKGROUND_COLOR)
 
 draw_text({
@@ -54,12 +60,12 @@ draw_text({
 
 const y = ½ SCREEN_SIZE.y + 20
 const w = 200
-draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w * min(mode_frames / GATHER_FRAMES, 100%), 10), color)
+draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w * τ, 10), color)
 draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w, 10), ∅, color)
 
 draw_globe(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y - 40), 20)
 
-if mode_frames ≥ GATHER_FRAMES:
+if utc_time ≥ end_time:
     set_mode(GlobalIntermission) because "Timer"
     
     

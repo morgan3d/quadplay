@@ -144,7 +144,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
         
         competitor.word_list = keys(word_set)
                 
-        sort(competitor.word_list, size_comparator)
+        sort(competitor.word_list, size_comparator, true)
         
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
@@ -255,13 +255,25 @@ def competitor_assign_awards(competitor_array):
 
         if competitor.longest_size > longest_winner.longest_size:
             longest_winner = competitor
-
+            
         if size(competitor.word_list) > size(most_words_winner.word_list):
             most_words_winner = competitor
 
-    // Put in the same order as the award stages
-    best_word_winner.badges  += BADGE_TABLE.best_word
-    most_words_winner.badges += BADGE_TABLE.most_words
-    best_rare_winner.badges  += BADGE_TABLE.best_rare
-    longest_winner.badges    += BADGE_TABLE.longest
+
+
+    // Now loop again and give badges, including for ties:
+    for competitor in competitor_array:
+        // Put in the same order as the award stages
+        if competitor.best_word_points == best_word_winner.best_word_points:
+            competitor.badges += BADGE_TABLE.best_word
+            
+        if competitor.best_rare_points == best_rare_winner.best_rare_points:
+            competitor.badges += BADGE_TABLE.best_rare
+
+        if competitor.longest_size == longest_winner.longest_size:
+            competitor.badges += BADGE_TABLE.longest
+
+        if size(competitor.word_list) == size(most_words_winner.word_list):
+            competitor.badges += BADGE_TABLE.most_words
+        
 
