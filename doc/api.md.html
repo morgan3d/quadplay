@@ -4825,21 +4825,31 @@ A conduit has the following properties:
 
 `conduit.status`
 : - `"pending"` - in the process of connecting the conduit. Messages sent or received will be queued while awaiting the full handshake.
-  - `"ok"` - the conduit is open and stable.
-  - `"closed"` - the conduit has been terminated on one or both sides.
-  - `"offline"` - the conduit could not be connected because there is no internet connection on this node (or, in rare cases, the servers that initally broker the P2P connections are offline or overloaded).
+  - `"online"` - the conduit is open and stable.
+  - `"closed"` - the conduit has been terminated on one or both sides and cannot come `"online"` again.
+  - `"offline"` - the conduit is queuing but not actively delivering
+      messages because there is no internet connection on this node (or, in rare cases, the servers that initally broker the P2P connections are offline or overloaded).
+      but may come `"online"` later.
 
 `conduit.netid`
 : The `netid` of the group or node being communicated with through this conduit.
 
+*****************************************************
+*                    .-> "closed" <-.
+*                   |                |
+*                   |                |
+* "pending" ---> "online" <-----> "offline"
+*     |                              ^
+*     |                              |
+*      '----------------------------'
+*****************************************************
+[`conduit.status` transitions]
+
 The functions in the conduit API are:
 
-`make_conduit(id default "group_netid 0000", join_message default nil)`
+`make_conduit(id default "group_netid 0000")`
 : Create a connection to one or more nodes on the network. `id`
-  is a string. `join_message` is an arbitrary object to send
-  immediately after the connection succeeds, which may occur before
-  the next frame. The message is serialized before the function returns
-  and so may safely be mutated by the caller afterwards.
+  is a string.
 
   If `id` begins with the string `"group_netid"`, then the conduit
   communicates many-to-many with all nodes in that group that are running the same game loaded
@@ -4859,14 +4869,24 @@ The functions in the conduit API are:
 : Get the `netid` for this node, which is a globally unique string per session
   unless `set_node_netid()` has been called.
 
+`get_conduit_online_status()`
+: Get the current network status as a string: `"pending"` while establishing the initial
+  network connection, `"online"` when ready to create conduits, or `"offline"` when
+  there is no network connectivity. This indicates the overall ability to create new
+  conduits, not the status of any individual conduit. In all states
+   new conduits may be created, and messages sent on them. The underlying implementation
+  queues the work until the connection is established if offline or pending. If offline
+  for a significant amount of time then individual conduits may be forcibly closed. If offline
+  for a short period, the conduits will queue work waiting to come back online.
+
 `conduit_send(conduit, message)`
 : Send this message, which can be any serializable message. If `conduit` is a group conduit,
   every node in the group will receive the message.
 
-`conduit_iterate(conduit, message_handler, leave_handler)`
+`conduit_iterate(conduit, message_handler, join_handler, leave_handler)`
 : Iterate through all incoming messages. For each, invokes `message_handler(message, node_netid, conduit)`.
-  It is the caller's responsibility to recognize nodes that have newly appeared on a group 
-  conduit from their IDs. Maintaining a table mapping node_netids to 
+  Calls `join_handler(node_netid, conduit)` for each node that has newly joined the conduit
+  since the last call to `conduit_iterate()`. For single conduits, this is not used.
   Calls `leave_handler(node_netid, conduit)` for each node that has closed their
   side of the conduit or left the group.
 

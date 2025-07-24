@@ -3,7 +3,6 @@ GatherGlobalResults
 
 const color = #F3C
 
-todo("Actually gather the global results from real players...")
 
 def draw_arc(pos, radius, start, stop, color):
     const N = 10
@@ -29,6 +28,18 @@ def draw_globe(pos, radius):
         if ϕ < 180°:
             draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, color)
 
+enter
+────────────────────────────────────────────────────────────────────────
+remove_all(competitor_array)
+
+player_competitor = make_player_competitor()
+push(competitor_array, player_competitor)
+  
+// Make some bogus competitors for testing purposes
+insert_synthetic_competitors(competitor_array, ⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(8, 15))
+
+todo("Actually gather the global results from real players...")
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -50,3 +61,10 @@ draw_globe(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y - 40), 20)
 
 if mode_frames ≥ GATHER_FRAMES:
     set_mode(GlobalIntermission) because "Timer"
+    
+    
+leave
+────────────────────────────────────────────────────────────────────────
+competitor_analyze(competitor_array)
+
+todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")

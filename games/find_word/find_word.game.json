@@ -54,7 +54,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.153",
+    "version": "0.154",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -677,8 +677,9 @@
                 "SUMMARY": 0,
                 "BEST_WORD": 1,
                 "MOST_WORDS": 2,
-                "BEST_RARE": 3,
-                "LONGEST": 4
+                "MOST_WORDS2": 3,
+                "BEST_RARE": 4,
+                "LONGEST": 5
             },
             "description": "Constants for intermission awards stages"
         },

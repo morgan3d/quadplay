@@ -1,4 +1,9 @@
-/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License
+
+  This is the default host networking that operates by streaming the screen.
+  See quadplay-conduit.js for the explicit state synchronization API.
+
+*/
 "use strict";
 
 /* Initialized at the bottom of this file */

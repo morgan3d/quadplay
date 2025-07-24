@@ -35,8 +35,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
         {name: "FLA",  sprite: avatar_sprite[9][16]},
         {name: "Lou",  sprite: avatar_sprite[8][18]},
         {name: "RON",  sprite: avatar_sprite[8][16]},
-        {name: "PO8",  sprite: avatar_sprite[21][2]}
-        ]
+        {name: "PO8",  sprite: avatar_sprite[21][2]}]
     
     // Make the competitors stable in their personalities by using a fixed
     // competitor_rng for anything specific to the competitor generation. Do not use
@@ -143,12 +142,8 @@ def insert_synthetic_competitors(competitor_array, target_count):
                 maybe_add_word(random_value(player.history.list, match_rng).word)
         */
         
-        
         competitor.word_list = keys(word_set)
                 
-        // Remove sensitive words from computer players
-        iterate(competitor.word_list, remove_sensitive)
-        
         sort(competitor.word_list, size_comparator)
         
         for word at i in competitor.word_list:
@@ -159,16 +154,16 @@ def insert_synthetic_competitors(competitor_array, target_count):
 
 
 /* Convert the local player into a competitor */
-def add_player_competitor():
-    player_competitor = {
+def make_player_competitor():
+    const competitor = {
         avatar: player.avatar,
         score: player.score,
         word_list: []}
     
     for entry in player.history.list:
-        push(player_competitor.word_list, entry.word)
+        push(competitor.word_list, entry.word)
         
-    push(competitor_array, player_competitor)
+    return competitor
 
 
 

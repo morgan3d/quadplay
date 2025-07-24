@@ -1,6 +1,8 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
 
+todo("Do not show sensitive words in any award")
+
 // Cycle through the award stages. See `STAGE`
 let stage
 
@@ -178,7 +180,7 @@ def draw_leaderboard()
                 pos: pos + xy(27, alt - 1)})
             
         draw_text({…text_args, text: format_number(competitor.score, "commas"), pos: pos + xy(60, 0), x_align: "right"})
-        draw_text({…text_args, font: history_font, text: competitor.text, x_align: "right", pos: pos + xy(110, 0)})
+        draw_text({…text_args, font: history_font, text: censor(competitor.text), x_align: "right", pos: pos + xy(110, 0)})
 
 
 
@@ -209,21 +211,9 @@ draw_most_words_award.frames = 0
 
 end_time = next_global_game_utc_start_time()
 
-resize(competitor_array, 0)
-add_player_competitor()
-
-                    
-
-// Make some bogus competitors for testing purposes
-insert_synthetic_competitors(competitor_array, ⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(8, 15))
-
-todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")
-
-competitor_analyze(competitor_array)
 
 stage = STAGE.SUMMARY
 prev_stage = stage
-
 
 
 frame
@@ -233,6 +223,9 @@ frame
 if game_type == GLOBAL or DEBUG_INTERMISSION:
     prev_stage = stage
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
+    if stage == STAGE.MOST_WORDS2:
+        // This is 2x as long
+        stage = STAGE.MOST_WORDS
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)

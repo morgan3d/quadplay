@@ -14,6 +14,7 @@ This includes the contents of:
 - [`quadplay-browser-audio.js`](../console/quadplay-browser-audio.js)
 - [`quadplay-browser-touch.js`](../console/quadplay-browser-touch.js)
 - [`quadplay-network.js`](../console/quadplay-network.js)
+- [`quadplay-serialize.js`](../console/quadplay-serialize.js)
 - [`quadplay-midi.js`](../console/quadplay-midi.js)
 - [`quadplay.js`](../console/quadplay.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
@@ -37,6 +38,9 @@ The VS Code extension is by [Josef Spjut](http://josef.spjut.me/).
 GIF support via [gif.js](https://github.com/jnordberg/gif.js) (c) 2013 Johan Nordberg,
 used under the [MIT license](https://github.com/jnordberg/gif.js/blob/master/LICENSE). It includes code by Kevin Weiner, Thibault Imbert, and Anthony
 Dekker.
+
+Improved JSON serialization via [serialize.js](https://github.com/morgan3d/serializejs/) (c) 2025 Morgan McGuire
+used under the [MIT license](https://github.com/morgan3d/serializejs/blob/main/LICENSE).
 
 QR code support via [qrcodejs](https://github.com/davidshimjs/qrcodejs) (c) 2012 [@davidshimjs](https://twitter.com/davidshimjs) used under
 the [MIT license](https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/LICENSE).

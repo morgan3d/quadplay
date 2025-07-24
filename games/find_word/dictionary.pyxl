@@ -121,8 +121,13 @@ def random_safe_word(rng default random, min_size default 5, max_size default 8)
 
 
 /* `iterate()` callback for filtering out sensitive words */
-def remove_sensitive(word):
-    if sensitive[lowercase(word)]:
+def remove_sensitive(text):
+    if sensitive[lowercase(text)]:
         return iterate.REMOVE
-        
 
+
+
+/* Replaces the text with ??? if it is in the sensitive dictionary*/
+def censor(text):
+    return if sensitive[lowercase(text)] then "???" else word
+        
