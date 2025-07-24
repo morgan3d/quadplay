@@ -1,8 +1,11 @@
-/* In seconds, using now() */
-let end_time
-
 /* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
 let game_type = SOLO
+
+/* In seconds, using utc_time */
+let start_time
+
+/* In seconds, using utc_time */
+let end_time
 
 /* If true, then the player is just warming
    up for a `GLOBAL` game that will start soon. */

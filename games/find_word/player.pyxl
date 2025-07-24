@@ -232,19 +232,7 @@ def _player_draw_score(player, board_pos)
             y_align: "top",
             color: #FFF,
             z: TILE_LETTER_Z})
-    
-    
-
-/* Draws the count-down timer for `end_time` relative to the board */
-def draw_timer(board_pos):  
-    draw_text({
-        pos: board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16),
-        font: score_font,
-        text: format_number(max(0, end_time - utc_now()), "timer"),
-        color: if in_waiting_room then #0F0 else #FFF,
-        y_align: "center",
-        x_align: "right"})
-
+        
 
 
 /*

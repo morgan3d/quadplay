@@ -62,7 +62,7 @@ draw_text({
     color: #FFF})
 
 
-if mode_frames mod 380 == 60 and size(unfound_word_array) > 0:
+if mode_frames mod 320 == 60 and size(unfound_word_array) > 0:
     // Choose the next unfound word
     const word = pop(unfound_word_array)
     board_select_word(player.board, word)

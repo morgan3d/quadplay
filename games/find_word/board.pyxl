@@ -483,3 +483,65 @@ def board_select_word(board, word, color default #E1B):
     
     play_sound(blip_sound)
 
+
+    
+/* Cooldown used in `draw_timer()`. Reset in `Play.enter` */
+let last_countdown_sound_time
+
+/* Draws the count-down timer for `end_time` relative to the board, and handles
+   the countdown beeping and flashing */
+def draw_timer(board_pos):
+    // Real seconds
+    const real_time_left = max(0, end_time - utc_time)
+    
+    // Remapped to shorten midgame and extend endgame tension
+    let time_left = real_time_left
+    
+    if not in_waiting_room:
+        // Varies per player because they may have entered late
+        const game_total_time = end_time - start_time
+        
+        // Amount of distorted time to remap. I.e., remapping starts when
+        // this time is displayed
+        const remap_seconds = 10
+        
+        // How much to scale time after the pivot (< 100% = slower)
+        const end_time_scale = 90%
+        
+        // Real time at which we pivot to expanding time
+        const pivot = remap_seconds / end_time_scale
+        
+        // How much to scale time before the pivot
+        const begin_time_scale = (game_total_time - pivot) / (game_total_time - remap_seconds)
+        
+        if time_left > pivot:
+            time_left = (time_left - pivot) * begin_time_scale + remap_seconds
+        else:
+            time_left *= end_time_scale
+        
+    // Display slightly less time than is actually available
+    // so it doesn't feel like we're ending too abruptly on 0
+    time_left -= 3/60
+    
+    draw_text({
+        pos: board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16),
+        font: score_font,
+        text: format_number(time_left, "timer"),
+        color: if in_waiting_room then #0F0 else #FFF,
+        y_align: "center",
+        x_align: "right"})
+    
+    const BEEP_SECONDS = 5    
+    if time_left > 0.1 and time_left < BEEP_SECONDS + 0.5:
+        if |loop(time_left, -0.5, 0.5)| ≤ 3/60 and now() - last_countdown_sound_time > 0.25:
+            // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
+            // but ensure that we play only once per timeout, converting from time to frames
+            last_countdown_sound_time = now()
+            play_sound(timer_countdown_sound, false, 150%)
+            // Pulse in case sound is off
+            player.background_color = #FFF
+        else:
+            // Fade back towards normal
+            player.background_color = lerp(player.background_color, BOARD_COLOR, 4%)
+
+

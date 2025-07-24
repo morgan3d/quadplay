@@ -1,15 +1,13 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-// Cooldown
-let last_countdown_sound_time
-
 
 enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
 
 last_countdown_sound_time = now()
+start_time = utc_time
 
 // Compute end_time
 if game_type == SOLO:
@@ -38,19 +36,15 @@ if mode_frames == 1 and not in_waiting_room:
 
 player_update(player, ∅, true)
 
-const time_left = end_time - utc_now()
-if time_left > 0.1 and time_left < 5.5:
-    if |loop(time_left, -0.5, 0.5)| ≤ 1/30 and now() - last_countdown_sound_time > 0.2:
-        // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
-        // but ensure that we play only once per timeout
-        last_countdown_sound_time = now()
-        play_sound(timer_countdown_sound, false, 150%)
-        // Pulse in case sound is off
-        player.background_color = #FFF
-    else:
-        // Fade back towards normal
-        player.background_color = lerp(player.background_color, BOARD_COLOR, 2%)
-    
+const time_left = end_time - utc_now()    
+
+if time_left ≤ 15/60:
+    // Make a few frames black at the end so that a player can
+    // still trace a little further but can't see. This makes
+    // it feel like they squeezed in one more word and weren't
+    // "robbed" if in the process of selecting. Without this
+    // it always feels like "I was just about to finish my word"
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 100)
     
     
 if time_left ≤ 0 or DEBUG_INTERMISSION:
