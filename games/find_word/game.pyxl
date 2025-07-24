@@ -21,7 +21,7 @@ let input_hook
 const SOLO_GAME_TIME = 60 SOLO_GAME_TIME_MINUTES
 
 const GLOBAL_INTERMISSION_TIME = GLOBAL_INTERMISSION_TIME_SECONDS
-const GLOBAL_GAME_TIME = 60 GLOBAL_GAME_TIME_MINUTES
+const GLOBAL_GAME_TIME = GLOBAL_GAME_TIME_SECONDS
 
 /* Global games are synchronized to this clock, hitting this period exactly 
    relative to UTC Unix 0 time */
