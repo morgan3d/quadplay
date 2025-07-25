@@ -26,12 +26,19 @@ def update_stats_button(pos):
     const selected = selected_index == STATS_INDEX
     
     const radius = 20
+    const sprite_args = {sprite: stats_sprite[0][0], pos: pos, z: 100}
     
     if selected:
         draw_round_selection(pos)
+        // Outline
+        for i < 2:
+            draw_sprite({…sprite_args, pos: pos + xy(2i - 1, 0), override_color: #090})    
+            draw_sprite({…sprite_args, pos: pos + xy(0, 2i - 1), override_color: #090})    
+        draw_sprite({…sprite_args, override_color: #EEE})    
     else:
         // Background
         draw_disk(pos, radius, #FFFC, #DDD, 100)
+        draw_sprite(sprite_args)    
         
     draw_text({
         font: score_font, 
@@ -244,7 +251,7 @@ local:
     if selected_index == AVATAR_EDITOR_INDEX:
         draw_round_selection(pos)
 
-    draw_disk(pos, 20, rgba(player.avatar.color, 75%))    
+    draw_disk(pos, 20, rgba(player.avatar.color, 75%), 75% player.avatar.color)    
     avatar_draw_large(player.avatar, pos)
     
     if (not intro and
