@@ -839,12 +839,13 @@ function makeErrorHandler(conduit, node_netid) {
     };
 }
 
+
 function makeMessageHandler(conduit, node_netid) {
     return function (data) {
         conduit.$event_queue.push({
             type: 'message',
             node_netid: node_netid,
-            data: deserialize(data)
+            data: deserialize(data, quadplaySerializeUntransform)
         });
     };
 }
@@ -856,6 +857,7 @@ function makeCloseHandler(conduit, node_netid) {
         conduit.$event_queue.push({type: 'leave', node_netid: node_netid});
     };
 }
+
 
 function peerid_to_netid(peerid) {
     try {

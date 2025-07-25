@@ -48,7 +48,7 @@ function quadplaySerializeTransform(value) {
 /* This is the untransformer (reviver) for quadplay types to use with serialize(). */
 function quadplaySerializeUntransform(encoded, custom_type) {
     function getByName(array, name) {
-        for (const elt of arra) {
+        for (const elt of array) {
             if (elt.$name === name) {
                 return elt;
             }
