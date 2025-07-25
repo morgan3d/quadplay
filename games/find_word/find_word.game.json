@@ -55,7 +55,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.166",
+    "version": "0.167",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -721,6 +721,39 @@
             "type": "boolean",
             "value": false,
             "description": "Do not actually share results online if true"
+        },
+        "REBOOT_TIME_MINUTES": {
+            "type": "number",
+            "value": "10",
+            "description": "If the game has been asleep for longer than this restart on wake intead of unpausing",
+            "min": 1,
+            "max": 60,
+            "format": "0",
+            "quantum": 1
+        },
+        "GLOBAL_LAYOUT": {
+            "type": "object",
+            "value": {
+                "LEADERBOARD_WIDTH": {
+                    "type": "number",
+                    "value": "123",
+                    "description": "In pixels. Forces the award width",
+                    "min": 64,
+                    "max": 256,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "AWARD_HEIGHT": {
+                    "type": "number",
+                    "value": "72",
+                    "description": "In pixels. Forces the leaderboard height",
+                    "min": 32,
+                    "max": 256,
+                    "format": "0",
+                    "quantum": 1
+                }
+            },
+            "description": "Constants for the GlobalIntermission layout"
         }
     },
     "screenshot_tag": "find_word",

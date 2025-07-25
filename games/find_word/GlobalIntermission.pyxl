@@ -1,6 +1,10 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
 
+todo("Favoriting flag")
+todo("Favoriting UI")
+todo("Permanent badges")
+
 // Cycle through the award stages. See `STAGE`
 let stage
 
@@ -8,15 +12,35 @@ let stage
    changes to play sounds */
 let prev_stage
 
-/* Wall clock time in seconds ala `utc_now()` when the Intermission ends
-   for a `GLOBAL` game. */
-let end_time
+
+/* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
+def draw_awards()
+& preserving_transform:
+    set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD_WIDTH + 35, 34))
+    if stage ≠ prev_stage and mode_frames > 10:
+        play_sound({sound: word_sound, pan: xy(0, 0)})
+
+    if stage == STAGE.SUMMARY:
+        draw_award_summary()
+   
+    else if stage == STAGE.BEST_WORD:
+        draw_word_award("Best Word", best_word_winner)
+   
+    else if stage == STAGE.LONGEST:
+        draw_word_award("Longest", longest_winner)
+        
+    else if stage == STAGE.BEST_RARE:
+        draw_word_award("Best Rare", best_rare_winner)
+    
+    else if stage == STAGE.MOST_WORDS:
+        draw_most_words_award(most_words_winner)
+
 
 
 /* Called from `draw_awards()` when `stage` == `STAGE.SUMMARY` */
 def draw_award_summary()
 & preserving_transform:
-    draw_corner_rect(xy(-35, -36), xy(125, 63), player.avatar.color)
+    draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD_WIDTH, 63), player.avatar.color)
     avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF)
 
     const shadow = 60% player.avatar.color
@@ -44,28 +68,6 @@ def draw_award_summary()
     draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 23), x_align: "right"})
 
 
-
-/* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
-def draw_awards()
-& preserving_transform:
-    set_transform(xy(SCREEN_SIZE.x - 88, 34))
-    if stage ≠ prev_stage and mode_frames > 10:
-        play_sound({sound: word_sound, pan: xy(0, 0)})
-
-    if stage == STAGE.SUMMARY:
-        draw_award_summary()
-   
-    else if stage == STAGE.BEST_WORD:
-        draw_word_award("Best Word", best_word_winner)
-   
-    else if stage == STAGE.LONGEST:
-        draw_word_award("Longest", longest_winner)
-        
-    else if stage == STAGE.BEST_RARE:
-        draw_word_award("Best Rare", best_rare_winner)
-    
-    else if stage == STAGE.MOST_WORDS:
-        draw_most_words_award(most_words_winner)
 
 
 
@@ -133,27 +135,30 @@ def draw_most_words_award(winner):
         board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
 
 
-
+todo("Abstract layout constants")
 
 /* Draw the ranked competitors and perform UI logic */
 def draw_leaderboard()
 & preserving_transform:
-    set_clip(xy(0, 0), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 22))
-    set_transform(xy(SCREEN_SIZE.x - 110, 72))
-
-    draw_text({text: "Global Scoreboard", pos: xy(55, -5), x_align: "center", font: history_font, color: #E1B, shadow: #000})
+    todo("Scroll")
+    const width = GLOBAL_LAYOUT.LEADERBOARD_WIDTH
+    
+    set_clip(xy(SCREEN_SIZE.x - width, 0), xy(width, SCREEN_SIZE.y - 22))
+    set_transform(xy(SCREEN_SIZE.x - width, 72))
+    
+    draw_text({text: "Global Leaderboard", pos: xy(½ width, -5), x_align: "center", font: history_font, color: #E1B, shadow: #000})
     
     const RANK_SPACING_Y = 16
     const alt = ⌊mode_frames / 30⌋ mod 2
     
     for competitor at i in competitor_array:
-        const pos = xy(-3, i * RANK_SPACING_Y + 8)
+        const pos = xy(10, i * RANK_SPACING_Y + 8)
                 
         const me = competitor == player_competitor
 
         // Highlight
         if me:
-            draw_corner_rect(pos - xy(10, 9), xy(130, 18), player.avatar.color, ∅, ∅, -1)
+            draw_corner_rect(pos - xy(10, 9), xy(width, 18), player.avatar.color, ∅, ∅, -1)
             
         // Animate sprite
         let sprite = competitor.avatar.sprite
@@ -245,8 +250,8 @@ if game_type == GLOBAL or DEBUG_INTERMISSION:
         stage = STAGE.MOST_WORDS
 
 // Separator bars
-draw_corner_rect(xy(SCREEN_SIZE.x - 125, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
-draw_corner_rect(xy(SCREEN_SIZE.x - 125, 61), xy(125, 2), #000, ∅, 20)
+draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD_WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
+draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD_WIDTH - 2, 61), xy(GLOBAL_LAYOUT.LEADERBOARD_WIDTH, 2), #000, ∅, 20)
 
 const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 125, SCREEN_SIZE.y - 22)}
 history_update(player.history, history_rect)

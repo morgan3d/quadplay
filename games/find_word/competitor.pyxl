@@ -114,7 +114,7 @@ last_hour: 9
 },
 {
 name: "HCD",
-sprite: avatar_sprite[39][2],
+sprite: avatar_sprite[39][6],
 base_ability: 0.02,
 short_word_preference: 0.92,
 first_hour: 12,

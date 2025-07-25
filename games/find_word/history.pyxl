@@ -30,8 +30,11 @@ def make_history():
     }
 
 
+
 /* Mutates `pos`, returns `max_width`. Called from `history_update()`. */
 def history_draw(history, pos, max_height):
+    todo("Visualize history scroll state on Play view")
+    todo("Vertical scroll history")
     
     const start_y = pos.y
     

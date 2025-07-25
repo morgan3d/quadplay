@@ -70,7 +70,11 @@ def penultimate_value(array):
 
 
 def _update_utc_time():
+    const prev_time = utc_time
     utc_time = utc_now()
+    
+    if utc_time - prev_time > 60 * REBOOT_TIME_MINUTES:
+        reset_game()
 
 
 

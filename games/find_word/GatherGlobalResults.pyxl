@@ -28,6 +28,7 @@ def draw_globe(pos, radius):
         if ϕ < 180°:
             draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, color)
 
+
 enter
 ────────────────────────────────────────────────────────────────────────
 remove_all(competitor_array)
@@ -39,16 +40,18 @@ share_results_with_network(player_competitor)
 
 end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
 
+if DEBUG_INTERMISSION:
+    end_time = utc_time
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if mode_frames == 60:
+if mode_frames == (if DEBUG_INTERMISSION then 0 else 60):
     // Make some bots to fill out the competitor list if offline or
     // there are too few players. Do this after almost a second so that
     // other players could come in first
     insert_bots(competitor_array, ⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(10, 18))
 
-const utc_time = utc_now()
 const start_time = end_time - GATHER_TIME_SECONDS
 const τ = min((utc_time - start_time) / GATHER_TIME_SECONDS, 100%)
 
