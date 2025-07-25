@@ -181,7 +181,7 @@ def export(args):
       # because they are part of the IDE only
       ignore_files = ['launcher', 'templates',
                       'ace', 'lib/dagre.min.js',
-                      'quadplay-ide*.js', 'quadplay-vcs.js',
+                      'quadplay-ide*.js',
                       'wraps/carbon.png', 'wraps/oak.jpg', 'wraps/strips.png', 'wraps/walnut_burl.jpg']
 
       def custom_ignore(dir, files):

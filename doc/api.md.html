@@ -4636,6 +4636,9 @@ guest, you cannot currently leave a game without restarting <quadplay/>.
 
 ### Conduit
 
+!!! Warning Experimental API
+    The Conduit API is currently experimental and likely to change throughout summer and fall 2025
+
 The Conduit network API is an alternative to built-in Host-Guest shared-screen
 multiplayer. Both APIs can be used together, although the Conduit API is intended to
 completely replace Host-Guest for games that use it.
@@ -4693,14 +4696,13 @@ let last_jump
 let player_table = {}
 
 def handle_message(message, node_netid, conduit):
-  if message == nil:
-    // This particular example doesn't require a hand shake message
-    // but here's how you'd add one
-    player_table[node_netid] = "idle"
-  
-  else if message.type == "action":
+  if message.type == "action":
     player_table[node_netid] = message.action
 
+
+def handle_leave(node_netid, conduit):
+    remove_key(player_table, node_netid)
+  
 
 // Send to others and process myself immediately for lower latency
 def send(message):
@@ -4711,7 +4713,7 @@ def send(message):
 def jump():
     send({type: "action", action: "jump"})
 
-
+    
 def land():
   send({type: "action", action: "land"})
 
@@ -4730,11 +4732,12 @@ frame
 --------------------------------------------------
 // Example of receiving incoming messages. We receive never receive
 // messages from ourselves
-conduit_iterate(group_conduit, handle_message, handle_leave)
+conduit_iterate(group_conduit, handle_message, nil, handle_leave)
 
 if gamepad_array[0].aa and player_table[my_netid] == "idle":
   jump()
   delay(5, land)
+
 
 exit
 --------------------------------------------------

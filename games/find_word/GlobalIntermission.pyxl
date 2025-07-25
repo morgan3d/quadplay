@@ -50,7 +50,7 @@ def draw_awards()
 & preserving_transform:
     set_transform(xy(SCREEN_SIZE.x - 88, 34))
     if stage ≠ prev_stage and mode_frames > 10:
-        play_sound(word_sound)
+        play_sound({sound: word_sound, pan: xy(0, 0)})
 
     if stage == STAGE.SUMMARY:
         draw_award_summary()

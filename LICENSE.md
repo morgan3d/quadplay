@@ -14,6 +14,7 @@ This includes the contents of:
 - [`quadplay-browser-audio.js`](../console/quadplay-browser-audio.js)
 - [`quadplay-browser-touch.js`](../console/quadplay-browser-touch.js)
 - [`quadplay-network.js`](../console/quadplay-network.js)
+- [`quadplay-conduit.js`](../console/quadplay-conduit.js)
 - [`quadplay-serialize.js`](../console/quadplay-serialize.js)
 - [`quadplay-midi.js`](../console/quadplay-midi.js)
 - [`quadplay.js`](../console/quadplay.js)

@@ -969,6 +969,7 @@ let lastAnimationRequest = 0;
 let lastAnimationInterval = undefined;
 function onStopButton(inReset, preserveNetwork) {
     hideAllRuntimeDialogs();
+    conduitNetwork.reset_conduits();
     
     if (! preserveNetwork) {
         stopHosting();
@@ -2860,6 +2861,7 @@ function reloadRuntime(oncomplete) {
     QRuntime.document.write(src);
     
     QRuntime.onload = function () {
+        conduitNetwork.reset_conduits();
         QRuntime.$resize_framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
         QRuntime.reset_clip();
 
@@ -2871,8 +2873,8 @@ function reloadRuntime(oncomplete) {
         // more
         QRuntime.$updateIDEModeGraph = useIDE ? $updateIDEModeGraph : function () {};
         
-        // Remove any base URL that appears to include the quadplay URL
         QRuntime.$window = window;
+        // Remove any base URL that appears to include the quadplay URL
         QRuntime.$gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
         QRuntime.$debugPrintEnabled  = document.getElementById('debugPrintEnabled').checked && useIDE;
         QRuntime.$assertEnabled      = document.getElementById('assertEnabled').checked && useIDE;
@@ -2902,6 +2904,17 @@ function reloadRuntime(oncomplete) {
         QRuntime.$navigator          = navigator;
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
+
+        // Conduit API is entirely implemented outside of the runtime files
+        QRuntime.make_conduit        = conduitNetwork.make_conduit;
+        QRuntime.conduit_iterate     = conduitNetwork.conduit_iterate;
+        QRuntime.conduit_send        = conduitNetwork.conduit_send;
+        QRuntime.conduit_close       = conduitNetwork.conduit_close;
+        QRuntime.set_node_netid      = conduitNetwork.set_node_netid;
+        QRuntime.get_node_netid      = conduitNetwork.get_node_netid;
+        QRuntime.get_conduit_online_status = conduitNetwork.get_conduit_online_status;
+        QRuntime.reset_conduits      = conduitNetwork.reset_conduits;
+        QRuntime.conduit_listen      = conduitNetwork.conduit_listen;
 
         // When the game forces a framebuffer change, preserve the background to prevent flicker
         QRuntime.$setFramebufferSize = function (w, h, p) { return setFramebufferSize(w, h, p, true); };

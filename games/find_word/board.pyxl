@@ -481,7 +481,7 @@ def board_select_word(board, word, color default #E1B):
     for index at i in board.selection:
         board.tile[index.x][index.y].selected = game_frames + 2 i
     
-    play_sound(blip_sound)
+    play_sound({sound: blip_sound, pan: board.pos})
 
 
     
