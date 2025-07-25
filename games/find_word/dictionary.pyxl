@@ -127,7 +127,7 @@ def remove_sensitive(text):
 
 
 
-/* Replaces the text with ??? if it is in the sensitive dictionary*/
+/* Replaces the text with ??? if it is in the sensitive dictionary */
 def censor(text):
-    return if text and sensitive[lowercase(text)] then "¿∙?" else text
+    return if text and sensitive[lowercase(text)] then slice("????????????", 0, size(text)) else text
         

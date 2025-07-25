@@ -16,31 +16,158 @@ let most_words_winner
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count):
-    const avatar_set = [
-        {name: "Moo", sprite: avatar_sprite[34][22]},
-        {name: "411", sprite: avatar_sprite[24][18]},
-        {name: "o_o", sprite: avatar_sprite[20][14]},
-        {name: "AMS", sprite: avatar_sprite[37][14]},
-        {name: "NT",  sprite: avatar_sprite[17][6]},
-        {name: "Bob", sprite: avatar_sprite[28][26]},
-        {name: "I♥U", sprite: avatar_sprite[3][20]},
-        {name: "THX", sprite: avatar_sprite[13][4]},
-        {name: "jen", sprite: avatar_sprite[39][8]},
-        {name: "RLL", sprite: avatar_sprite[33][24]},
-        {name: "CJ",  sprite: avatar_sprite[39][24]},
-        {name: "TTT", sprite: avatar_sprite[39][16]},
-        {name: "HCD", sprite: avatar_sprite[39][2]},
-        {name: "GEW", sprite: avatar_sprite[39][2]},
-        {name: "jr",  sprite: avatar_sprite[9][18]},
-        {name: "FLA",  sprite: avatar_sprite[9][16]},
-        {name: "Lou",  sprite: avatar_sprite[8][18]},
-        {name: "RON",  sprite: avatar_sprite[8][16]},
-        {name: "PO8",  sprite: avatar_sprite[21][2]}]
-    
-    // Make the competitors stable in their personalities by using a fixed
-    // competitor_rng for anything specific to the competitor generation. Do not use
-    // this competitor_rng for word selection.
-    const competitor_rng = make_random(4582)
+    const avatar_set = [{
+name: "Moo",
+sprite: avatar_sprite[34][22],
+base_ability: 0.0698069739514106,
+short_word_preference: 0.7207721041943576,
+first_hour: 17,
+last_hour: 1
+},
+{
+name: "411",
+sprite: avatar_sprite[24][18],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 21,
+last_hour: 10
+},
+{
+name: "o_o",
+sprite: avatar_sprite[20][14],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 17,
+last_hour: 7
+},
+{
+name: "AMS",
+sprite: avatar_sprite[37][14],
+base_ability: 0.20989316369171385,
+short_word_preference: 0.3227786173178901,
+first_hour: 23,
+last_hour: 12
+},
+{
+name: "NT",
+sprite: avatar_sprite[17][6],
+base_ability: 0.08139577593236193,
+short_word_preference: 0.6744168962705523,
+first_hour: 8,
+last_hour: 12
+},
+{
+name: "Bob",
+sprite: avatar_sprite[28][26],
+base_ability: 0.09596281621507843,
+short_word_preference: 0.6161487351396863,
+first_hour: 0,
+last_hour: 7
+},
+{
+name: "I♥U",
+sprite: avatar_sprite[3][20],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 19,
+last_hour: 4
+},
+{
+name: "THX",
+sprite: avatar_sprite[13][4],
+base_ability: 0.21883489044791676,
+short_word_preference: 0.16354711555742432,
+first_hour: 11,
+last_hour: 19
+},
+{
+name: "jen",
+sprite: avatar_sprite[39][8],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 7,
+last_hour: 11
+},
+{
+name: "RLL",
+sprite: avatar_sprite[33][24],
+base_ability: 0.21281131767993983,
+short_word_preference: 0.2136182478620353,
+first_hour: 15,
+last_hour: 2
+},
+{
+name: "CJ",
+sprite: avatar_sprite[39][24],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 15,
+last_hour: 0
+},
+{
+name: "TTT",
+sprite: avatar_sprite[39][16],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 2,
+last_hour: 9
+},
+{
+name: "HCD",
+sprite: avatar_sprite[39][2],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 12,
+last_hour: 20
+},
+{
+name: "GEW",
+sprite: avatar_sprite[39][2],
+base_ability: 0.3037478105091114,
+short_word_preference: 0.45393640967962884,
+first_hour: 11,
+last_hour: 15
+},
+{
+name: "jr",
+sprite: avatar_sprite[9][18],
+base_ability: 0.02798352169998617,
+short_word_preference: 0.8880659132000553,
+first_hour: 18,
+last_hour: 6
+},
+{
+name: "FLA",
+sprite: avatar_sprite[9][16],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 1,
+last_hour: 7
+},
+{
+name: "Lou",
+sprite: avatar_sprite[8][18],
+base_ability: 0.0711575915744297,
+short_word_preference: 0.7153696337022812,
+first_hour: 6,
+last_hour: 12
+},
+{
+name: "RON",
+sprite: avatar_sprite[8][16],
+base_ability: 0.034604881436825705,
+short_word_preference: 0.8615804742526971,
+first_hour: 4,
+last_hour: 18
+},
+{
+name: "PO8",
+sprite: avatar_sprite[21][2],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 12,
+last_hour: 1
+}]
 
     // Make results for the board stable so that all human players see the
     // bots doing the same things
@@ -57,19 +184,7 @@ def insert_bots(competitor_array, target_count):
     
     // Shift everybody's ability by this amount
     const match_shift = match_rng(-10%, 0%)
-    
-    // Decrease the chance of getting the player's best words
-    const protect = {}    
-    /*
-    // This is not player-independent, so causes divergence. Only do
-    // if there is a single human player
-    if player.history:
-        for i < min(3, size(player.history.list)):
-            const entry = player.history.list[i]
-            if entry.points > 32 and match_rng() < min(90%, 30% + entry.points / 100):
-                protect[entry.word] = 1
-                */
-    
+        
     let c = 0
     while size(competitor_array) < target_count:    
         const competitor = {
@@ -84,34 +199,27 @@ def insert_bots(competitor_array, target_count):
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const base_ability = max(2%, competitor_rng()³ * 35% + match_shift)
+        const base_ability = competitor.avatar.base_ability
         const find_percentage = min(28%, match_rng(3%^⅓, 30%^⅓)³ + base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 10, 55)
+        const short_word_preference = competitor.avatar.short_word_preference
         
-        const short_word_preference = max(100% - 4 base_ability, competitor_rng(0%, 90%))
-
-        // Is this particular competitor available right now? Choose stable random
-        // hours that they play
-        const first_hour = random_integer(0, 23, competitor_rng)
-        const last_hour  = (random_integer(4, 14, competitor_rng) + first_hour) mod 24
-        
-        if last_hour > first_hour:
-            if hour < first_hour or hour > last_hour: continue
+        // Is this particular competitor available right now?         
+        if competitor.avatar.last_hour > competitor.avatar.first_hour:
+            if hour < competitor.avatar.first_hour or hour > competitor.avatar.last_hour: continue
         else:
             // Play hours wrapped around the clock
-            if hour > last_hour and hour < first_hour: continue
+            if hour > competitor.avatar.last_hour and hour < competitor.avatar.first_hour: continue
         
-        // Make a bogus word list for this competitor and score it.
-        // Choose both from the player's discovered words and
-        // from the board. Higher chance of discovering shorter words
-        // via rejection sampling.
+        // Make a word list for this competitor and score it.
+        // Higher chance of discovering shorter words via rejection sampling.
         
         const word_set = {}
         def maybe_add_word(word):
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if not word_set[word] and not protect[word] and match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference):
+            if not word_set[word] and match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
@@ -131,17 +239,6 @@ def insert_bots(competitor_array, target_count):
             ++tries
             maybe_add_word(random_value(player.board.word_list, match_rng))
 
-        /*
-        // Not player-independent. Only do if there is a single human player.
-        // Steal some words from the player (if the player had any words)
-
-        if size(player.history.list) > 0:
-            tries = 0
-            while size(word_set) < words_found and tries < words_found:
-                ++tries
-                maybe_add_word(random_value(player.history.list, match_rng).word)
-        */
-        
         competitor.word_list = keys(word_set)
                 
         sort(competitor.word_list, size_comparator, true)
