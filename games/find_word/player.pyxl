@@ -387,7 +387,7 @@ def player_update_board(player, pos, angle, allow_selection)
     // it easier to select diagonals without hitting
     // the sides. If this is the first letter, make the
     // selection radius extra large instead
-    const selection_size = center_size + (if size(board.selection) == 0 then +2 else -1)
+    const selection_size = center_size + (if size(board.selection) == 0 then +3 else 0)
             
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
@@ -416,6 +416,7 @@ def player_update_board(player, pos, angle, allow_selection)
             const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
             
             tile.pos = transform_ws_to_ss(pos)
+            // This is only for touch purposes, not rendering
             const tile_center = {pos: pos, shape: "disk", size: selection_size}
 
             if allow_selection:
