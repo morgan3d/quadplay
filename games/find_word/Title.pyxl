@@ -7,24 +7,61 @@ const INTRO_DURATION = INTRO_PRE_FRAMES + INTRO_BEAT_FRAMES * INTRO_NUM_BEATS
 
 const SLIDE_FRAMES = 40
 const HIGHLIGHT_COLOR = #F3C
+const SELECTED_BUTTON_COLOR = CURSOR_COLOR
 
 set_random_seed()
 const fake_player = make_player()
 
 /* Value for selected_index */
 const AVATAR_EDITOR_INDEX = 2
+const STATS_INDEX = 3
 
+/* Currently selected button (0-3)*/
 let selected_index = GLOBAL
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
 
-
+def update_stats_button(pos):
+    const selected = selected_index == STATS_INDEX
+    
+    const radius = 20
+    
+    if selected:
+        draw_round_selection(pos)
+    else:
+        // Background
+        draw_disk(pos, radius, #FFFC, #DDD, 100)
+        
+    draw_text({
+        font: score_font, 
+        text: "Goals", 
+        color: if selected then #FFF else #EEE,
+        outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
+        shadow: #000, 
+        pos: pos + xy(0, 27),
+        z: 100})
+        
+    if touch.hover and overlaps(touch.hover, {pos: pos, shape: "disk", size: radius * xy(2, 2)}):
+        if selected_index ≠ STATS_INDEX:
+            play_sound(select_tile_sound, ∅, ∅, 100%)
+            selected_index = STATS_INDEX
+        
+        
+        
+    
+def draw_round_selection(pos):
+    draw_disk(pos - xy(0, 1), 20.5, ∅, #FFF, 2)
+    draw_disk(pos - xy(0, 1), 21.5, CURSOR_COLOR, ∅, -0.5)
+    draw_disk(pos - xy(0, 1), 24.5, rgba(CURSOR_COLOR, 25%), ∅, -0.6)
+    draw_disk(pos - xy(0, 1), 27.5, rgba(CURSOR_COLOR, 15%), ∅, -0.7)
+    
+    
+    
 def update_button(pos, text, index):
     const selected = selected_index == index
     
     const BUTTON_SIZE = xy(132, 24)
-    const SELECTED_BUTTON_COLOR = CURSOR_COLOR
     
     if selected:
         // Drop shadow
@@ -187,39 +224,44 @@ player_update_board(fake_player, pos, θ, false)
 draw_rect(pos, board_pixel_size() + 22, fake_player.board.selection_color, ∅, θ, -1) 
 
 // How far to slide the buttons, 0 if the intro has been skipped
-const slide = if intro then (3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE_FRAMES), 0)) else 0
+const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE_FRAMES), 0)) else 0
 
-update_button(pos - xy(slide, 30), "Solo", 0)
-update_button(pos + xy(slide, 30), "Global", 1)
+update_button(pos + xy(slide, 30), "Solo", 0)
+update_button(pos - xy(slide, 30), "Global", 1)
 
-draw_sprite({sprite: logo_sprite, pos: SCREEN_SIZE - xy(22 + slide, 20), z: -0.6})
+// Logo
+draw_sprite({sprite: logo_sprite, pos: xy(SCREEN_SIZE.x - 32 + slide, 20), z: -0.6})
 
 // Avatar
 local:
-    const pos = xy(22 + slide, SCREEN_SIZE.y - 34)
+    const pos = xy(32 - slide, SCREEN_SIZE.y - 36)
     const bounds = {pos: pos, size: xy(32, 32)}
     
-    if touch.hover and overlaps(touch.hover, bounds):
+    if touch.hover and overlaps(touch.hover, bounds) and selected_index ≠ AVATAR_EDITOR_INDEX:
+        play_sound(select_tile_sound, ∅, ∅, -100%)
         selected_index = AVATAR_EDITOR_INDEX
         
     if selected_index == AVATAR_EDITOR_INDEX:
-        // Show selection
-        draw_disk(pos - xy(0, 1), 20.5, ∅, #FFF, 2)
-        draw_disk(pos - xy(0, 1), 21.5, CURSOR_COLOR, ∅, -0.5)
-        draw_disk(pos - xy(0, 1), 24.5, rgba(CURSOR_COLOR, 25%), ∅, -0.6)
-        draw_disk(pos - xy(0, 1), 27.5, rgba(CURSOR_COLOR, 15%), ∅, -0.7)
-    
+        draw_round_selection(pos)
+
+    draw_disk(pos, 20, rgba(player.avatar.color, 75%))    
     avatar_draw_large(player.avatar, pos)
+    
     if (not intro and
         ((touch.pressed_a and overlaps(touch.xy, bounds)) or
          (player.gamepad.pressed_a and selected_index == AVATAR_EDITOR_INDEX))):
         push_mode(AvatarEditor) because "Selected avatar"
     
+// Stats button
+local:
+    const pos = xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36)
+    update_stats_button(pos)
+
 
 if gamepad_array[0].xx or gamepad_array[0].yy:
     if intro: skip_intro()
     // Change selection
-    selected_index = loop(selected_index + 1, 3)
+    selected_index = loop(selected_index + (gamepad_array[0].xx or -gamepad_array[0].yy), STATS_INDEX + 1)
     play_sound(select_tile_sound)
 
 
