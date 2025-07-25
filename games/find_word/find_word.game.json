@@ -54,7 +54,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.162",
+    "version": "0.163",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -507,7 +507,7 @@
         },
         "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
-            "value": "21",
+            "value": "22",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_SECONDS + GLOBAL_GAME_TIME_MINUTES exactly",
             "min": 1,
             "max": 240,
@@ -685,7 +685,7 @@
         },
         "MOST_WORDS_AWARD_FRAMES_PER_WORD": {
             "type": "number",
-            "value": "24",
+            "value": "26",
             "min": 1,
             "max": 128,
             "format": "0",
