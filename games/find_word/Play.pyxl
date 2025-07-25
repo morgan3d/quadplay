@@ -6,6 +6,8 @@ enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
 
+if not in_waiting_room: play_sound(start_sound)
+    
 last_countdown_sound_time = now()
 start_time = utc_time
 
@@ -20,8 +22,10 @@ else:
     assert(end_time > utc_time + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION,
         "The game should not end so soon")
 
-set_background(if game_type == GLOBAL then GLOBAL_BACKGROUND_COLOR
-     else SOLO_BACKGROUND_COLOR)
+set_background(
+    if game_type == GLOBAL 
+    then GLOBAL_BACKGROUND_COLOR
+    else SOLO_BACKGROUND_COLOR)
 
 
 board_deselect_all(player.board, player)
@@ -29,10 +33,6 @@ board_deselect_all(player.board, player)
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if mode_frames == 1 and not in_waiting_room:
-    // Play here instead of enter because
-    // creating the board can delay the first frame
-    play_sound(start_sound)
 
 player_update(player, ∅, true)
 

@@ -13,9 +13,9 @@ let best_rare_winner
 let longest_winner
 let most_words_winner
 
-/* Generate a stable set of synthetic competitors with a range of abilities, and 
+/* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
-def insert_synthetic_competitors(competitor_array, target_count):
+def insert_bots(competitor_array, target_count):
     const avatar_set = [
         {name: "Moo", sprite: avatar_sprite[34][22]},
         {name: "411", sprite: avatar_sprite[24][18]},
@@ -43,7 +43,7 @@ def insert_synthetic_competitors(competitor_array, target_count):
     const competitor_rng = make_random(4582)
 
     // Make results for the board stable so that all human players see the
-    // synthetic competitors doing the same things
+    // bots doing the same things
     const match_rng = make_random(player.board.seed)
     
     // Used for finding legal substrings

@@ -13,7 +13,8 @@
         "player.pyxl",
         "board_search.pyxl",
         "game.pyxl",
-        "competitor.pyxl"
+        "competitor.pyxl",
+        "network.pyxl"
     ],
     "modes": [
         "Title",
@@ -54,7 +55,7 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json"
     },
-    "version": "0.163",
+    "version": "0.164",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -160,6 +161,22 @@
                 "longest": "▶",
                 "most_words": "§"
             }
+        },
+        "TIMER_REMAP_SECONDS": {
+            "type": "number",
+            "value": 10,
+            "min": 0,
+            "max": 30,
+            "description": "Amount of distorted time to remap. I.e., remapping starts when this time is displayed"
+        },
+        "TIMER_END_TIME_SCALE": {
+            "type": "number",
+            "description": "How much to scale time after the pivot (< 100% = slower)",
+            "value": "88%",
+            "format": "%",
+            "quantum": 0.01,
+            "min": 0.5,
+            "max": 1.5
         },
         "LETTER_POINT_TABLE": {
             "type": "raw",
@@ -699,6 +716,11 @@
             "max": 15,
             "format": "0",
             "quantum": 1
+        },
+        "DEBUG_OFFLINE": {
+            "type": "boolean",
+            "value": false,
+            "description": "Do not actually share results online if true"
         }
     },
     "screenshot_tag": "find_word",

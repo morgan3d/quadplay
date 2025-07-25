@@ -277,6 +277,9 @@ def _player_update_cursor(player)
 
 /* Run UI for this player and draw their board */
 def player_update(player, angle default 0°, allow_selection default false):
+    
+    maybe_connect_to_network()
+    
     // Track most recent UI method
     if touch.pressed_a:
         player.using_gamepad = false

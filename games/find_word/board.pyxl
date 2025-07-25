@@ -501,23 +501,16 @@ def draw_timer(board_pos):
         // Varies per player because they may have entered late
         const game_total_time = end_time - start_time
         
-        // Amount of distorted time to remap. I.e., remapping starts when
-        // this time is displayed
-        const remap_seconds = 10
-        
-        // How much to scale time after the pivot (< 100% = slower)
-        const end_time_scale = 88%
-        
         // Real time at which we pivot to expanding time
-        const pivot = remap_seconds / end_time_scale
+        const pivot = TIMER_REMAP_SECONDS / TIMER_END_TIME_SCALE
         
         // How much to scale time before the pivot
-        const begin_time_scale = (game_total_time - pivot) / (game_total_time - remap_seconds)
+        const begin_time_scale = (game_total_time - pivot) / (game_total_time - TIMER_REMAP_SECONDS)
         
         if time_left > pivot:
-            time_left = (time_left - pivot) * begin_time_scale + remap_seconds
+            time_left = (time_left - pivot) * begin_time_scale + TIMER_REMAP_SECONDS
         else:
-            time_left *= end_time_scale
+            time_left *= TIMER_END_TIME_SCALE
         
     // Display slightly less time than is actually available
     // so it doesn't feel like we're ending too abruptly on 0

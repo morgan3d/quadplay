@@ -34,11 +34,12 @@ remove_all(competitor_array)
 
 player_competitor = make_player_competitor()
 push(competitor_array, player_competitor)
-  
-// Make some bogus competitors for testing purposes
-insert_synthetic_competitors(competitor_array, ⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(8, 15))
 
-todo("Actually gather the global results from real players...")
+share_results_with_network(player_competitor)
+  
+// Make some bots to fill out the competitor list if offline or
+// there are too few players
+insert_bots(competitor_array, ⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(8, 15))
 
 end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
 
@@ -48,6 +49,8 @@ frame
 const utc_time = utc_now()
 const start_time = end_time - GATHER_TIME_SECONDS
 const τ = min((utc_time - start_time) / GATHER_TIME_SECONDS, 100%)
+
+update_network()
 
 set_background(GLOBAL_BACKGROUND_COLOR)
 
@@ -71,6 +74,7 @@ if utc_time ≥ end_time:
     
 leave
 ────────────────────────────────────────────────────────────────────────
+disconnect_from_network()
 competitor_analyze(competitor_array)
 
 todo("* Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")
