@@ -387,7 +387,7 @@ def player_update_board(player, pos, angle, allow_selection)
     // it easier to select diagonals without hitting
     // the sides. If this is the first letter, make the
     // selection radius extra large instead
-    const selection_size = center_size + (if size(board.selection) == 0 then +3 else 0)
+    const selection_size = center_size + (if size(board.selection) == 0 then +3 else -1)
             
     set_transform(pos)
     set_camera(xy(0, 0), -angle)

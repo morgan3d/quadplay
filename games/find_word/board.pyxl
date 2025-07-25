@@ -506,7 +506,7 @@ def draw_timer(board_pos):
         const remap_seconds = 10
         
         // How much to scale time after the pivot (< 100% = slower)
-        const end_time_scale = 90%
+        const end_time_scale = 88%
         
         // Real time at which we pivot to expanding time
         const pivot = remap_seconds / end_time_scale
