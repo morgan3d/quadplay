@@ -47,6 +47,17 @@ function quadplaySerializeTransform(value) {
 
 /* This is the untransformer (reviver) for quadplay types to use with serialize(). */
 function quadplaySerializeUntransform(encoded, custom_type) {
+    function getSpritesheetByName(name) {
+        for (const spritesheet of spritesheetArray) {
+            if (spritesheet.$name === name) {
+                return spritesheet;
+            }
+        }
+        
+        return null;
+    }
+
+
     switch (custom_type) {
     case undefined:
         return encoded;
@@ -58,11 +69,11 @@ function quadplaySerializeUntransform(encoded, custom_type) {
         return fontArray[encoded.name];
 
     case 'spritesheet':
-        return spritesheetArray[encoded.name];
+        return getSpritesheetByName(encoded.name);
 
     case 'sprite': {
         // Find the spritesheet
-        const spritesheet = spritesheetArray[encoded.spritesheet_name];
+        const spritesheet = getSpritesheetByName(encoded.spritesheet_name);
         let sprite = spritesheet[encoded.tile_index.x][encoded.tile_index.y];
 
         if (encoded.scale.x === -1) { sprite = sprite.flipped_x; }
