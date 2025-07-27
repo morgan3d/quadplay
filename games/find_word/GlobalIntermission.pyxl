@@ -13,6 +13,8 @@ let stage
    changes to play sounds */
 let prev_stage
 
+let first_frame_this_stage
+
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
@@ -41,27 +43,38 @@ def draw_awards()
 /* Called from `draw_awards()` when `stage` == `STAGE.SUMMARY` */
 def draw_award_summary()
 & preserving_transform:
-    draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
+    
 
+    const frames = mode_frames - first_frame_this_stage
     const XP_ANIMATION_DELAY_FRAMES = 80
-    if mode_frames == XP_ANIMATION_DELAY_FRAMES + 10:
+    if frames == XP_ANIMATION_DELAY_FRAMES + 10:
         play_sound(xp_sound, false, ∅, 90%, ∅, 0, 70%)
         
     const XP_ANIMATION_RATE = 1 / 80
-    const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((mode_frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
+    const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
     const level = xp_to_level(xp)
 
-    if mode_frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
+    if frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
         // Level up!
         play_sound(award_sound, false, ∅, 90%, 150%)
         
+    // Flash the background color on level up
+    draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
     draw_award_summary.last_level_displayed = level
     
     const xp_lo = level_to_xp(level)
     const xp_hi = level_to_xp(level + 1)
     const shadow = 70% player.avatar.color
 
-    draw_text({color: if (level == prev_level) then #FFF else #E1B, shadow:shadow, font: history_font, text: "Level " + level, pos: xy(-14, -27)})
+    // Flash and turn pink on level up
+    const flash = ⌊frames / 15⌋ mod 2
+    draw_text({
+        color: if (level == prev_level) then #FFF else (if flash then #000 else #E1B),
+        shadow:shadow,
+        outline: if level ≠ prev_level then (if flash then #E1B else #FFF) else ∅,
+        font: history_font,
+        text: "Level " + level,
+        pos: xy(-14, -27)})
     avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF, shadow)
   
     const args = {font: history_font,
@@ -111,7 +124,7 @@ def draw_word_award(title, winner):
     draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
 
     draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
-    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(32, -29), z: 2})
+    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(42, -29), z: 2})
     
     avatar_draw_large(winner.avatar, xy(0, -5), false)
     
@@ -278,8 +291,9 @@ draw_most_words_award.skip = 0
 
 end_time = next_global_game_utc_start_time()
 
-stage = STAGE.SUMMARY
+stage = 0
 prev_stage = stage
+first_frame_this_stage = 0
 
 
 
@@ -293,6 +307,8 @@ if game_type == GLOBAL or DEBUG_INTERMISSION:
     if stage == STAGE.MOST_WORDS2 or stage == STAGE.SUMMARY2:
         // These are 2x as long
         --stage
+    if prev_stage ≠ stage:
+        first_frame_this_stage = mode_frames
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)

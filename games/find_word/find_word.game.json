@@ -60,7 +60,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.181",
+    "version": "0.183",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -550,7 +550,7 @@
         },
         "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
-            "value": "24",
+            "value": "25",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_SECONDS + GLOBAL_GAME_TIME_MINUTES exactly",
             "min": 1,
             "max": 240,
@@ -865,13 +865,13 @@
         "STAGE": {
             "type": "raw",
             "value": {
-                "SUMMARY": 0,
-                "SUMMARY2": 1,
-                "BEST_WORD": 2,
+                "BEST_WORD": 0,
+                "MOST_WORDS": 1,
+                "MOST_WORDS2": 2,
                 "BEST_RARE": 3,
                 "LONGEST": 4,
-                "MOST_WORDS": 5,
-                "MOST_WORDS2": 6
+                "SUMMARY": 5,
+                "SUMMARY2": 6
             },
             "description": "Constants for intermission awards stages"
         },
@@ -885,12 +885,12 @@
         },
         "GATHER_TIME_SECONDS": {
             "type": "number",
-            "value": "3",
+            "value": "2.5",
             "description": "How many seconds GatherGlobalResults runs for",
             "min": 0,
             "max": 15,
-            "format": "0",
-            "quantum": 1
+            "format": "0.0",
+            "quantum": 0.1
         },
         "DEBUG_OFFLINE": {
             "type": "boolean",
