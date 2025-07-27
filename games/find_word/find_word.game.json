@@ -59,7 +59,7 @@
         "award_sound": "quad://sounds/good-01.sound.json",
         "stats_sprite": "stats.sprite.json"
     },
-    "version": "0.174",
+    "version": "0.175",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

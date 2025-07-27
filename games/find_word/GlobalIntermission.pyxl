@@ -80,9 +80,6 @@ def draw_award_summary()
     draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
     
-    
-    todo("Animate XP")
-
 
 
 def maybe_player_award_sound(winner):
@@ -259,9 +256,6 @@ prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
     player_change_stats(player, player_competitor)
     stats_save(player.stats)
-
-todo("Remove:")
-player.stats.lifetime.xp = 800
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0
