@@ -771,13 +771,13 @@
             "url": "quad://games/find_word/",
             "title": "FIND WORD ALLL NITE",
             "description": "Race the clock and global players to discover English words hidden in the grid.",
-            "version": "0.178",
+            "version": "0.179",
             "developer": "SHMUEL",
             "min_players": 1,
             "max_players": "\u221e",
             "cooperative": false,
             "competitive": true,
-            "achievements": false
+            "achievements": true
         },
         {
             "url": "quad://games/firmament/",

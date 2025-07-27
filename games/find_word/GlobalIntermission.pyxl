@@ -44,8 +44,8 @@ def draw_award_summary()
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
 
     const XP_ANIMATION_DELAY_FRAMES = 80
-    if mode_frames == XP_ANIMATION_DELAY_FRAMES:
-        play_sound(xp_sound, false, ∅, 90%)
+    if mode_frames == XP_ANIMATION_DELAY_FRAMES + 10:
+        play_sound(xp_sound, false, ∅, 90%, ∅, 0, 70%)
         
     const XP_ANIMATION_RATE = 1 / 80
     const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((mode_frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
@@ -190,10 +190,10 @@ def draw_leaderboard()
         if alt: sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
         
         const text_args = {
-                font: leaderboard_font,
-                shadow: if me then 60% competitor.avatar.color else ∅,
-                x_align: "left",
-                color: #FFF}
+            font: leaderboard_font,
+            shadow: if me then 60% competitor.avatar.color else ∅,
+            x_align: "left",
+            color: if me or friend then #FFF else #999}
         
         if friend:
             draw_text({…text_args,
@@ -267,6 +267,8 @@ prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
     player_change_stats(player, player_competitor)
     stats_save(player.stats)
+else:
+    player.stats.lifetime.xp += player.score + 1000
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0

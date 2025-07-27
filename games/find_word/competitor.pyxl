@@ -267,11 +267,12 @@ last_hour: 1
                     word_set[word] = 1
                         
         // Pick up a bunch of cheap words first
+        const short_word_length = if competitor.name == "Moo" then 3 else 4
         let tries = 0
         while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
             ++tries
             const word = random_value(player.board.word_list, match_rng)
-            if size(word) ≤ 4:
+            if size(word) ≤ short_word_length:
                 maybe_add_word(word)
     
         // Moo cannot find non-cow words greater than 4 letters    
