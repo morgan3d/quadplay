@@ -44,13 +44,16 @@ def draw_awards()
 def draw_award_summary()
 & preserving_transform:
     
+    const highlight_color = #E1B    
 
     const frames = mode_frames - first_frame_this_stage
-    const XP_ANIMATION_DELAY_FRAMES = 80
+    const flash = ⌊frames / 15⌋ mod 2
+    const XP_ANIMATION_DELAY_FRAMES = 120
     if frames == XP_ANIMATION_DELAY_FRAMES + 10:
         play_sound(xp_sound, false, ∅, 90%, ∅, 0, 70%)
-        
-    const XP_ANIMATION_RATE = 1 / 80
+    
+    
+    const XP_ANIMATION_RATE = 1 / 100
     const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
     const level = xp_to_level(xp)
 
@@ -58,7 +61,6 @@ def draw_award_summary()
         // Level up!
         play_sound(award_sound, false, ∅, 90%, 150%)
         
-    // Flash the background color on level up
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
     draw_award_summary.last_level_displayed = level
     
@@ -67,11 +69,10 @@ def draw_award_summary()
     const shadow = 70% player.avatar.color
 
     // Flash and turn pink on level up
-    const flash = ⌊frames / 15⌋ mod 2
     draw_text({
-        color: if (level == prev_level) then #FFF else (if flash then #000 else #E1B),
+        color: if level ≠ prev_level and flash then highlight_color else #FFF,
         shadow:shadow,
-        outline: if level ≠ prev_level then (if flash then #E1B else #FFF) else ∅,
+        outline: if level ≠ prev_level and flash then #FFF else ∅,
         font: history_font,
         text: "Level " + level,
         pos: xy(-14, -27)})
@@ -87,21 +88,27 @@ def draw_award_summary()
     compose_transform(xy(70, -24))
     draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 2), x_align: "right", markup: true})
 
-    const x = -46
+    const x = -56
     draw_text({…args, text: "Rare Words", pos: xy(x, 14)})
     draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 14), x_align: "right"})
 
     draw_text({…args, text: "Longest", pos: xy(x, 24)})
     draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
 
-    draw_text({…args, text: "XP Earned", pos: xy(x, 34)})
-    draw_text({…args, text: "+" + (player.stats.lifetime.xp - prev_xp), pos: xy(30, 34), x_align: "right"})
+    const xp_color = if frames < XP_ANIMATION_DELAY_FRAMES and flash then highlight_color else #FFF
+    const xp_outline = if frames < XP_ANIMATION_DELAY_FRAMES and flash then #FFF else ∅
+    draw_text({…args, text: "XP Earned", pos: xy(x, 34), color: xp_color, outline: xp_outline})
+    draw_text({…args, text: "+" + (player.stats.lifetime.xp - prev_xp), color: xp_color, outline: xp_outline, pos: xy(30, 34), x_align: "right"})
 
     // XP bar
-    const xp_rect = {corner: xy(x, 39), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH + x - 17, 10)}
+    const xp_rect = {corner: xy(x, 39), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - x - 108, 10)}
     draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size, ∅, shadow)
     const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
-    draw_corner_rect(xp_rect.corner + 1, xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), #E1B)
+    // Actual bar
+    draw_corner_rect(
+        xp_rect.corner + 1,
+        xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), 
+        if frames < XP_ANIMATION_DELAY_FRAMES and flash then #000 else #E1B)
     
     draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
