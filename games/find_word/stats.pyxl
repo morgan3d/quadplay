@@ -7,7 +7,7 @@ const LEVEL_DIVISOR  = 1000
 
 const XP_VALUE = {
     // Per point
-    point: 0.1,
+    point: 0.2,
     
     // Per day
     //day: 100,

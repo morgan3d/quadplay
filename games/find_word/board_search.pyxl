@@ -18,6 +18,14 @@ def _player_find_good_board(player, game_type):
     
     const board_rng = make_random(rng_seed)
     
+    let short_word_count = 0
+    let long_word_count = 0
+    let very_long_word_count = 0
+    let valuable_letter_table = {}
+    let valuable_letter_long_count = {}
+    let mean_valuable_letter_uses = 0
+    let mean_valuable_letter_long_uses = 0
+            
     for i < BOARD_SEARCH.RETRIES:
         if i > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
 
@@ -48,19 +56,21 @@ def _player_find_good_board(player, game_type):
     
             // If a valuable letter appears, ensure that it is used in 
             // at least two words. First find high point value letters.
-            const valuable_letter_table = {}
+                        
+            // Number of times a valuable letter was used
+            valuable_letter_table = {}
             for col in player.board.tile:
                 for tile in col:
                     if LETTER_POINT_TABLE[tile.letter] ≥ 4:
                         valuable_letter_table[tile.letter] = 0
             
             const valuable_letters = keys(valuable_letter_table)
-            const valuable_letter_long_count = keys(valuable_letter_table)
+            valuable_letter_long_count = clone(valuable_letter_table)
         
             // Iterate through words, rating them for each criterion
-            let short_word_count = 0
-            let long_word_count = 0
-            let very_long_word_count = 0
+            short_word_count = 0
+            long_word_count = 0
+            very_long_word_count = 0
             for word in word_array:
                 if size(word) ≤ 4:
                     ++short_word_count
@@ -91,22 +101,23 @@ def _player_find_good_board(player, game_type):
                 if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
                 continue
             
-            // See if we used the valuable letters
-            let used_valuable_letters = true
-            let used_valuable_letters_in_long_words = true
+            // See if we used the valuable letters. We only need to hit these
+            // on average, not for every valuable letter.
+            let total_valuable_letter_uses = 0
+            let total_valuable_letter_long_uses = 0
             for count at letter in valuable_letter_table:
-                if count < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
-                    used_valuable_letters = false
+                total_valuable_letter_uses += count
+                total_valuable_letter_long_uses += valuable_letter_long_count[letter]
+            const num_valuable_letters = size(valuable_letter_table)
+            mean_valuable_letter_uses = total_valuable_letter_uses / num_valuable_letters
+            mean_valuable_letter_long_uses = total_valuable_letter_long_uses / num_valuable_letters
                     
-                if valuable_letter_long_count[letter] < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
-                    used_valuable_letters_in_long_words = false
-                    
-            if not used_valuable_letters:
+            if mean_valuable_letter_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
                 if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
                 continue
             
-            if not used_valuable_letters_in_long_words:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
+            if mean_valuable_letter_long_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
                 continue
     
             // Success!
@@ -125,7 +136,14 @@ def _player_find_good_board(player, game_type):
     player.board.word_count = size(word_array)
     if DEBUG_BOARD_SEARCH:
         debug_print(player.board.word_list)
-
+        debug_print("very_long_word_count =", very_long_word_count)
+        debug_print("valuable_letter_table =", valuable_letter_table)
+        debug_print("valuable_letter_long_count =", valuable_letter_long_count)
+        debug_print("size(word_array) =", size(word_array))
+        debug_print("short_word_count =", short_word_count)
+        debug_print("long_word_count =", long_word_count)
+        debug_print("mean_valuable_letter_uses =", mean_valuable_letter_uses)
+        debug_print("mean_valuable_letter_long_uses =", mean_valuable_letter_long_uses)
 
 
 /* Chooses a random letter for each tile, and then 
