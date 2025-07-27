@@ -9,7 +9,7 @@
         "dictionary.pyxl",
         "board.pyxl",
         "history.pyxl",
-        "xp.pyxl",
+        "stats.pyxl",
         "avatar.pyxl",
         "player.pyxl",
         "game.pyxl",
@@ -27,7 +27,7 @@
         "SoloIntermission",
         "GatherGlobalResults",
         "GlobalIntermission",
-        "Stats"
+        "DisplayStats"
     ],
     "start_mode": "Title",
     "docs": [

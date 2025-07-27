@@ -9,8 +9,8 @@ const SLIDE_FRAMES = 40
 const HIGHLIGHT_COLOR = #F3C
 const SELECTED_BUTTON_COLOR = CURSOR_COLOR
 
+// Only on first game load
 set_random_seed()
-const fake_player = make_player()
 
 /* Value for selected_index */
 const AVATAR_EDITOR_INDEX = 2
@@ -60,7 +60,7 @@ def update_stats_button(pos):
         ((touch.pressed_a and overlaps(touch.xy, region)) or
          (selected and gamepad_array[0].pressed_a)))
          or DEBUG_STATS):
-        push_mode(Stats)        
+        push_mode(DisplayStats)        
         
         
     
@@ -151,11 +151,11 @@ def update_button(pos, text, index):
 
 def bounce_row(y, sound default select_tile_sound, color default TILE_CENTER_SELECTED_COLOR):
     play_sound(sound)
-    board_deselect_all(fake_player.board, fake_player)
-    fake_player.board.selection_color = color
+    board_deselect_all(player.board, player)
+    player.board.selection_color = color
     for x < 4:
-        push(fake_player.board.selection, xy(x, y))
-        fake_player.board.tile[x][y].selected = mode_frames
+        push(player.board.selection, xy(x, y))
+        player.board.tile[x][y].selected = mode_frames
 
 
 def bounce_row1(): bounce_row(0)
@@ -186,7 +186,7 @@ def skip_intro():
 
 
 // Initialize the fake board
-player_reset(fake_player, SOLO, "FIND WORD ALLL NITE")
+player_reset_match(player, SOLO, "FIND WORD ALLL NITE")
 
 
 enter
@@ -194,8 +194,8 @@ enter
 set_background(#000)
 set_hooks()
 
-fake_player.board.selection_color = TILE_CENTER_SELECTED_COLOR
-board_deselect_all(fake_player.board, fake_player)
+player.board.selection_color = TILE_CENTER_SELECTED_COLOR
+board_deselect_all(player.board, player)
 
 def sound():
     play_sound(times_up_sound)
@@ -213,7 +213,13 @@ intro = sequence(
     intro_cleanup)
 
 
+
 pop_mode from AvatarEditor
+────────────────────────────────────────────────────────────────────────
+intro_cleanup()
+
+
+pop_mode from DisplayStats
 ────────────────────────────────────────────────────────────────────────
 intro_cleanup()
 
@@ -234,8 +240,8 @@ draw_background_words()
 // Spin after the intro
 const θ = -0.2° max(0, mode_frames - INTRO_DURATION)
 const pos = ½ SCREEN_SIZE
-player_update_board(fake_player, pos, θ, false)
-draw_rect(pos, board_pixel_size() + 22, fake_player.board.selection_color, ∅, θ, -1) 
+player_update_board(player, pos, θ, false)
+draw_rect(pos, board_pixel_size() + 22, player.board.selection_color, ∅, θ, -1) 
 
 // How far to slide the buttons, 0 if the intro has been skipped
 const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE_FRAMES), 0)) else 0

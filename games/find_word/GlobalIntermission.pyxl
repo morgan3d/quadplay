@@ -241,7 +241,6 @@ todo("Animate XP increasing and leveling up")
 const prev_xp = player.stats.lifetime.xp
 const prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
-    player.stats = load_local("stats")
     player_change_stats(player, player_competitor)
     save_local("stats", player.stats)
 
