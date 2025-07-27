@@ -37,7 +37,8 @@ todo("** Implement stats drawing **")
 
 draw_text({text: "Coming soon!", font: giant_score_font, pos: ½ SCREEN_SIZE - xy(0, 20), color: #FFF})
 
-draw_text({text: player.avatar.name + ": Level " + player.avatar.level + ", " + player.stats.lifetime.xp + " XP", font: score_font, pos: ½ SCREEN_SIZE + xy(0, 40), color: #FFF})
+draw_text({text: player.avatar.name + ": Level " + player.avatar.level + ", " + format_number(player.stats.lifetime.xp, "commas") + " XP", font: score_font, pos: ½ SCREEN_SIZE + xy(0, 40), color: #FFF})
+draw_text({text: "Next level at " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: score_font, pos: ½ SCREEN_SIZE + xy(0, 60), color: #FFF})
 
 // Large done button, which is always selected
 local:
