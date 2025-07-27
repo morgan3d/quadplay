@@ -46,12 +46,13 @@ def competitor_is_friend(competitor):
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count):
     const avatar_set = [{
+        // Moo has special cow logic below
 name: "Moo",
 sprite: avatar_sprite[34][22],
-base_ability: 0.0698069739514106,
-short_word_preference: 0.7207721041943576,
-first_hour: 17,
-last_hour: 1,
+base_ability: 0.1,
+short_word_preference: 0.80,
+first_hour: 12,
+last_hour: 7,
 },
 {
 name: "411",
@@ -70,12 +71,20 @@ first_hour: 17,
 last_hour: 7
 },
 {
+name: "THX",
+sprite: avatar_sprite[13][4],
+base_ability: 0.21883489044791676,
+short_word_preference: 0.16354711555742432,
+first_hour: 11,
+last_hour: 19
+},
+{
 name: "AMS",
 sprite: avatar_sprite[37][14],
-base_ability: 0.20989316369171385,
+base_ability: 0.3,
 short_word_preference: 0.3227786173178901,
-first_hour: 23,
-last_hour: 12
+first_hour: 22,
+last_hour: 10
 },
 {
 name: "NT",
@@ -100,14 +109,6 @@ base_ability: 0.02,
 short_word_preference: 0.92,
 first_hour: 19,
 last_hour: 4
-},
-{
-name: "THX",
-sprite: avatar_sprite[13][4],
-base_ability: 0.21883489044791676,
-short_word_preference: 0.16354711555742432,
-first_hour: 11,
-last_hour: 19
 },
 {
 name: "jen",
@@ -190,9 +191,9 @@ first_hour: 4,
 last_hour: 18
 },
 {
-name: "PO8",
+name: "CPU",
 sprite: avatar_sprite[21][2],
-base_ability: 0.02,
+base_ability: 0.08,
 short_word_preference: 0.92,
 first_hour: 12,
 last_hour: 1
@@ -234,7 +235,7 @@ last_hour: 1
         // Apply that as a fraction of all words possible
         const base_ability = competitor.avatar.base_ability
         const find_percentage = min(28%, match_rng(3%^⅓, 30%^⅓)³ + base_ability)
-        const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 10, 55)
+        const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = competitor.avatar.short_word_preference
         
         // Is this particular competitor available right now?         
@@ -260,14 +261,14 @@ last_hour: 1
                     if word_table[w]:
                         word_set[w] = 1
         
-        // Special case for moo, who finds all cow-related words
+        // Special case for moo, who always finds *all* cow-related words
         if competitor.avatar.name == "Moo":
             for word in COW_WORDS:
                 if not word_set[word] and contains(player.board.word_list, word):
                     word_set[word] = 1
                         
         // Pick up a bunch of cheap words first
-        const short_word_length = if competitor.name == "Moo" then 3 else 4
+        const short_word_length = if competitor.avatar.name == "Moo" then 3 else 4
         let tries = 0
         while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
             ++tries
