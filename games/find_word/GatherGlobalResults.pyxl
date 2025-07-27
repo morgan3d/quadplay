@@ -85,9 +85,9 @@ for i < ⌊max(N, 10) τ⌋:
         const pos = 20 xy(i mod row_size, -⌊i / row_size⌋) + xy(½ SCREEN_SIZE.x - ½ w + 5, SCREEN_SIZE.y - 30)       
         if competitor_is_friend:
             // Backgroun
-            draw_rect(pos - xy(0, 8), xy(16, 24), competitor.avatar.color)
+            draw_rect(pos - xy(0, 10), xy(20, 26), competitor.avatar.color)
             // Heart
-            draw_text({pos: pos - xy(0, 16), text: "♥", color: #FFF, shadow: #000, text: leaderboard_font})
+            draw_text({pos: pos - xy(0, 16), text: "♥", color: #FFF, shadow: #000, font: leaderboard_font})
             // Drop shadow
             draw_sprite({sprite: sprite, pos: pos + xy(0, 1), override_color: #000})
             
