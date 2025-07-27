@@ -9823,7 +9823,9 @@ function resized(str, n, pad, right_align) {
 
 
 function split(str, c, n) {
-    if (c === undefined || c === '' || (is_number(c) && c <= 0)) {
+    if (typeof str !== 'string') {
+        error('split(str) requires a string');
+    } else if (c === undefined || c === '' || (is_number(c) && c <= 0)) {
         
         return Array.from(str);
         

@@ -35,7 +35,9 @@ draw_background_words()
 
 todo("** Implement stats drawing **")
 
-draw_text({text: "Coming soon!", font: giant_score_font, pos: ½ SCREEN_SIZE, color: #FFF})
+draw_text({text: "Coming soon!", font: giant_score_font, pos: ½ SCREEN_SIZE - xy(0, 20), color: #FFF})
+
+draw_text({text: player.avatar.name + ": Level " + player.avatar.level + ", " + player.stats.lifetime.xp + " XP", font: score_font, pos: ½ SCREEN_SIZE + xy(0, 40), color: #FFF})
 
 // Large done button, which is always selected
 local:

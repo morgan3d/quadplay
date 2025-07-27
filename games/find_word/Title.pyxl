@@ -200,6 +200,7 @@ board_deselect_all(player.board, player)
 def sound():
     play_sound(times_up_sound)
     
+    
 intro = sequence(
     INTRO_PRE_FRAMES, 
     bounce_row1, INTRO_BEAT_FRAMES,

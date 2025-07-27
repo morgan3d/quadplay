@@ -1,7 +1,4 @@
 
-def player_save_stats():
-    save_local("stats", player.stats)
-    
     
 
 /* Constructs a new player with an uninitialized board. Loads
@@ -10,7 +7,7 @@ def player_save_stats():
    A fake player is 
    */
 def make_player():
-    const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
+    const stats = stats_load()
 
     return {
         board: make_board(),

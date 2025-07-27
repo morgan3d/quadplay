@@ -41,6 +41,47 @@ def make_empty_stats_entry():
         xp: 0}
 
 
+
+def stats_save(stats):
+    const s = deep_clone(stats)
+    for day in s:
+        day.xp = encode_xp(day.xp)
+    save_local("stats", s)
+    
+    
+
+/* Returns a new stats object, which may have zeros */
+def stats_load():    
+    const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}    
+    for day in stats:
+        day.xp = decode_xp(day.xp)
+    return stats
+    
+    
+    
+/* Used for lightly protecting the saved value from casual abuse via a checksum */
+def encode_xp(xp):
+    let h = "" + hash(xp)
+    h = slice(h, 2)
+    return h + "." + xp
+        
+        
+        
+/* Used for lightly protecting the saved value from casual abuse via a checksum */
+def decode_xp(str):
+    if type(str) ≠ "string":
+        // Was not properly encoded
+        return 0
+        
+    const xp = parse(split(str, ".")[1])
+    if encode_xp(xp) == str:
+        return xp
+    else:
+        // Was not properly encoded
+        return 0
+    
+
+
 /* 
     Update the player's stats and level given the results in 
     competitor from a global match. Do not save.
@@ -83,7 +124,7 @@ def player_change_stats(player, competitor)
         entry.points += competitor.score
         ++entry.matches
         
-        entry.xp += competitor.score * XP_VALUE.point
+        entry.xp += ⌊competitor.score * XP_VALUE.point⌋
 
     player.avatar.level = xp_to_level(stats.lifetime.xp)
 

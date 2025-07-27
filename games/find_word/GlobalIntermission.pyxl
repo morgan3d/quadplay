@@ -155,7 +155,7 @@ def draw_leaderboard()
         const friend = (not me) and (player.friends[competitor.avatar.id] or (not competitor.avatar.base_ability))
         
         // Highlight
-        const highlight_color = if friend then lerp(competitor.avatar.color, #333, 80%) else (if me then competitor.avatar.color else ∅)
+        const highlight_color = if friend then lerp(competitor.avatar.color, #333, 75%) else (if me then competitor.avatar.color else ∅)
         draw_corner_rect(pos - xy(0, 9), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 18), highlight_color, ∅, ∅, -1)
             
         // Animate sprite
@@ -242,7 +242,9 @@ const prev_xp = player.stats.lifetime.xp
 const prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
     player_change_stats(player, player_competitor)
-    save_local("stats", player.stats)
+    stats_save(player.stats)
+    
+debug_print("XP: ", prev_xp, " -> ", player.stats.lifetime.xp)
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0
