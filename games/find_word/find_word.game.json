@@ -57,9 +57,10 @@
         "sensitive_source": "quad://data/english_sensitive_table.data.json",
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json",
-        "stats_sprite": "stats.sprite.json"
+        "stats_sprite": "stats.sprite.json",
+        "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.177",
+    "version": "0.178",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

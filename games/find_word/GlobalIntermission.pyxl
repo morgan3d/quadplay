@@ -44,9 +44,19 @@ def draw_award_summary()
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
 
     const XP_ANIMATION_DELAY_FRAMES = 80
+    if mode_frames == XP_ANIMATION_DELAY_FRAMES:
+        play_sound(xp_sound, false, ∅, 90%)
+        
     const XP_ANIMATION_RATE = 1 / 80
     const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((mode_frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
     const level = xp_to_level(xp)
+
+    if mode_frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
+        // Level up!
+        play_sound(award_sound, false, ∅, 90%, 150%)
+        
+    draw_award_summary.last_level_displayed = level
+    
     const xp_lo = level_to_xp(level)
     const xp_hi = level_to_xp(level + 1)
     const shadow = 70% player.avatar.color
@@ -61,18 +71,21 @@ def draw_award_summary()
         color: #FFF}
 
     // Score
-    compose_transform(xy(70, -22))
-    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 0), x_align: "right", markup: true})
+    compose_transform(xy(70, -24))
+    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 2), x_align: "right", markup: true})
 
     const x = -46
-    draw_text({…args, text: "Rare Words", pos: xy(x, 16)})
-    draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 16), x_align: "right"})
+    draw_text({…args, text: "Rare Words", pos: xy(x, 14)})
+    draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 14), x_align: "right"})
 
-    draw_text({…args, text: "Longest", pos: xy(x, 26)})
-    draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 26), x_align: "right"})
+    draw_text({…args, text: "Longest", pos: xy(x, 24)})
+    draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
+
+    draw_text({…args, text: "XP Earned", pos: xy(x, 34)})
+    draw_text({…args, text: "+" + (player.stats.lifetime.xp - prev_xp), pos: xy(30, 34), x_align: "right"})
 
     // XP bar
-    const xp_rect = {corner: xy(x, 37), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH + x - 17, 10)}
+    const xp_rect = {corner: xy(x, 39), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH + x - 17, 10)}
     draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size, ∅, shadow)
     const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
     draw_corner_rect(xp_rect.corner + 1, xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), #E1B)
@@ -248,8 +261,6 @@ def update_countdown():
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
-
-todo("Animate XP increasing and leveling up")
 
 prev_xp = player.stats.lifetime.xp
 prev_level = player.avatar.level

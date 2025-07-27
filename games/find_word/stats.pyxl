@@ -127,7 +127,7 @@ def player_change_stats(player, competitor)
         entry.points += competitor.score
         ++entry.matches
         
-        entry.xp += ⌊competitor.score * XP_VALUE.point⌋
+        entry.xp += ⌈competitor.score * XP_VALUE.point⌉
 
     player.avatar.level = xp_to_level(stats.lifetime.xp)
 
