@@ -3,16 +3,49 @@
    count early */
 const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 10
 
-/* Legal letters in an avatar name. Names are also run through a sensitive check
-   before being displayed. */
-const AVATAR_NAME_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞!?♥★♦+-/ "
-
 def avatar_save(avatar):
+    // Other properties are recomputed on load
     save_local("avatar", {
-        name: player.avatar.name,
-        sprite_index: avatar_sprite_to_linear_index(player.avatar.sprite)})
+        name: avatar.name,
+        id: avatar.id,
+        sprite_index: avatar_sprite_to_linear_index(avatar.sprite)})
 
 
+
+def new_guid():
+    return "U" + round(utc_now() * 1000)
+    
+
+
+def avatar_load():
+    let avatar_data = load_local("avatar")
+    
+    if not avatar_data:
+        avatar_data = {
+            sprite_index: random_integer(0, AVATAR_SPRITE_COUNT - 1),
+            id: new_guid(),
+            name: ""}
+
+        // Generate a random name
+        while avatar_data.name == "" or sensitive[lowercase(avatar_data.name)]:
+            avatar_data.name = ""
+            for i < 3:
+                avatar_data.name += random_value(ALPHABET)
+        
+        // Persist the random avatar        
+        save_local("avatar", avatar_data)
+    
+    const sprite = avatar_sprite_from_linear_index(avatar_data.sprite_index)
+    
+    return {
+        sprite: sprite,
+        id: avatar_data.id default new_guid(),
+        // Will be computed from player stats
+        level: ∅,
+        color: avatar_compute_color(sprite),
+        name: avatar_data.name}
+        
+    
 
 def avatar_compute_color(sprite):
     const color = hsv(sprite.mean_color)

@@ -9,10 +9,11 @@
         "dictionary.pyxl",
         "board.pyxl",
         "history.pyxl",
+        "xp.pyxl",
         "avatar.pyxl",
         "player.pyxl",
-        "board_search.pyxl",
         "game.pyxl",
+        "board_search.pyxl",
         "competitor.pyxl",
         "network.pyxl"
     ],
@@ -25,7 +26,8 @@
         "Rotate",
         "SoloIntermission",
         "GatherGlobalResults",
-        "GlobalIntermission"
+        "GlobalIntermission",
+        "Stats"
     ],
     "start_mode": "Title",
     "docs": [
@@ -51,12 +53,13 @@
         "avatar_sprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
         "giant_score_font": "quad://fonts/novarese-20.font.json",
         "logo_sprite": "logo.sprite.json",
+        "offensive": "quad://data/english_offensive_table.data.json",
         "sensitive_source": "quad://data/english_sensitive_table.data.json",
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json",
         "stats_sprite": "stats.sprite.json"
     },
-    "version": "0.168",
+    "version": "0.170",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -129,7 +132,7 @@
         },
         "LETTER_SET_ARRAY": {
             "type": "raw",
-            "description": "Choice of letters is constrained by selecting from each of these individual distributions.",
+            "description": "Individual distributions when using the cube algorithm. Choice of letters is constrained by selecting from each of these individual distributions.",
             "value": [
                 "EAGEAN",
                 "AOTOTW",
@@ -137,10 +140,10 @@
                 "ELRTTY",
                 "EHRTVW",
                 "CIMOTU",
-                "DISTTY",
+                "DISFTY",
                 "EIOSST",
                 "EEGHNW",
-                "AFFKPS",
+                "AFTKPS",
                 "HLNNRZ",
                 "DEILRX",
                 "DELRVY",
@@ -151,16 +154,37 @@
         },
         "LETTER_BAG": {
             "type": "string",
-            "value": "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUVVWWXYYZ"
+            "description": "Bag for drawing from when using the bag algorithm",
+            "value": "AAAAAAAAAABBCCDDDDEEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPPQQRRRRRRSSSSSTTTTTTUUUVVWWXYYZ"
+        },
+        "AVATAR_NAME_ALPHABET": {
+            "type": "string",
+            "description": "Legal letters in an avatar name. Names are also run through a sensitive check before being displayed.",
+            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞!?♥★♦+-/ "
         },
         "BADGE_TABLE": {
-            "type": "raw",
+            "type": "object",
             "value": {
-                "most_rare": "★",
-                "best_word": "♦",
-                "best_rare": "☆",
-                "longest": "▶",
-                "most_words": "§"
+                "most_rare": {
+                    "type": "string",
+                    "value": "★"
+                },
+                "best_word": {
+                    "type": "string",
+                    "value": "♦"
+                },
+                "best_rare": {
+                    "type": "string",
+                    "value": "☆"
+                },
+                "longest": {
+                    "type": "string",
+                    "value": "▶"
+                },
+                "most_words": {
+                    "type": "string",
+                    "value": "∞"
+                }
             }
         },
         "TIMER_REMAP_SECONDS": {
@@ -735,14 +759,55 @@
         "GLOBAL_LAYOUT": {
             "type": "object",
             "value": {
-                "LEADERBOARD_WIDTH": {
-                    "type": "number",
-                    "value": "123",
-                    "description": "In pixels. Forces the award width",
-                    "min": 64,
-                    "max": 256,
-                    "format": "0",
-                    "quantum": 1
+                "LEADERBOARD": {
+                    "type": "object",
+                    "value": {
+                        "WIDTH": {
+                            "type": "number",
+                            "value": "140",
+                            "description": "In pixels. Forces the award width",
+                            "min": 64,
+                            "max": 256,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "ROW_SPACING": {
+                            "type": "number",
+                            "value": 16
+                        },
+                        "NAME_X": {
+                            "type": "number",
+                            "value": "39",
+                            "min": 0,
+                            "max": 150,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "BADGE_X": {
+                            "type": "number",
+                            "value": "83",
+                            "min": 0,
+                            "max": 150,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "SCORE_X": {
+                            "type": "number",
+                            "value": "80",
+                            "min": 0,
+                            "max": 150,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "AVATAR_X": {
+                            "type": "number",
+                            "value": "16",
+                            "min": 0,
+                            "max": 150,
+                            "format": "0",
+                            "quantum": 1
+                        }
+                    }
                 },
                 "AWARD_HEIGHT": {
                     "type": "number",
@@ -755,6 +820,10 @@
                 }
             },
             "description": "Constants for the GlobalIntermission layout"
+        },
+        "DEBUG_STATS": {
+            "type": "boolean",
+            "value": false
         }
     },
     "screenshot_tag": "find_word",

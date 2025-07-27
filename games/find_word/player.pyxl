@@ -1,34 +1,26 @@
 
+def player_save_stats():
+    save_local("stats", player.stats)
+    
+    
+
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one. */
 def make_player():
-            
-    let avatar_data = load_local("avatar")
     
-    if not avatar_data:
-        avatar_data = {
-            sprite_index: random_integer(0, AVATAR_SPRITE_COUNT - 1),
-            name: ""}
+    const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
 
-        // Generate a random name
-        while avatar_data.name == "" or sensitive[lowercase(avatar_data.name)]:
-            avatar_data.name = ""
-            for i < 3:
-                avatar_data.name += random_value(ALPHABET)
-        
-        // Persist the random avatar        
-        save_local("avatar", avatar_data)
-    
-    avatar_data.sprite = avatar_sprite_from_linear_index(avatar_data.sprite_index)
-    
     return {
         board: make_board(),
         
-        avatar: {
-            sprite: avatar_data.sprite,
-            color: avatar_compute_color(avatar_data.sprite),
-            name: avatar_data.name
-        },
+        stats: stats,
+        
+        avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp)},
+        
+        // Maps player GUIDs to their most recent name.
+        // The names are only for debugging. Players with no friends
+        // automatically friend Moo.
+        friends: load_local("friends") default {"B1": "Moo"},
         
         score: 0,
         

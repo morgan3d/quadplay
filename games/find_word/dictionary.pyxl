@@ -12,6 +12,7 @@
 /* Longest possible word */
 const MAX_WORD_LENGTH = ROWS * COLS
 
+
 /* Revised dictionary table of about 192k words with:
  
    - No capitalized words
@@ -129,5 +130,5 @@ def remove_sensitive(text):
 
 /* Replaces the text with ??? if it is in the sensitive dictionary */
 def censor(text):
-    return if text and sensitive[lowercase(text)] then slice("????????????", 0, size(text)) else text
+    return if text and sensitive[lowercase(text)] then (text[0] + slice("∙∙∙∙∙∙∙∙∙∙∙∙∙", 0, size(text) - 1)) else text
         

@@ -273,7 +273,7 @@ def board_pixel_size():
 
 /* Detect if a row or column or main diagonal spells a sensitive word.
    These words are acceptable in play but we don't want to explicitly
-   spell them out. */
+   spell them out in the default or reverse orientation. */
 def board_has_obvious_sensitive_word(board):
     
     def is_sensitive(word):

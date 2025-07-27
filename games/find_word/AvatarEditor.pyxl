@@ -49,6 +49,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 draw_background_words()
 
+let prev_selection = selection_index
 if player.using_gamepad and selection_index == -1:
     // Don't allow no selection once gamepad is active
     selection_index = 0
@@ -116,6 +117,8 @@ local:
     
     if touch.hover and overlaps(touch.hover, rect):
         selection_index = DONE_BUTTON_INDEX
+        if prev_selection ≠ DONE_BUTTON_INDEX:
+            play_sound(select_tile_sound)
         
     const selected = selection_index == DONE_BUTTON_INDEX
     

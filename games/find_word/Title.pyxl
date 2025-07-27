@@ -42,18 +42,25 @@ def update_stats_button(pos):
         
     draw_text({
         font: score_font, 
-        text: "Goals", 
+        text: "Stats", 
         color: if selected then #FFF else #EEE,
         outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
         shadow: #000, 
         pos: pos + xy(0, 27),
         z: 100})
-        
-    if touch.hover and overlaps(touch.hover, {pos: pos, shape: "disk", size: radius * xy(2, 2)}):
+
+    const region = {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
+    if touch.hover and overlaps(touch.hover, region):
         if selected_index ≠ STATS_INDEX:
             play_sound(select_tile_sound, ∅, ∅, 100%)
             selected_index = STATS_INDEX
         
+    if ((not intro and
+        mode_frames > 2 and 
+        ((touch.pressed_a and overlaps(touch.xy, region)) or
+         (selected and gamepad_array[0].pressed_a)))
+         or DEBUG_STATS):
+        push_mode(Stats)        
         
         
     
@@ -233,8 +240,8 @@ draw_rect(pos, board_pixel_size() + 22, fake_player.board.selection_color, ∅, 
 // How far to slide the buttons, 0 if the intro has been skipped
 const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE_FRAMES), 0)) else 0
 
-update_button(pos + xy(slide, 30), "Solo", 0)
-update_button(pos - xy(slide, 30), "Global", 1)
+update_button(pos + xy(slide, -30), "Solo", 0)
+update_button(pos - xy(slide, -30), "Global", 1)
 
 // Logo
 draw_sprite({sprite: logo_sprite, pos: xy(SCREEN_SIZE.x - 32 + slide, 20), z: -0.6})
@@ -250,9 +257,11 @@ local:
         
     if selected_index == AVATAR_EDITOR_INDEX:
         draw_round_selection(pos)
-
-    draw_disk(pos, 20, rgba(player.avatar.color, 75%), 75% player.avatar.color)    
+    else:
+        draw_disk(pos, 20, rgba(player.avatar.color, 75%), 75% player.avatar.color)
+        
     avatar_draw_large(player.avatar, pos)
+    draw_text({text: "Level " + player.avatar.level, z: 102, pos: pos - xy(0, 26), color: player.avatar.color, outline: #0008, font: leaderboard_font})
     
     if (not intro and
         ((touch.pressed_a and overlaps(touch.xy, bounds)) or
@@ -268,7 +277,7 @@ local:
 if gamepad_array[0].xx or gamepad_array[0].yy:
     if intro: skip_intro()
     // Change selection
-    selected_index = loop(selected_index + (gamepad_array[0].xx or -gamepad_array[0].yy), STATS_INDEX + 1)
+    selected_index = loop(selected_index + (gamepad_array[0].xx or gamepad_array[0].yy), STATS_INDEX + 1)
     play_sound(select_tile_sound)
 
 

@@ -340,8 +340,16 @@ Data
 : List of words that a game designer may not want a word game to generate by 
   itself, even if it accepts these words. Words in the 
   English language that may be particularly embarrasing, triggering, 
-  sensitive to different groups.
+  sensitive to different groups. Words may appear in both english_offensive
+  and english_sensitive.
+  Represented as an object mapping words in this set to `true`.
+
+`quad://data/english_offensive.json`
+: List of words that a game designer may not want a word game to allow
+  showing or to be communicated between players as they are considered
+  deeply offensive to different groups.
   Rerpresented as an object mapping words in this set to `true`.
+  
 
 <script>
 markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>

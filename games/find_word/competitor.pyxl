@@ -1,8 +1,28 @@
 /* Information about other players online (or virtual ones) used by Intermission */
 
 
-/* `{avatar, score, word_list, representative_text, badges}`
-   `word_list` is Q-encoded */
+/* 
+   ```
+   {
+        avatar
+        text
+        badges
+   
+        num_rare
+        longest_size
+        longest_text
+        best_word_points
+        best_word_text
+        best_rare_points
+        best_rare_text
+        word_list
+        score
+    }```
+   
+   
+   `word_list` is Q-encoded. `text` values are Q-decoded.
+   
+   */
 const competitor_array = []
 
 let player_competitor
@@ -22,7 +42,7 @@ sprite: avatar_sprite[34][22],
 base_ability: 0.0698069739514106,
 short_word_preference: 0.7207721041943576,
 first_hour: 17,
-last_hour: 1
+last_hour: 1,
 },
 {
 name: "411",
@@ -195,7 +215,11 @@ last_hour: 1
         if not competitor.avatar: return
         
         ++c
+        
+        // Bot user ID
+        competitor.avatar.id = "B" + c
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
+        competitor.avatar.level = max(1, ⌈70 competitor.avatar.base_ability⌉)
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
@@ -216,10 +240,11 @@ last_hour: 1
         
         const word_set = {}
         def maybe_add_word(word):
+            assert(word)
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if not word_set[word] and match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference):
+            if not sensitive[lowercase(word)] and not word_set[word] and match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
@@ -232,7 +257,7 @@ last_hour: 1
             ++tries
             const word = random_value(player.board.word_list, match_rng)
             if size(word) < 5:
-                maybe_add_word()
+                maybe_add_word(word)
         
         tries = 0
         while size(word_set) < words_found and tries < 2 words_found:
@@ -277,7 +302,7 @@ def competitor_analyze(competitor_array):
         // Censor names by slicing off the 2nd letter, if inappropriate,
         // and replacing common letter substitutions to prevent casual
         // looks-like thwarting
-        if sensitive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
+        if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
 
         competitor.best_word_points = 0
@@ -328,7 +353,7 @@ def competitor_analyze(competitor_array):
     
     competitor_assign_awards(competitor_array)
     
-    
+
     
 /* Helper for `competitor_analyze()`. Sets the `_winner` globals
    and assigns the `competitor.badges` strings. */

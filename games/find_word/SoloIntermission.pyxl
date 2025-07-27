@@ -28,7 +28,7 @@ shown_array = []
 unfound_word_array = []
 for word in player.board.word_list:
     // Do not use player.already_found
-    if not sensitive[lowercase(word)] and not player.already_found[q_encode(word)]:
+    if not offensive[lowercase(word)] and not player.already_found[q_encode(word)]:
         push(unfound_word_array, word)
 
 

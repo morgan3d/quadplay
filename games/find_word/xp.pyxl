@@ -1,0 +1,90 @@
+/* See `xp_to_level()`. Chosen to make Level 20 = 100k XP */
+const LEVEL_EXPONENT = 0.65
+
+/* See `xp_to_level()` */
+const LEVEL_DIVISOR  = 1000
+
+
+const XP_VALUE = {
+    // Per point
+    point: 0.1,
+    
+    // Per day
+    //day: 100,
+    
+    // For each badge
+    //badge: 50
+}
+
+
+def xp_to_level(xp):
+    assert(xp ≠ ∅ and not is_nan(xp))
+    return ⌊(floor(xp, ½ LEVEL_DIVISOR) / LEVEL_DIVISOR)^LEVEL_EXPONENT + 1⌋
+    
+
+/* XP needed to reach this level */
+def level_to_xp(level):
+    return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
+
+
+
+def make_empty_stats_entry():
+    return {
+        longest: "", 
+        best_word_text: "", 
+        best_word_points: 0,
+        best_score: 0,
+        most_words: 0,
+        words: 0,
+        points: 0,
+        matches: 0,
+        xp: 0}
+
+
+/* 
+    Update the player's stats and level given the results in 
+    competitor from a global match. Do not save.
+*/
+def player_change_stats(player, competitor)
+& with stats in player:
+
+    assert(stats)
+    assert(stats.lifetime)
+    
+    // Today's date in the local time zone
+    let date = local_time()
+    date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
+    
+    // Remove any previous date values
+    for key in keys(stats):
+        if key ≠ "lifetime" and key ≠ date:
+            remove_key(stats, key)
+    
+    // Update lifetime and today
+    for entry_name in ["lifetime", date]:
+        
+        if not stats[entry_name]:
+            // No record, so update it
+            stats[entry_name] = make_empty_stats_entry()
+            
+        // Update result
+        const entry = stats[entry_name]
+        if size(competitor.longest) > size(entry.longest):
+            entry.longest = competitor.longest
+            
+        if competitor.best_word_points > entry.best_word_points:
+            entry.best_word_points = competitor.best_word_points
+            entry.best_word_text = competitor.best_word_text
+            
+        if competitor.score > entry.best_score:
+            entry.best_score = competitor.score
+        
+        entry.words += size(competitor.word_list)
+        entry.points += competitor.score
+        ++entry.matches
+        
+        entry.xp += competitor.score * XP_VALUE.point
+
+    player.avatar.level = xp_to_level(stats.lifetime.xp)
+
+    

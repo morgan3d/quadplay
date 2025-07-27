@@ -1,0 +1,60 @@
+Stats
+════════════════════════════════════════════════════════════════════════
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+/*
+        AVATAR NAME Global Match Stats
+         Level X  [>>>>>400xp>>>  ]
+                              
+                       Lifetime | Today
+                       ---------+-------
+ Longest word          FLUORESCE| ESTABLISH
+ Most words               62    | 35
+ Best word              DRUIDIC | LAUGH
+                                | 
+ Matches played          value  | value
+ Total words found       value  | value
+ Total points scored     value  | value 
+
+ Averages: 
+ Points per match         emwa  |
+ Word length              emwa  |
+ Words found              emwa  |
+ Percent found            emwa  | Δ
+
+
+*/
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_background_words()
+
+todo("** Implement stats drawing **")
+
+draw_text({text: "Coming soon!", font: giant_score_font, pos: ½ SCREEN_SIZE, color: #FFF})
+
+// Large done button, which is always selected
+local:
+    const rect = {pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), size: xy(150, 21)}
+    
+    for 1 ≤ i < 4: 
+        draw_rect(rect.pos, rect.size + 2i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
+            
+    draw_rect(rect.pos, rect.size, CURSOR_COLOR, #FFF)
+    draw_text({
+        font: score_font,
+        text: "Done",
+        pos: rect.pos + xy(0, 1),
+        outline: #000,
+        color: #FFF})
+        
+
+if (gamepad_array[0].pressed_a or gamepad_array[0].pressed_b or touch.pressed_a) and mode_frames > 2:
+    pop_mode()
+
+
+
