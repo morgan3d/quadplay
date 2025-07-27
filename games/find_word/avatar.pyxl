@@ -55,7 +55,7 @@ def avatar_compute_color(sprite):
         
         
         
-def avatar_draw_large(avatar, pos, background default true, color):
+def avatar_draw_large(avatar, pos, background default true, color, shadow default #000):
     
     let sprite = avatar.sprite
     
@@ -73,7 +73,7 @@ def avatar_draw_large(avatar, pos, background default true, color):
     draw_sprite({sprite: sprite, scale: 200%, pos: pos + xy(0, -1), z: 5})
     
     color = color default (if background then avatar.color else player.board.selection_color)
-    draw_text({font: score_font, text: avatar.name, color: color, shadow: #000, pos: pos + xy(0, 27), z: 5})
+    draw_text({font: score_font, text: avatar.name, color: color, shadow: shadow, pos: pos + xy(0, 27), z: 5})
 
 
 

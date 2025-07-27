@@ -24,7 +24,10 @@ def xp_to_level(xp):
 
 /* XP needed to reach this level */
 def level_to_xp(level):
-    return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
+    if level ≤ 0:
+        return 0
+    else:
+        return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
 
 
 

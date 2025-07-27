@@ -3,6 +3,9 @@ GlobalIntermission
 
 todo("** Favoriting UI + save")
 
+let prev_xp
+let prev_level
+
 // Cycle through the award stages. See `STAGE`
 let stage
 
@@ -39,9 +42,17 @@ def draw_awards()
 def draw_award_summary()
 & preserving_transform:
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
-    avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF)
 
-    const shadow = 60% player.avatar.color
+    const XP_ANIMATION_DELAY_FRAMES = 80
+    const XP_ANIMATION_RATE = 1 / 80
+    const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((mode_frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
+    const level = xp_to_level(xp)
+    const xp_lo = level_to_xp(level)
+    const xp_hi = level_to_xp(level + 1)
+    const shadow = 70% player.avatar.color
+
+    draw_text({color: if (level == prev_level) then #FFF else #E1B, shadow:shadow, font: history_font, text: "Level " + level, pos: xy(-14, -27)})
+    avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF, shadow)
   
     const args = {font: history_font,
         x_align: "left",
@@ -49,21 +60,28 @@ def draw_award_summary()
         shadow: shadow,
         color: #FFF}
 
-    draw_text({…args, text: "Summary", pos: xy(31, -27), x_align: "center"})
-    
-    compose_transform(xy(55, 0))
-    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(10, -8), x_align: "right", markup: true})
+    // Score
+    compose_transform(xy(70, -22))
+    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 0), x_align: "right", markup: true})
 
     const x = -46
-    draw_text({…args, text: "Found", pos: xy(x, 5)})
-    draw_text({…args, text: "" + size(player.history.list) + "/" + player.board.word_count, pos: xy(30, 5), x_align: "right"})
-    
-    if game_type == GLOBAL:
-        draw_text({…args, text: "Rare Words", pos: xy(x, 14)})
-        draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 14), x_align: "right"})
+    draw_text({…args, text: "Rare Words", pos: xy(x, 16)})
+    draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 16), x_align: "right"})
 
-    draw_text({…args, text: "Longest", pos: xy(x, 23)})
-    draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 23), x_align: "right"})
+    draw_text({…args, text: "Longest", pos: xy(x, 26)})
+    draw_text({…args, text: player_competitor.longest_text, pos: xy(30, 26), x_align: "right"})
+
+    // XP bar
+    const xp_rect = {corner: xy(x, 37), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH + x - 17, 10)}
+    draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size, ∅, shadow)
+    const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
+    draw_corner_rect(xp_rect.corner + 1, xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), #E1B)
+    
+    draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
+    draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
+    
+    
+    todo("Animate XP")
 
 
 
@@ -150,9 +168,7 @@ def draw_leaderboard()
                 
         const me = (competitor == player_competitor)
         
-        todo("Remove when we have a friending UI")
-        // For now, friend all humans. Bots have a `base_ability` property
-        const friend = (not me) and (player.friends[competitor.avatar.id] or (not competitor.avatar.base_ability))
+        const friend = competitor_is_friend(competitor)
         
         // Highlight
         const highlight_color = if friend then lerp(competitor.avatar.color, #333, 75%) else (if me then competitor.avatar.color else ∅)
@@ -238,13 +254,14 @@ set_background(#333)
 
 todo("Animate XP increasing and leveling up")
 
-const prev_xp = player.stats.lifetime.xp
-const prev_level = player.avatar.level
+prev_xp = player.stats.lifetime.xp
+prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
     player_change_stats(player, player_competitor)
     stats_save(player.stats)
-    
-debug_print("XP: ", prev_xp, " -> ", player.stats.lifetime.xp)
+
+todo("Remove:")
+player.stats.lifetime.xp = 800
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0
@@ -266,9 +283,9 @@ frame
 if game_type == GLOBAL or DEBUG_INTERMISSION:
     prev_stage = stage
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
-    if stage == STAGE.MOST_WORDS2:
-        // This is 2x as long
-        stage = STAGE.MOST_WORDS
+    if stage == STAGE.MOST_WORDS2 or stage == STAGE.SUMMARY2:
+        // These are 2x as long
+        --stage
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
@@ -281,7 +298,7 @@ history_update(player.history, history_rect)
 const α = max(0%, 100% - max(mode_frames - 360, 0) / 90)
 if stage == STAGE.SUMMARY and α > 0%
 & preserving_transform:
-    set_transform(history_rect.corner + history_rect.size - xy(46, 42))
+    set_transform(history_rect.corner + history_rect.size - xy(42, 48))
     const history_tile_color = rgba(.8, .8, .8, α)
     const history_board_color = rgba(0, 0, 0, α)
     for x < COLS:
@@ -295,15 +312,14 @@ if stage == STAGE.SUMMARY and α > 0%
                 pos: pos,
                 text: letter,
                 color: history_board_color})
-else:
-    draw_text({
-        font: history_font, 
-        pos: history_rect.corner + history_rect.size - xy(5, 0),
-        text: "Found " + size(player.history.list) + "/" + player.board.word_count,
-        x_align: "right",
-        y_align: "bottom",
-        outline: #333,
-        color: #DDD})
+draw_text({
+    font: history_font, 
+    pos: history_rect.corner + history_rect.size - xy(5, 0),
+    text: "Found " + size(player.history.list) + "/" + player.board.word_count,
+    x_align: "right",
+    y_align: "bottom",
+    outline: #333,
+    color: #CCC})
     
 draw_awards()
 

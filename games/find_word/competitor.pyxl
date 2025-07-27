@@ -33,6 +33,15 @@ let best_rare_winner
 let longest_winner
 let most_words_winner
 
+
+/* Are they a friend of the player_competitor */
+def competitor_is_friend(competitor):
+    todo("Remove when we have a friending UI")
+    // For now, friend all humans. Bots have a `base_ability` property
+    return (competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or (not competitor.avatar.base_ability))
+        
+
+
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count):
@@ -251,18 +260,26 @@ last_hour: 1
                     if word_table[w]:
                         word_set[w] = 1
         
+        // Special case for moo, who finds all cow-related words
+        if competitor.avatar.name == "Moo":
+            for word in COW_WORDS:
+                if not word_set[word] and contains(player.board.word_list, word):
+                    word_set[word] = 1
+                        
         // Pick up a bunch of cheap words first
         let tries = 0
         while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
             ++tries
             const word = random_value(player.board.word_list, match_rng)
-            if size(word) < 5:
+            if size(word) ≤ 4:
                 maybe_add_word(word)
-        
-        tries = 0
-        while size(word_set) < words_found and tries < 2 words_found:
-            ++tries
-            maybe_add_word(random_value(player.board.word_list, match_rng))
+    
+        // Moo cannot find non-cow words greater than 4 letters    
+        if competitor.avatar.name ≠ "Moo":
+            tries = 0
+            while size(word_set) < words_found and tries < 2 words_found:
+                ++tries
+                maybe_add_word(random_value(player.board.word_list, match_rng))
 
         competitor.word_list = keys(word_set)
                 
