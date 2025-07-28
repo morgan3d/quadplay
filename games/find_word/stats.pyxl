@@ -38,7 +38,7 @@ for 1 ≤ level ≤  10:
 
 def make_empty_stats_entry():
     return {
-        longest: "", 
+        longest_text: "", 
         best_word_text: "", 
         best_word_points: 0,
         best_score: 0,
@@ -60,9 +60,17 @@ def stats_save(stats):
 
 /* Returns a new stats object, which may have zeros */
 def stats_load():    
-    const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}    
+    const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
+    stats.word_list = stats.word_list default []
+    
     for day in stats:
         day.xp = decode_xp(day.xp)
+        // Upgrade
+        if day.longest ≠ ∅:
+            remove_key(day, "longest")
+        if day.longest_text == ∅:
+            day.longest_text = ""
+        
     return stats
     
     
@@ -90,6 +98,12 @@ def decode_xp(str):
     
 
 
+def today_date_string():
+    const date = local_time()
+    return "" + date.year + "-" + (date.month + 1) + "-" + date.day
+
+
+
 /* 
     Update the player's stats and level given the results in 
     competitor from a global match. Do not save.
@@ -99,14 +113,14 @@ def player_change_stats(player, competitor)
 
     assert(stats)
     assert(stats.lifetime)
+    assert(stats.word_list ≠ ∅)
     
     // Today's date in the local time zone
-    let date = local_time()
-    date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
+    const date = today_date_string()
     
     // Remove any previous date values
     for key in keys(stats):
-        if key ≠ "lifetime" and key ≠ date:
+        if key ≠ "lifetime" and key ≠ date and key ≠ "word_list":
             remove_key(stats, key)
     
     // Update lifetime and today
@@ -118,8 +132,8 @@ def player_change_stats(player, competitor)
             
         // Update result
         const entry = stats[entry_name]
-        if size(competitor.longest) > size(entry.longest):
-            entry.longest = competitor.longest
+        if size(competitor.longest_text) > size(entry.longest_text):
+            entry.longest_text = competitor.longest_text
             
         if competitor.best_word_points > entry.best_word_points:
             entry.best_word_points = competitor.best_word_points
@@ -128,12 +142,26 @@ def player_change_stats(player, competitor)
         if competitor.score > entry.best_score:
             entry.best_score = competitor.score
         
-        entry.words += size(competitor.word_list)
+        const N = size(competitor.word_list)
+        if N > entry.most_words:
+            entry.most_words = N
+        
+        entry.words += N
         entry.points += competitor.score
         ++entry.matches
         
         entry.xp += ⌈competitor.score * XP_VALUE.point⌉
 
+    // Accumulate the words found by this player
+    const word_set = {}
+    for word in player.stats.word_list:
+        word_set[word] = 1
+    
+    for word in competitor.word_list:
+        if not word_set[word]:
+            push(stats.word_list, word)
+    
+    sort(stats.word_list)
     player.avatar.level = xp_to_level(stats.lifetime.xp)
 
     

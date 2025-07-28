@@ -1,44 +1,51 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
 
+def draw_row(y, caption, lifetime, today):
+    const args = {font: leaderboard_font, color: #fff, outline: #000, x_align: "left"}
+    const x = ½ SCREEN_SIZE.x
+    draw_text({…args, text: caption,    pos: xy(x - 90, y)})
+    
+    if ends_with(caption, "Word"): args.font = history_font
+    args.x_align = "right"
+    draw_text({…args, text: lifetime,   pos: xy(x + 35,  y)})
+    draw_text({…args, text: today,      pos: xy(x + 90, y)})
+    return 14
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
 
-/*
-        AVATAR NAME Global Match Stats
-         Level X  [>>>>>400xp>>>  ]
-                              
-                       Lifetime | Today
-                       ---------+-------
- Longest word          FLUORESCE| ESTABLISH
- Most words               62    | 35
- Best word              DRUIDIC | LAUGH
-                                | 
- Matches played          value  | value
- Total words found       value  | value
- Total points scored     value  | value 
-
- Averages: 
- Points per match         emwa  |
- Word length              emwa  |
- Words found              emwa  |
- Percent found            emwa  | Δ
-
-
-*/
+debug_print(player.stats)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 draw_background_words()
+draw_rect(½ SCREEN_SIZE, xy(210, SCREEN_SIZE.y), #0009)
 
-todo("** Implement stats drawing **")
+draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, pos: xy(½ SCREEN_SIZE.x, 10), color: #FFF})
+draw_text({text: format_number(player.stats.lifetime.xp, "commas") + " XP. Next level at " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, pos: xy(½ SCREEN_SIZE.x, 25), color: #FFF})
 
-draw_text({text: "Coming soon!", font: giant_score_font, pos: ½ SCREEN_SIZE - xy(0, 20), color: #FFF})
 
-draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, pos: ½ SCREEN_SIZE + xy(0, 40), color: #FFF})
-draw_text({text: format_number(player.stats.lifetime.xp, "commas") + " XP. Next level at " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: history_font, pos: ½ SCREEN_SIZE + xy(0, 60), color: #FFF})
+const lifetime = player.stats.lifetime
+const today    = player.stats[today_date_string()] default make_empty_stats_entry()
+
+let y = 56
+y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text)
+y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text)
+y += draw_row(y, "Most Words",   lifetime.most_words, today.most_words)
+y += draw_row(y, "High Score",   lifetime.best_score, today.best_score)
+
+y += 6
+y += draw_row(y, "XP",           lifetime.xp, "+" + today.xp)
+y += draw_row(y, "Words",        lifetime.words, "+" + today.words)
+y += draw_row(y, "Matches",      lifetime.matches, "+" + today.matches)
+
+y += 6
+y += draw_row(y, "Words/Match", format_number(lifetime.words / max(lifetime.matches, 1), "0.0"),  format_number(today.words / max(today.matches, 1), "0.0"))
+y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
+
 
 // Large done button, which is always selected
 local:

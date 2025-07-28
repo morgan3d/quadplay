@@ -70,7 +70,7 @@ def q_decode(word):
     return replace(word, "Q", "QU")
     
     
-const sensitive = {…sensitive_source, "quadplay":1, "sarah":1, "levi":1, "morgan":1, "sonya":1, "shmuel":1}
+const sensitive = {…sensitive_source, "quadplay":1, "wryl":1, "shmuel":1, "sarah":1, "levi":1, "morgan":1, "sonya":1}
 def q_encode(word):
     return replace(word, "QU", "Q")
     
