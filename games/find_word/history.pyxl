@@ -67,7 +67,7 @@ def history_draw(history, pos, max_height):
         // For other modes (e.g., Play), `rare` will never be true.
         if entry.rare: text += "★"
         
-        const flash = entry.rare and (game_frames + 500 - ¼ pos.y) mod 120 > 110
+        const flash = entry.rare and (game_frames + 500 - ¼ pos.y) mod 360 > 345
         
         const bounds = draw_text({
             // Bounce if emphasized

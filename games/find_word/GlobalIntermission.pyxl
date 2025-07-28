@@ -342,6 +342,7 @@ if stage == STAGE.SUMMARY and α > 0%
                 pos: pos,
                 text: letter,
                 color: history_board_color})
+
 draw_text({
     font: history_font, 
     pos: history_rect.corner + history_rect.size - xy(5, 0),
