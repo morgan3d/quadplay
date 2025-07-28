@@ -60,7 +60,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.188",
+    "version": "0.190",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -161,7 +161,7 @@
         "AVATAR_NAME_ALPHABET": {
             "type": "string",
             "description": "Legal letters in an avatar name. Names are also run through a sensitive check before being displayed.",
-            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞!?♥★♦+-/ "
+            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞!?ℵ♥★♦+-/ "
         },
         "BADGE_TABLE": {
             "type": "object",
@@ -550,7 +550,7 @@
         },
         "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
-            "value": "26",
+            "value": "28",
             "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_SECONDS + GLOBAL_GAME_TIME_MINUTES exactly",
             "min": 1,
             "max": 240,
@@ -727,6 +727,8 @@
                 "REIN",
                 "REINS",
                 "COWS",
+                "BLEAT",
+                "BLEATS",
                 "BULL",
                 "OX",
                 "OXEN",
@@ -856,7 +858,8 @@
                 "RUMINANT",
                 "RUMINANTS",
                 "BISON"
-            ]
+            ],
+            "description": "These are words that the Moo AI automatically finds when present."
         },
         "STAGE": {
             "type": "raw",
@@ -873,7 +876,7 @@
         },
         "MOST_WORDS_AWARD_FRAMES_PER_WORD": {
             "type": "number",
-            "value": "26",
+            "value": "38",
             "min": 1,
             "max": 128,
             "format": "0",

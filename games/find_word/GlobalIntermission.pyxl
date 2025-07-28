@@ -48,12 +48,12 @@ def draw_award_summary()
 
     const frames = mode_frames - first_frame_this_stage
     const flash = ⌊frames / 15⌋ mod 2
-    const XP_ANIMATION_DELAY_FRAMES = 120
+    const XP_ANIMATION_DELAY_FRAMES = 150
     if frames == XP_ANIMATION_DELAY_FRAMES + 10:
         play_sound(xp_sound, false, ∅, 90%, ∅, 0, 70%)
     
     
-    const XP_ANIMATION_RATE = 1 / 100
+    const XP_ANIMATION_RATE = 1 / 120
     const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
     const level = xp_to_level(xp)
 
@@ -108,7 +108,7 @@ def draw_award_summary()
     draw_corner_rect(
         xp_rect.corner + 1,
         xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), 
-        if frames < XP_ANIMATION_DELAY_FRAMES and flash then #000 else #E1B)
+        if frames < XP_ANIMATION_DELAY_FRAMES and not flash then #000 else #E1B)
     
     draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
