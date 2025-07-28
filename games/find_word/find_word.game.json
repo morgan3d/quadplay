@@ -762,8 +762,6 @@
                 "COWLICK",
                 "COWSLIP",
                 "COWHIDE",
-                "HIDE",
-                "HIDES",
                 "COWHIDES",
                 "COWLICK",
                 "COWLICKS",
@@ -782,9 +780,6 @@
                 "CUD",
                 "GRASS",
                 "GRASSES",
-                "LEATHER",
-                "LEATHERS",
-                "BEEF",
                 "CHEESE",
                 "CHEESES",
                 "YOGURT",
@@ -856,10 +851,7 @@
                 "CHICKENS",
                 "RUMINANT",
                 "RUMINANTS",
-                "BISON",
-                "MEAT",
-                "BURGER",
-                "HAMBURGER"
+                "BISON"
             ]
         },
         "STAGE": {
