@@ -19,8 +19,9 @@ const XP_VALUE = {
 
 def xp_to_level(xp):
     assert(xp ≠ ∅ and not is_nan(xp))
-    return ⌊(floor(xp, ½ LEVEL_DIVISOR) / LEVEL_DIVISOR)^LEVEL_EXPONENT + 1⌋
-    
+    return floor((xp / LEVEL_DIVISOR + ½)^LEVEL_EXPONENT + 1)
+
+
 
 /* XP needed to reach this level */
 def level_to_xp(level):
@@ -29,6 +30,10 @@ def level_to_xp(level):
     else:
         return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
 
+/*
+for 1 ≤ level ≤  10:
+    const xp = level_to_xp(level)
+    debug_print(level, xp, xp_to_level(xp + 0))*/
 
 
 def make_empty_stats_entry():

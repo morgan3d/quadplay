@@ -1,11 +1,5 @@
-
-    
-
 /* Constructs a new player with an uninitialized board. Loads
-   their avatar from local storage or creates a random one. 
-   
-   A fake player is 
-   */
+   their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
 

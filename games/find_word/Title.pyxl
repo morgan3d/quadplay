@@ -199,7 +199,8 @@ board_deselect_all(player.board, player)
 
 def sound():
     play_sound(times_up_sound)
-    
+
+debug_print(xp_to_level(2683))
     
 intro = sequence(
     INTRO_PRE_FRAMES, 
