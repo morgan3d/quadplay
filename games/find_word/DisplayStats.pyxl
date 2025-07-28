@@ -1,12 +1,12 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
 
-def draw_row(y, caption, lifetime, today):
-    const args = {font: leaderboard_font, color: #fff, outline: #000, x_align: "left"}
+def draw_row(y, caption, lifetime, today, color default #fff):
+    const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
-    draw_text({…args, text: caption,    pos: xy(x - 90, y)})
+    if caption: draw_text({…args, text: caption,    pos: xy(x - 90, y)})
     
-    if ends_with(caption, "Word"): args.font = history_font
+    if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
     draw_text({…args, text: lifetime,   pos: xy(x + 35,  y)})
     draw_text({…args, text: today,      pos: xy(x + 90, y)})
@@ -31,7 +31,10 @@ draw_text({text: format_number(player.stats.lifetime.xp, "commas") + " XP. Next 
 const lifetime = player.stats.lifetime
 const today    = player.stats[today_date_string()] default make_empty_stats_entry()
 
-let y = 56
+let y = 40 + ½ (SCREEN_SIZE.y - 224)
+y += draw_row(y, ∅, "Lifetime", "Today", #E1B)
+y += 2
+
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text)
 y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text)
 y += draw_row(y, "Most Words",   lifetime.most_words, today.most_words)
