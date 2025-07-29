@@ -73,7 +73,7 @@ last_hour: 7
 {
 name: "THX",
 sprite: avatar_sprite[13][4],
-base_ability: 0.21883489044791676,
+base_ability: 0.22,
 short_word_preference: 0.16354711555742432,
 first_hour: 11,
 last_hour: 19
@@ -210,6 +210,7 @@ last_hour: 1
             word_table[word] = 1
     
     // Used for determining which players are active
+    todo("** Make the hours in a global time!")
     const hour = local_time().hours
     
     // Shift everybody's ability by this amount

@@ -19,7 +19,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 debug_print(player.stats)
-debug_value = size(unparse(stats.word_list, 0))
+debug_value = size(unparse(player.stats.word_list, 0))
 
 
 frame
