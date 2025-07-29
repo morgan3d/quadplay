@@ -47,11 +47,13 @@ def draw_award_summary()
     const highlight_color = #E1B    
 
     const frames = mode_frames - first_frame_this_stage
-    const flash = ⌊frames / 15⌋ mod 2
+    const flash = (⌊frames / 15⌋ mod 2) and (player.score > 0)
     const XP_ANIMATION_DELAY_FRAMES = 150
-    if frames == XP_ANIMATION_DELAY_FRAMES + 10:
+    if frames == XP_ANIMATION_DELAY_FRAMES + 10 and player.score > 0:
         play_sound(xp_sound, false, ∅, 90%, ∅, 0, 70%)
-    
+        
+    if frames < XP_ANIMATION_DELAY_FRAMES + 10 and frames mod 30 == 0:
+        play_sound({sound: word_sound, pan: 100%, pitch: 150%})
     
     const XP_ANIMATION_RATE = 1 / 120
     const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))

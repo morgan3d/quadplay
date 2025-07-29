@@ -220,7 +220,7 @@ def board_find_all_words(board):
     
     // This produces the 5-grams used for filtering and in the process
     // also finds all words of length 3, 4, 5.
-    const quintgram_set = _board_ngram_set(player.board, 5, word_set)
+    const quintgram_set = _board_ngram_set(board, 5, word_set)
 
     // Used for performance profiling
     let long_count = 0
