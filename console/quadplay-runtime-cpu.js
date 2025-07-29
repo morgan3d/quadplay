@@ -10414,7 +10414,7 @@ function utc_time() {
         weekday:     d.getUTCDay(),
         day_second:  (d.getUTCHours() * 60 + d.getUTCMinutes()) * 60 + d.getUTCSeconds() + d.getUTCMilliseconds() * 0.001,
         timezone:    0,
-        absolute_milliseconds: d.getUTCTime()
+        absolute_milliseconds: d.getTime()
     };
 }
 
