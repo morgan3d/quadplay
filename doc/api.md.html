@@ -4528,7 +4528,7 @@ and persistent worlds.
 `save_local(key, value)`
 : The value will be serialized to a string with `unparse(value, 0)` and then
   stored associated with `key` and the URL of the game. Save a value
-  of `∅` to delete the key. There is a maximum size of 4096
+  of `∅` to delete the key. There is a maximum size of 16384
   characters for the unparsed value for each key and a maximum size of
   64 keys per application. There is no way for two different games to
   read each other's values.

@@ -9917,8 +9917,8 @@ function save_local(key, value) {
         delete table[key];
     } else {
         const v = unparse(value, 0);
-        if (v.length > 4096) {
-            $error('Cannot store_local() a value that is greater than 4096 characters after unparse()');
+        if (v.length > 16384) {
+            $error('Cannot store_local() a value that is greater than 16384 characters after unparse()');
         }
         table[key] = v;
         if ($Object.keys(table).length > 64) {

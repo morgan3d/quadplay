@@ -4,6 +4,10 @@ const LEVEL_EXPONENT = 0.65
 /* See `xp_to_level()` */
 const LEVEL_DIVISOR  = 1000
 
+todo("For partial games, give XP but adjust no other stats")
+todo("Try Gzipping the localStorage values when large")
+todo("Make serialize() on an array of all strings, numbers, or booleans more efficient")
+
 
 const XP_VALUE = {
     // Per point
