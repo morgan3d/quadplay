@@ -13,10 +13,13 @@ def draw_row(y, caption, lifetime, today, color default #fff):
     return 14
 
 
+let debug_value
+
 enter
 ────────────────────────────────────────────────────────────────────────
 
 debug_print(player.stats)
+debug_value = size(unparse(stats.word_list, 0))
 
 
 frame
@@ -48,7 +51,10 @@ y += draw_row(y, "Matches",      lifetime.matches, "+" + today.matches)
 y += 6
 y += draw_row(y, "Words/Match", format_number(lifetime.words / max(lifetime.matches, 1), "0.0"),  format_number(today.words / max(today.matches, 1), "0.0"))
 y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
+y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
 
+todo("Remove")
+draw_text({text: debug_value, pos: xy(5, 5), font: history_font, color: #F00, x_align: "left", y_align: "top"})
 
 // Large done button, which is always selected
 local:

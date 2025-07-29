@@ -55,6 +55,7 @@ def make_empty_stats_entry():
 
 
 def stats_save(stats):
+    todo("String split/concat word list to reduce characters")
     const s = deep_clone(stats)
     for day in s:
         day.xp = encode_xp(day.xp)
@@ -66,7 +67,7 @@ def stats_save(stats):
 def stats_load():    
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
     stats.word_list = stats.word_list default []
-    
+        
     for day in stats:
         day.xp = decode_xp(day.xp)
         // Upgrade
