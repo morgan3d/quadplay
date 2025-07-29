@@ -8,8 +8,8 @@ def draw_row(y, caption, lifetime, today, color default #fff):
     
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
-    draw_text({…args, text: lifetime,   pos: xy(x + 35,  y)})
-    draw_text({…args, text: today,      pos: xy(x + 90, y)})
+    draw_text({…args, text: lifetime, pos: xy(x + 35,  y)})
+    if today: draw_text({…args, text: today, pos: xy(x + 90, y)})
     return 14
 
 
@@ -46,17 +46,15 @@ y += 5
 y += draw_row(y, "XP",           lifetime.xp, "+" + today.xp)
 y += draw_row(y, "Words",        lifetime.words, "+" + today.words)
 y += draw_row(y, "Matches",      lifetime.matches, "+" + today.matches)
+y += draw_row(y, "Unique Words", size(player.stats.word_list),  "-")
 
 y += 5
 y += draw_row(y, "Words/Match", format_number(lifetime.words / max(lifetime.matches, 1), "0.0"),  format_number(today.words / max(today.matches, 1), "0.0"))
 y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
-y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
 
+todo("Color code stats that went up")
 todo("Show lifetime unique words found")
 todo("XP Awards for first time finding a word")
-
-todo("Remove debugging text later")
-draw_text({text: debug_value, pos: xy(5, 5), font: history_font, color: #F00, x_align: "left", y_align: "top"})
 
 // Large done button, which is always selected
 local:

@@ -1,10 +1,10 @@
 /* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
 let game_type = SOLO
 
-/* In seconds, using utc_time */
+/* In seconds, using frame_utc_now */
 let start_time
 
-/* In seconds, using utc_time */
+/* In seconds, using frame_utc_now */
 let end_time
 
 /* If true, then the player is just warming
@@ -47,19 +47,19 @@ def draw_background_words():
 /* Updated once per frame by a frame hook. This ensures that there are no 
    race conditions within a frame because the time can only change 
    between frames */
-let utc_time = utc_now()
+let frame_utc_now = utc_now()
 
 
 /* Time at which the last global game already started
    (or is about to start) */
 def prev_global_game_utc_start_time():
-    return floor(utc_time, GLOBAL_PERIOD)
+    return floor(frame_utc_now, GLOBAL_PERIOD)
 
 
 
 /* Time at which the next global game will start */
 def next_global_game_utc_start_time():
-    return round(utc_time, GLOBAL_PERIOD)
+    return round(frame_utc_now, GLOBAL_PERIOD)
 
 
 
@@ -69,11 +69,11 @@ def penultimate_value(array):
 
 
 
-def _update_utc_time():
-    const prev_time = utc_time
-    utc_time = utc_now()
+def _update_frame_utc_now():
+    const prev_time = frame_utc_now
+    frame_utc_now = utc_now()
     
-    if utc_time - prev_time > 60 * REBOOT_TIME_MINUTES:
+    if frame_utc_now - prev_time > 60 * REBOOT_TIME_MINUTES:
         reset_game()
 
 
@@ -138,7 +138,7 @@ def set_hooks():
         input_hook = add_frame_hook(detect_input, ∅, ∞, "all")
     
     if not time_hook:
-        time_hook = add_frame_hook(_update_utc_time, ∅, ∞, "all")
+        time_hook = add_frame_hook(_update_frame_utc_now, ∅, ∞, "all")
         
     if not resolution_hook:
         device_control("set_mouse_cursor", "pointer")

@@ -9,17 +9,17 @@ assert(not in_waiting_room)
 if not in_waiting_room: play_sound(start_sound)
     
 last_countdown_sound_time = now()
-start_time = utc_time
+start_time = frame_utc_now
 
 // Compute end_time
 if game_type == SOLO:
-    end_time = utc_time + SOLO_GAME_TIME
+    end_time = frame_utc_now + SOLO_GAME_TIME
 else:
     assert(game_type == GLOBAL)
     
     end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
 
-    assert(end_time > utc_time + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION,
+    assert(end_time > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION,
         "The game should not end so soon")
 
 set_background(

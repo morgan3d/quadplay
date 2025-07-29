@@ -86,7 +86,9 @@ def _board_ngram_set(board, n, word_set):
 /* Returns a selection array [xy(), …] that matches the word, or ∅ if the word 
    does not appear in this board. The word is all caps and NOT Q-encoded */
 def board_find_unencoded_word(board, unencoded_word):
-    
+    // Workaround bug
+    if not unencoded_word: return ∅
+
     let path = ∅
     const encoded = q_encode(unencoded_word)
 
@@ -493,7 +495,7 @@ let last_countdown_sound_time
    the countdown beeping and flashing */
 def draw_timer(board_pos):
     // Real seconds
-    const real_time_left = max(0, end_time - utc_time)
+    const real_time_left = max(0, end_time - frame_utc_now)
     
     // Remapped to shorten midgame and extend endgame tension
     let time_left = real_time_left

@@ -41,7 +41,7 @@ share_results_with_network(player_competitor)
 end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
 
 if DEBUG_INTERMISSION:
-    end_time = utc_time
+    end_time = frame_utc_now
 
 
 frame
@@ -53,7 +53,7 @@ if mode_frames == (if DEBUG_INTERMISSION then 0 else 60):
     insert_bots(competitor_array, clamp(⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(6, 16), 3, 8))
 
 const start_time = end_time - GATHER_TIME_SECONDS
-const τ = min((utc_time - start_time) / GATHER_TIME_SECONDS, 100%)
+const τ = min((frame_utc_now - start_time) / GATHER_TIME_SECONDS, 100%)
 
 update_network()
 
@@ -93,7 +93,7 @@ for i < ⌊max(N, 10) τ⌋:
             
         draw_sprite(sprite, pos)
 
-if utc_time ≥ end_time:
+if frame_utc_now ≥ end_time:
     set_mode(GlobalIntermission) because "Timer"
     
     

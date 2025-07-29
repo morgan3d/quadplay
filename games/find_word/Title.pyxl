@@ -119,15 +119,15 @@ def update_button(pos, text, index):
         const prev_start = prev_global_game_utc_start_time()
         
         // Did the previous game finish (i.e., there is no current game)
-        const prev_game_finished = utc_time ≥ prev_start + GLOBAL_GAME_TIME
+        const prev_game_finished = frame_utc_now ≥ prev_start + GLOBAL_GAME_TIME
                 
         // Is the next game about to begin? If they are within 2 seconds of the next
         // game just send them to the game a little early, it isn't a huge
         // advantage and avoids any race condition
-        const next_game_imminent = utc_time > prev_start + GLOBAL_PERIOD - 2
+        const next_game_imminent = frame_utc_now > prev_start + GLOBAL_PERIOD - 2
         
         // How much time is left in the current game?
-        const curr_game_remaining_time = max((prev_start + GLOBAL_GAME_TIME) - utc_time, 0)
+        const curr_game_remaining_time = max((prev_start + GLOBAL_GAME_TIME) - frame_utc_now, 0)
 
         /*        
         debug_print(

@@ -4238,6 +4238,10 @@ unaffected.
   See `format_number()` for the various clock formatting options for numbers in seconds,
   and `now()` for a high-precision timer. See also `utc_time()`.
 
+`utc_time()`
+: Returns an object with the same fields as `local_time()` for the current time.
+  There is no way to produce this object for a different time.
+
 `utc_now()`
 : Seconds since midnight Jan 1, 1970 in UTC, with no guaranteed accuracy 
   below the second. See also `now()`.

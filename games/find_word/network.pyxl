@@ -22,7 +22,7 @@ def maybe_connect_to_network():
     const my_connect_time = end_time - NETWORK_CONNECT_TIME + τ * NETWORK_CONNECT_MAX_DELAY
 
     // Create the conduit    
-    if not conduit and utc_time > my_connect_time:
+    if not conduit and frame_utc_now > my_connect_time:
         conduit = make_conduit()
 
 

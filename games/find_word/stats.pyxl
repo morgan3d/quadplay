@@ -5,8 +5,6 @@ const LEVEL_EXPONENT = 0.65
 const LEVEL_DIVISOR  = 1000
 
 todo("For partial games, give XP but adjust no other stats")
-todo("Try Gzipping the localStorage values when large")
-todo("Make serialize() on an array of all strings, numbers, or booleans more efficient")
 
 
 const XP_VALUE = {
@@ -34,6 +32,91 @@ def level_to_xp(level):
     else:
         return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
 
+
+/* Assumes the input is a list of q-encoded, all-caps words. 
+   Returns a string packing them into a form that serializes
+   efficiently.
+   
+   quadplay limits the length of serialized save_local values, so
+   compress by
+   
+   - Using a single string, eliminating an extra comma and quote from each word
+   - Using suffix encoding for variants with trivial plurals:
+       - § = + ES
+       - $ = + S
+   */
+def compress_word_list(array):
+    def length(a, b):
+        return size(a) - size(b)
+    
+    const PRESENT = 2
+    const ALREADY_SAVED = 1
+    
+    
+    // Start with words sorted from longest to shortest
+    // (so we see prefixes first), and then mark all present
+    array = sorted(array, length, true)
+
+    // Maps each word to PRESENT or ALREADY_SAVED
+    let set = {}
+    for i < size(array):
+        set[array[i]] = PRESENT
+        
+    // Encode the words of array. Process in order from longest
+    // to shortest so that suffix encodings work
+    const dest = []    
+    
+    for i < size(array):
+        const text = array[i]
+        if set[text] ≠ ALREADY_SAVED:
+            // Technically unnecessary; we won't return to this word
+            set[text] = ALREADY_SAVED
+            
+            // Because of the way that the game scores words,
+            // it is actually impossible to have found the suffix
+            // plural without the singular. However, this logic is good
+            // for cases where the word ending in ES or S is not actually
+            // plural as well as for later generalizing to other suffixes
+            // and prefixes.
+            const strip2 = slice(text, 0, size(text) - 2)
+            const strip1 = slice(text, 0, size(text) - 1)
+            if ends_with(text, "ES") and set[strip2] == PRESENT:
+                set[strip2] = ALREADY_SAVED
+                push(dest, strip2 + "§")
+            else if ends_with(text, "S") and set[strip1] == PRESENT:
+                set[strip1] = ALREADY_SAVED
+                push(dest, strip1 + "$")
+            else:
+                push(dest, text)
+    
+    // Allow array and set to be garbage collected before we compute a giant
+    // string.
+    set = ∅
+    array = ∅    
+        
+    // Perform a single join at the end instead of string concatenation as we go
+    // so that native code can do this more efficiently
+    return join(dest, ",")
+    
+    
+
+def decompress_word_list(string):
+    const result = []
+    const array = split(string, ",")
+    for i < size(array):
+        let text = array[i]
+        if ends_with(text, "$"):
+            text = slice(text, 0, size(text) - 1)
+            push(result, text + "S")
+        else if ends_with(text, "§"):
+            text = slice(text, 0, size(text) - 1)
+            push(result, text + "ES")
+            
+        push(result, text)
+        
+    return result
+    
+
 /*
 for 1 ≤ level ≤  10:
     const xp = level_to_xp(level)
@@ -55,10 +138,11 @@ def make_empty_stats_entry():
 
 
 def stats_save(stats):
-    todo("String split/concat word list to reduce characters")
     const s = deep_clone(stats)
     for day in s:
         day.xp = encode_xp(day.xp)
+        
+    s.word_list = compress_word_list(s.word_list)
     save_local("stats", s)
     
     
@@ -66,7 +150,16 @@ def stats_save(stats):
 /* Returns a new stats object, which may have zeros */
 def stats_load():    
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
-    stats.word_list = stats.word_list default []
+    
+    if stats.word_list:
+        if type(stats.word_list) == "array":
+            // Legacy, already an array
+        else:
+            // Modern, decompress
+            stats.word_list = decompress_word_list(stats.word_list)
+    else:
+        // Legacy, add
+        stats.word_list = []
         
     for day in stats:
         day.xp = decode_xp(day.xp)

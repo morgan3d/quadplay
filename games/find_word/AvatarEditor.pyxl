@@ -3,6 +3,7 @@ AvatarEditor
 const DONE_BUTTON_INDEX = 4
 const AVATAR_SCALE = 300%
 
+
 // Which button is selected
 let selection_index = -1
 

@@ -3,6 +3,25 @@
    count early */
 const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 10
 
+/* Prevent players from using these */
+const AVATAR_RESTRICTED_INDEXES = [
+    // caf (Baby Moo)
+    xy(33, 22), 
+    
+    // Moo
+    xy(34, 22)
+    
+    // kat (Baby KAT)
+    xy(47, 6)
+    
+    // KAT
+    xy(0, 8),
+    
+    // KAT doppleganger
+    xy(1, 8)]
+    
+    
+
 def avatar_save(avatar):
     // Other properties are recomputed on load
     save_local("avatar", {
@@ -100,9 +119,15 @@ def avatar_sprite_from_linear_index(index):
 
 
 def avatar_next_sprite(sprite, dir default +1):
+    // Advance one
     let i = avatar_sprite_to_linear_index(sprite)
     i = loop(i + dir, AVATAR_SPRITE_COUNT)
-    return avatar_sprite_from_linear_index(i)
+    sprite = avatar_sprite_from_linear_index(i)
+    
+    if contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent):
+        return avatar_next_sprite(sprite, dir)
+    else:
+        return sprite
 
 
 

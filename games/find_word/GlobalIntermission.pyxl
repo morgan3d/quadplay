@@ -261,7 +261,7 @@ def draw_leaderboard()
 
 
 def update_countdown():
-    const time_left = max(end_time - utc_time, 0)
+    const time_left = max(end_time - frame_utc_now, 0)
     const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
     const α = 100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME)
     
@@ -275,7 +275,7 @@ def update_countdown():
         pos: timer_pos,
         color: #FFF})
     
-    if utc_time ≥ end_time and not DEBUG_INTERMISSION:
+    if frame_utc_now ≥ end_time and not DEBUG_INTERMISSION:
         set_mode(GenerateBoard) because "Timer"
     
 

@@ -10401,6 +10401,24 @@ function utc_now() {
 }
 
 
+function utc_time() {
+    let d = new Date();
+    return {
+        year:        d.getUTCFullYear(),
+        month:       d.getUTCMonth(),
+        day:         d.getUTCDate(),
+        hour:        d.getUTCHours(),
+        minute:      d.getUTCMinutes(),
+        second:      d.getUTCSeconds(),
+        millisecond: d.getUTCMilliseconds(),
+        weekday:     d.getUTCDay(),
+        day_second:  (d.getUTCHours() * 60 + d.getUTCMinutes()) * 60 + d.getUTCSeconds() + d.getUTCMilliseconds() * 0.001,
+        timezone:    0,
+        absolute_milliseconds: d.getUTCTime()
+    };
+}
+
+
 function local_time(args) {
     
     let d;
