@@ -1,3 +1,5 @@
+todo("XP Awards for first time finding a word")
+
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */
 def make_player():

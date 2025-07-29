@@ -1,25 +1,47 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
 
-def draw_row(y, caption, lifetime, today, color default #fff):
+/*
+ - `caption`  Left column value
+ - `lifetime` Center column value
+ - `today`    Right column value
+ - `color`    Color of the left and center values
+ - `today_color` Color of the today value
+*/
+def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
     if caption: draw_text({…args, text: caption,    pos: xy(x - 90, y)})
     
+    if today_suffix:
+        draw_text({…args,
+            pos: xy(x + 92, y),
+            text: today_suffix,
+            color: today_color})
+    
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
     draw_text({…args, text: lifetime, pos: xy(x + 35,  y)})
-    if today: draw_text({…args, text: today, pos: xy(x + 90, y)})
+    if today: draw_text({…args, text: today, pos: xy(x + 90, y), color: today_color})
     return 14
 
 
-let debug_value
+
+def draw_trend_row(y, caption, format, lifetime, today, color, highlight_color):
+    return draw_row(
+        y,
+        caption,
+        format_number(lifetime, format),
+        format_number(today, format),
+        color, 
+        if today > lifetime then highlight_color else ∅,
+        if today > lifetime then "↑" else ∅)
+    
+    
 
 enter
 ────────────────────────────────────────────────────────────────────────
 
-debug_print(player.stats)
-debug_value = "" + size(unparse(player.stats.word_list, 0)) + ", " + size(player.stats.word_list)
 
 
 frame
@@ -35,26 +57,26 @@ const lifetime = player.stats.lifetime
 const today    = player.stats[today_date_string()] default make_empty_stats_entry()
 
 let y = 36 + ½ (SCREEN_SIZE.y - 224)
-y += draw_row(y, ∅, "Lifetime", "Today", #E1B)
+const DIM = #ACF
+const HIGHLIGHT = #E1B
+
+y += draw_row(y, ∅, "Lifetime", "Today", HIGHLIGHT)
 y -= 1
-y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text)
-y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text)
-y += draw_row(y, "Most Words",   lifetime.most_words, today.most_words)
-y += draw_row(y, "High Score",   lifetime.best_score, today.best_score)
+y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text, ∅, if size(today.longest_text) == size(lifetime.longest_text) then HIGHLIGHT else ∅)
+y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text, DIM, if lifetime.best_word_points == today.best_word_points then HIGHLIGHT else ∅)
+y += draw_trend(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
+y += draw_trend(y, "High Score",   lifetime.best_score, today.best_score, DIM)
 
 y += 5
 y += draw_row(y, "XP",           lifetime.xp, "+" + today.xp)
-y += draw_row(y, "Words",        lifetime.words, "+" + today.words)
-y += draw_row(y, "Matches",      lifetime.matches, "+" + today.matches)
-y += draw_row(y, "Unique Words", size(player.stats.word_list),  "-")
+y += draw_row(y, "Total Words",  lifetime.words, "+" + today.words, DIM)
+y += draw_row(y, "Total Matches",lifetime.matches, "+" + today.matches)
+y += draw_row(y, "Unique Words", size(player.stats.word_list),  "-", DIM)
 
 y += 5
-y += draw_row(y, "Words/Match", format_number(lifetime.words / max(lifetime.matches, 1), "0.0"),  format_number(today.words / max(today.matches, 1), "0.0"))
-y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
+y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT)
+y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), DIM, HIGHLIGHT)
 
-todo("Color code stats that went up")
-todo("Show lifetime unique words found")
-todo("XP Awards for first time finding a word")
 
 // Large done button, which is always selected
 local:
