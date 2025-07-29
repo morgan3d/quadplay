@@ -19,7 +19,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 debug_print(player.stats)
-debug_value = size(unparse(player.stats.word_list, 0))
+debug_value = "" + size(unparse(player.stats.word_list, 0)) + ", " + size(player.stats.word_list)) 
 
 
 frame
@@ -53,7 +53,10 @@ y += draw_row(y, "Words/Match", format_number(lifetime.words / max(lifetime.matc
 y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
 y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
 
-todo("Remove")
+todo("Show lifetime unique words found")
+todo("XP Awards for first time finding a word")
+
+todo("Remove debugging text later")
 draw_text({text: debug_value, pos: xy(5, 5), font: history_font, color: #F00, x_align: "left", y_align: "top"})
 
 // Large done button, which is always selected
