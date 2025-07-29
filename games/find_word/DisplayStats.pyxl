@@ -19,7 +19,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 debug_print(player.stats)
-debug_value = "" + size(unparse(player.stats.word_list, 0)) + ", " + size(player.stats.word_list)) 
+debug_value = "" + size(unparse(player.stats.word_list, 0)) + ", " + size(player.stats.word_list)
 
 
 frame
@@ -27,28 +27,27 @@ frame
 draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(210, SCREEN_SIZE.y), #0009)
 
-draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, pos: xy(½ SCREEN_SIZE.x, 10), color: #FFF})
-draw_text({text: format_number(player.stats.lifetime.xp, "commas") + " XP. Next level at " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, pos: xy(½ SCREEN_SIZE.x, 25), color: #FFF})
+draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, pos: xy(½ SCREEN_SIZE.x, 9), color: #FFF})
+draw_text({text: format_number(player.stats.lifetime.xp, "commas") + " XP. Next level at " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, pos: xy(½ SCREEN_SIZE.x, 22), color: #FFF})
 
 
 const lifetime = player.stats.lifetime
 const today    = player.stats[today_date_string()] default make_empty_stats_entry()
 
-let y = 40 + ½ (SCREEN_SIZE.y - 224)
+let y = 36 + ½ (SCREEN_SIZE.y - 224)
 y += draw_row(y, ∅, "Lifetime", "Today", #E1B)
-y += 2
-
+y -= 1
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text)
 y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text)
 y += draw_row(y, "Most Words",   lifetime.most_words, today.most_words)
 y += draw_row(y, "High Score",   lifetime.best_score, today.best_score)
 
-y += 6
+y += 5
 y += draw_row(y, "XP",           lifetime.xp, "+" + today.xp)
 y += draw_row(y, "Words",        lifetime.words, "+" + today.words)
 y += draw_row(y, "Matches",      lifetime.matches, "+" + today.matches)
 
-y += 6
+y += 5
 y += draw_row(y, "Words/Match", format_number(lifetime.words / max(lifetime.matches, 1), "0.0"),  format_number(today.words / max(today.matches, 1), "0.0"))
 y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
 y += draw_row(y, "Points/Match", format_number(lifetime.points / max(lifetime.matches, 1), "0"),  format_number(today.points / max(today.matches, 1), "0"))
