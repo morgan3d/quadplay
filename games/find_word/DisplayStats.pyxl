@@ -21,7 +21,7 @@ def draw_row(y, caption, lifetime, today, color default #fff, today_color defaul
     
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
-    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "-" then 35 else 75),  y)})
+    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "-" then 35 else 65),  y)})
     if today and today ≠ "-": draw_text({…args, text: today, pos: xy(x + 90, y), color: today_color})
     return 14
 

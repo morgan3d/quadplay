@@ -84,6 +84,8 @@ if someone_ready and not someone_choosing:
     set_mode(GameSelect, player_info) because "All ready"
 
 
+draw_sprite(logo_sprite[0][0], xy(SCREEN_SIZE.x - 32, 14))
+
 preserving_transform:
     set_transform(xy(1, 1), xy(1, 1))
     

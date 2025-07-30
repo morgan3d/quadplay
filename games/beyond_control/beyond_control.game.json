@@ -1,7 +1,7 @@
 {
     "title": "Beyond Control",
-    "developer": "Casual Effects",
-    "copyright": "©2020 Morgan McGuire",
+    "developer": "SHMUEL and Morgan McGuire",
+    "copyright": "©2020 Factory 797",
     "license": "Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause",
     "packages": [],
     "scripts": [
@@ -74,9 +74,10 @@
         "loop_forest_sound": "quad://sounds/loop-forest.sound.json",
         "loop_beat_sound": "quad://sounds/loop-beat.sound.json",
         "loop_wind_sound": "quad://sounds/loop-wind.sound.json",
-        "teleport_sound": "quad://sounds/wild-01.sound.json"
+        "teleport_sound": "quad://sounds/wild-01.sound.json",
+        "logo_sprite": "logo.sprite.json"
     },
-    "version": 0,
+    "version": "1",
     "min_players": 1,
     "max_players": 4,
     "cooperative": true,
@@ -106,14 +107,42 @@
         "player_position": {
             "type": "array",
             "value": [
-                1, 2, 0, 3
+                1,
+                2,
+                0,
+                3
             ],
             "description": "Maps player index to on-screen order of players."
         },
         "spawn_poly": {
             "type": "raw",
-            "value": [{x:7.361215932167729, y:3.680607966083864}, {x:5.204748896376251e-16, y:7.361215932167729}, {x:-7.3612159321677275, y:3.680607966083867}, {x:-7.36121593216773, y:-3.6806079660838624}, {x:-1.5614246689128753e-15, y:-7.361215932167729}, {x:7.361215932167726, y:-3.6806079660838678}],
-            "description": "The inset geometry for the player spawn point. Computed by:\n\nfor i < 6: const θ = 30° + 60° i; push(spawn_poly, 8.5 xy(cos θ, cos(30°) * sin θ))\n\n The extra cos(30°) accounts for the 32x32 pixel tile hex scaling." 
+            "value": [
+                {
+                    "x": 7.361215932167729,
+                    "y": 3.680607966083864
+                },
+                {
+                    "x": 5.204748896376251e-16,
+                    "y": 7.361215932167729
+                },
+                {
+                    "x": -7.3612159321677275,
+                    "y": 3.680607966083867
+                },
+                {
+                    "x": -7.36121593216773,
+                    "y": -3.6806079660838624
+                },
+                {
+                    "x": -1.5614246689128753e-15,
+                    "y": -7.361215932167729
+                },
+                {
+                    "x": 7.361215932167726,
+                    "y": -3.6806079660838678
+                }
+            ],
+            "description": "The inset geometry for the player spawn point. Computed by:\n\nfor i < 6: const θ = 30° + 60° i; push(spawn_poly, 8.5 xy(cos θ, cos(30°) * sin θ))\n\n The extra cos(30°) accounts for the 32x32 pixel tile hex scaling."
         },
         "UI_SHADOW_OFFSET": {
             "type": "xy",
@@ -270,5 +299,10 @@
             "value": 0.05
         }
     },
-    "y_up": true
+    "y_up": true,
+    "online_menu": true,
+    "screenshot_tag": "Beyond Control",
+    "show_start_animation": true,
+    "show_controls_button": true,
+    "mobile_touch_gamepad": true
 }
