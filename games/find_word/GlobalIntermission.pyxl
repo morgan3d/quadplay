@@ -56,7 +56,7 @@ def draw_award_summary()
         play_sound({sound: word_sound, pan: 100%, pitch: 150%})
     
     const XP_ANIMATION_RATE = 1 / 120
-    const xp = round(lerp(prev_xp, player.stats.lifetime.xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
+    const xp = round(lerp(prev_xp, new_xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
     const level = xp_to_level(xp)
 
     if frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
@@ -100,7 +100,7 @@ def draw_award_summary()
     const xp_color = if frames < XP_ANIMATION_DELAY_FRAMES and flash then highlight_color else #FFF
     const xp_outline = if frames < XP_ANIMATION_DELAY_FRAMES and flash then #FFF else ∅
     draw_text({…args, text: "XP Earned", pos: xy(x, 34), color: xp_color, outline: xp_outline})
-    draw_text({…args, text: "+" + (player.stats.lifetime.xp - prev_xp), color: xp_color, outline: xp_outline, pos: xy(30, 34), x_align: "right"})
+    draw_text({…args, text: "+" + (new_xp - prev_xp), color: xp_color, outline: xp_outline, pos: xy(30, 34), x_align: "right"})
 
     // XP bar
     const xp_rect = {corner: xy(x, 39), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - x - 108, 10)}
@@ -290,11 +290,12 @@ if not DEBUG_INTERMISSION:
     todo("*** TRACK IF JOINED LATE ***")
     const joined_late = false
     stats_update(player.stats, player_competitor, joined_late)
+    new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
     // Update level
-    player.avatar.level = xp_to_level(player.stats.lifetime.xp + player.stats[today_date_string()].xp)
+    player.avatar.level = xp_to_level(new_xp)
     stats_save(player.stats)
 else:
-    player.stats.lifetime.xp += player.score + 1000
+    new_xp = prev_xp + 1000
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0
