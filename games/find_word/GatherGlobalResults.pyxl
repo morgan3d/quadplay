@@ -50,7 +50,8 @@ if mode_frames == (if DEBUG_INTERMISSION then 0 else 60):
     // Make some bots to fill out the competitor list if offline or
     // there are too few players. Do this after almost a second so that
     // other players could come in first
-    insert_bots(competitor_array, clamp(⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(6, 16), 3, 8))
+    const num_total_competitors = clamp(⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(6, 16), 3, 14)
+    insert_bots(competitor_array, num_total_competitors)
 
 const start_time = end_time - GATHER_TIME_SECONDS
 const τ = min((frame_utc_now - start_time) / GATHER_TIME_SECONDS, 100%)
