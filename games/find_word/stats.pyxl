@@ -187,13 +187,12 @@ def stats_load():
    then delete those days.
 */
 def stats_merge_previous_days(stats):
-    const today_date = today_date_string()                
+    const today_date = today_date_string(true)
     const lifetime = stats.lifetime
     
     if not stats[today_date]:
         stats[today_date] = make_empty_stats_entry()
-        
-        
+                
     for date in keys(stats):
         // Skip the elements we are not modifying and the word_list, which is the only
         // non-date top-level member
@@ -242,10 +241,14 @@ def decode_xp(str):
         return 0
     
 
-
-def today_date_string():
-    const date = local_time()
-    return "" + date.year + "-" + (date.month + 1) + "-" + date.day
+/* Don't let the value change except when stats are updated, otherwise
+   we'll access uncollected data. */
+let today_date = ∅
+def today_date_string(update default false):
+    if update:
+        const date = local_time()
+        today_date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
+    return today_date
 
 
 

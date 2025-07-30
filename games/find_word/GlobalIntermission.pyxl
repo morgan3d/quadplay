@@ -47,7 +47,6 @@ def draw_award_summary()
     const highlight_color = #E1B    
 
     const frames = mode_frames - first_frame_this_stage
-    todo("Flash level AFTER level up")
     const flash = (⌊frames / 15⌋ mod 2) and (player.score > 0)
     const XP_ANIMATION_DELAY_FRAMES = 150
     if frames == XP_ANIMATION_DELAY_FRAMES + 10 and player.score > 0:
