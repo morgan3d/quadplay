@@ -60,7 +60,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.221",
+    "version": "0.223",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -375,7 +375,7 @@
                 "MIN_LONG_WORDS": {
                     "description": "5-6 letters",
                     "type": "number",
-                    "value": "36",
+                    "value": "40",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -384,7 +384,7 @@
                 "MIN_VERY_LONG_WORDS": {
                     "description": "7+ letters",
                     "type": "number",
-                    "value": "12",
+                    "value": "18",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -402,16 +402,34 @@
                 "MIN_VALUABLE_LETTER_USES": {
                     "description": "How many times every good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
                     "type": "number",
-                    "value": "14",
+                    "value": "16",
                     "min": 0,
                     "max": 20,
                     "format": "0",
                     "quantum": 1
                 },
                 "MIN_VALUABLE_LETTER_LONG_WORDS": {
-                    "description": "How many times every good letter (such as Q) must be used in 5+ letter words longer than 5 letters. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                    "description": "How many times every good letter (such as Q) must be used in 5+ letter words . -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
                     "type": "number",
                     "value": "8",
+                    "min": 0,
+                    "max": 20,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "MEAN_VALUABLE_LETTER_USES": {
+                    "description": "How many times good letters (such as Q) must be used in words on average. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                    "type": "number",
+                    "value": "20",
+                    "min": 0,
+                    "max": 20,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "MEAN_VALUABLE_LETTER_LONG_WORDS": {
+                    "description": "How many times good letters (such as Q) must be used in 5+ letter words on average. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                    "type": "number",
+                    "value": "14",
                     "min": 0,
                     "max": 20,
                     "format": "0",
@@ -720,6 +738,8 @@
                 "COW",
                 "MOO",
                 "EAT",
+                "STRAW",
+                "STRAWS",
                 "GORE",
                 "GORED",
                 "GORING",
@@ -824,6 +844,8 @@
                 "YAK",
                 "HINDU",
                 "HINDUS",
+                "HINDOO",
+                "HINDUISM",
                 "YAKS",
                 "MANURE",
                 "DUNG",

@@ -1,5 +1,3 @@
-todo("** Test boards for locked out letters**")
-
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def _player_find_good_board(player, game_type):
     let done = false
@@ -27,6 +25,8 @@ def _player_find_good_board(player, game_type):
     let valuable_letter_long_count = {}
     let mean_valuable_letter_uses = 0
     let mean_valuable_letter_long_uses = 0
+    let min_valuable_letter_uses = ∞
+    let min_valuable_letter_long_uses = ∞
             
     for i < BOARD_SEARCH.RETRIES:
         if i > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
@@ -106,23 +106,35 @@ def _player_find_good_board(player, game_type):
                 if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it only produced " + very_long_word_count + " very long words")        
                 continue
             
-            // See if we used the valuable letters. We only need to hit these
-            // on average, not for every valuable letter.
+            // See if we used the valuable letters.
             let total_valuable_letter_uses = 0
             let total_valuable_letter_long_uses = 0
+            min_valuable_letter_uses = ∞
+            min_valuable_letter_long_uses = ∞
+            
             for count at letter in valuable_letter_table:
                 total_valuable_letter_uses += count
                 total_valuable_letter_long_uses += valuable_letter_long_count[letter]
-                
-            mean_valuable_letter_uses = total_valuable_letter_uses / num_valuable_letter_instances
-            mean_valuable_letter_long_uses = total_valuable_letter_long_uses / num_valuable_letter_instances
-                    
-            if mean_valuable_letter_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters")
+                min_valuable_letter_uses = min(min_valuable_letter_uses, count)
+                min_valuable_letter_long_uses = min(min_valuable_letter_long_uses, valuable_letter_long_count[letter])
+            
+            mean_valuable_letter_uses = total_valuable_letter_uses / max(num_valuable_letter_instances, 1)
+            mean_valuable_letter_long_uses = total_valuable_letter_long_uses / max(num_valuable_letter_instances, 1)
+            
+            if mean_valuable_letter_uses < BOARD_SEARCH.MEAN_VALUABLE_LETTER_USES:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters enough on average")
                 continue
             
-            if mean_valuable_letter_long_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + "long words")
+            if mean_valuable_letter_long_uses < BOARD_SEARCH.MEAN_VALUABLE_LETTER_LONG_WORDS:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + "long words enough on average")
+                continue
+
+            if min_valuable_letter_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters enough")
+                continue
+            
+            if min_valuable_letter_long_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
+                if DEBUG_BOARD_SEARCH: debug_print("Shuffled board " + seed_word + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + "long words enough")
                 continue
     
             // Success!
@@ -149,6 +161,8 @@ def _player_find_good_board(player, game_type):
         debug_print("long_word_count =", long_word_count)
         debug_print("mean_valuable_letter_uses =", mean_valuable_letter_uses)
         debug_print("mean_valuable_letter_long_uses =", mean_valuable_letter_long_uses)
+        debug_print("min_valuable_letter_uses =", min_valuable_letter_uses)
+        debug_print("min_valuable_letter_long_uses =", min_valuable_letter_long_uses)
 
 
 /* Chooses a random letter for each tile, and then 
