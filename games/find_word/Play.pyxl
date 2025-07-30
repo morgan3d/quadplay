@@ -29,6 +29,9 @@ set_background(
     then GLOBAL_BACKGROUND_COLOR
     else SOLO_BACKGROUND_COLOR)
 
+// Started more than 4s late, do not affect
+// ratio stats
+joined_late = (end_time - start_time - 4 < GLOBAL_GAME_TIME)
 
 board_deselect_all(player.board, player)
 

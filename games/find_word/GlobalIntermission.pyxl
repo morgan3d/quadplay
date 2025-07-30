@@ -289,8 +289,7 @@ set_background(#333)
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
-    todo("*** TRACK IF JOINED LATE ***")
-    const joined_late = false
+
     stats_update(player.stats, player_competitor, joined_late)
     new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
     // Update level

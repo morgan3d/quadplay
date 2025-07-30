@@ -17,6 +17,8 @@ let resolution_hook
 let time_hook
 let input_hook
 
+/* Set by `Play.enter`. Used to track games that should not affect stats */
+let joined_late
 
 const SOLO_GAME_TIME = 60 SOLO_GAME_TIME_MINUTES
 
