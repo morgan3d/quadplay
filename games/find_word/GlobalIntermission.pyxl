@@ -1,7 +1,7 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
 
-todo("** Favoriting UI + save")
+todo("Favoriting UI + save")
 
 let prev_xp
 let prev_level
@@ -48,6 +48,7 @@ def draw_award_summary()
     const highlight_color = #E1B    
 
     const frames = mode_frames - first_frame_this_stage
+    todo("Flash level AFTER level up")
     const flash = (⌊frames / 15⌋ mod 2) and (player.score > 0)
     const XP_ANIMATION_DELAY_FRAMES = 150
     if frames == XP_ANIMATION_DELAY_FRAMES + 10 and player.score > 0:
@@ -57,6 +58,8 @@ def draw_award_summary()
         play_sound({sound: word_sound, pan: 100%, pitch: 150%})
     
     const XP_ANIMATION_RATE = 1 / 120
+
+    // Compute animated XP and level
     const xp = round(lerp(prev_xp, new_xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
     const level = xp_to_level(xp)
 
