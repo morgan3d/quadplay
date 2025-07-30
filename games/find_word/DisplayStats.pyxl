@@ -21,8 +21,8 @@ def draw_row(y, caption, lifetime, today, color default #fff, today_color defaul
     
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
-    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "-" then 35 else 65),  y)})
-    if today and today ≠ "-": draw_text({…args, text: today, pos: xy(x + 90, y), color: today_color})
+    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "N/A" then 35 else 65),  y)})
+    if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x + 90, y), color: today_color})
     return 14
 
 
@@ -62,8 +62,8 @@ const HIGHLIGHT = #E1B
 
 y += draw_row(y, ∅, "Lifetime", "Today", HIGHLIGHT)
 y -= 1
-y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text, ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) then HIGHLIGHT else ∅)
-y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text, DIM, if lifetime.best_word_points ≥ today.best_word_points then HIGHLIGHT else ∅)
+y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text or "-", ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) then HIGHLIGHT else ∅)
+y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text or "-", DIM, if lifetime.best_word_points ≥ today.best_word_points then HIGHLIGHT else ∅)
 y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
 y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, DIM, HIGHLIGHT)
 
@@ -71,7 +71,7 @@ y += 5
 y += draw_row(y, "XP",           format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
 y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"), DIM)
 y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
-y += draw_row(y, "Unique Words", format_number(size(player.stats.word_list), "commas"),  "-", DIM)
+y += draw_row(y, "Unique Words", format_number(size(player.stats.word_list), "commas"),  "N/A", DIM)
 
 y += 5
 y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT)

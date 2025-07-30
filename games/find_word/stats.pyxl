@@ -205,7 +205,7 @@ def stats_merge_previous_days(stats):
             
         if day.best_word_points > lifetime.best_word_points:
             lifetime.best_word_points = day.best_word_points
-            lifetime.best_word_text = day.best_word_points
+            lifetime.best_word_text = day.best_word_text
 
         lifetime.most_words = max(lifetime.most_words, day.most_words)
         lifetime.best_score = max(lifetime.best_score, day.best_score)
