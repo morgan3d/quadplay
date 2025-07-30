@@ -60,7 +60,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.220",
+    "version": "0.221",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
