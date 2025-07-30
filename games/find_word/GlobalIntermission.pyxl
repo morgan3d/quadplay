@@ -1,6 +1,5 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-
 todo("Favoriting UI + save")
 
 let prev_xp
@@ -288,7 +287,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
 
-prev_xp = player.stats.lifetime.xp
+prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
     todo("*** TRACK IF JOINED LATE ***")
