@@ -10,7 +10,7 @@ def make_player():
         
         stats: stats,
         
-        avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp)},
+        avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
         
         // Maps player GUIDs to their most recent name.
         // The names are only for debugging. Players with no friends

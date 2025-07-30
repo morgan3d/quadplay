@@ -3484,9 +3484,9 @@ common bugs when using first class functions with loops.
 
 The Java/C++ equivalents of `for`-loop conditions are:
 
-<quadplay/>             | Java/C++
+<quadplay/>           | Java/C++
 ----------------------|------------------------
-`for i ≤ k`           | `for (i = 0; i <= k; ++i)`
+`for i ≤ k`           | `for (i = 0; i &lt;= k; ++i)`
 `for i &lt; k`        | `for (i = 0; i &lt; k; ++i)`
 `for 4 ≤ i &lt; k`    | `for (i = 4; i &lt; k; ++i)`
 `for 4 &lt; i &lt; k` | `for (i = 5; i &lt; k; ++i)`
@@ -3495,10 +3495,10 @@ The Java/C++ equivalents of `for`-loop conditions are:
 The comparison operators in a `for` loop declaration are an overloaded
 syntax for comparison operators (just as many languages overload the
 `=` operator for `for` loops).  They have the lowest precedence. For
-example, `for i&lt;a||b` is equivalent to `for i&lt;(a||b)`.  To use
+example, `for i &lt; a or b:` is equivalent to `for i &lt; (a or b):`.  To use
 regular comparison operators within `for` loop preamble, you *must*
 use parentheses to make the parsing unambiguous, for example, `for i
-&lt; (a &lt; b)`.
+&lt; (a &lt; b):`.
 
 
 ### `for-in` Loop
@@ -3532,12 +3532,12 @@ change slots. Writing to the current value is legal and frequently useful.
 If you would like to add or remove from the container, transform your code from
 `for x in container:` to `for x in clone(container):`. Cloning is
 fairly fast in PyxlScript. Or, use the syntax
-`let i = 0; while i < size(container): let x = container[i] ... ++i` and account for the
+`let i = 0; while i &lt; size(container): let x = container[i] ... ++i` and account for the
 index and size changes in your own iteration.
 
 The Java/C++ equivalents of `for-in`-loop conditions are:
 
-<quadplay/>             | Java/C++
+<quadplay/>           | Java/C++
 ----------------------|------------------------
 `for x ∈ S`           | `for (x : S)`
 

@@ -5,7 +5,6 @@ const LEVEL_EXPONENT = 0.65
 const LEVEL_DIVISOR  = 1000
 
 todo("** For partial games, give XP but adjust no other stats")
-todo("** Separate stats into Before and Today")
 
 const XP_VALUE = {
     // Per point
@@ -18,6 +17,21 @@ const XP_VALUE = {
     //badge: 50
 }
 
+
+
+/* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */
+def make_empty_stats_entry():
+    return {
+        longest_text: "", 
+        best_word_text: "", 
+        best_word_points: 0,
+        best_score: 0,
+        most_words: 0,
+        words: 0,
+        points: 0,
+        matches: 0,
+        xp: 0}
+        
 
 def xp_to_level(xp):
     assert(xp ≠ ∅ and not is_nan(xp))
@@ -123,19 +137,6 @@ for 1 ≤ level ≤  10:
     debug_print(level, xp, xp_to_level(xp + 0))*/
 
 
-def make_empty_stats_entry():
-    return {
-        longest_text: "", 
-        best_word_text: "", 
-        best_word_points: 0,
-        best_score: 0,
-        most_words: 0,
-        words: 0,
-        points: 0,
-        matches: 0,
-        xp: 0}
-
-
 
 def stats_save(stats):
     const s = deep_clone(stats)
@@ -147,10 +148,11 @@ def stats_save(stats):
     
     
 
-/* Returns a new stats object, which may have zeros */
+/* Returns a new stats object loaded from storage. */
 def stats_load():    
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
-    
+
+    // Decompress the word list    
     if stats.word_list:
         if type(stats.word_list) == "array":
             // Legacy, already an array
@@ -160,16 +162,60 @@ def stats_load():
     else:
         // Legacy, add
         stats.word_list = []
-        
-    for day in stats:
-        day.xp = decode_xp(day.xp)
-        // Upgrade
-        if day.longest ≠ ∅:
-            remove_key(day, "longest")
-        if day.longest_text == ∅:
-            day.longest_text = ""
-        
+
+    // Clean up and decode all entries
+    for day at date in stats:
+        if date ≠ "word_list":
+            const day = stats[date]
+            day.xp = decode_xp(day.xp)
+            
+            // Upgrade legacy formats
+            if day.longest ≠ ∅:
+                remove_key(day, "longest")
+            if day.longest_text == ∅:
+                day.longest_text = ""
+                
+    // Everything is decoded now. Iterate again,
+    stats_merge_previous_days(stats)
+    
     return stats
+
+
+
+/* Roll up every day other than today into the lifetime stats, and
+   then delete those days.
+*/
+def stats_merge_previous_days(stats):
+    const today_date = today_date_string()                
+    const lifetime = stats.lifetime
+    
+    if not stats[today_date]:
+        stats[today_date] = make_empty_stats_entry()
+        
+        
+    for date in keys(stats):
+        // Skip the elements we are not modifying and the word_list, which is the only
+        // non-date top-level member
+        if date == "lifetime" or date == today_date or date == "word_list": continue
+    
+        const day = stats[date]
+                    
+        if size(day.longest_text) > size(lifetime.longest_text):
+            lifetime.longest_text = day.longest_text
+            
+        if day.best_word_points > lifetime.best_word_points:
+            lifetime.best_word_points = day.best_word_points
+            lifetime.best_word_text = day.best_word_points
+
+        lifetime.most_words = max(lifetime.most_words, day.most_words)
+        lifetime.best_score = max(lifetime.best_score, day.best_score)
+        lifetime.words += day.words
+        lifetime.points += day.points
+        lifetime.matches += day.matches
+        lifetime.xp += day.xp
+        remove_key(stats, date)
+                                
+        return stats
     
     
     
@@ -206,53 +252,41 @@ def today_date_string():
     Update the player's stats and level given the results in 
     competitor from a global match. Do not save.
 */
-def player_change_stats(player, competitor)
-& with stats in player:
+def stats_update(stats, competitor, joined_late):
+
+    // We may have passed midnight, so roll up any previous days
+    // if needed before updating today's entry
+    stats_merge_previous_days(stats)
 
     assert(stats)
-    assert(stats.lifetime)
     assert(stats.word_list ≠ ∅)
     
-    // Today's date in the local time zone
-    const date = today_date_string()
+    const entry = stats[today_date_string()]
     
-    // Remove any previous date values
-    for key in keys(stats):
-        if key ≠ "lifetime" and key ≠ date and key ≠ "word_list":
-            remove_key(stats, key)
+    if size(competitor.longest_text) > size(entry.longest_text):
+        entry.longest_text = competitor.longest_text
+        
+    if competitor.best_word_points > entry.best_word_points:
+        entry.best_word_points = competitor.best_word_points
+        entry.best_word_text = competitor.best_word_text
     
-    // Update lifetime and today
-    for entry_name in ["lifetime", date]:
-        
-        if not stats[entry_name]:
-            // No record, so update it
-            stats[entry_name] = make_empty_stats_entry()
-            
-        // Update result
-        const entry = stats[entry_name]
-        if size(competitor.longest_text) > size(entry.longest_text):
-            entry.longest_text = competitor.longest_text
-            
-        if competitor.best_word_points > entry.best_word_points:
-            entry.best_word_points = competitor.best_word_points
-            entry.best_word_text = competitor.best_word_text
-            
-        if competitor.score > entry.best_score:
-            entry.best_score = competitor.score
-        
-        const N = size(competitor.word_list)
-        if N > entry.most_words:
-            entry.most_words = N
-        
+    if competitor.score > entry.best_score:
+        entry.best_score = competitor.score
+    
+    const N = size(competitor.word_list)
+    if N > entry.most_words:
+        entry.most_words = N
+    
+    if not joined_late:
         entry.words += N
         entry.points += competitor.score
         ++entry.matches
-        
-        entry.xp += ⌈competitor.score * XP_VALUE.point⌉
+    
+    entry.xp += ⌈competitor.score * XP_VALUE.point⌉
 
     // Accumulate the words found by this player
     const word_set = {}
-    for word in player.stats.word_list:
+    for word in stats.word_list:
         word_set[word] = 1
     
     for word in competitor.word_list:
@@ -260,6 +294,5 @@ def player_change_stats(player, competitor)
             push(stats.word_list, word)
     
     sort(stats.word_list)
-    player.avatar.level = xp_to_level(stats.lifetime.xp)
 
     
