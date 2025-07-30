@@ -5,6 +5,7 @@ todo("** Favoriting UI + save")
 
 let prev_xp
 let prev_level
+let new_xp
 
 // Cycle through the award stages. See `STAGE`
 let stage
