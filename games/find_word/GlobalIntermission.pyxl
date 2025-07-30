@@ -131,6 +131,7 @@ def draw_word_award(title, winner):
         
     const field = replace(lowercase(title), {" ": "_"})
     const text = winner[field + "_text"]
+    if not text: return
         
     draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
 
@@ -192,13 +193,13 @@ def draw_leaderboard()
     set_clip(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, SCREEN_SIZE.y - 22))
     set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 72))
     
-    draw_text({text: "Global Leaderboard", pos: xy(½ GLOBAL_LAYOUT.LEADERBOARD.WIDTH, -5), x_align: "center", font: history_font, color: #E1B, shadow: #000})
+    draw_text({text: "Global Leaderboard", pos: xy(½ GLOBAL_LAYOUT.LEADERBOARD.WIDTH, -4), x_align: "center", font: leaderboard_font, color: #E1B, shadow: #000})
     
     // Alternating animation frames for avatar idle animations
     const alt = ⌊mode_frames / 30⌋ mod 2
     for competitor at i in competitor_array:
         // Center of avatar
-        const pos = xy(0, i * GLOBAL_LAYOUT.LEADERBOARD.ROW_SPACING + 8)
+        const pos = xy(0, i * GLOBAL_LAYOUT.LEADERBOARD.ROW_SPACING + 11)
                 
         const me = (competitor == player_competitor)
         

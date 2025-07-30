@@ -18,8 +18,9 @@ frame
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
 
-// Draw a screen on the first frame. On the second frame, go to
-// the next mode.
+// Draw on the first few frames (needed in case we're running at low
+// frame rate--ensure this is seen). Then, generate the board and go
+// to play.
 
 draw_text({
     text: "Generating board…",
@@ -27,7 +28,7 @@ draw_text({
     color: #F3C,
     pos: ½ SCREEN_SIZE})
 
-if mode_frames == 1:
+if mode_frames > 3:
     player_reset_match(player, game_type, if DEBUG_INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅)
     
     if DEBUG_HISTORY or DEBUG_INTERMISSION:
