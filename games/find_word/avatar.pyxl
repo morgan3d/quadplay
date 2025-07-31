@@ -74,12 +74,14 @@ def avatar_compute_color(sprite):
 
 
         
-def avatar_draw_large(avatar, pos, background default true, color, shadow default #000):
+def avatar_draw_large(avatar, pos, background default true, color, shadow default #000, spin default false):
     
     let sprite = avatar.sprite
     
     if ⌊(game_frames + 15) / 30⌋ mod 2:
         sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
+        sprite = sprite_transfer_orientation(avatar.sprite, sprite)
+        if spin: sprite = sprite.x_flipped
 
     sprite = sprite.x_flipped
     

@@ -138,7 +138,7 @@ def draw_word_award(title, winner):
     draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
     draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(42, -29), z: 2})
     
-    avatar_draw_large(winner.avatar, xy(0, -5), false)
+    avatar_draw_large(winner.avatar, xy(0, -5), false, ∅, ∅, true)
     
     if winner == player_competitor or not offensive[lowercase(text)]:
         board_select_word(player.board, text)
@@ -169,7 +169,7 @@ def draw_most_words_award(winner):
 
     draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
     draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, "most_words", winner.avatar.color)
-    avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color)
+    avatar_draw_large(winner.avatar, xy(0, -5), false, player.board.selection_color, ∅, true)
 
     let word
     // Find a non-offensive word, but give up after four tries instead of locking up
@@ -212,7 +212,8 @@ def draw_leaderboard()
         // Animate sprite
         let sprite = competitor.avatar.sprite
         
-        if alt: sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
+        if alt: 
+            sprite = sprite_transfer_orientation(sprite, sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1])
         
         const text_args = {
             font: leaderboard_font,
