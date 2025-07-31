@@ -29,8 +29,10 @@ def _player_find_good_board(player, game_type):
     let mean_valuable_letter_long_uses = 0
     let min_valuable_letter_uses = ∞
     let min_valuable_letter_long_uses = ∞
-            
-    for tries < BOARD_SEARCH.RETRIES:
+
+    let tries = -1  
+    while tries < BOARD_SEARCH.RETRIES:
+        ++tries
         if tries > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
 
         // Search for a not-sensitive seed word to use
@@ -47,7 +49,7 @@ def _player_find_good_board(player, game_type):
                 done = true
                 break
     
-            if board_has_obvious_sensitive_word(player.board, tries > ½ BOARD_SEARCH.RETRIES):
+            if board_has_obvious_sensitive_word(player.board, tries > ½ BOARD_SEARCH.RETRIES or j > 0):
                 if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
                 continue
     
@@ -60,6 +62,7 @@ def _player_find_good_board(player, game_type):
                 // We're running out of tries. This board passes
                 // the min words test, so just accept it instead of getting
                 // stuck with the last board we generate
+                if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted board " + seed_word + " because we had two tries left and this passed minumum words")
                 done = true
                 break
 
@@ -173,6 +176,7 @@ def _player_find_good_board(player, game_type):
         debug_print("mean_valuable_letter_long_uses =", mean_valuable_letter_long_uses)
         debug_print("min_valuable_letter_uses =", min_valuable_letter_uses)
         debug_print("min_valuable_letter_long_uses =", min_valuable_letter_long_uses)
+        debug_print("Total tries:", tries)
 
 
 /* Chooses a random letter for each tile, and then 
@@ -183,42 +187,58 @@ def board_reset(board, seed_word, permute_number default 0):
     board.seed = seed_word + "-" + permute_number
     const rnd = make_random(seed_word)
     
-    // Shuffle the sets themselves
     assert(ROWS * COLS == size(LETTER_SET_ARRAY), "Distribution does not have enough tile sets")
 
     // If true, choose using the word dice algorithm with the
     // standard dice set. If false, choose using sampling from 
     // a bag of tiles without replacement.
-    const dice = rnd() < 85%
+    let dice = rnd() < 85%
     if DEBUG_BOARD_SEARCH:
         debug_print("Using " + (if dice then "DICE" else "TILE") + " generator")
+    
+    const VOWEL = {A:1, E:1, I:1, O:1, U:1}
 
+    let i = 0
+    while true:
+        ++i
+        if i > 5:
+            if DEBUG_BOARD_SEARCH: debug_print("Switched back to DICE generator")
+            // Give up on the tile algorithm as it
+            // isn't producing enough vowels
+            dice = true
+            
+        // Shuffle the sets themselves
+        const distribution = shuffled(LETTER_SET_ARRAY, rnd)
+        const letter_bag = split(LETTER_BAG)
         
-    const distribution = shuffled(LETTER_SET_ARRAY, rnd)
-    let letter_bag = split(LETTER_BAG)
-    
-    const flat_array = []
-    for y < ROWS:
-        for x < COLS:
-            const tile = board.tile[x][y]
-            if dice:
-                tile.letter = random_value(pop(distribution), rnd)
-            else:
-                tile.letter = random_value(letter_bag, rnd)
-                fast_remove_value(letter_bag, tile.letter)
-                
-            tile.selected = 0
-            // Store for shuffling below
-            push(flat_array, tile)
-        
-    
-    if permute_number > 0:
-        shuffle(flat_array, make_random(permute_number))
-        // Put back
+        let vowels = 0
+        const flat_array = []
         for y < ROWS:
             for x < COLS:
-                board.tile[x][y] = flat_array[x + y * COLS]
+                const tile = board.tile[x][y]
+                if dice:
+                    tile.letter = random_value(pop(distribution), rnd)
+                else:
+                    tile.letter = random_value(letter_bag, rnd)
+                    fast_remove_value(letter_bag, tile.letter)
+
+                vowels += VOWEL[tile.letter] default 0
+                
+                tile.selected = 0
+                // Store for shuffling below
+                push(flat_array, tile)
     
+        if i < 6 and vowels < ROWS:
+            // Try again
+            continue
+        
+        if permute_number > 0:
+            shuffle(flat_array, make_random(permute_number))
+            for y < ROWS:
+                for x < COLS:
+                    board.tile[x][y] = flat_array[x + y * COLS]
+        break
+        
     if DEBUG_BOARD_SEARCH: debug_print(board_to_string(board))
 
 

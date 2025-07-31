@@ -60,7 +60,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.230",
+    "version": "0.231",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -393,7 +393,7 @@
                 "SHUFFLE_RETRIES": {
                     "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
                     "type": "number",
-                    "value": "19",
+                    "value": "14",
                     "min": 0,
                     "max": 50,
                     "format": "0",
