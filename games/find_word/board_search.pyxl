@@ -1,5 +1,3 @@
-todo("If running out of tries, relax constraints but still require many words")
-
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def _player_find_good_board(player, game_type):
     let done = false

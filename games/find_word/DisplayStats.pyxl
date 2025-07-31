@@ -1,5 +1,6 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
+const WIDTH = 230
 
 /*
  - `caption`  Left column value
@@ -11,7 +12,7 @@ DisplayStats
 def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
-    if caption: draw_text({…args, text: caption,    pos: xy(x - 90, y)})
+    if caption: draw_text({…args, text: caption,    pos: xy(x - ½ WIDTH + 8, y)})
     
     if today_suffix:
         draw_text({…args,
@@ -21,8 +22,8 @@ def draw_row(y, caption, lifetime, today, color default #fff, today_color defaul
     
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
-    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "N/A" then 35 else 65),  y)})
-    if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x + 90, y), color: today_color})
+    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "N/A" then 45 else 75),  y)})
+    if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x + ½ WIDTH - 8, y), color: today_color})
     return 14
 
 
@@ -47,12 +48,12 @@ enter
 frame
 ────────────────────────────────────────────────────────────────────────
 draw_background_words()
-draw_rect(½ SCREEN_SIZE, xy(210, SCREEN_SIZE.y), #0009)
+draw_rect(½ SCREEN_SIZE, xy(WIDTH, SCREEN_SIZE.y), #0009)
 
-draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - 80, 15), scale: 200%})
+draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 16, 15), scale: 200%})
 
-draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, pos: xy(½ SCREEN_SIZE.x, 9), color: #FFF})
-draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, x_align: "right", pos: xy(½ SCREEN_SIZE.x + 90, 22), color: #FFF})
+draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, x_align: "left", pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 64, 9), color: #FFF})
+draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, x_align: "left", pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 64, 22), color: #FFF})
 
 
 const lifetime = player.stats.lifetime
@@ -65,7 +66,11 @@ const HIGHLIGHT = #E1B
 y += draw_row(y, ∅, "Lifetime", "Today", HIGHLIGHT)
 y -= 1
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text or "-", ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) then HIGHLIGHT else ∅)
-y += draw_row(y, "Best Word",    lifetime.best_word_text, today.best_word_text or "-", DIM, if lifetime.best_word_points ≥ today.best_word_points then HIGHLIGHT else ∅)
+y += draw_row(y, "Best Word",    
+    lifetime.best_word_text + " (" + lifetime.best_word_points + ")", 
+    (if today.best_word_text then (today.best_word_text + " (" + today.best_word_points + ")") else "-"), 
+    DIM, 
+    if today.best_word_points ≥ lifetime.best_word_points then HIGHLIGHT else ∅)
 y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
 y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, DIM, HIGHLIGHT)
 
