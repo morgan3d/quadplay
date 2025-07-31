@@ -12,8 +12,9 @@ const WIDTH = 230
 def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix default ∅):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
-    const x_left  = x - ½ WIDTH + 8
-    const x_right = x + ½ WIDTH - 9
+    const x_left   = x - ½ WIDTH + 14
+    const x_center = x + (if today ≠ "N/A" then 40 else 70)
+    const x_right  = x + ½ WIDTH - 11
     
     if caption: draw_text({…args, text: caption, pos: xy(x_left, y)})
     
@@ -25,7 +26,7 @@ def draw_row(y, caption, lifetime, today, color default #fff, today_color defaul
     
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
-    draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "N/A" then 45 else 75),  y)})
+    draw_text({…args, text: lifetime, pos: xy(x_center,  y)})
     if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x_right, y), color: today_color})
     return 14
 
@@ -53,7 +54,7 @@ frame
 draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(WIDTH, SCREEN_SIZE.y), #0009)
 
-draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 16, 15), scale: 200%})
+draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 22, 15), scale: 200%})
 
 draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, x_align: "left", pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 64, 9), color: #FFF})
 draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, x_align: "left", pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 64, 22), color: #FFF})
