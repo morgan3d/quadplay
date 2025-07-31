@@ -276,12 +276,14 @@ def board_pixel_size():
 /* Detect if a row or column or main diagonal spells a sensitive word.
    These words are acceptable in play but we don't want to explicitly
    spell them out in the default or reverse orientation. */
-def board_has_obvious_sensitive_word(board):
+def board_has_obvious_sensitive_word(board, only_stop_offensive default false):
+    
+    let dict = if only_stop_offensive then offensive else sensitive
     
     def is_sensitive(word):
         // The sensitive dictionary has not been encoded
         word = lowercase(q_decode(word))
-        return sensitive[word] or sensitive[reversed(word)]
+        return dict[word] or dict[reversed(word)]
         
     let ok = true
     let word = ""

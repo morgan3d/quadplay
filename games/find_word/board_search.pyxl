@@ -1,3 +1,5 @@
+todo("If running out of tries, relax constraints but still require many words")
+
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def _player_find_good_board(player, game_type):
     let done = false
@@ -28,8 +30,8 @@ def _player_find_good_board(player, game_type):
     let min_valuable_letter_uses = ∞
     let min_valuable_letter_long_uses = ∞
             
-    for i < BOARD_SEARCH.RETRIES:
-        if i > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
+    for tries < BOARD_SEARCH.RETRIES:
+        if tries > 0 and DEBUG_BOARD_SEARCH: debug_print("*** Re-rolling ***") 
 
         // Search for a not-sensitive seed word to use
         seed_word = random_safe_word(board_rng)
@@ -39,13 +41,13 @@ def _player_find_good_board(player, game_type):
             board_reset(player.board, seed_word, j)
             word_array = board_find_all_words(player.board)
         
-            if i == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
+            if tries == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
                 // Last try, so just give up and accept the board
                 if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted " + seed_word)
                 done = true
                 break
     
-            if board_has_obvious_sensitive_word(player.board):
+            if board_has_obvious_sensitive_word(player.board, tries > ½ BOARD_SEARCH.RETRIES):
                 if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it had an obvious sensitive word")
                 continue
     
@@ -53,6 +55,14 @@ def _player_find_good_board(player, game_type):
                 // Not enough words to even examine the board
                 if DEBUG_BOARD_SEARCH: debug_print("Reshuffled board " + seed_word + " because it only produced " + size(word_array) + " words")        
                 continue
+            
+            if tries ≥ BOARD_SEARCH.RETRIES - 2:
+                // We're running out of tries. This board passes
+                // the min words test, so just accept it instead of getting
+                // stuck with the last board we generate
+                done = true
+                break
+
     
             // Examine the actual words to see if there are enough good ones   
     
@@ -152,7 +162,7 @@ def _player_find_good_board(player, game_type):
     player.board.word_list = word_array
     player.board.word_count = size(word_array)
     if DEBUG_BOARD_SEARCH:
-        debug_print(player.board.word_list)
+        debug_print(join(player.board.word_list, ","))
         debug_print("very_long_word_count =", very_long_word_count)
         debug_print("valuable_letter_table =", valuable_letter_table)
         debug_print("valuable_letter_long_count =", valuable_letter_long_count)
