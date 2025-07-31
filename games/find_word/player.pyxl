@@ -1,4 +1,10 @@
-todo("XP Awards for first time finding a word")
+todo("Level 2 Bonus: See level and XP stats")
+todo("Level 3 Bonus: Longest word stat")
+todo("Level 4 Bonus: See total words after game")
+todo("Level 5 Bonus: XP Awards for first time finding a word")
+todo("Level 6 Bonus: See total words during game")
+todo("Level 8 Bonus: See all words after game")
+
 
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */

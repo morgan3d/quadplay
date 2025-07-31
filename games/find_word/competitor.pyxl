@@ -228,6 +228,9 @@ last_hour: 1
         
         // Bot user ID
         competitor.avatar.id = "B" + c
+
+        // Bots face left
+        competitor.avatar.sprite = competitor.avatar.sprite.x_flipped
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
         competitor.avatar.level = max(1, ⌈70 competitor.avatar.base_ability⌉)
         

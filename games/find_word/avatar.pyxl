@@ -71,8 +71,8 @@ def avatar_compute_color(sprite):
     color.s *= 130%
     color.v = max(color.v, 70%)
     return rgb(color)
-        
-        
+
+
         
 def avatar_draw_large(avatar, pos, background default true, color, shadow default #000):
     

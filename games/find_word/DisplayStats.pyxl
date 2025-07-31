@@ -49,8 +49,10 @@ frame
 draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(210, SCREEN_SIZE.y), #0009)
 
+draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - 80, 15), scale: 200%})
+
 draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, pos: xy(½ SCREEN_SIZE.x, 9), color: #FFF})
-draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level at " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, pos: xy(½ SCREEN_SIZE.x, 22), color: #FFF})
+draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, x_align: "right", pos: xy(½ SCREEN_SIZE.x + 90, 22), color: #FFF})
 
 
 const lifetime = player.stats.lifetime
