@@ -178,6 +178,7 @@ def _player_find_good_board(player, game_type):
         debug_print("Total tries:", tries)
 
 
+
 /* Chooses a random letter for each tile, and then 
    permutes the result into pattern `seed_number`.
    This process is entirely deterministic based on
@@ -227,8 +228,9 @@ def board_reset(board, seed_base, permute_number default 0):
                 // Store for shuffling below
                 push(flat_array, tile)
     
-        if i < 6 and vowels < ROWS:
-            // Try again
+        if i < 6 and vowels ≤ ROWS or vowels ≥ 2 ROWS:
+            // Try again, there aren't enough vowels on this 
+            // board (or less likely, maybe too many)
             continue
         
         if permute_number > 0:
