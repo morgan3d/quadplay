@@ -452,7 +452,7 @@ def board_draw_mini(board, pos)
         
         // Draw word
         draw_text({
-            font: history_font,
+            font: leaderboard_font,
             text: word,
             pos: xy(0, -31),
             shadow: #000,

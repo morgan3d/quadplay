@@ -1,8 +1,8 @@
 GatherGlobalResults
 ════════════════════════════════════════════════════════════════════════
 
+todo("** Layout with awards more central **")
 const color = #F3C
-
 
 def draw_arc(pos, radius, start, stop, color):
     const N = 10

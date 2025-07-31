@@ -136,13 +136,13 @@ def draw_word_award(title, winner):
     draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
 
     draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
-    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(42, -29), z: 2})
+    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(40, -29), z: 2})
     
     avatar_draw_large(winner.avatar, xy(0, -5), false, ∅, ∅, true)
     
     if winner == player_competitor or not offensive[lowercase(text)]:
         board_select_word(player.board, text)
-        board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
+        board_draw_mini(player.board, xy(SCREEN_SIZE.x - 32, 36))
 
 
 
@@ -181,7 +181,7 @@ def draw_most_words_award(winner):
             
     if winner == player_competitor or not offensive[lowercase(q_decode(word))]:
         board_select_word(player.board, word)
-        board_draw_mini(player.board, xy(SCREEN_SIZE.x - 26, 36))
+        board_draw_mini(player.board, xy(SCREEN_SIZE.x - 32, 36))
 
 
 
