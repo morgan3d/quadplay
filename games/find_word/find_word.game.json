@@ -358,7 +358,7 @@
                 "MIN_WORDS": {
                     "description": "including long words",
                     "type": "number",
-                    "value": "60",
+                    "value": "75",
                     "min": 0,
                     "max": 200,
                     "format": "0",
