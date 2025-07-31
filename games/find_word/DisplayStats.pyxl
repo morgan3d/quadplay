@@ -9,21 +9,24 @@ const WIDTH = 230
  - `color`    Color of the left and center values
  - `today_color` Color of the today value
 */
-def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix):
+def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix default ∅):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
-    if caption: draw_text({…args, text: caption,    pos: xy(x - ½ WIDTH + 8, y)})
+    const x_left  = x - ½ WIDTH + 8
+    const x_right = x + ½ WIDTH - 9
+    
+    if caption: draw_text({…args, text: caption, pos: xy(x_left, y)})
     
     if today_suffix:
         draw_text({…args,
-            pos: xy(x + 92, y),
+            pos: xy(x_right + 4, y),
             text: today_suffix,
             color: today_color})
     
     if caption and ends_with(caption, "Word"): args.font = history_font
     args.x_align = "right"
     draw_text({…args, text: lifetime, pos: xy(x + (if today ≠ "N/A" then 45 else 75),  y)})
-    if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x + ½ WIDTH - 8, y), color: today_color})
+    if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x_right, y), color: today_color})
     return 14
 
 
@@ -68,7 +71,7 @@ y -= 1
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text or "-", ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) then HIGHLIGHT else ∅)
 y += draw_row(y, "Best Word",    
     lifetime.best_word_text + " (" + lifetime.best_word_points + ")", 
-    (if today.best_word_text then (today.best_word_text + " (" + today.best_word_points + ")") else "-"), 
+    (if today.best_word_text then (today.best_word_text + " (" + today.best_word_points + ")") else "-"),
     DIM, 
     if today.best_word_points ≥ lifetime.best_word_points then HIGHLIGHT else ∅)
 y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
