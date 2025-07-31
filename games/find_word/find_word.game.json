@@ -60,7 +60,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.234",
+    "version": "0.235",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -366,7 +366,7 @@
                 },
                 "RETRIES": {
                     "type": "number",
-                    "value": "16",
+                    "value": "18",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -384,7 +384,7 @@
                 "MIN_VERY_LONG_WORDS": {
                     "description": "7+ letters",
                     "type": "number",
-                    "value": "14",
+                    "value": "7",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -393,7 +393,7 @@
                 "SHUFFLE_RETRIES": {
                     "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
                     "type": "number",
-                    "value": "13",
+                    "value": "12",
                     "min": 0,
                     "max": 50,
                     "format": "0",

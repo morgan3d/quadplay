@@ -1093,7 +1093,7 @@ function $outputAppend(m, location, linkAll) {
             if (linkAll) {
                 m = `<span style="cursor:pointer" title="${tooltip}" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${m}</span>`;
             } else {
-                m = `<a class="outputLink" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${tooltip}</a>` + m;
+                m = `<div style="width: 100%; box-sizing: border-box; clear:both"><a class="outputLink" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${tooltip}</a>${m}</div>`;
             }
         }
         

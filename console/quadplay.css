@@ -271,27 +271,35 @@ body:not(.IDE) a, body:not(.IDE) #header a, body:not(.IDE) .menu a {
     text-decoration: none;
 }
 
+/* clearfix hack needed to make the file:line float right properly */
+.outputLine {
+    width: 100%;
+    box-sizing: border-box;
+    clear:both;
+}
+
 /* Used in the Output window for formatting links into code */
-a.outputLink {
-    position:absolute;
-    right:0;
-    display:block;
-    margin-right:30px;
+.outputLink {
+    float: right;
+    display: block;
+    margin-right:5px;
+    white-space: nowrap;
     cursor:pointer;
     font-family:Arial;
-    text-align:right;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    box-sizing: border-box;
 }
 
 #outputDisplayPane {
     position: absolute;
     top: 22px;
     bottom:0;
-    left:0; right:0;
-    padding-left: 10px;
+    left:0px;
+    right:0px;
+    padding-left: 6px;
     font-family: monospace;
     white-space: pre-wrap;
     overflow:scroll;
