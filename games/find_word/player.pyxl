@@ -1,11 +1,3 @@
-todo("Level 2 Bonus: See level and XP stats")
-todo("Level 3 Bonus: Longest word stat")
-todo("Level 4 Bonus: See total words after game")
-todo("Level 5 Bonus: XP Awards for first time finding a word")
-todo("Level 6 Bonus: See total words during game")
-todo("Level 8 Bonus: See all words after game")
-
-
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */
 def make_player():
@@ -125,42 +117,35 @@ def play_big_points_sound():
 
 
 
+/* Does not update the score. Returns the color */
+def player_add_to_bonus(player, word, points):
+    return history_add(player.history, "bonus", word, points)
+    
+    
+
 /* Returns the color. Updates the score. Does not verify that the word has
-   not been found previously. word is Q-encoded */ 
+   not been found previously. `word` is Q-encoded */ 
 def player_add_to_history(player, word, points):
     player.already_found[word] = true
-    
-    let color = color_for_points(points)
-    
-    let text_color = color
-    let outline = ∅
-    
-    // Super scorer colors
-    if points ≥ 65:
-        outline = lerp(color, #FFF, 40%)
-        text_color = #FFF
-    else if points ≥ 45:
-        outline = color
-        text_color = #FFF
-    else if points ≥ 35:
-        outline = lerp(color, #000, 25%)
-        text_color = lerp(color, #FFF, 50%)
-    
-    push(player.history.list, {
-        text:    q_decode(word) + " " + points, 
-        word:    word,
-        tiles:   size(word),
-        emphasize_frame: 0,
-        reveal_frame: game_frames + POINTS_ANIMATION_FRAMES,
-        points:  points, 
-        color:   text_color,
-        outline: outline})
-        
     player.score += points
+    return history_add(player.history, "list", word, points)
+
+
     
-    return color
+/* Recompute `player.history.bonus` from `bonus_row` and return the `bonus_selection_color`*/
+def player_recompute_history_bonus(player, bonus_row):
+    remove_all(player.history.bonus)
+    let bonus_selection_color = TILE_CENTER_SELECTED_COLOR
+
+    let word = ""
+    for tile at t in bonus_row:
+        word += tile.letter
+        if dictionary[word] and not player.already_found[word]:
+            bonus_selection_color = player_add_to_bonus(player, word, score_word(word))
+            
+    return bonus_selection_color
     
-    
+
 
 /* Make this q-encoded word that is already in the history 
    appear emphasized for a few frames to make it obvious 
@@ -293,36 +278,9 @@ def player_update(player, angle default 0°, allow_selection default false):
         // If not selecting, make sure it is empty
         not allow_selection):
         
-        board_deselect_all(player.board, player)
+        board_deselect_all(player.board, player)    
 
-    
-    // Version/debugging stamp
-    /*
-    draw_text({
-        pos: xy(2, SCREEN_SIZE.y - 1),
-        font: tile_point_font,
-        text: "Board \"" + player.board.seed + "\" on v" + CREDITS.version,
-        color: #0008,
-        y_align: "bottom",
-        x_align: "left",
-        z: -1})
-        */
-
-    let board_pos
-    
-    // Our board has some content at the top, so don't switch
-    // to portrait until all of the UI will be visible
-    if landscape():
-        // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
-        // Leave some space on the right so that if someone has the bad idea to play on a phone in this orientation
-        // they won't be jammed against the edge with their thumb.
-        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 8)
-    else:
-        // Portrait. Put at the bottom, centered, unless the screen is not very high
-        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 18)
-        
-        // Slide up a little on narrow screens so that it is easier to swipe on a phone
-        board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
+    const board_pos = get_board_pos()
 
     player_update_board(player, board_pos, angle, allow_selection)
 
@@ -330,7 +288,6 @@ def player_update(player, angle default 0°, allow_selection default false):
     
     if allow_selection:
         _player_update_rotate_button(player, board_pos)
-        
 
     let history_rect
     if landscape():
@@ -356,6 +313,26 @@ def player_update(player, angle default 0°, allow_selection default false):
 
 
 
+/* Compute the position of the center of the board based on the screen size */
+def get_board_pos():
+    let board_pos
+    
+    // Our board has some content at the top, so don't switch
+    // to portrait until all of the UI will be visible
+    if landscape():
+        // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
+        // Leave some space on the right so that if someone has the bad idea to play on a phone in this orientation
+        // they won't be jammed against the edge with their thumb.
+        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 8)
+    else:
+        // Portrait. Put at the bottom, centered, unless the screen is not very high
+        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 18)
+        
+        // Slide up a little on narrow screens so that it is easier to swipe on a phone
+        board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
+
+    return board_pos
+
 
 
 
@@ -377,13 +354,12 @@ def player_update_board(player, pos, angle, allow_selection)
     
     const grid_size = board_pixel_size()
     const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
-    const center_size = tile_size - TILE_GUTTER
     
     // Make the selection target slightly small to make 
     // it easier to select diagonals without hitting
     // the sides. If this is the first letter, make the
     // selection radius extra large instead
-    const selection_size = center_size + (if size(board.selection) == 0 then +3 else -1)
+    const selection_size = tile_size + (if size(board.selection) == 0 then -2 else -6)
             
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
@@ -392,8 +368,6 @@ def player_update_board(player, pos, angle, allow_selection)
     draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, ∅, board.selection_color)
     draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 4, ∅, board.selection_color)
     
-    const subscript_offset = angle_to_xy(-45° - angle) * ⅓ TILE_EXTENT
-
     // Store store this before selection changes so that the same
     // button can be used to start and end selection
     const cancel_gamepad_selection = gamepad.pressed_b        
@@ -437,44 +411,8 @@ def player_update_board(player, pos, angle, allow_selection)
                             // Continue selection
                             board_select(board, index, player)
     
+            tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size)
             
-            let radius = ½ center_size.x
-            
-            if tile.selected:
-                // Bounce if just selected
-                if tile.selected > game_frames - 12:
-                    radius += ⅕ oscillate(tile.selected - game_frames, 0, 6) + 0.8
-            
-            if not tile.selected or is_cursor_tile:
-                // Background rect
-                draw_rect(pos, tile_size, if is_cursor_tile then CURSOR_COLOR else TILE_COLOR, if is_cursor_tile then #0C0 else ∅) 
-            
-            draw_disk(
-                pos,
-                radius,
-                if tile.selected then selection_color else TILE_CENTER_COLOR,
-                ∅, 
-                TILE_CENTER_Z)
-
-            const text_color = if tile.selected then SELECTED_TEXT_COLOR else TEXT_COLOR
-            
-            // Label
-            draw_text({
-                pos: pos, 
-                font: tile_font, 
-                text: if tile.letter == "Q" then "Qu" else tile.letter,
-                color: text_color,
-                z: TILE_LETTER_Z})
-            
-            // Points
-            if not tile.selected:
-                draw_text({
-                    pos: pos + subscript_offset, 
-                    font: tile_point_font, 
-                    text: LETTER_POINT_TABLE[tile.letter], 
-                    color: #AAA,
-                    z: TILE_LETTER_Z})
-                
     
     // Draw the connectors between selected letters
     if size(board.selection) > 1:

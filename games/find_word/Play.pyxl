@@ -1,51 +1,54 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("New word achievements after level 2")
-
-todo("**Bonus word selecting letters like scrabble**")
 
 enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
 
-if not in_waiting_room: play_sound(start_sound)
+play_sound(start_sound)
     
 last_countdown_sound_time = now()
 start_time = frame_utc_now
 
 // Compute end_time
 if game_type == SOLO:
-    end_time = frame_utc_now + SOLO_GAME_TIME
+    end_time = frame_utc_now + max(SOLO_GAME_TIME - bonus_round_time(), 0)
 else:
     assert(game_type == GLOBAL)
     
-    end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
+    end_time = prev_global_game_utc_start_time() + max(GLOBAL_GAME_TIME - bonus_round_time(), 0)
 
-    assert(end_time > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION,
+    assert(end_time + bonus_round_time() > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION or DEBUG_BONUS_ROUND,
         "The game should not end so soon")
+
+if DEBUG_BONUS_ROUND: 
+    end_time = prev_global_game_utc_start_time()
 
 set_background(
     if game_type == GLOBAL 
     then GLOBAL_BACKGROUND_COLOR
     else SOLO_BACKGROUND_COLOR)
 
-// Started more than 4s late, do not affect
+// Started more than 10s late, do not affect
 // ratio stats
 joined_late = (end_time - start_time < GLOBAL_GAME_TIME - 10)
-
 
 board_deselect_all(player.board, player)
 
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
+const time_left = end_time - frame_utc_now   
 
-player_update(player, ∅, true)
+// Disallow rotation if the mode is about to end
+const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
 
-const time_left = end_time - utc_now()    
+player_update(player, ∅, allow_rotate)
 
-if time_left ≤ 15/60:
+
+if time_left ≤ 20/60:
     // Make a few frames black at the end so that a player can
     // still trace a little further but can't see. This makes
     // it feel like they squeezed in one more word and weren't
@@ -55,18 +58,9 @@ if time_left ≤ 15/60:
     
     
 if time_left ≤ 0 or DEBUG_INTERMISSION:
-    play_sound(times_up_sound)
-    
     board_deselect_all(player.board, player)
-    sort(player.history.list, "points", true)
-    // Reset the scroll position because layout differs
-    // from the main game during intermission
-    player.history.scroll = 0
-    
-    if game_type == SOLO:
-        set_mode(SoloIntermission) because "SOLO and timer"
-    else:
-        set_mode(GatherGlobalResults) because "GLOBAL and timer"
+    set_mode(BonusRound) because "Timer"
+
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"

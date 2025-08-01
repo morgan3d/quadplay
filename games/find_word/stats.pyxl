@@ -1,3 +1,65 @@
+/*
+
+## **Level Progression**
+
+Level 2
+: - See stats (includes level, XP, next level)
+: - See Most words stat
+: - (Moo visible to player)
+: - (Moo introduces themselves)
+
+Level 3
+: - See Highest score stat
+: - See unlocked abilities
+: - More avatars unlocked
+
+Level 4
+: - See Longest word stat
+: - More avatars unlocked
+
+Level 5
+: - See Best word stat
+: - See Unique words stat
+: - Get XP Awards for first time finding a word 
+:   (applies retroactively)
+: - More avatars unlocked
+ 
+Level 6
+: - See Most words stat
+: - See # total words possible _after_ game
+: - (caf appears to player)
+: - (Moo introduces caf)
+
+Level 7
+: - See Total words stat
+: - See Total matches stat
+: - *Access bonus round*
+
+Level 8
+: - See avg words/match
+: - See avg points/match
+: - More avatars unlocked
+
+Level 9
+: - XP awards for per-match badges (does not apply retroactively)
+: - More avatars unlocked
+
+Level 10
+: - See total 2 suggested words _after_ game
+: - More avatars unlocked
+
+Level 11
+: - See total words possible _during_ game
+: - More avatars unlocked
+
+Level 12
+: - See total 6 suggested words _after_ game
+: - More avatars unlocked
+
+
+*/
+todo("Level progression")
+
 /* See `xp_to_level()`. Chosen to make Level 20 = 100k XP */
 const LEVEL_EXPONENT = 0.65
 

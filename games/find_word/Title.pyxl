@@ -112,7 +112,8 @@ def update_button(pos, text, index):
         mode_frames > 2 and 
         ((touch.pressed_a and overlaps(touch.xy, rect)) or
          (selected and gamepad_array[0].pressed_a)))
-         or (DEBUG_INTERMISSION and index == GLOBAL)):
+         or (DEBUG_INTERMISSION and index == GLOBAL)
+         or (DEBUG_BONUS_ROUND and index == SOLO)):
         game_type = index
         
         // When did the previous game start?

@@ -223,6 +223,8 @@ def board_reset(board, seed_base, permute_number default 0):
             vowels += VOWEL[tile.letter] default 0
             
             tile.selected = 0
+            tile.used = false
+            
             // Store for shuffling below
             push(flat_array, tile)
     

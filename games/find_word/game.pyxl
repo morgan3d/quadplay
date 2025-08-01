@@ -104,14 +104,17 @@ def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
 
+
 /* For sorting on size(A) */
 def size_comparator(A, B):
     return size(A) - size(B)
 
 
+
 /* Returns str with str[index] replaced with `replacement` */
 def letter_replaced(str, index, replacement):
     return slice(str, 0, index) + replacement + slice(str, index + 1)
+
 
 
 /* Swap elements i and j in array. */
@@ -205,6 +208,19 @@ def draw_timer(board_pos):
         else:
             // Fade back towards normal
             player.background_color = lerp(player.background_color, BOARD_COLOR, 4%)
+
+
+
+/* Number of seconds in the bonus round based on the game type */
+def bonus_round_time():
+    todo("Only allow GLOBAL bonus round if unlocked by level")
+    if DEBUG_BONUS_ROUND:
+        return 10000
+    else:
+        return (if game_type == SOLO then SOLO_BONUS_ROUND_TIME else GLOBAL_BONUS_ROUND_TIME)
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 set_random_seed()

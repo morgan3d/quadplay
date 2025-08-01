@@ -2,11 +2,12 @@
     "title": "FIND WORD ALLL NITE",
     "developer": "SHMUEL",
     "copyright": "©2025 Factory 797",
-    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "license": "Open source under the GPL-3.0-only license https://www.gnu.org/licenses/gpl-3.0.html",
     "packages": [],
     "scripts": [
         "quad://scripts/screen_lib.pyxl",
         "dictionary.pyxl",
+        "tile.pyxl",
         "board.pyxl",
         "history.pyxl",
         "stats.pyxl",
@@ -19,15 +20,16 @@
     ],
     "modes": [
         "Title",
+        "DisplayStats",
         "AvatarEditor",
         "WaitingRoom",
         "GenerateBoard",
         "Play",
         "Rotate",
+        "BonusRound",
         "SoloIntermission",
         "GatherGlobalResults",
-        "GlobalIntermission",
-        "DisplayStats"
+        "GlobalIntermission"
     ],
     "start_mode": "Title",
     "docs": [
@@ -60,7 +62,7 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json"
     },
-    "version": "0.241",
+    "version": "0.242",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -76,15 +78,6 @@
             "value": "44",
             "description": "Width of a tile",
             "min": 16,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-        "TILE_GUTTER": {
-            "type": "number",
-            "value": "5",
-            "description": "Distance between two adjacent tiles",
-            "min": 0,
             "max": 128,
             "format": "0",
             "quantum": 1
@@ -238,6 +231,7 @@
         },
         "TILE_CENTER_SELECTED_COLOR": {
             "type": "rgb",
+            "description": "Default selection gray. This is replaced by custom colors as increasingly valuable words are found. See `player_add_to_history()`",
             "value": {
                 "r": {
                     "type": "number",
@@ -564,7 +558,7 @@
             "max": 480,
             "format": "0",
             "quantum": 1,
-            "description": "Game time"
+            "description": "Game time *including* BigFinish time"
         },
         "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
@@ -1128,6 +1122,32 @@
         "DEBUG_STATS": {
             "type": "boolean",
             "value": false
+        },
+        "GLOBAL_BONUS_ROUND_TIME": {
+            "type": "number",
+            "value": 0,
+            "description": "In seconds. Zero = none",
+            "min": 0,
+            "max": 30,
+            "format": "0",
+            "quantum": 1
+        },
+        "SOLO_BONUS_ROUND_TIME": {
+            "type": "number",
+            "value": 0,
+            "description": "In seconds. Zero = none",
+            "min": 0,
+            "max": 30,
+            "format": "0",
+            "quantum": 1
+        },
+        "DEBUG_BONUS_ROUND": {
+            "type": "boolean",
+            "value": false
+        },
+        "tile_small_font": {
+            "type": "reference",
+            "value": "leaderboard_font"
         }
     },
     "screenshot_tag": "find_word",
