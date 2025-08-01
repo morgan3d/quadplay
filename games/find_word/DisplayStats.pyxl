@@ -1,6 +1,6 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
-const WIDTH = 230
+const WIDTH = 224
 
 /*
  - `caption`  Left column value
@@ -12,9 +12,9 @@ const WIDTH = 230
 def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix default ∅):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
-    const x_left   = x - ½ WIDTH + 14
-    const x_center = x + (if today ≠ "N/A" then 40 else 70)
-    const x_right  = x + ½ WIDTH - 11
+    const x_left   = x - ½ WIDTH + 12
+    const x_center = x + (if today ≠ "N/A" then 36 else 70)
+    const x_right  = x + ½ WIDTH - 10
     
     if caption: draw_text({…args, text: caption, pos: xy(x_left, y)})
     
