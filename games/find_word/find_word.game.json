@@ -1148,6 +1148,14 @@
         "tile_small_font": {
             "type": "reference",
             "value": "leaderboard_font"
+        },
+        "TILE_GUTTER": {
+            "type": "number",
+            "value": "5",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "find_word",

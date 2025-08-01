@@ -734,7 +734,10 @@ function ascii(x) { return x.charCodeAt(0); }
 /** Used by $submitFrame() to map axes and buttons to event key codes
     when sampling the keyboard controller. See also
     https://hacks.mozilla.org/2017/03/internationalize-your-keyboard-controls/
-    for why we use codes instead of keyCodes in JavaScript */
+    for why we use codes instead of keyCodes in JavaScript.
+    
+    The code using this data supports up to THREE options for each button/axis
+    */
 const keyMapTable = {
     Normal: [
         // Keyboard P1
@@ -743,7 +746,7 @@ const keyMapTable = {
          '-y':['KeyW', 'ArrowUp'],
          '+y':['KeyS', 'ArrowDown'],
          a:['KeyB', 'Space'],
-         b:['KeyH', 'Enter'],
+         b:['KeyH', 'Enter', 'Backspace'],
          c:['KeyV', 'KeyV'],
          d:['KeyG', 'KeyG'],
          e:['ShiftLeft', 'ShiftLeft'],
@@ -1093,7 +1096,7 @@ function $outputAppend(m, location, linkAll) {
             if (linkAll) {
                 m = `<span style="cursor:pointer" title="${tooltip}" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${m}</span>`;
             } else {
-                m = `<div style="width: 100%; box-sizing: border-box; clear:both"><a class="outputLink" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${tooltip}</a>${m}</div>`;
+                m = `<div class="outputLine"><a class="outputLink" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${tooltip}</a>${m}</div>`;
             }
         }
         
@@ -1405,7 +1408,7 @@ function updateInput() {
         
         // Have player 0 physical alt controls set player 1 virtual buttons only
         // if there is no second controller physically present
-	const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[gamepadOrderMap[0]] : undefined,
+	    const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[gamepadOrderMap[0]] : undefined,
 	      altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[gamepadOrderMap[0]] : undefined;
 
         if (realGamepad && (realGamepad.id !== pad.$id)) {
