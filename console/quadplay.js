@@ -739,7 +739,7 @@ function onResize() {
                 // loses any semblance of integer scaling
                 scale *= 0.50 * 0.90 / 0.75;
             }
-        } else if (SCREEN_WIDTH > 384) {
+        } else if (SCREEN_WIDTH > 384 || SCREEN_HEIGHT > 224) {
             // Greater than normal resolution runs at half scale
             scale *= 0.5;
         }
