@@ -47,10 +47,7 @@ def history_draw(history, pos, max_height):
     
     const start_y = pos.y
     
-    todo("** Show bonus words **")
-    
     let max_width = 0
-    
     
     def history_draw_entry(entry):
         // Wrap into multiple columns if this element will

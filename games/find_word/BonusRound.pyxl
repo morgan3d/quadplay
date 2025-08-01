@@ -1,5 +1,6 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
+todo("** Mode transition animation **")
 
 /* Tiles for the bonus word construction */
 let bonus_row = []
@@ -69,14 +70,21 @@ def draw_bonus_row():
     // to imply that the player can keep going
     const tile_slots = clamp(size(bonus_row) + 1, 6, ROWS * COLS)
     let tile_size = ⌈(history_rect.size.x - 10) / tile_slots⌉
+    
+    todo("Why is layout broken? no padding")
     // Take off the padding
     if tile_size.x ≥ 22:
         tile_size -= 1
+        
     if tile_size.x ≥ 12:
         tile_size -= 1
+        
+    // Spacing between tiles
     const tile_spacing = tile_size + (if tile_size.x > 22 then 2 else (if tile_size.x > 12 then 1 else 0))
 
-    todo("** Selection color **")
+    const last_entry = last_value(player.history.bonus) default {word: "", color: TILE_CENTER_SELECTED_COLOR}
+    const selection_length = size(last_entry.word)
+    const selection_color = last_entry.color
     
     // Reduce history area for bonus word area
     history_rect.size.y -= tile_size + 4
@@ -94,14 +102,17 @@ def draw_bonus_row():
     const tile_y = bonus_rect.corner.y + ⌊½ bonus_rect.size.y⌋
     
     for tile at i in bonus_row:
+        tile.selected = i < selection_length
         const tile_pos = xy(start_x + i * tile_spacing, tile_y)
-        tile_draw(tile, tile_pos, false, 0°, ∅, xy(tile_size, tile_size))
+        tile_draw(tile, tile_pos, false, 0°, selection_color, xy(tile_size, tile_size))
 
         // Touch area for removal
-        todo("touch remove")
+        todo("** touch remove **")
         if touch.pressed_a and |touch.xy - tile_pos| < tile_size/2:
             remove_tile_at_index(i)
-    
+            
+    todo("** Draw selection connectors **")
+
     
 
 
