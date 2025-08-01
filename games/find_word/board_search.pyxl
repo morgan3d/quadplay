@@ -39,7 +39,10 @@ def _player_find_good_board(player, game_type):
         for j < BOARD_SEARCH.SHUFFLE_RETRIES:
             const vowels = board_reset(player.board, seed_base, j)
 
-            if vowels > 2 ROWS or vowels ≤ ROWS and DEBUG_BOARD_SEARCH: debug_print("\n*** Rerolling because " + vowels + " ***") 
+            // Bwtween 4 and 7 vowels seems to be the sweet spot for 4x4 grid
+            if vowels ≤ ROWS or vowels ≥ 2 ROWS:
+                if DEBUG_BOARD_SEARCH: debug_print("\n*** Rerolling because " + vowels + " ***") 
+                continue
 
             word_array = board_find_all_words(player.board)
         
