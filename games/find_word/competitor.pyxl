@@ -214,21 +214,14 @@ last_hour: 1
     
     // Shift everybody's ability by this amount
     const match_shift = match_rng(-10%, 0%)
-        
-    let c = 0
-    while size(competitor_array) < target_count:    
+    
+    def make_bot_competitor(avatar, id):
         const competitor = {
             avatar: avatar_set[c],
             score: 0}
-            
-        // Ran out!
-        if not competitor.avatar: return
-        
-        ++c
-        
-        // Bot user ID
-        competitor.avatar.id = "B" + c
-
+    
+        compeitor.avatar.id = id
+    
         // Bots face left
         competitor.avatar.sprite = competitor.avatar.sprite.x_flipped
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
@@ -285,14 +278,21 @@ last_hour: 1
             while size(word_set) < words_found and tries < 2 words_found:
                 ++tries
                 maybe_add_word(random_value(player.board.word_list, match_rng))
-
+    
         competitor.word_list = keys(word_set)
                 
         sort(competitor.word_list, size_comparator, true)
         
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
-        
+    
+    // Moo is a special case
+    todo("ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if it is an odd 10 minute interval right now")
+    
+    let c = 0
+    while size(competitor_array) < target_count and avatar_set[c]        
+        make_bot_competitor(avatar_set[c], "B" + c)
+        ++c
         push(competitor_array, competitor)
 
 

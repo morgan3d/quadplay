@@ -367,6 +367,12 @@ def board_select(board, index, player):
 
 
 def board_deselect_last(board, player):
+    board.selection_color = TILE_CENTER_SELECTED_COLOR
+    if not board.selection: 
+        // Bug workaround
+        board.selection = []
+        return
+    
     const index = pop(board.selection)
     board.tile[index.x][index.y].selected = false
     
@@ -376,10 +382,15 @@ def board_deselect_last(board, player):
 
 
 def board_deselect_all(board, player):
+    board.selection_color = TILE_CENTER_SELECTED_COLOR
+    if not board.selection: 
+        // Bug workaround
+        board.selection = []
+        return
+
     for index in board.selection:
         board.tile[index.x][index.y].selected = false
     resize(board.selection, 0)
-    board.selection_color = TILE_CENTER_SELECTED_COLOR
     // Could play a deselect sound here
         
         
