@@ -421,6 +421,10 @@ def board_reverse_rotate(board):
 /* Returns the Q-encoded upper-case text word that is selected, 
    or "" if no selection */
 def board_selected_word(board):
+    if not board.selection:
+        // Bug workaround
+        return ""
+        
     let word = ""
     for s in board.selection:
         word += board.tile[s.x][s.y].letter

@@ -60,9 +60,11 @@
         "leaderboard_font": "quad://fonts/deja-8.font.json",
         "award_sound": "quad://sounds/good-01.sound.json",
         "stats_sprite": "stats.sprite.json",
-        "xp_sound": "quad://sounds/powerup-02.sound.json"
+        "xp_sound": "quad://sounds/powerup-02.sound.json",
+        "tile_small_point_font": "quad://fonts/deja-4.font.json",
+        "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.245",
+    "version": "0.247",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -726,7 +728,7 @@
             "format": "0",
             "quantum": 1
         },
-        "COW_WORDS": {
+        "MOOCABULARY": {
             "type": "raw",
             "value": [
                 "ABOMASUM",
@@ -868,6 +870,8 @@
                 "HAY",
                 "HAYBALE",
                 "HAYBALES",
+                "HAYLOFT",
+                "HAYLOFTS",
                 "HEIFER",
                 "HEIFERS",
                 "HERB",
@@ -896,6 +900,8 @@
                 "LONGHORN",
                 "LOW",
                 "LOWS",
+                "MANGER",
+                "MANGERS",
                 "MANURE",
                 "MILK",
                 "MILKED",
@@ -991,9 +997,16 @@
                 "TRAIL",
                 "TRAILS",
                 "TROUGH",
+                "TROUGHS",
                 "UDDER",
                 "UDDERS",
                 "UNGULATE",
+                "VEGETABLE",
+                "VEGETABLES",
+                "VEGETARIAN",
+                "VEGETARIANS",
+                "VEGAN",
+                "VEGANS",
                 "WEED",
                 "WEEDS",
                 "WHEAT",
@@ -1156,6 +1169,27 @@
             "max": 128,
             "format": "0",
             "quantum": 1
+        },
+        "tile_tiny_font": {
+            "type": "reference",
+            "value": "history_font"
+        },
+        "BOARD_OUTLINE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "40%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "40%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "40%"
+                }
+            }
         }
     },
     "screenshot_tag": "find_word",

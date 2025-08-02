@@ -1,17 +1,17 @@
 /* Draws a tile, adjusting fonts appropriately for the size */
-def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size):
+def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, force_background default false):
     // Shrink by 5 at 44
-    const inset = ⌊tile_size.x / 9⌋
-    const center_size = ceil(tile_size - inset, ½)
-    const subscript_offset = angle_to_xy(-45° - angle) * ⅓ center_size.x
-    let radius = ½ center_size.x
+    const inset = if tile_size.x > 10 then ⌊tile_size.x / 9⌋ else 0
+    const center_size_x = ceil(tile_size.x - inset, ½)
+    const subscript_offset = angle_to_xy(-45° - angle) * ⅓ center_size_x
+    let radius = ½ center_size_x
     
     if tile.selected:
         // Bounce if just selected
         if tile.selected > game_frames - 12:
             radius += ⅕ oscillate(tile.selected - game_frames, 0, 6) + 0.8
     
-    if not tile.selected or is_cursor_tile:
+    if not tile.selected or is_cursor_tile or force_background:
         // Background rect
         draw_rect(pos, tile_size, if is_cursor_tile then CURSOR_COLOR else TILE_COLOR, if is_cursor_tile then #0C0 else ∅) 
     
@@ -23,20 +23,32 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size):
         TILE_CENTER_Z)
 
     const text_color = if tile.selected then SELECTED_TEXT_COLOR else TEXT_COLOR
+
+    const font = (
+        if tile_size.x > 25
+        then tile_font
+        else (
+            if tile_size.x > 12
+            then tile_small_font  
+            else tile_tiny_font))
+            
+    const MIN_VISIBLE_POINTS_SIZE = 17
     
-    // Label
+    // Letter label. Slide left at small sizes so that there's
+    // room for the points
     draw_text({
-        pos: pos, 
-        font: if tile_size.x > 24 then tile_font else tile_small_font, 
+        pos: if tile_size.x ≥ MIN_VISIBLE_POINTS_SIZE and tile_size.x < 21 then pos - xy(½, 0) else pos, 
+        font: font, 
         text: if tile.letter == "Q" then "Qu" else tile.letter,
         color: text_color,
         z: TILE_LETTER_Z})
     
     // Points
-    if not tile.selected and tile_size.x > 18:
+    if not tile.selected and tile_size.x ≥ MIN_VISIBLE_POINTS_SIZE:
         draw_text({
             pos: pos + subscript_offset, 
-            font: tile_point_font, 
+            font: if tile_size.x > 20 then tile_point_font else tile_small_point_font, 
             text: LETTER_POINT_TABLE[tile.letter], 
             color: #AAA,
             z: TILE_LETTER_Z})
+            

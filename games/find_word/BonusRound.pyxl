@@ -1,10 +1,16 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
-todo("** Mode transition animation **")
+todo("* Mode transition animation *")
+
+todo("** Make selection stable, so that animation can occur **")
 
 /* Tiles for the bonus word construction */
 let bonus_row = []
 let selection_color = TILE_CENTER_SELECTED_COLOR
+
+/* Computed in `enter` */
+let bonus_round_text
+
 
 def done():
     for points in entry in player.history.bonus:        
@@ -40,26 +46,31 @@ def add_tile_to_word(tile_x, tile_y):
 
 /* Remove the last tile from the bonus row */
 def remove_last_tile():
-    if size(bonus_row) > 0:
-        const tile_info = pop(bonus_row)
-        player.board.tile[tile_info.x][tile_info.y].used = false
-        selection_color = player_recompute_history_bonus(player, bonus_row)
+    remove_tile_at_index(size(bonus_row) - 1)
         
 
 
 /* Remove a specific tile from the bonus row by index */
 def remove_tile_at_index(index):
-    if index ≥ 0 and index < size(bonus_row):
-        const tile_info = bonus_row[index]
-        player.board.tile[tile_info.x][tile_info.y].used = false
-        remove_values(bonus_row, index)
-        selection_color = player_recompute_history_bonus(player, bonus_row)
+    assert(index ≥ 0 and index < size(bonus_row))
+    const tile = bonus_row[index]
+    // Put back into the board
+    player.board.tile[tile.x][tile.y].used = false
+
+    // Remove from the bonus_row
+    remove_values(bonus_row, tile)
+    
+    // Update selection
+    selection_color = player_recompute_history_bonus(player, bonus_row)
 
 
 
-/* Draw the bonus word construction area */
-def draw_bonus_row():
-    const board_pos = get_board_pos()
+/* Draw the bonus word construction area. Returns the history rect
+   because that is computed as a side effect of layout. */
+def draw_bonus_row(board_pos):
+    const [board_grid_size, board_tile_size, board_gutter] = get_bonus_round_board_dims()
+    const board_width = board_grid_size.x + ¼ board_tile_size.x
+    
     let history_rect
     if landscape():
         history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
@@ -68,80 +79,126 @@ def draw_bonus_row():
         
     // Choose tile size. Leave room for one extra tile until we hit 16
     // to imply that the player can keep going
-    const tile_slots = clamp(size(bonus_row) + 1, 6, ROWS * COLS)
-    let tile_size = ⌈(history_rect.size.x - 10) / tile_slots⌉
+    const tile_slots = clamp(size(bonus_row) + 1, if landscape() then 8 else 6, ROWS * COLS)
     
-    todo("Why is layout broken? no padding")
+    const tile_area_width = if landscape() then board_grid_size.x else (history_rect.size.x - 10)
+    
+    let tile_size = xy(1, 1) * tile_area_width / tile_slots
+    if tile_slots < ROWS * COLS:
+        // Round up, we have some room
+        tile_size = ceil(tile_size)
+    else:
+        // Have to make that last letter fit
+        tile_size = round(tile_size)
+        
+    
     // Take off the padding
-    if tile_size.x ≥ 22:
+    if tile_size.x > 21:
         tile_size -= 1
         
     if tile_size.x ≥ 12:
         tile_size -= 1
         
     // Spacing between tiles
-    const tile_spacing = tile_size + (if tile_size.x > 22 then 2 else (if tile_size.x > 12 then 1 else 0))
+    const tile_spacing = tile_size.x + (if tile_size.x > 21 then 2 else (if tile_size.x > 12 then 1 else 0))
 
     const last_entry = last_value(player.history.bonus) default {word: "", color: TILE_CENTER_SELECTED_COLOR}
-    const selection_length = size(last_entry.word)
+    let selection_length = size(last_entry.word)
     const selection_color = last_entry.color
+
     
-    // Reduce history area for bonus word area
-    history_rect.size.y -= tile_size + 4
-    history_update(player.history, history_rect)
+    let bonus_rect
+    if landscape():
+        // Landscape: bonus over board
+        bonus_rect = {
+            corner: board_pos - xy(½ board_width, ½ board_width + tile_size.y + 14),
+            size: xy(board_width, tile_size.y + 6)}
+    else: 
+        // Portrait: bonus over reduced history
+        history_rect.size.y -= tile_size.y + 4
+        
+        bonus_rect = {
+            corner: history_rect.corner + xy(1, history_rect.size.y),
+            size: xy(history_rect.size.x - 2, tile_size.y + 6)}    
     
-    // Draw bonus word area
-    const bonus_rect = {
-        corner: history_rect.corner + xy(0, history_rect.size.y),
-        size: xy(history_rect.size.x, tile_size + 4)}
-    
-    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size, #222, #666)
+    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size, player.background_color, selection_color)
+    // Double wide outline
+    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size + 2, ∅, selection_color)
+    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size + 4, ∅, selection_color)
         
     // Draw tiles in the word
-    const start_x = bonus_rect.corner.x + ⌈½ tile_spacing⌉
+    const start_x = bonus_rect.corner.x + ⌈½ tile_spacing⌉ + 2
     const tile_y = bonus_rect.corner.y + ⌊½ bonus_rect.size.y⌋
-    
-    for tile at i in bonus_row:
-        tile.selected = i < selection_length
+
+    let i = 0
+    let removed_already = false
+    while i < size(bonus_row):
+        const tile = bonus_row[i]
         const tile_pos = xy(start_x + i * tile_spacing, tile_y)
-        tile_draw(tile, tile_pos, false, 0°, selection_color, xy(tile_size, tile_size))
-
-        // Touch area for removal
-        todo("** touch remove **")
-        if touch.pressed_a and |touch.xy - tile_pos| < tile_size/2:
+        
+        tile.selected = i < selection_length
+        tile_draw(tile, tile_pos, false, 0°, selection_color, tile_size, true)
+        
+        if not removed_already and touch.pressed_a and overlaps(touch.xy, {pos: tile_pos, size: tile_size}):
+            --selection_length
+            removed_already = true
             remove_tile_at_index(i)
+        else:
+            ++i
             
-    todo("** Draw selection connectors **")
+    // Draw the connectors between letters if it is a word. Intentionally
+    // do not draw the selected-but-not-a-word line, as it makes them not 
+    // look like tiles any more
+    if selection_length > 1:
+        draw_line(xy(start_x, tile_y), xy(start_x + (selection_length - 1) * tile_spacing, tile_y), selection_color, TILE_CENTER_Z, ¼ tile_size.y)
 
+    return history_rect
     
+
+
+/* Returns `[grid_size, tile_size, gutter]` for the
+   bonus round board, which is shrunk in landscape mode. */    
+def get_bonus_round_board_dims():
+    let tile_size = xy(TILE_EXTENT, TILE_EXTENT)
+    
+    if landscape():
+        // Make the board smaller to make room for the bonus row.
+        // The player may not notice as we blacked the screen
+        // between rounds
+        tile_size = ⌊85% tile_size⌋
+
+    const gutter = ⌊tile_size.x / 9⌋
+    const grid_size = xy(COLS, ROWS) * tile_size + xy(COLS - 1, ROWS - 1) * gutter
+    return [grid_size, tile_size, gutter]
+
 
 
 /* Draw the board with used tiles shown as blank */
 def draw_bonus_round_board(pos)
 & preserving_transform:
-    todo("Merge with the existing player_update_board() code")
+    // Duplicates some `player_update_board()` code because it has to draw
+    // the board in a special way to make it smaller and have missing tiles
 
-    const grid_size = board_pixel_size()
-    const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
+    const [grid_size, tile_size, gutter] = get_bonus_round_board_dims()
     const center_size = tile_size - 5
     
     set_transform(pos)
     
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT, player.background_color, #666)
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, ∅, #666)
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 4, ∅, #666)
+    draw_rect(xy(0, 0), grid_size + ¼ tile_size.x, player.background_color, player.board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ tile_size.x + 2, ∅, player.board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ tile_size.x + 4, ∅, player.board.selection_color)
     
     for col at i in player.board.tile:
         for tile at j in col:
             const index = xy(i, j)
-            const tile_pos = _index_to_pos(index)
+            const tile_pos = (index * (gutter * xy(min(index.x, 1), min(index.y, 1)) + tile_size.x) - ½ xy(COLS - 1, ROWS - 1) * (tile_size.x + gutter))
             const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
             
             tile.pos = transform_ws_to_ss(tile_pos)
             
             // Touch selection for adding tiles to word
             const tile_center = {pos: tile_pos, shape: "disk", size: center_size}
-            if touch.pressed_a and overlaps(tile_center, touch.xy) and not tile.used:
+            if mode_frames > 5 and touch.a and overlaps(tile_center, touch.xy) and not tile.used:
                 add_tile_to_word(i, j)
             
             // Gamepad selection
@@ -177,9 +234,21 @@ end_time += bonus_round_time()
 // Skip this mode entirely if there is no bonus time
 if frame_utc_now ≥ end_time: done()
 
+play_sound(bonus_round_sound)
+
 bonus_row = []
 
 todo("Animation on words appearing")
+
+bonus_round_text = ""
+const text = "BONUS ROUND"
+for letter at i in text:
+    const α = i / (size(text) - 1)
+    if letter == " ":
+        bonus_round_text += " "
+    else:
+        bonus_round_text += "{color:" + unparse(perceptual_lerp_color(#E1B, #0AE, α)) + " " + letter + "}"
+
 
 
 frame
@@ -193,16 +262,36 @@ if player.using_gamepad:
         player.cursor_tile_index = target
 
 const board_pos = get_board_pos()
+// Draw timer in the usual height, but shift to line
+// up with the new board edge
+draw_timer(board_pos + (if landscape() then xy(16, 0) else xy(0, 0)))
+
+if landscape():
+    // Move the board down to make room for the bonus row
+    board_pos.y += 17
 
 // Draw the board with used tiles as blank
 draw_bonus_round_board(board_pos)
 
-// Draw timer
-draw_timer(board_pos)
-
 // Draw bonus word construction area
-draw_bonus_row()
+const history_rect = draw_bonus_row(board_pos)
+
+history_update(player.history, history_rect)
+
+// Draw the bonus round animation over the history
+preserving_transform:
+    set_clip(history_rect)
+        
+    draw_text({
+        font: giant_score_font,
+        text: bonus_round_text,
+        pos: xy(history_rect.corner.x + 1.2 history_rect.size.x - 2 mode_frames, history_rect.corner.y + ½ history_rect.size.y),
+        x_align: "left",
+        markup: true,
+        outline: #FFF,
+        shadow: #000})
 
 draw_instructions(board_pos)
 
 if time_left ≤ 0: done()
+
