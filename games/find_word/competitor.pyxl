@@ -266,7 +266,7 @@ last_hour: 1
         
         // Special case for moo, who always finds *all* cow-related words
         if competitor.avatar.name == "Moo":
-            for word in COW_WORDS:
+            for word in MOOCABULARY:
                 if not word_set[word] and contains(player.board.word_list, word):
                     word_set[word] = 1
                         

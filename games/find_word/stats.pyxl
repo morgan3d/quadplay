@@ -1,88 +1,6 @@
-todo("Convert progression to named ")
-
-/*
-
-## **Level Progression**
-
-Level 2
-: - See stats (includes level, XP, next level)
-: - (Moo visible to player)
-
-Level 3
-: - See Most words stat
-: - (Moo introduces themselves)
-
-Level 4
-: - See Highest score stat
-: - See unlocked abilities
-
-Level 5
-: - More avatars unlocked
-
-Level 6
-: - See Longest word stat
-
-Level 7
-: - More avatars unlocked
-
-Level 8
-: - See Unique words stat
-: - Get XP Awards for first time finding a word 
-:   (applies retroactively)
-
-Level 9
-: - See Best word stat
-: - More avatars unlocked
- 
-Level 10
-: - See Most words stat
-: - (caf appears to player)
-: - (Moo introduces caf)
-
-Level 11
-: - See # total words possible _after_ game
-
-Level 12
-: - See avg words/match
-: - See avg points/match
-
-Level 13
-: - *Access bonus round*
-
-Level 14
-: - See Total words stat
-: - See Total matches stat
-
-Level 15
-: - More avatars unlocked
-
-Level 16
-: - XP awards for per-match badges (does not apply retroactively)
-
-Level 17
-: - More avatars unlocked
-
-Level 18
-: - See total 2 suggested words _after_ game
-
-Level 19
-: - More avatars unlocked
-
-Level 20
-: - See total words possible _during_ game
-
-Level 21
-: - More avatars unlocked
-
-Level 22
-: - See total 6 suggested words _after_ game
-
-Level 23
-: - More avatars unlocked
-
-
-*/
-todo("Level progression")
+todo("Level progression: Store unlocks on player")
+todo("Level progression: Announce upgrades")
+todo("Level progression: Test in game")
 
 /* See `xp_to_level()`. Chosen to make Level 20 ~= 25k XP */
 const LEVEL_EXPONENT = 0.75
@@ -129,8 +47,8 @@ def level_to_xp(level):
     else:
         return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
 
-for i < 22:
-    debug_print(i, level_to_xp(i))
+// To print levels:
+// for i < 22: debug_print(i, level_to_xp(i))
 
 /* Assumes the input is a list of q-encoded, all-caps words. 
    Returns a string packing them into a form that serializes

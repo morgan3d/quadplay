@@ -64,7 +64,7 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.247",
+    "version": "0.248",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -75,6 +75,11 @@
     "midi_sysex": false,
     "description": "Uncover words hidden in the grid in a world-wide real-time competition.",
     "constants": {
+        "ABILITY_TABLE": {
+            "type": "table",
+            "transpose": true,
+            "url": "ability.csv"
+        },
         "TILE_EXTENT": {
             "type": "number",
             "value": "44",

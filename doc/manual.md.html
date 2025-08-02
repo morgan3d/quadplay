@@ -2022,7 +2022,7 @@ a separate CSV file for the data has additional properties:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
 {
-  "type": "table",              // or "array"
+  "type": "table",              // "table" = struct-of-structs; "array" = flat array
   "transpose": "false",         // Optional, default false
   "column_type": "object",      // Optional, default "object"
   "ignore_first_column": false, // Optional, default to false. Removes the source 1st column if true
@@ -2034,7 +2034,7 @@ a separate CSV file for the data has additional properties:
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `type` is `"array"` then the table after being read is flattend in column-major order
+If `type` is `"array"` then the table after being read is flattened in column-major order
 into an array.
 
 By default, tables are indexed in-game as `table[x][y]` a.k.a. `table[col][row]`.

@@ -1,8 +1,5 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
-todo("* Mode transition animation *")
-
-todo("** Make selection stable, so that animation can occur **")
 
 /* Tiles for the bonus word construction */
 let bonus_row = []
@@ -11,22 +8,7 @@ let selection_color = TILE_CENTER_SELECTED_COLOR
 /* Computed in `enter` */
 let bonus_round_text
 
-
-def done():
-    for points in entry in player.history.bonus:        
-        player.score += points
-    
-    // Reset the scroll position because layout differs
-    // from the main game during intermission
-    play_sound(times_up_sound)
-    sort(player.history.list, "points", true)
-    player.history.scroll = 0
-    
-    if game_type == SOLO:
-        set_mode(SoloIntermission) because "SOLO and timer"
-    else:
-        set_mode(GatherGlobalResults) because "GLOBAL and timer"
-    
+todo("** Make selection stable, so that animation can occur **")
 
 
 /* Add a tile to the bonus row */
@@ -224,6 +206,23 @@ def draw_instructions(board_pos):
     else:
         // Portrait
         draw_text({…args, font: leaderboard_font, pos: ½(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y) + board_pos + xy(0, 100)), wrap_width: SCREEN_SIZE.x - 10})
+
+
+def done():
+    for points in entry in player.history.bonus:        
+        player.score += points
+    
+    // Reset the scroll position because layout differs
+    // from the main game during intermission
+    play_sound(times_up_sound)
+    sort(player.history.list, "points", true)
+    player.history.scroll = 0
+    
+    if game_type == SOLO:
+        set_mode(SoloIntermission) because "SOLO and timer"
+    else:
+        set_mode(GatherGlobalResults) because "GLOBAL and timer"
+    
 
 
 enter
