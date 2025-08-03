@@ -131,7 +131,7 @@ def avatar_next_sprite(sprite, dir default +1):
     
     if (contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent) or
         // Harpy's special avatar
-        ((player.avatar.name ≠ "bug" or player.level < 8) and equivalent(sprite.tile_index, HARPY_AVATAR_INDEX)):
+        ((player.avatar.name ≠ "bug" or player.level < 8) and equivalent(sprite.tile_index, HARPY_AVATAR_INDEX))):
             
         return avatar_next_sprite(sprite, dir)
     else:
