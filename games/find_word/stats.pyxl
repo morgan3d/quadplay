@@ -151,7 +151,12 @@ def stats_save(stats):
 /* Returns a new stats object loaded from storage. */
 def stats_load():    
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
+    
+    // Encode
+    if stats.lifetime.word_list == []: stats.lifetime.word_list = ""
 
+    debug_print("encoded stats", stats)
+    
     // Decompress the word list    
     if stats.word_list:
         if type(stats.word_list) == "array":
@@ -167,8 +172,7 @@ def stats_load():
         if date ≠ "word_list":
             const day = stats[date]
             day.xp = decode_xp(day.xp)
-            if type(day.word_list) == "string":
-                day.word_list = decompress_word_list(day.word_list default "")
+            day.word_list = decompress_word_list(day.word_list default "")
             
             // Upgrade legacy formats
             if day.longest ≠ ∅:
@@ -180,6 +184,8 @@ def stats_load():
     // Everything is decoded now. Iterate again to merge any
     // days before today
     stats_merge_previous_days(stats)
+    
+    debug_print(stats)
     
     return stats
 

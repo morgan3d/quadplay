@@ -78,7 +78,7 @@ y += draw_row(y, "Best Word",
     lifetime.best_word_text + " " + lifetime.best_word_points, 
     (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
     DIM,
-    if today.best_word_points ≥ lifetime.best_word_points then HIGHLIGHT else ∅)
+    if today.best_word_text and (today.best_word_points ≥ lifetime.best_word_points) then HIGHLIGHT else ∅)
 y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
 y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, DIM, HIGHLIGHT)
 
