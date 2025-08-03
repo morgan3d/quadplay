@@ -1,6 +1,10 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
+todo("** Level up sequence that shows bonuses and does not show other awards**")
 todo("Favoriting UI + save")
+todo("Popups for stat achievements")
+todo("Award for best bonus word")
+todo("Change layout to make awards more central")
 
 let prev_xp
 let prev_level
@@ -296,7 +300,11 @@ if not DEBUG_INTERMISSION:
     new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
     // Update level
     player.avatar.level = xp_to_level(new_xp)
+    
+    todo("**Grant any missing abilities**")
+    todo("*Level progression: Announce upgrades*")
     stats_save(player.stats)
+    save_local(player.has_ability)
 else:
     new_xp = prev_xp + 1000
 

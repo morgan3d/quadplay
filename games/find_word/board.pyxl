@@ -397,7 +397,7 @@ def board_deselect_all(board, player):
 
 /* Adjusts the pan for the index */
 def _board_play_sound(sound, volume, pitch, index):
-    play_sound(sound, false, volume, (index.x + 1) / (COLS + 1), pitch)
+    play_sound(sound, false, volume, if index then (index.x + 1) / (COLS + 1) else ∅, pitch)
     
 
 
@@ -442,9 +442,10 @@ def board_selected_word(board):
         
     return word
     
-    
 
-/* Draw a mini version of the game board on the intermission modes. */
+
+/* Draw a mini version of the game board on the intermission modes. 
+   See also `player_update_board()` */
 def board_draw_mini(board, pos)
 & preserving_transform:
     set_transform(pos)

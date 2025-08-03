@@ -1,6 +1,4 @@
-todo("Level progression: Store unlocks on player")
-todo("Level progression: Announce upgrades")
-todo("Level progression: Test in game")
+todo("*Level progression: Test player.has_ability[] in game*")
 
 /* See `xp_to_level()`. Chosen to make Level 20 ~= 25k XP */
 const LEVEL_EXPONENT = 0.75

@@ -3,26 +3,135 @@ BonusRound
 
 /* Tiles for the bonus word construction */
 let bonus_row = []
+
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
 /* Computed in `enter` */
 let bonus_round_text
 
-todo("** Make selection stable, so that animation can occur **")
+
+/* Searches player.history.bonus for the word */
+def player_already_found_bonus(player, word):
+    return contains(player.history.bonus, {word: word}, word_property_equals)
 
 
+
+def player_update_back_button(player, board_pos):
+    if size(bonus_row):
+        player_update_aux_button(player, board_pos, remove_last_tile, shapes.arrow.x_flipped, "b", ∅, true)
+
+
+
+/* Recompute `player.history.bonus` from `bonus_row` and return the `bonus_selection_color`.
+   See also `player_selection_change_callback()` for the `Play` mode. */
+def player_bonus_selection_change_callback(player, bonus_row):    
+    // Clean up the list for any removals
+    player_remove_destroyed_bonus_words(player, bonus_row)
+
+    // Look for any additions, tracking the most points seen for sound triggers
+    let word = ""
+    let max_points = 0
+    let best_new_word = ∅
+    let best_new_color = ∅
+    for tile at t in bonus_row:
+        word += tile.letter
+        if dictionary[word] and not player_already_found_bonus(player, word):
+            if player.already_found[word]:
+                if t == size(bonus_row):
+                    // Show that we've already seen this just-completed word by 
+                    // finding and emphasizing it
+                    player_emphasize_history_word(player, word)
+                    play_sound(select_tile_sound, false, 150%, ∅, 40%)
+            else:
+                const points = score_word(word)
+                const color = player_add_to_bonus(player, word, points)
+                if points > max_points:
+                    max_points = points
+                    best_new_word = word
+                    best_new_color = color
+
+    // At least one word was added
+    if max_points > 0:
+        player_spawn_bonus_score_animation(player, best_new_word, best_new_color)
+        play_points_sound(max_points)
+    
+    // Choose the color based on the best selection
+    max_points = 0
+    for points in entry in player.history.bonus:
+        max_points = max(max_points, points)
+
+    if max_points > 0:
+        return color_for_points(max_points) 
+    else:
+        return TILE_CENTER_SELECTED_COLOR
+
+
+
+/* Creates animation going from the selection to the last word in the bonus list */
+def player_spawn_bonus_score_animation(player, word, color):
+    let target
+    
+    let letter_array = []
+    let start_array = []
+    
+    const entry = player.history.bonus[find(player.history.bonus, {word: word}, ∅, word_property_equals)]
+    assert(entry)
+    
+    // Have to wait until callback time for this so that the 
+    // target actually gets rendered and assigned a pos first
+    def capture_target():
+        // Abort if the mode ends and history is cleared while 
+        // waiting for this callback
+        if not entry: return sequence.BREAK
+        
+        for i < size(word):
+            const tile = bonus_row[i]
+            
+            if not tile or tile.letter ≠ word[i]: return sequence.BREAK
+            
+            push(start_array, xy(tile.pos))
+            push(letter_array, q_decode(tile.letter))
+        target = entry.pos + xy(4 size(entry.word), 4)
+
+
+    def callback(frames_left, total_frames):
+        const α = linstep(total_frames, 0, frames_left)^1.5
+        for i < size(letter_array):
+            const pos = lerp(start_array[i], target, α)
+            draw_disk(pos, 12 * (1 - α), color, ∅, 9)
+            draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
+        
+    sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
+
+
+
+/* Remove any previous entry of player.history.bonus that does not belong */
+def player_remove_destroyed_bonus_words(player, bonus_row):
+    let word = ""
+    for tile at t in bonus_row:
+        word += tile.letter
+        
+    def maybe_remove(entry):
+        if not starts_with(word, entry.word):
+            todo("Sound and animation for removal")
+            return iterate.REMOVE
+        
+    iterate(player.history.bonus, maybe_remove)
+    
+    
+    
 /* Add a tile to the bonus row */
-def add_tile_to_word(tile_x, tile_y):
-    const tile = player.board.tile[tile_x][tile_y]
-    if not tile.used:
-        tile.used = true
-        push(bonus_row, {
-            letter: tile.letter,
-            x: tile_x,
-            y: tile_y,
-            points: LETTER_POINT_TABLE[tile.letter]
-        })
-        selection_color = player_recompute_history_bonus(player, bonus_row)
+def add_tile_to_word(index):
+    const tile = player.board.tile[index.x][index.y]
+    assert(not tile.used)
+    
+    tile.used = true
+    push(bonus_row, {
+        letter: tile.letter,
+        index: xy(index),
+        points: LETTER_POINT_TABLE[tile.letter]})
+    
+    selection_color = player_bonus_selection_change_callback(player, bonus_row)
 
 
 
@@ -37,19 +146,23 @@ def remove_tile_at_index(index):
     assert(index ≥ 0 and index < size(bonus_row))
     const tile = bonus_row[index]
     // Put back into the board
-    player.board.tile[tile.x][tile.y].used = false
+    player.board.tile[tile.index.x][tile.index.y].used = false
 
     // Remove from the bonus_row
     remove_values(bonus_row, tile)
     
+    play_sound(select_tile_sound, false, 150%, ∅, 40%)
+
     // Update selection
-    selection_color = player_recompute_history_bonus(player, bonus_row)
+    selection_color = player_bonus_selection_change_callback(player, bonus_row)
 
 
 
 /* Draw the bonus word construction area. Returns the history rect
    because that is computed as a side effect of layout. */
 def draw_bonus_row(board_pos):
+    todo("Show empty tile slots on bonus row")
+
     const [board_grid_size, board_tile_size, board_gutter] = get_bonus_round_board_dims()
     const board_width = board_grid_size.x + ¼ board_tile_size.x
     
@@ -116,12 +229,12 @@ def draw_bonus_row(board_pos):
     let removed_already = false
     while i < size(bonus_row):
         const tile = bonus_row[i]
-        const tile_pos = xy(start_x + i * tile_spacing, tile_y)
+        tile.pos = xy(start_x + i * tile_spacing, tile_y)
         
         tile.selected = i < selection_length
-        tile_draw(tile, tile_pos, false, 0°, selection_color, tile_size, true)
+        tile_draw(tile, tile.pos, false, 0°, selection_color, tile_size, true)
         
-        if not removed_already and touch.pressed_a and overlaps(touch.xy, {pos: tile_pos, size: tile_size}):
+        if not removed_already and touch.pressed_a and overlaps(touch.xy, {pos: tile.pos, size: tile_size}):
             --selection_length
             removed_already = true
             remove_tile_at_index(i)
@@ -181,22 +294,22 @@ def draw_bonus_round_board(pos)
             // Touch selection for adding tiles to word
             const tile_center = {pos: tile_pos, shape: "disk", size: center_size}
             if mode_frames > 5 and touch.a and overlaps(tile_center, touch.xy) and not tile.used:
-                add_tile_to_word(i, j)
+                add_tile_to_word(index)
             
             // Gamepad selection
             if player.using_gamepad and is_cursor_tile:
                 if player.gamepad.pressed_a and not tile.used:
-                    add_tile_to_word(i, j)
-                else if player.gamepad.pressed_b:
-                    remove_last_tile()
-            
-            // Cursor on used tile: border only
-            if is_cursor_tile and tile.used:
-                for i < 3:
-                    draw_rect(tile_pos, tile_size - 2 i, ∅, CURSOR_COLOR)
-            
+                    add_tile_to_word(index)
+                        
             if not tile.used:
                 tile_draw(tile, tile_pos, is_cursor_tile, 0°, #CCC, tile_size)
+            else:
+                draw_rect(tile_pos, xy(35, 35), 90% player.background_color)
+                
+                // Cursor on used tile: border only
+                if is_cursor_tile:
+                    for i < 2:
+                        draw_rect(tile_pos, tile_size - 2 i, ∅, CURSOR_COLOR)
 
 
 
@@ -237,8 +350,6 @@ play_sound(bonus_round_sound)
 
 bonus_row = []
 
-todo("Animation on words appearing")
-
 bonus_round_text = ""
 const text = "BONUS ROUND"
 for letter at i in text:
@@ -261,9 +372,15 @@ if player.using_gamepad:
         player.cursor_tile_index = target
 
 const board_pos = get_board_pos()
-// Draw timer in the usual height, but shift to line
-// up with the new board edge
-draw_timer(board_pos + (if landscape() then xy(16, 0) else xy(0, 0)))
+// Draw timer, score, and back button in the usual height but squeeze
+// closer to align
+local:
+    const offset = if landscape() then xy(16, 0) else xy(0, 0)
+    draw_timer(board_pos + offset)
+    player_update_back_button(player, board_pos - offset)
+    player_draw_score(player, board_pos - offset)
+        
+    todo("Draw score!")
 
 if landscape():
     // Move the board down to make room for the bonus row

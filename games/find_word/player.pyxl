@@ -10,6 +10,12 @@ def make_player():
         
         avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
         
+        // Maps names of abilities from ABILITY_TABLE to 1 if present.
+        // We do this instead of testing the player level so that during playtesting
+        // save files don't have to be updated; instead upgrades are sticky
+        // and automatically appear on level up retroactively
+        has_ability: load_local("has_ability") default {},
+        
         // Maps player GUIDs to their most recent name.
         // The names are only for debugging. Players with no friends
         // automatically friend Moo.
@@ -96,17 +102,9 @@ def player_selection_change_callback(player):
     else if points > 0:
         // Score the word, even without the player releasing their touch
         const color = player_add_to_history(player, word, points)
-                
         board.selection_color = color
         player_spawn_score_animation(player)
-    
-        const pitch = 75% + min(max(0, points - 6)^0.1, 3)
-        _board_play_sound(word_sound, 100% + 10% pitch, pitch, last_value(board.selection))
-    
-        // Repeatly ding for 35 or more points
-        for i ≤ (points - 35) / 10:
-            delay(play_big_points_sound, 12 i)
-    
+        play_points_sound(points, last_value(board.selection))    
         return true
 
 
@@ -129,21 +127,6 @@ def player_add_to_history(player, word, points):
     player.already_found[word] = true
     player.score += points
     return history_add(player.history, "list", word, points)
-
-
-    
-/* Recompute `player.history.bonus` from `bonus_row` and return the `bonus_selection_color`*/
-def player_recompute_history_bonus(player, bonus_row):
-    remove_all(player.history.bonus)
-    let bonus_selection_color = TILE_CENTER_SELECTED_COLOR
-
-    let word = ""
-    for tile at t in bonus_row:
-        word += tile.letter
-        if dictionary[word] and not player.already_found[word]:
-            bonus_selection_color = player_add_to_bonus(player, word, score_word(word))
-            
-    return bonus_selection_color
     
 
 
@@ -160,23 +143,35 @@ def player_emphasize_history_word(player, word, duration default 30):
 
 
 
-def _player_update_rotate_button(player, board_pos):
-    let rotate_button_sprite = shapes.curved_arrow.rotated_270
-    
-    let rotate_button_pos = board_pos + xy(-4, -16) + xy(½, -½) board_pixel_size()
-        
-    draw_disk(rotate_button_pos, 8, ∅, #FFF)
-    draw_sprite(rotate_button_sprite, rotate_button_pos + xy(1, 1), ∅, 38%)
-    if player.using_gamepad:
-        draw_text({font: button_prompt_font, text: player.gamepad.prompt["(d)"], x_align: "right", pos: rotate_button_pos + xy(-6, 7), color: #FFF, outline: #000})
+/* For the rotate button in `Play` mode and the delete button in `BonusRound` mode */
+def player_update_aux_button(player, board_pos, callback, sprite, button, button2 default button, square default false):
+    assert(sprite)
+    const button_pos = board_pos + xy(-4, -16) + xy(½, -½) board_pixel_size()
 
-    if (touch.pressed_a and overlaps({pos: rotate_button_pos, size: rotate_button_sprite.size}, touch.xy)) or joy.pressed_f or joy.pressed_d:
+    if square:
+        draw_rect(button_pos, xy(16, 16), ∅, #FFF)
+    else:
+        draw_disk(button_pos, 8, ∅, #FFF)
+        
+    draw_sprite(sprite, button_pos + xy(1, 1), ∅, 38%)
+    
+    if player.using_gamepad:
+        draw_text({font: button_prompt_font, text: player.gamepad.prompt["(" + button + ")"], x_align: "right", pos: button_pos + xy(-5, 7), color: #FFF, outline: #000, z: 10})
+
+    if (touch.pressed_a and overlaps({pos: button_pos, size: sprite.size}, touch.xy)) or joy["pressed_" + button2] or joy["pressed_" + button]:
+        callback()
+
+
+
+def _player_update_rotate_button(player, board_pos):
+    def callback():
         push_mode(Rotate) because "Rotate button"
+    player_update_aux_button(player, board_pos, callback, shapes.curved_arrow.rotated_270, "d", "f")
 
 
 
 /* Also draws button prompts */
-def _player_draw_score(player, board_pos)
+def player_draw_score(player, board_pos)
 & with gamepad, board, score in player:
     
     const score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(18, 16)
@@ -192,16 +187,21 @@ def _player_draw_score(player, board_pos)
             z: TILE_LETTER_Z})
             
     else:
+        let total_score = score
+        if get_mode() == BonusRound:
+            for points in entry in player.history.bonus:
+                total_score += points
+        
         draw_text({
             pos: score_pos,
             font: score_font,
-            text: format_number(score, "commas") + " pts",
+            text: format_number(total_score, "commas") + " pts",
             color: #FFF,
             y_align: "center",
             x_align: "right"})
     
-    // Button prompts    
-    if player.using_gamepad:
+    // Button prompts (no space during bonus round for this)
+    if player.using_gamepad and get_mode() ≠ BonusRound:
         draw_text({
             pos: score_pos + xy(-136, -7),
             font: button_prompt_font,
@@ -284,7 +284,7 @@ def player_update(player, angle default 0°, allow_selection default false):
 
     player_update_board(player, board_pos, angle, allow_selection)
 
-    _player_draw_score(player, board_pos)
+    player_draw_score(player, board_pos)
     
     if allow_selection:
         _player_update_rotate_button(player, board_pos)

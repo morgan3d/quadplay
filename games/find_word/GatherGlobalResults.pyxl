@@ -1,11 +1,6 @@
 GatherGlobalResults
 ════════════════════════════════════════════════════════════════════════
 
-todo("* Award for best bonus word *")
-todo("* Change layout to make awards more central *")
-todo("* Level up sequence that shows bonuses and does not show other awards*")
-todo("* Popups for stat achievements *")
-
 const color = #F3C
 
 def draw_arc(pos, radius, start, stop, color):

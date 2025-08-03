@@ -33,7 +33,11 @@
     ],
     "start_mode": "Title",
     "docs": [
-        "index.html"
+        "index.html",
+        {
+            "name": "faq",
+            "url": "faq.md.html"
+        }
     ],
     "assets": {
         "tile_point_font": "quad://fonts/deja-6.font.json",
@@ -64,7 +68,7 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.249",
+    "version": "0.250",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

@@ -236,10 +236,10 @@ last_hour: 1
         
         // Is this particular competitor available right now?         
         if competitor.avatar.last_hour > competitor.avatar.first_hour:
-            if hour < competitor.avatar.first_hour or hour > competitor.avatar.last_hour: continue
+            if hour < competitor.avatar.first_hour or hour > competitor.avatar.last_hour: return
         else:
             // Play hours wrapped around the clock
-            if hour > competitor.avatar.last_hour and hour < competitor.avatar.first_hour: continue
+            if hour > competitor.avatar.last_hour and hour < competitor.avatar.first_hour: return
         
         // Make a word list for this competitor and score it.
         // Higher chance of discovering shorter words via rejection sampling.
@@ -290,7 +290,7 @@ last_hour: 1
     todo("ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if it is an odd 10 minute interval right now")
     
     let c = 0
-    while size(competitor_array) < target_count and avatar_set[c]        
+    while size(competitor_array) < target_count and avatar_set[c]:       
         make_bot_competitor(avatar_set[c], "B" + c)
         ++c
         push(competitor_array, competitor)

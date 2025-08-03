@@ -9,7 +9,7 @@ def make_history():
         /* 
           `[{text, word, points}, …]`. Recomputed by `update_bonus_row_list()`
           in the `BonusPhase` mode.
-                      
+            
          `size(last_value().word)` is the number of tiles used in a word.
          `color_for_points(last_value().points)` is the color to use.
         */
@@ -37,6 +37,13 @@ def make_history():
             scroll: ∅
         }
     }
+
+
+    
+/* True if A and B have the same value for their `word` property.
+   Useful for comparing two history list entries. */
+def word_property_equals(A, B):
+    return A.word == B.word
 
 
 
@@ -99,10 +106,10 @@ def history_draw(history, pos, max_height):
         history_draw_entry(entry)
         
     if size(history.bonus):
-        
+        // Separator
         if size(history.list):
-            // Separator
             history_draw_entry({text: "    ~    ", color: #888, reveal_frame: 0, emphasize_frame: 0})
+            
         for entry in history.bonus:
             history_draw_entry(entry)
         
