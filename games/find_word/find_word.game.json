@@ -70,7 +70,7 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.269",
+    "version": "0.270",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1057,7 +1057,7 @@
         },
         "GATHER_TIME_SECONDS": {
             "type": "number",
-            "value": "2.5",
+            "value": "3.3",
             "description": "How many seconds GatherGlobalResults runs for",
             "min": 0,
             "max": 15,
