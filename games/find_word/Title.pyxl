@@ -33,7 +33,8 @@ def update_stats_button(pos):
     if ((not intro and
         mode_frames > 2 and 
         ((touch.pressed_a and overlaps(touch.xy, region)) or
-         (selected and gamepad_array[0].pressed_a)))
+         (selected and gamepad_array[0].pressed_a) or
+         gamepad_array[0].pressed_q))
          or DEBUG_STATS):
         push_mode(DisplayStats)        
             
@@ -244,7 +245,7 @@ local:
         push_mode(AvatarEditor) because "Selected avatar"
     
 // Stats button
-local:
+if player.has_ability["Stats Tracker"]:
     const pos = xy(32 - slide, SCREEN_SIZE.y - 36)
     update_stats_button(pos)
 

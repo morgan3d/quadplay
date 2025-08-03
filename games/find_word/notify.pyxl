@@ -1,4 +1,108 @@
-/* Popup notification system */
+/* Popup notification system. Only shows one at a time and enqueues the rest. */
 
 todo("**** Popup System ****")
+
+// The notification at the front of the queue is currently displayed
+const _notification_queue = []
+
+def notify(sprite, title, description, sound default ∅, begin_callback default ∅, duration_seconds default 5, sprite_scale default 200%):
+    push(_notification_queue, {
+        sprite:         sprite,
+        sprite_scale:   sprite_scale,
+        title:          title,
+        sound:          sound,
+        description:    description,
+        begin_callback: begin_callback,
+        // Real time of display
+        first_shown:    ∅,
+        duration_seconds: duration_seconds})
+    
+    
+    
+def notifications_pending():
+    return size(_notification_queue)    
+    
+    
+
+/* Hook to process notification animation every frame */
+def update_notifications()
+& preserving_transform:
+    const TITLE_FONT       = score_font
+    const DESCRIPTION_FONT = leaderboard_font
+
+    // These count against duration_seconds
+    const ENTER_DURATION_SECONDS   = 0.17
+    const EXIT_DURATION_SECONDS    = 0.17
+    
+    // Does not count against duration_seconds
+    const DELAY_AFTER_SECONDS      = 1.2
+    
+    // Nothing to do
+    if not notifications_pending(): return
+
+    // Peek the queue
+    const notification = _notification_queue[0]
+    with first_shown, duration_seconds, sprite, sprite_scale, sound, begin_callback in notification:
+        const time_now = now()
+        
+        if first_shown == ∅:
+            first_shown = time_now
+            if sound:
+                play_sound(sound)
+            if begin_callback():
+                begin_callback()
+
+        const relative_time = time_now - first_shown    
+        if relative_time > duration_seconds:        
+            if relative_time > duration_seconds + DELAY_AFTER_SECONDS:
+                // Done! remove
+                pop_front(_notification_queue)
+                
+            return
+        
+        let α = 100%        
+        if relative_time < ENTER_DURATION_SECONDS:
+            // Grow
+            α = clamp(relative_time / ENTER_DURATION_SECONDS, 0%, 100%)
+        else if relative_time > EXIT_DURATION_SECONDS:
+            // Shrink
+            α = clamp((duration_seconds - relative_time) / EXIT_DURATION_SECONDS, 0%, 100%)
+
+        // Draw way on top of everything
+        set_transform(xy(½ SCREEN_SIZE.x, 40), ∅, 100)
+        
+        const rect = {pos: xy(0, 0), size: α * xy(204, 50)}
+        // Drop shadow
+        draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
+
+        // Window
+        draw_rect(rect.pos, rect.size, #FFF, #E1B)
+        draw_rect(rect.pos, rect.size - 2, ∅, #E1B)
+        draw_rect(rect.pos, rect.size + 2, ∅, #000)
+        
+        if α == 100%:
+            // Show contents when the window is full size
+            const sprite_width = sprite.size.x * sprite_scale
+            const padding = 7
+            const text_width = rect.size.x - sprite_width - 3 padding 
+
+            draw_sprite(notification.sprite, xy(-½ rect.size.x + padding + ½ sprite_width, 0), ∅, notification.sprite_scale)
+    
+            draw_text({
+                text: notification.title,
+                pos: xy(-½ rect.size.x + sprite_width + 2 padding, -3),
+                font: TITLE_FONT,
+                color: #E1B,
+                x_align: "left",
+                y_align: "bottom"})
+
+            draw_text({
+                text: notification.description,
+                pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
+                font: DESCRIPTION_FONT,
+                color: #000,
+                wrap_width: text_width,
+                x_align: "left",
+                y_align: "top"})
+            todo("Text")
 

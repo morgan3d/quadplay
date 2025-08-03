@@ -21,10 +21,30 @@ let first_frame_this_stage
 let selection_index = 0
 const STATS_BUTTON_INDEX = 1
 
+
 def level_up():
     play_sound(award_sound, false, ∅, 90%, 150%)
-    todo("Unlock abilities")
-    todo("Spawn notifications")
+    // Look for any abilities that should be unlocked
+    for ability at name in ABILITY_TABLE:
+        if player.avatar.level ≥ ability.level:
+            def grant_ability():           
+                player.has_ability[name] = true
+            
+            if ability.description ≠ "SILENT":
+                todo("sound")
+                let sprite = player.avatar.sprite.x_flipped
+                if ability.sprite_name ≠ "<default>":
+                    todo("Get a sprite by name")
+                notify(sprite, name, ability.description, ∅, grant_ability)
+            else:
+                // Grant the ability immediately because there is no notification
+                grant_ability()
+    
+    
+    // Save new abilities
+    if not DEBUG_INTERMISSION:
+        save_local("has_ability", player.has_ability)
+        
 
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
@@ -321,10 +341,7 @@ if not DEBUG_INTERMISSION:
     stats_update(player.stats, player_competitor, joined_late)
     new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
     // Update level
-    player.avatar.level = xp_to_level(new_xp)
-    
-    todo("**Grant any missing abilities**")
-    todo("**Level progression: Announce upgrades with popup system**")
+    player.avatar.level = xp_to_level(new_xp)    
     stats_save(player.stats)
     save_local(player.has_ability)
 else:
@@ -355,8 +372,9 @@ first_frame_this_stage = 0
 frame
 ────────────────────────────────────────────────────────────────────────
 
-// Cycle through awards, giving equal time to each
-if game_type == GLOBAL or DEBUG_INTERMISSION:
+if not notifications_pending():
+    // Cycle through awards, giving equal time to each. Don't do this and distract
+    // the player during the level up cycle
     prev_stage = stage
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
 
@@ -367,8 +385,10 @@ if game_type == GLOBAL or DEBUG_INTERMISSION:
     if stage == STAGE.MOST_WORDS2 or stage == STAGE.SUMMARY2:
         // These are 2x as long
         --stage
+        
     if prev_stage ≠ stage:
         first_frame_this_stage = mode_frames
+
 
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)

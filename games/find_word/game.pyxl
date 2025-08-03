@@ -16,6 +16,7 @@ let player = make_player()
 let resolution_hook
 let time_hook
 let input_hook
+let notification_hook
 
 /* Set by `Play.enter`. Used to track games that should not affect stats */
 let joined_late
@@ -99,10 +100,9 @@ def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
     
-
-/* Fill the screen even at non-quadplay aspect ratios
-   for a good mobile experience. See also `DEBUG_PORTRAIT` */
 def set_hooks():
+    if not notification_hook:
+        notification_hook = add_frame_hook(update_notifications, ∅, ∞, "all")
     
     if not input_hook:
         input_hook = add_frame_hook(detect_input, ∅, ∞, "all")
@@ -111,6 +111,8 @@ def set_hooks():
         time_hook = add_frame_hook(_update_frame_utc_now, ∅, ∞, "all")
         
     if not resolution_hook:
+        // Fill the screen even at non-quadplay aspect ratios
+        // for a good mobile experience. See also `DEBUG_PORTRAIT`
         device_control("set_mouse_cursor", "pointer")
         
         if DEBUG_LANDSCAPE:
