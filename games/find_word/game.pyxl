@@ -1,3 +1,5 @@
+todo("**** Popup System ****")
+
 /* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
 let game_type = SOLO
 
@@ -208,9 +210,8 @@ def draw_timer(board_pos):
         color: if in_waiting_room then #0F0 else #FFF,
         y_align: "center",
         x_align: "right"})
-    
-    const BEEP_SECONDS = 5    
-    if time_left > 0.1 and time_left < BEEP_SECONDS + 0.5:
+      
+    if time_left > 0.1 and time_left < TIMER_BEEP_SECONDS + 0.5:
         if |loop(time_left, -0.5, 0.5)| ≤ 3/60 and now() - last_countdown_sound_time > 0.25:
             // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
             // but ensure that we play only once per timeout, converting from time to frames
@@ -224,13 +225,15 @@ def draw_timer(board_pos):
 
 
 
-/* Number of seconds in the bonus round based on the game type */
+/* Number of seconds in the bonus round based on the game type and player abilities. */
 def bonus_round_time():
-    todo("Only allow GLOBAL bonus round if unlocked by level")
     if DEBUG_BONUS_ROUND:
+        // Force bonus round even of still locked
         return 10000
-    else:
+    else if player.has_ability["Bonus Round"]:
         return (if game_type == SOLO then SOLO_BONUS_ROUND_TIME else GLOBAL_BONUS_ROUND_TIME)
+    else:
+        return 0
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

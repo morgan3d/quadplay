@@ -68,7 +68,7 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.250",
+    "version": "0.251",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1147,7 +1147,7 @@
         },
         "GLOBAL_BONUS_ROUND_TIME": {
             "type": "number",
-            "value": 0,
+            "value": "10",
             "description": "In seconds. Zero = none",
             "min": 0,
             "max": 30,
@@ -1156,7 +1156,7 @@
         },
         "SOLO_BONUS_ROUND_TIME": {
             "type": "number",
-            "value": 0,
+            "value": "20",
             "description": "In seconds. Zero = none",
             "min": 0,
             "max": 30,
@@ -1198,6 +1198,32 @@
                     "type": "number",
                     "value": "40%"
                 }
+            }
+        },
+        "TIMER_BEEP_SECONDS": {
+            "type": "number",
+            "value": "5.0",
+            "min": 0,
+            "max": 30,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "HARPY_AVATAR_INDEX": {
+            "type": "xz",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "37"
+                },
+                "z": {
+                    "type": "number",
+                    "value": "27"
+                }
+            },
+            "description": "Reserved avatar index",
+            "nudge": {
+                "x": "+1",
+                "z": "+1"
             }
         }
     },

@@ -379,8 +379,7 @@ local:
     draw_timer(board_pos + offset)
     player_update_back_button(player, board_pos - offset)
     player_draw_score(player, board_pos - offset)
-        
-    todo("Draw score!")
+
 
 if landscape():
     // Move the board down to make room for the bonus row

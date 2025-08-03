@@ -1,7 +1,10 @@
 /* Total number of avatar sprites available. In the actual 
    spritesheet, the last few are unused, so we stop this 
-   count early */
-const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 10
+   count early. Note that there are other restrictions
+   on which avatars can be used. */
+const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 9
+
+todo("Lock avatars by level")
 
 /* Prevent players from using these */
 const AVATAR_RESTRICTED_INDEXES = [
@@ -126,7 +129,10 @@ def avatar_next_sprite(sprite, dir default +1):
     i = loop(i + dir, AVATAR_SPRITE_COUNT)
     sprite = avatar_sprite_from_linear_index(i)
     
-    if contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent):
+    if (contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent) or
+        // Harpy's special avatar
+        ((player.avatar.name ≠ "bug" or player.level < 8) and equivalent(sprite.tile_index, HARPY_AVATAR_INDEX)):
+            
         return avatar_next_sprite(sprite, dir)
     else:
         return sprite

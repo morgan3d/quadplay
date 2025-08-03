@@ -302,7 +302,7 @@ if not DEBUG_INTERMISSION:
     player.avatar.level = xp_to_level(new_xp)
     
     todo("**Grant any missing abilities**")
-    todo("*Level progression: Announce upgrades*")
+    todo("**Level progression: Announce upgrades with popup system**")
     stats_save(player.stats)
     save_local(player.has_ability)
 else:
