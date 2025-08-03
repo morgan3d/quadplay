@@ -17,9 +17,8 @@ def make_player():
         has_ability: load_local("has_ability") default {},
         
         // Maps player GUIDs to their most recent name.
-        // The names are only for debugging. Players with no friends
-        // automatically friend Moo.
-        friends: load_local("friends") default {"B1": "Moo"},
+        // The names are only for debugging.
+        friends: load_local("friends") default {},
         
         score: 0,
         

@@ -38,22 +38,16 @@ let most_words_winner
 def competitor_is_friend(competitor):
     todo("Remove when we have a friending UI")
     // For now, friend all humans. Bots have a `base_ability` property
-    return (competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or (not competitor.avatar.base_ability))
+    return ((competitor.avatar.id == "BMOO") or
+            (competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or
+            (not competitor.avatar.base_ability))
         
 
 
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count):
-    const avatar_set = [{
-        // Moo has special cow logic below
-name: "Moo",
-sprite: avatar_sprite[34][22],
-base_ability: 0.1,
-short_word_preference: 0.80,
-first_hour: 0,
-last_hour: 22,
-},
+    const avatar_set = [
 {
 name: "411",
 sprite: avatar_sprite[24][18],
@@ -291,9 +285,18 @@ last_hour: 1
     // Moo is a special case
     todo("ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if it is an odd 10 minute interval right now")
     
+    push_competutor_array({
+            name: "Moo",
+            sprite: avatar_sprite[34][22],
+            base_ability: 0.1,
+            short_word_preference: 0.80,
+            first_hour: 0,
+            last_hour: 22},
+        "SPECIAL_Moo")
+    
     let c = 0
     while size(competitor_array) < target_count and avatar_set[c]:       
-        const competitor = make_bot_competitor(avatar_set[c], "B" + c)
+        const competitor = make_bot_competitor(avatar_set[c], "BOT_" + c)
         ++c
         push(competitor_array, competitor)
 
