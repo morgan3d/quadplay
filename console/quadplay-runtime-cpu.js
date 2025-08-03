@@ -9824,7 +9824,7 @@ function resized(str, n, pad, right_align) {
 
 function split(str, c, n) {
     if (typeof str !== 'string') {
-        $error('split(str) requires a string');
+        $error('split(str) requires a string. Received ' + (typeof str) + "=" + unparse(str));
     } else if (c === undefined || c === '' || (is_number(c) && c <= 0)) {
         
         return Array.from(str);
