@@ -19,6 +19,8 @@ let prev_stage
 
 let first_frame_this_stage
 
+let selection_index = 0
+const STATS_BUTTON_INDEX = 1
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
@@ -271,26 +273,37 @@ def draw_leaderboard()
 def update_countdown():
     const time_left = max(end_time - frame_utc_now, 0)
     const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
-    const α = 100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME)
+    const α = clamp(100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME), 0%, 100%)
     
-    draw_corner_rect(xy(0, timer_pos.y - 10), xy(SCREEN_SIZE.x, 19), #000, #FFF)
-    draw_corner_rect(xy(1, timer_pos.y - 9), xy(α * (SCREEN_SIZE.x - 2), 17), #0F0)
+    const countdown_rect = {
+        corner: xy(32, timer_pos.y - 10),
+        size: xy(SCREEN_SIZE.x - 64, 20)}
+        
+    draw_corner_rect(countdown_rect.corner, countdown_rect.size, #000, #FFF)
+    draw_corner_rect(countdown_rect.corner + 1, xy(α * (countdown_rect.size.x - 2), countdown_rect.size.y - 2), #0F0)
     
+    todo("Shrink countdown")
     draw_text({
         font: score_font,
-        text: format_number(time_left, "timer") + " until next game…",
+        text: "Next match in " + format_number(time_left, "timer"),
         outline: #090,
-        pos: timer_pos,
+        pos: timer_pos + xy(0, 1),
         color: #FFF})
     
     if frame_utc_now ≥ end_time and not DEBUG_INTERMISSION:
         set_mode(GenerateBoard) because "Timer"
     
+    
+
+pop_mode from DisplayStats
+────────────────────────────────────────────────────────────────────────
+selection_index = 0
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
+selection_index = 0
 
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
@@ -338,6 +351,7 @@ if game_type == GLOBAL or DEBUG_INTERMISSION:
 // Separator bars
 draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
 draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 61), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 2), #000, ∅, 20)
+draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
 
 const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, SCREEN_SIZE.y - 22)}
 history_update(player.history, history_rect)
@@ -347,7 +361,7 @@ const α = max(0%, 100% - max(mode_frames - 360, 0) / 90)
 if stage == STAGE.SUMMARY and α > 0%
 & preserving_transform:
     set_transform(history_rect.corner + history_rect.size - xy(42, 48))
-    const history_tile_color = rgba(.8, .8, .8, α)
+    const history_tile_color = rgba(0.8, 0.8, 0.8, α)
     const history_board_color = rgba(0, 0, 0, α)
     for x < COLS:
         for y < ROWS:
@@ -363,7 +377,7 @@ if stage == STAGE.SUMMARY and α > 0%
 
 draw_text({
     font: history_font, 
-    pos: history_rect.corner + history_rect.size - xy(5, 0),
+    pos: history_rect.corner + history_rect.size - xy(5, 2),
     text: "Found " + size(player.history.list) + "/" + player.board.word_count,
     x_align: "right",
     y_align: "bottom",
@@ -374,7 +388,19 @@ draw_awards()
 
 draw_leaderboard()
 
+if player.has_ability["Stats Tracker"]:
+    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 * xy(2, 2), shape: "disk"}
+    if touch.hover:
+        selection_index = if overlaps(touch.hover, region) then STATS_BUTTON_INDEX else 0
+    else if player.using_gamepad:
+        selection_index = 0
+        draw_text({font: leaderboard_font, pos: region.pos + xy(-12, 4), text: joy.prompt["(q)"], color: #DDD, outline: #000, z: 10})
             
+    draw_stats_button(region.pos, selection_index == STATS_BUTTON_INDEX, ½ region.size.x)
+    
+    if (touch.pressed_a and overlaps(touch.xy, region)) or joy.pressed_q:
+        push_mode(DisplayStats) because "Button"
+
 // Countdown
 update_countdown()
 

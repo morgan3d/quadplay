@@ -1,0 +1,36 @@
+/* Utility functions that are not specific to this game */
+
+
+
+/* Returns the second to last value or ∅ */
+def penultimate_value(array):
+    return array[size(array) - 2]
+
+
+
+/* Returns a boolean that is true if the button has just been
+   pressed or is on a repeat press this frame, where `button_frames`
+   is the value of a gamepad button. */
+def button_repeat(button_frames):
+    return (
+        (button_frames == 1) or 
+          (MAX(button_frames - BUTTON_REPEAT_DELAY, 0) mod BUTTON_REPEAT_PERIOD) == 1)
+
+
+/* For sorting on size(A) */
+def size_comparator(A, B):
+    return size(A) - size(B)
+
+
+
+/* Returns str with str[index] replaced with `replacement` */
+def letter_replaced(str, index, replacement):
+    return slice(str, 0, index) + replacement + slice(str, index + 1)
+
+
+
+/* Swap elements i and j in array. */
+def swap(array, i, j):
+    const temp = array[i]
+    array[i] = array[j]
+    array[j] = temp

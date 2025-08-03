@@ -19,34 +19,12 @@ let selected_index = GLOBAL
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
 
+
 def update_stats_button(pos):
+    const radius = 20
     const selected = selected_index == STATS_INDEX
     
-    const radius = 20
-    const sprite_args = {sprite: stats_sprite[0][0], pos: pos, z: 100}
-    
-    if selected:
-        draw_round_selection(pos)
-        // Outline
-        for i < 2:
-            draw_sprite({…sprite_args, pos: pos + xy(2i - 1, 0), override_color: #090})    
-            draw_sprite({…sprite_args, pos: pos + xy(0, 2i - 1), override_color: #090})    
-        draw_sprite({…sprite_args, override_color: #EEE})    
-    else:
-        // Background
-        draw_disk(pos, radius, #FFFC, #DDD, 100)
-        draw_sprite(sprite_args)    
-        
-    draw_text({
-        font: score_font, 
-        text: "Stats", 
-        color: if selected then #FFF else #EEE,
-        outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
-        shadow: #000, 
-        pos: pos + xy(0, 27),
-        z: 100})
-
-    const region = {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
+    const region = draw_stats_button(pos, selected, radius)
     if touch.hover and overlaps(touch.hover, region):
         if selected_index ≠ STATS_INDEX:
             play_sound(select_tile_sound, ∅, ∅, 100%)
@@ -58,15 +36,7 @@ def update_stats_button(pos):
          (selected and gamepad_array[0].pressed_a)))
          or DEBUG_STATS):
         push_mode(DisplayStats)        
-        
-        
-    
-def draw_round_selection(pos):
-    draw_disk(pos - xy(0, 1), 20.5, ∅, #FFF, 2)
-    draw_disk(pos - xy(0, 1), 21.5, CURSOR_COLOR, ∅, -0.5)
-    draw_disk(pos - xy(0, 1), 24.5, rgba(CURSOR_COLOR, 25%), ∅, -0.6)
-    draw_disk(pos - xy(0, 1), 27.5, rgba(CURSOR_COLOR, 15%), ∅, -0.7)
-    
+            
     
     
 def update_button(pos, text, index):
@@ -252,17 +222,18 @@ draw_sprite({sprite: logo_sprite, pos: xy(SCREEN_SIZE.x - 32 + slide, 20), z: -0
 
 // Avatar
 local:
-    const pos = xy(32 - slide, SCREEN_SIZE.y - 36)
+    const pos = xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36)
     const bounds = {pos: pos, size: xy(32, 32)}
+    const radius = 20
     
     if touch.hover and overlaps(touch.hover, bounds) and selected_index ≠ AVATAR_EDITOR_INDEX:
         play_sound(select_tile_sound, ∅, ∅, -100%)
         selected_index = AVATAR_EDITOR_INDEX
         
     if selected_index == AVATAR_EDITOR_INDEX:
-        draw_round_selection(pos)
+        draw_round_selection(pos, radius)
     else:
-        draw_disk(pos, 20, rgba(player.avatar.color, 75%), 75% player.avatar.color)
+        draw_disk(pos, radius, rgba(player.avatar.color, 75%), 75% player.avatar.color)
         
     avatar_draw_large(player.avatar, pos)
     draw_text({text: "Level " + player.avatar.level, z: 102, pos: pos - xy(0, 26), color: player.avatar.color, outline: #0008, font: leaderboard_font})
@@ -274,7 +245,7 @@ local:
     
 // Stats button
 local:
-    const pos = xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36)
+    const pos = xy(32 - slide, SCREEN_SIZE.y - 36)
     update_stats_button(pos)
 
 

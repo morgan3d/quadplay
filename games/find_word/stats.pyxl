@@ -6,13 +6,7 @@ const LEVEL_DIVISOR  = 500
 
 const XP_VALUE = {
     // Per point
-    point: 0.2,
-    
-    // Per day
-    //day: 100,
-    
-    // For each badge
-    //badge: 50
+    point: 0.25,    
 }
 
 
@@ -307,4 +301,35 @@ def stats_update(stats, competitor, joined_late):
             push(entry.word_list, word)
     
     sort(entry.word_list)
+    
+    
+
+/* Returns the region */
+def draw_stats_button(pos, selected, radius):
+    const scale = radius / 20
+    const sprite_args = {sprite: stats_sprite[0][0], pos: pos, z: 10, scale: scale}
+    
+    if selected:
+        draw_round_selection(pos, radius)
+        // Outline
+        for i < 2:
+            draw_sprite({…sprite_args, pos: pos + xy(2i - 1, 0), override_color: #090})    
+            draw_sprite({…sprite_args, pos: pos + xy(0, 2i - 1), override_color: #090})    
+        draw_sprite({…sprite_args, override_color: #EEE})    
+    else:
+        // Background
+        draw_disk(pos, radius, #FFFC, #DDD, 9)
+        draw_sprite(sprite_args)    
+        
+    draw_text({
+        font: score_font, 
+        text: "Stats", 
+        color: if selected then #FFF else #EEE,
+        outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
+        shadow: #000, 
+        pos: pos + xy(0, 27),
+        z: 100})
+
+    return {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
+
     

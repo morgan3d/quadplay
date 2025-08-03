@@ -67,12 +67,6 @@ def next_global_game_utc_start_time():
 
 
 
-/* Returns the second to last value or ∅ */
-def penultimate_value(array):
-    return array[size(array) - 2]
-
-
-
 def _update_frame_utc_now():
     const prev_time = frame_utc_now
     frame_utc_now = utc_now()
@@ -92,15 +86,6 @@ def detect_input():
 
 
 
-/* Returns a boolean that is true if the button has just been
-   pressed or is on a repeat press this frame */
-def button_repeat(button_frames):
-    return (
-        (button_frames == 1) or 
-          (MAX(button_frames - BUTTON_REPEAT_DELAY, 0) mod BUTTON_REPEAT_PERIOD) == 1)
-
-
-
 def play_points_sound(points, index default ∅):
     const pitch = 75% + min(max(0, points - 6)^0.1, 3)
     _board_play_sound(word_sound, 100% + 10% pitch, pitch, index)
@@ -115,37 +100,7 @@ def play_points_sound(points, index default ∅):
 def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
-
-
-/* For sorting on size(A) */
-def size_comparator(A, B):
-    return size(A) - size(B)
-
-
-
-/* Returns str with str[index] replaced with `replacement` */
-def letter_replaced(str, index, replacement):
-    return slice(str, 0, index) + replacement + slice(str, index + 1)
-
-
-
-/* Swap elements i and j in array. */
-def swap(array, i, j):
-    const temp = array[i]
-    array[i] = array[j]
-    array[j] = temp
-
     
-
-/* Weigh the probability towards capital letters,
-   and always start with a capital letter */
-def make_random_name(rng default random):
-    return replace(
-        random_value(ALPHABET, rng) +
-        random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng) +
-        random_value(AVATAR_NAME_ALPHABET + ALPHABET, rng), " ", "O")
-
-
 
 /* Fill the screen even at non-quadplay aspect ratios
    for a good mobile experience. See also `DEBUG_PORTRAIT` */
@@ -236,10 +191,16 @@ def bonus_round_time():
         return 0
 
 
+
+def draw_round_selection(pos, radius):
+    draw_disk(pos - xy(0, 1), radius + 0.5, ∅, #FFF, 2)
+    draw_disk(pos - xy(0, 1), radius + 1.5, CURSOR_COLOR, ∅, -0.5)
+    draw_disk(pos - xy(0, 1), radius + 4.5, rgba(CURSOR_COLOR, 25%), ∅, -0.6)
+    draw_disk(pos - xy(0, 1), radius + 7.5, rgba(CURSOR_COLOR, 15%), ∅, -0.7)
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-set_random_seed()
 
 // Initialize the background words
 for y < 20:
