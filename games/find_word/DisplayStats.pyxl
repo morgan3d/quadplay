@@ -71,13 +71,13 @@ let y = 36 + ½ (SCREEN_SIZE.y - 224)
 const DIM = #6AD
 const HIGHLIGHT = #E1B
 
-y += draw_row(y, ∅, "Previous", "Today", HIGHLIGHT)
+y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT)
 y -= 1
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text or "-", ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) then HIGHLIGHT else ∅)
 y += draw_row(y, "Best Word",    
     lifetime.best_word_text + " " + lifetime.best_word_points, 
     (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
-    DIM, 
+    DIM,
     if today.best_word_points ≥ lifetime.best_word_points then HIGHLIGHT else ∅)
 y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
 y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, DIM, HIGHLIGHT)
@@ -86,7 +86,7 @@ y += 5
 y += draw_row(y, "XP",           format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
 y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"), DIM)
 y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
-y += draw_row(y, "Unique Words", format_number(size(player.stats.word_list), "commas"),  "N/A", DIM)
+y += draw_row(y, "Unique Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), DIM)
 
 y += 5
 y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT)

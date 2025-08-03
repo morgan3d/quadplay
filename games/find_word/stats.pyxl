@@ -27,6 +27,7 @@ def make_empty_stats_entry():
         words: 0,
         points: 0,
         matches: 0,
+        word_list: [],
         xp: 0}
         
 
@@ -63,7 +64,6 @@ def compress_word_list(array):
     
     const PRESENT = 2
     const ALREADY_SAVED = 1
-    
     
     // Start with words sorted from longest to shortest
     // (so we see prefixes first), and then mark all present
@@ -112,7 +112,10 @@ def compress_word_list(array):
     
     
 
+/* Returns an array of Q-encoded words */
 def decompress_word_list(string):
+    assert(string ≠ ∅)
+    
     const result = []
     const array = split(string, ",")
     for i < size(array):
@@ -135,14 +138,13 @@ for 1 ≤ level ≤  10:
     debug_print(level, xp, xp_to_level(xp + 0))*/
 
 
-
 def stats_save(stats):
     const s = deep_clone(stats)
     for day at date in s:
         if date ≠ "word_list":
             day.xp = encode_xp(day.xp)
+            day.word_list = compress_word_list(day.word_list)
         
-    s.word_list = compress_word_list(s.word_list)
     save_local("stats", s)
     
     
@@ -154,27 +156,29 @@ def stats_load():
     // Decompress the word list    
     if stats.word_list:
         if type(stats.word_list) == "array":
-            // Legacy, already an array
-        else:
-            // Modern, decompress
-            stats.word_list = decompress_word_list(stats.word_list)
-    else:
-        // Legacy, add
-        stats.word_list = []
+            // Legacy, already an array. Compress
+            stats.word_list = compress_word_list(stats.word_list)
+            
+        // Legacy, move to lifetime
+        stats.lifetime.word_list = stats.word_list
+        remove_key(stats, "word_list")
 
     // Clean up and decode all entries
     for day at date in stats:
         if date ≠ "word_list":
             const day = stats[date]
             day.xp = decode_xp(day.xp)
+            day.word_list = decompress_word_list(day.word_list default "")
             
             // Upgrade legacy formats
             if day.longest ≠ ∅:
                 remove_key(day, "longest")
+            
             if day.longest_text == ∅:
                 day.longest_text = ""
                 
-    // Everything is decoded now. Iterate again,
+    // Everything is decoded now. Iterate again to merge any
+    // days before today
     stats_merge_previous_days(stats)
     
     return stats
@@ -192,9 +196,10 @@ def stats_merge_previous_days(stats):
         stats[today_date] = make_empty_stats_entry()
                 
     for date in keys(stats):
-        // Skip the elements we are not modifying and the word_list, which is the only
-        // non-date top-level member
-        if date == "lifetime" or date == today_date or date == "word_list": continue
+        assert(date ≠ "word_list")
+        
+        // Skip the elements we are not modifying
+        if date == "lifetime" or date == today_date: continue
     
         const day = stats[date]
                     
@@ -211,8 +216,9 @@ def stats_merge_previous_days(stats):
         lifetime.points += day.points
         lifetime.matches += day.matches
         lifetime.xp += day.xp
+        push(lifetime.word_list, …day.word_list)
         remove_key(stats, date)
-                                
+
         return stats
     
     
@@ -261,7 +267,6 @@ def stats_update(stats, competitor, joined_late):
     stats_merge_previous_days(stats)
 
     assert(stats)
-    assert(stats.word_list ≠ ∅)
     
     const entry = stats[today_date_string()]
     
@@ -288,13 +293,13 @@ def stats_update(stats, competitor, joined_late):
 
     // Accumulate the words found by this player
     const word_set = {}
-    for word in stats.word_list:
-        word_set[word] = 1
+    for list in [stats.lifetime.word_list, entry.word_list]: 
+        for word in list:
+            word_set[word] = 1
     
     for word in competitor.word_list:
         if not word_set[word]:
-            push(stats.word_list, word)
+            push(entry.word_list, word)
     
-    sort(stats.word_list)
-
+    sort(entry.word_list)
     
