@@ -167,10 +167,8 @@ def stats_load():
         if date ≠ "word_list":
             const day = stats[date]
             day.xp = decode_xp(day.xp)
-            if day.word_list:
+            if type(day.word_list) == "string":
                 day.word_list = decompress_word_list(day.word_list default "")
-            else:
-                day.word_list = []
             
             // Upgrade legacy formats
             if day.longest ≠ ∅:
