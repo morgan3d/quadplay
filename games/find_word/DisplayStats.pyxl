@@ -74,8 +74,8 @@ const HIGHLIGHT = #E1B
 y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT)
 y -= 1
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text or "-", ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) and (today.longest_text ≠ "") then HIGHLIGHT else ∅)
-y += draw_row(y, "Best Word",    
-    lifetime.best_word_text + " " + lifetime.best_word_points, 
+y += draw_row(y, "Best Word",
+    if (lifetime.best_word_text ≠ "") then lifetime.best_word_text + " " + lifetime.best_word_points else "", 
     (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
     DIM,
     if today.best_word_text and (today.best_word_points ≥ lifetime.best_word_points) then HIGHLIGHT else ∅)

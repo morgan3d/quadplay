@@ -116,6 +116,8 @@ def compress_word_list(array):
 def decompress_word_list(string):
     assert(string ≠ ∅)
     
+    if string == "": return []
+    
     const result = []
     const array = split(string, ",")
     for i < size(array):
@@ -156,8 +158,6 @@ def stats_load():
     // by the incorrect coding
     if not size(stats.lifetime.word_list): stats.lifetime.word_list = ""
 
-    debug_print("encoded stats", stats)
-    
     // Decompress the word list    
     if stats.word_list:
         if type(stats.word_list) == "array":
@@ -186,8 +186,6 @@ def stats_load():
     // days before today
     stats_merge_previous_days(stats)
     
-    debug_print(stats)
-    
     return stats
 
 
@@ -203,8 +201,6 @@ def stats_merge_previous_days(stats):
         stats[today_date] = make_empty_stats_entry()
                 
     for date in keys(stats):
-        assert(date ≠ "word_list")
-        
         // Skip the elements we are not modifying
         if date == "lifetime" or date == today_date: continue
     
@@ -224,6 +220,8 @@ def stats_merge_previous_days(stats):
         lifetime.matches += day.matches
         lifetime.xp += day.xp
         push(lifetime.word_list, …day.word_list)
+        
+        // Remove this rolled up day
         remove_key(stats, date)
 
         return stats
