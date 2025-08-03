@@ -141,9 +141,8 @@ for 1 ≤ level ≤  10:
 def stats_save(stats):
     const s = deep_clone(stats)
     for day at date in s:
-        if date ≠ "word_list":
-            day.xp = encode_xp(day.xp)
-            day.word_list = compress_word_list(day.word_list)
+        day.xp = encode_xp(day.xp)
+        day.word_list = compress_word_list(day.word_list)
         
     save_local("stats", s)
     
@@ -168,7 +167,10 @@ def stats_load():
         if date ≠ "word_list":
             const day = stats[date]
             day.xp = decode_xp(day.xp)
-            day.word_list = decompress_word_list(day.word_list default "")
+            if day.word_list:
+                day.word_list = decompress_word_list(day.word_list default "")
+            else:
+                day.word_list = []
             
             // Upgrade legacy formats
             if day.longest ≠ ∅:
