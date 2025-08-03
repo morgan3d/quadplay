@@ -71,7 +71,7 @@ let y = 36 + ½ (SCREEN_SIZE.y - 224)
 const DIM = #6AD
 const HIGHLIGHT = #E1B
 
-y += draw_row(y, ∅, "Lifetime", "Today", HIGHLIGHT)
+y += draw_row(y, ∅, "Previous", "Today", HIGHLIGHT)
 y -= 1
 y += draw_row(y, "Longest Word", lifetime.longest_text, today.longest_text or "-", ∅, if size(today.longest_text) ≥ size(lifetime.longest_text) then HIGHLIGHT else ∅)
 y += draw_row(y, "Best Word",    

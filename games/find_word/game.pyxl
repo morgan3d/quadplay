@@ -230,7 +230,7 @@ def bonus_round_time():
     if DEBUG_BONUS_ROUND:
         // Force bonus round even of still locked
         return 10000
-    else if player.has_ability["Bonus Round"]:
+    else if player.has_ability["Bonus Round"] and not DEBUG_INTERMISSION:
         return (if game_type == SOLO then SOLO_BONUS_ROUND_TIME else GLOBAL_BONUS_ROUND_TIME)
     else:
         return 0

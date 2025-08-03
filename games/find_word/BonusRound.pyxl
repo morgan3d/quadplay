@@ -344,7 +344,7 @@ enter
 end_time += bonus_round_time()
 
 // Skip this mode entirely if there is no bonus time
-if frame_utc_now ≥ end_time: done()
+if frame_utc_now ≥ end_time or DEBUG_INTERMISSION: done()
 
 play_sound(bonus_round_sound)
 

@@ -220,7 +220,7 @@ last_hour: 1
             avatar: avatar_set[c],
             score: 0}
     
-        compeitor.avatar.id = id
+        competitor.avatar.id = id
     
         // Bots face left
         competitor.avatar.sprite = competitor.avatar.sprite.x_flipped
@@ -285,13 +285,15 @@ last_hour: 1
         
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
+
+        return competitor
     
     // Moo is a special case
     todo("ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if it is an odd 10 minute interval right now")
     
     let c = 0
     while size(competitor_array) < target_count and avatar_set[c]:       
-        make_bot_competitor(avatar_set[c], "B" + c)
+        const competitor = make_bot_competitor(avatar_set[c], "B" + c)
         ++c
         push(competitor_array, competitor)
 
