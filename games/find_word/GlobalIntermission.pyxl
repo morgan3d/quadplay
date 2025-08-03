@@ -1,10 +1,9 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("** Level up sequence that shows bonuses and does not show other awards**")
 todo("Favoriting UI + save")
-todo("Popups for stat achievements")
 todo("Award for best bonus word")
 todo("Change layout to make awards more central")
+todo("Suppress awards while notifications pending")
 
 let prev_xp
 let prev_level
@@ -21,6 +20,12 @@ let first_frame_this_stage
 
 let selection_index = 0
 const STATS_BUTTON_INDEX = 1
+
+def level_up():
+    play_sound(award_sound, false, ∅, 90%, 150%)
+    todo("Unlock abilities")
+    todo("Spawn notifications")
+
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
@@ -70,9 +75,8 @@ def draw_award_summary()
     const xp_lo = level_to_xp(level)
     const xp_hi = level_to_xp(level + 1)
     
-    // Level up!
     if frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
-        play_sound(award_sound, false, ∅, 90%, 150%)
+        level_up()
     
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
     draw_award_summary.last_level_displayed = level

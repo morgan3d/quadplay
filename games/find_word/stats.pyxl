@@ -6,7 +6,7 @@ const LEVEL_DIVISOR  = 500
 
 const XP_VALUE = {
     // Per point
-    point: 0.25,    
+    point: 0.35,
 }
 
 

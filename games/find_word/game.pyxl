@@ -1,5 +1,3 @@
-todo("**** Popup System ****")
-
 /* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
 let game_type = SOLO
 
