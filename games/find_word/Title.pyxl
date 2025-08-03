@@ -9,9 +9,6 @@ const SLIDE_FRAMES = 40
 const HIGHLIGHT_COLOR = #F3C
 const SELECTED_BUTTON_COLOR = CURSOR_COLOR
 
-// Only on first game load
-set_random_seed()
-
 /* Value for selected_index */
 const AVATAR_EDITOR_INDEX = 2
 const STATS_INDEX = 3

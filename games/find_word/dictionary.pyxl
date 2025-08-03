@@ -12,6 +12,7 @@
 /* Longest possible word */
 const MAX_WORD_LENGTH = ROWS * COLS
 
+set_random_seed()
 
 /* Revised dictionary table of about 192k words with:
  

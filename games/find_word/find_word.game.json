@@ -1,4 +1,4 @@
-{ 
+{
     "title": "FIND WORD ALLL NITE",
     "developer": "SHMUEL",
     "copyright": "©2025 Factory 797",
@@ -68,7 +68,7 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.256",
+    "version": "0.257",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
