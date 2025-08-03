@@ -62,33 +62,36 @@ def draw_award_summary()
         play_sound({sound: word_sound, pan: 100%, pitch: 150%})
     
     const XP_ANIMATION_RATE = 1 / 120
-
-    // Compute animated XP and level
-    const xp = round(lerp(prev_xp, new_xp, clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)))
+    
+    // *Currently shown* XP and level, interpolated for animation
+    const τ = clamp((frames - XP_ANIMATION_DELAY_FRAMES) * XP_ANIMATION_RATE, 0%, 100%)
+    const xp = round(lerp(prev_xp, new_xp, τ))
     const level = xp_to_level(xp)
-
+    const xp_lo = level_to_xp(level)
+    const xp_hi = level_to_xp(level + 1)
+    
+    // Level up!
     if frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
-        // Level up!
         play_sound(award_sound, false, ∅, 90%, 150%)
-        
+    
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
     draw_award_summary.last_level_displayed = level
     
-    const xp_lo = level_to_xp(level)
-    const xp_hi = level_to_xp(level + 1)
     const shadow = 70% player.avatar.color
 
     // Flash and turn pink on level up
     draw_text({
-        color: if level ≠ prev_level and flash then highlight_color else #FFF,
-        shadow:shadow,
+        color:   if level ≠ prev_level and flash then highlight_color else #FFF,
+        shadow:  shadow,
         outline: if level ≠ prev_level and flash then #FFF else ∅,
-        font: history_font,
-        text: "Level " + level,
-        pos: xy(-14, -27)})
+        font:    history_font,
+        text:    "Level " + level,
+        pos:     xy(-14, -27)})
+        
     avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF, shadow)
   
-    const args = {font: history_font,
+    const args = {
+        font: history_font,
         x_align: "left",
         y_align: "baseline",
         shadow: shadow,
@@ -102,19 +105,20 @@ def draw_award_summary()
     draw_text({…args, text: "Rare Words", pos: xy(x, 14)})
     draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 14), x_align: "right"})
 
-    draw_text({…args, text: "Longest", pos: xy(x, 24)})
-    draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
+    // draw_text({…args, text: "Longest", pos: xy(x, 24)})
+    // draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
 
-    const xp_color = if frames < XP_ANIMATION_DELAY_FRAMES and flash then highlight_color else #FFF
+    const xp_color   = if frames < XP_ANIMATION_DELAY_FRAMES and flash then highlight_color else #FFF
     const xp_outline = if frames < XP_ANIMATION_DELAY_FRAMES and flash then #FFF else ∅
-    draw_text({…args, text: "XP Earned", pos: xy(x, 34), color: xp_color, outline: xp_outline})
-    draw_text({…args, text: "+" + (new_xp - prev_xp), color: xp_color, outline: xp_outline, pos: xy(30, 34), x_align: "right"})
+    draw_text({…args, text: "XP Earned",              pos: xy(x,  34), color: xp_color, outline: xp_outline})
+    draw_text({…args, text: "+" + (new_xp - prev_xp), pos: xy(30, 34), color: xp_color, outline: xp_outline, x_align: "right"})
 
-    // XP bar
+    // XP bar outline
     const xp_rect = {corner: xy(x, 39), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - x - 108, 10)}
     draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size, ∅, shadow)
+
+    // Progress bar
     const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
-    // Actual bar
     draw_corner_rect(
         xp_rect.corner + 1,
         xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), 
@@ -300,6 +304,7 @@ pop_mode from DisplayStats
 selection_index = 0
 
 
+
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
@@ -319,7 +324,10 @@ if not DEBUG_INTERMISSION:
     stats_save(player.stats)
     save_local(player.has_ability)
 else:
-    new_xp = prev_xp + 1000
+    // Debugging, force a level up
+    new_xp = level_to_xp(player.avatar.level + 1) + 100
+    player.avatar.level = xp_to_level(new_xp)
+    
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0
@@ -329,10 +337,15 @@ draw_most_words_award.skip = 0
 
 end_time = next_global_game_utc_start_time()
 
-stage = 0
+if player.avatar.level ≠ prev_level:
+    // Leveling up, start on the summary/level up display
+    stage = STAGE.SUMMARY
+else:
+    stage = 0
+
+
 prev_stage = stage
 first_frame_this_stage = 0
-
 
 
 frame
@@ -342,6 +355,11 @@ frame
 if game_type == GLOBAL or DEBUG_INTERMISSION:
     prev_stage = stage
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
+
+    if player.avatar.level ≠ prev_level:
+        // Leveling up, so cycle around the order to put the summary stage first
+        stage = (stage + STAGE.SUMMARY) mod size(STAGE)
+        
     if stage == STAGE.MOST_WORDS2 or stage == STAGE.SUMMARY2:
         // These are 2x as long
         --stage

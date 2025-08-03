@@ -27,7 +27,12 @@ def make_empty_stats_entry():
 
 def xp_to_level(xp):
     assert(xp ≠ ∅ and not is_nan(xp))
-    return floor((xp / LEVEL_DIVISOR + ½)^LEVEL_EXPONENT + 1)
+    // Invert level_to_xp
+    let approx = floor(floor(xp / LEVEL_DIVISOR, ½)^LEVEL_EXPONENT) + 1
+    if level_to_xp(approx) > xp or xp ≥ level_to_xp(approx + 1):
+        ++approx
+        
+    return approx
 
 
 /* XP needed to reach this level */
@@ -35,10 +40,17 @@ def level_to_xp(level):
     if level ≤ 0:
         return 0
     else:
-        return floor((level - 1)^(1 / LEVEL_EXPONENT) * LEVEL_DIVISOR, ½ LEVEL_DIVISOR)
+        return floor((level - 1)^(1 / LEVEL_EXPONENT), ½) * LEVEL_DIVISOR
 
-// To print levels:
-// for i < 22: debug_print(i, level_to_xp(i))
+/*
+// Testing levels
+for i < 20:
+    const xp = 100 i + 20
+    const level = xp_to_level(xp)
+    debug_print(level, ":", level_to_xp(level), "≤", xp, "<", level_to_xp(level + 1))
+    assert(level_to_xp(level) ≤ xp)
+    assert(xp < level_to_xp(level + 1)) 
+*/
 
 /* Assumes the input is a list of q-encoded, all-caps words. 
    Returns a string packing them into a form that serializes
