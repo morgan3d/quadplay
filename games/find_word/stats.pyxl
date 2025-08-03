@@ -152,8 +152,9 @@ def stats_save(stats):
 def stats_load():    
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
     
-    // Encode
-    if stats.lifetime.word_list == []: stats.lifetime.word_list = ""
+    // Encode the empty. The xp should be encoded but will be forced to 0
+    // by the incorrect coding
+    if not size(stats.lifetime.word_list): stats.lifetime.word_list = ""
 
     debug_print("encoded stats", stats)
     
