@@ -23,6 +23,9 @@ def notifications_pending():
 /* Hook to process notification animation every frame */
 def update_notifications()
 & preserving_transform:
+    // Draw way on top of everything in Z
+    set_transform(xy(½ SCREEN_SIZE.x, 40), ∅, 110)
+    
     const BACKGROUND_COLOR = #EEE
     const TITLE_FONT       = score_font
     const DESCRIPTION_FONT = leaderboard_font
@@ -55,6 +58,7 @@ def update_notifications()
                 
             return
         
+        // Size fraction
         let α = 100%        
         if relative_time < ENTER_DURATION_SECONDS:
             // Grow
@@ -63,10 +67,8 @@ def update_notifications()
             // Shrink
             α = clamp((duration_seconds - relative_time) / EXIT_DURATION_SECONDS, 0%, 100%)
 
-        // Draw way on top of everything
-        set_transform(xy(½ SCREEN_SIZE.x, 40), ∅, 100)
         
-        const rect = {pos: xy(0, 0), size: α * xy(204, 50)}
+        const rect = {pos: xy(0, 0), size: α * xy(204, 60)}
         // Drop shadow
         draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
 
@@ -79,7 +81,7 @@ def update_notifications()
             // Show contents when the window is full size
             const sprite_width = 32
             const padding = 7
-            const text_width = rect.size.x - sprite_width - 3 padding 
+            const text_width = rect.size.x - sprite_width - 2.5 padding 
 
             draw_sprite({
                 sprite: notification.sprite,
@@ -88,19 +90,13 @@ def update_notifications()
                 scale: sprite_width / notification.sprite.size.x})
     
             draw_text({
-                text: notification.title,
-                pos: xy(-½ rect.size.x + sprite_width + 2 padding, -3),
-                font: TITLE_FONT,
-                color: #E1B,
-                x_align: "left",
-                y_align: "bottom"})
-
-            draw_text({
-                text: notification.description,
-                pos: xy(-½ rect.size.x + sprite_width + 2 padding, -1),
+                text: "{font:" + TITLE_FONT + " {color:#E1B " + notification.title + "}{br}}" + notification.description,
+                pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
                 font: DESCRIPTION_FONT,
                 color: #000,
+                markup: true,
                 wrap_width: text_width,
                 x_align: "left",
-                y_align: "top"})
+                y_align: "center"})
+
 

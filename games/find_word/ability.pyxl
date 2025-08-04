@@ -1,7 +1,7 @@
 /* Manage player abilities. See also `ABILITY_TABLE` */
 
 def ability_load():
-    const has_ability = load_local("has_ability") default {}
+    const has_ability = if DEBUG_REGRANT_ALL_ABILITIES then {} else (load_local("has_ability") default {})
 
     // Remove obsolete abilities from the save game
     // that have been removed from the game
