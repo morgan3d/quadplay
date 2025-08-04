@@ -1,6 +1,9 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
 
+todo("add bonus to unique words")
+todo("scroll Bonus words in on leaderboard")
+
 /* Tiles for the bonus word construction */
 let bonus_row = []
 
@@ -123,7 +126,8 @@ def player_remove_destroyed_bonus_words(player, bonus_row):
 /* Add a tile to the bonus row */
 def add_tile_to_word(index):
     const tile = player.board.tile[index.x][index.y]
-    assert(not tile.used)
+    assert(not tile.used)    
+    _board_play_sound(select_tile_sound, 85%, 100%, index)
     
     tile.used = true
     push(bonus_row, {
@@ -413,6 +417,10 @@ preserving_transform:
         shadow: #000})
 
 draw_instructions(board_pos)
+
+if time_left ≤ 20/60:
+    // Grace frames drawn in black
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 100)
 
 if time_left ≤ 0: done()
 
