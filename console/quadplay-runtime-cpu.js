@@ -10402,29 +10402,54 @@ function utc_now() {
 
 
 function utc_time() {
-    let d = new Date();
-    return {
-        year:        d.getUTCFullYear(),
-        month:       d.getUTCMonth(),
-        day:         d.getUTCDate(),
-        hour:        d.getUTCHours(),
-        minute:      d.getUTCMinutes(),
-        second:      d.getUTCSeconds(),
-        millisecond: d.getUTCMilliseconds(),
-        weekday:     d.getUTCDay(),
-        day_second:  (d.getUTCHours() * 60 + d.getUTCMinutes()) * 60 + d.getUTCSeconds() + d.getUTCMilliseconds() * 0.001,
-        timezone:    0,
-        absolute_milliseconds: d.getTime()
-    };
+    // Memoization variables
+    if (utc_time.memoized_frame !== game_frames) {
+        const d = new Date();
+        utc_time.memoized_value = {
+            year:        d.getUTCFullYear(),
+            month:       d.getUTCMonth(),
+            day:         d.getUTCDate(),
+            hour:        d.getUTCHours(),
+            minute:      d.getUTCMinutes(),
+            second:      d.getUTCSeconds(),
+            millisecond: d.getUTCMilliseconds(),
+            weekday:     d.getUTCDay(),
+            day_second:  (d.getUTCHours() * 60 + d.getUTCMinutes()) * 60 + d.getUTCSeconds() + d.getUTCMilliseconds() * 0.001,
+            timezone:    0,
+            absolute_milliseconds: d.getTime()
+        };
+        utc_time.memoized_frame = game_frames;
+    }
+    return utc_time.memoized_value;
 }
 
 
 function local_time(args) {
-    
-    let d;
+    // Only memoize when args === undefined
     if (args === undefined) {
-        d = new Date();
-    } else if (typeof args === 'string') {
+        if (local_time.memoized_frame !== game_frames) {
+            const d = new Date();
+            local_time.memoized_value = {
+                year:        d.getFullYear(),
+                month:       d.getMonth(),
+                day:         d.getDate(),
+                hour:        d.getHours(),
+                minute:      d.getMinutes(),
+                second:      d.getSeconds(),
+                millisecond: d.getMilliseconds(),
+                weekday:     d.getDay(),
+                day_second:  (d.getHours() * 60 + d.getMinutes()) * 60 + d.getSeconds() + d.getMilliseconds() * 0.001,
+                timezone:    d.getTimezoneOffset(),
+                absolute_milliseconds: d.getTime()
+            };
+            local_time.memoized_frame = game_frames;
+        }
+        return local_time.memoized_value;
+    }
+    
+    // For other cases, compute without memoization
+    let d;
+    if (typeof args === 'string') {
         d = new Date(args);
     } else {
         d = new Date(args.year, args.month, args.day,

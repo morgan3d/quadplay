@@ -4221,7 +4221,7 @@ unaffected.
   Do not use this time for simulation because it will have inconsistent
   jumps between frames dues to frame rate scaling. It is good for performance
   monitoring within a frame and for synchronizing to a real-time clock,
-  for example for music or MIDI. See also `utc_now()`.
+  for example for music or MIDI. The value returned may change within a frame. See also `utc_now()`.
 
 `local_time(time_spec default nil)`
 : Returns an object with the following properties set in the local
@@ -4253,13 +4253,17 @@ unaffected.
   See `format_number()` for the various clock formatting options for numbers in seconds,
   and `now()` for a high-precision timer. See also `utc_time()`.
 
+  The value of `local_time` is constant throughout a frame.
+
 `utc_time()`
 : Returns an object with the same fields as `local_time()` for the current time.
-  There is no way to produce this object for a different time.
+  There is no way to produce this object for a different time. The value of
+  `utc_time()` is constant throughout a frame.
 
 `utc_now()`
 : Seconds since midnight Jan 1, 1970 in UTC, with no guaranteed accuracy 
-  below the second. See also `now()`.
+  below the second. The value returned by `utc_time()` may change
+  within a frame. See also `now()`.
  
  
 AI

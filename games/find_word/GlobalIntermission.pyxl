@@ -1,17 +1,17 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("** XP Awards for in-game awards **")
+todo("** Send emotes?! **")
+todo("* Explore other player results? *")
 
 todo("* Award for best free word *")
 todo("Change layout to make awards more central")
 todo("Favoriting UI + save")
-todo("Send emotes?!")
 
 let prev_xp
 let prev_level
 let new_xp
 
-// Cycle through the award stages. See `STAGE`
+/* Cycle through the award stages. See `STAGE` */
 let stage
 
 /* Stage from the previous frame, used for detecting stage
@@ -23,6 +23,29 @@ let first_frame_this_stage
 let selection_index = 0
 const STATS_BUTTON_INDEX = 1
 
+/* So that the date doesn't change on us while we're in the mode and modifying stats */
+let today_date
+
+/* If leveling up, called after leveling up. Otherwise called at mode enter. */
+def grant_badge_xp():
+    if not player.has_ability["Badge XP"]: return
+
+    for badge in player_competitor.badges:
+        // Convert the badge back into a title
+        let title = find(BADGE_TABLE, badge)
+        assert(title)
+        
+        title = replace(title, "_", " ")
+        if not contains(title, "word"):
+            title += " word"
+        
+        todo("XP Award icons")
+        const xp_value = XP_VALUE.badge_per_competitor * min(size(competitor_array) - 1, 15)
+        notify(
+            player.avatar.sprite.x_flipped,
+            "XP Award",
+            "+" + format_number(xp_value, "commas") + " XP for winning " + uppercase(title) + " in a " + size(competitor_array) + "-player match!")
+        player.stats[today_date].xp += xp_value
 
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
@@ -78,7 +101,10 @@ def draw_award_summary()
         play_sound(level_up_sound)
         
         // Give the abilities after the sound has finished
-        delay(grant_new_abilities(), 30)
+        delay(grant_new_abilities, 30)
+        
+        // Give the XP after the leveling up
+        delay(grant_badge_xp, 60)
 
     
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
@@ -336,21 +362,25 @@ enter
 set_background(#333)
 selection_index = 0
 
-prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+today_date = today_date_string()
+
+prev_xp = player.stats.lifetime.xp + player.stats[today_date].xp
 prev_level = player.avatar.level
 if not DEBUG_INTERMISSION:
-
     stats_update(player.stats, player_competitor, joined_late)
-    new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+    new_xp = player.stats.lifetime.xp + player.stats[today_date].xp
     // Update level
-    player.avatar.level = xp_to_level(new_xp)    
+    player.avatar.level = xp_to_level(new_xp)   
     stats_save(player.stats)
     save_local(player.has_ability)
 else:
     // Debugging, force a level up
     new_xp = level_to_xp(player.avatar.level + 1) + 100
     player.avatar.level = xp_to_level(new_xp)
-    
+
+if prev_level == player.avatar.level:
+    // Not leveling up, give badge XP now
+    grant_badge_xp()
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0

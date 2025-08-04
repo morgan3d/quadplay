@@ -103,5 +103,3 @@ leave
 ────────────────────────────────────────────────────────────────────────
 disconnect_from_network()
 competitor_analyze(competitor_array)
-
-todo("Trim down when there are very many competitors, keeping the top 2, the bottom 3, and 3 around the player")

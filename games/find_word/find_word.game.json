@@ -87,6 +87,26 @@
     "midi_sysex": false,
     "description": "Uncover words hidden in the grid in a world-wide real-time competition.",
     "constants": {
+        "LEVEL_EXPONENT": {
+            "type": "number",
+            "value": 0.72,
+            "description": "See `xp_to_level()`. Higher is easier to level up. Chosen to make Level 20 ~= 40k XP"
+        },
+
+        "LEVEL_DIVISOR": {
+            "type": "number",
+            "value": 500,
+            "description": "See `xp_to_level()`"
+        },
+
+        "XP_VALUE" : {
+            "type": "object",
+            "value": {
+                "point": {"type": "number", "value": 0.4},
+                "badge_per_competitor": {"type": "number", "value": 20}
+            }
+        },
+        
         "ABILITY_TABLE": {
             "type": "table",
             "transpose": true,

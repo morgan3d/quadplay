@@ -249,7 +249,9 @@ last_hour: 1
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if not sensitive[lowercase(word)] and not word_set[word] and match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference):
+            if (not sensitive[lowercase(word)] and
+                not word_set[word] and
+                match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
@@ -307,7 +309,7 @@ last_hour: 1
                     last_hour: 22},
                 MOO_ID))
     
-    if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG_CAF:
+    if DEBUG_CAF or player.has_ability["See caf"]:// and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG_CAF:
         push(competitor_array,
             make_bot_competitor({
                     name: "caf",
@@ -482,5 +484,4 @@ def competitor_assign_awards(competitor_array):
 
         if size(competitor.word_list) == size(most_words_winner.word_list):
             competitor.badges += BADGE_TABLE.most_words
-        
-
+    

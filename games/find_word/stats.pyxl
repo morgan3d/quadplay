@@ -1,13 +1,3 @@
-/* See `xp_to_level()`. Higher is easier to level up. Chosen to make Level 20 ~= 25k XP */
-const LEVEL_EXPONENT = 0.72
-
-/* See `xp_to_level()` */
-const LEVEL_DIVISOR  = 500
-
-const XP_VALUE = {
-    // Per point
-    point: 0.4,
-}
 
 
 /* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */

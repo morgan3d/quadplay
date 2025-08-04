@@ -4,6 +4,8 @@
 const _notification_queue = []
 
 def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 5):
+    assert(begin_callback == ∅ or type(begin_callback) == "function")
+    
     push(_notification_queue, {
         sprite:         sprite,
         title:          title,
@@ -47,7 +49,7 @@ def update_notifications()
         
         if first_shown == ∅:
             first_shown = time_now
-            if begin_callback():
+            if begin_callback:
                 begin_callback()
 
         const relative_time = time_now - first_shown    
