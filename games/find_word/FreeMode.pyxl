@@ -114,7 +114,7 @@ def add_tile_to_word(index):
     tile.used = true
     push(player.free_row, {
         letter: tile.letter,
-        index: xy(index),
+        source_tile: tile,
         points: LETTER_POINT_TABLE[tile.letter]})
     
     selection_color = player_free_selection_change_callback(player, player.free_row)
@@ -132,7 +132,7 @@ def remove_tile_at_index(index):
     assert(index ≥ 0 and index < size(player.free_row))
     const tile = player.free_row[index]
     // Put back into the board
-    player.board.tile[tile.index.x][tile.index.y].used = false
+    tile.source_tile.used = false
 
     // Remove from the player.free_row
     remove_values(player.free_row, tile)

@@ -4,7 +4,7 @@
    on which avatars can be used. */
 const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 9
 
-todo("Lock avatars by level")
+todo("* Lock avatars by level *")
 
 /* Prevent players from using these */
 const AVATAR_RESTRICTED_INDEXES = [
