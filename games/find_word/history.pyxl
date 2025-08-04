@@ -1,3 +1,4 @@
+
 /* List of words found by a `player`. */
 def make_history():
     return {
@@ -101,7 +102,7 @@ def history_draw(history, pos, max_height):
         max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
         
-            
+    // Regular list
     for entry in history.list:
         history_draw_entry(entry)
         
@@ -109,10 +110,13 @@ def history_draw(history, pos, max_height):
         // Separator
         if size(history.list):
             history_draw_entry({text: "    ~    ", color: #888, reveal_frame: 0, emphasize_frame: 0})
-            
+        
+        // Bonus list
         for entry in history.bonus:
             history_draw_entry(entry)
         
+    todo("** Auto-scroll history when previous width exceeded so that bonus words/scores show properly **")
+
     return max_width
     
     
@@ -188,9 +192,11 @@ def history_update(history, list_rect)
         // End drag
         drag_start.pos = ∅
     
-    if not drag_start.pos and (not equivalent(SCREEN_SIZE, scroll_screen_size) or scroll_history_size ≠ size(history.list)):
+    const history_size = size(history.list) + size(history.bonus)
+    
+    if not drag_start.pos and (not equivalent(SCREEN_SIZE, scroll_screen_size) or scroll_history_size ≠ history_size):
         scroll_screen_size = xy(SCREEN_SIZE)
-        scroll_history_size = size(history.list)
+        scroll_history_size = history_size
         // Set the scroll to whatever it needs to be to keep the 
         // most recent words on screen
         history.scroll = max(history.scroll, overflow)
