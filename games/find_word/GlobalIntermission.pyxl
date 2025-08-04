@@ -74,10 +74,10 @@ def draw_award_summary()
     
     if frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
         // Level up
-        if not grant_new_abilities():
-            // Play a sound if no new abilities so that there is still
-            // a "level up" effect
-            play_sound(award_sound, false, ∅, 90%, 150%)
+        play_sound(level_up_sound)
+        
+        // Give the abilities after the sound has finished
+        delay(grant_new_abilities(), 30)
 
     
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)

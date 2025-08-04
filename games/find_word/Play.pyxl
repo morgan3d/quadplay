@@ -1,7 +1,6 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-
 enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
@@ -13,17 +12,16 @@ start_time = frame_utc_now
 
 // Compute end_time
 if game_type == SOLO:
-    end_time = frame_utc_now + max(SOLO_GAME_TIME - bonus_round_time(), 0)
+    end_time = frame_utc_now + SOLO_GAME_TIME
 else:
     assert(game_type == GLOBAL)
     
-    end_time = prev_global_game_utc_start_time() + max(GLOBAL_GAME_TIME - bonus_round_time(), 0)
+    end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
 
-    assert(end_time + bonus_round_time() > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or DEBUG_INTERMISSION or DEBUG_BONUS_ROUND,
+    assert(
+        end_time > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or 
+        DEBUG_INTERMISSION,
         "The game should not end so soon")
-
-if DEBUG_BONUS_ROUND: 
-    end_time = prev_global_game_utc_start_time()
 
 set_background(
     if game_type == GLOBAL 
@@ -47,6 +45,14 @@ const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
 
 player_update(player, ∅, allow_rotate)
 
+if player.has_ability["Free Mode"]:
+    def callback():
+        board_deselect_all(player.board, player)
+        push_mode(FreeMode) because "Button"
+        
+    handle_bonus_button(callback)
+
+    
 
 if time_left ≤ 20/60:
     // Make a few frames black at the end so that a player can
@@ -59,9 +65,24 @@ if time_left ≤ 20/60:
     
 if time_left ≤ 0 or DEBUG_INTERMISSION:
     board_deselect_all(player.board, player)
-    set_mode(BonusRound) because "Timer"
+    if game_type == SOLO:
+        set_mode(SoloIntermission) because "SOLO and timer"
+    else:
+        set_mode(GatherGlobalResults) because "GLOBAL and timer"
 
 
 // Hint for compiler:
 // push_mode(Rotate) because "Rotate button"
-            
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+for points in entry in player.history.bonus:        
+    player.score += points
+
+// Reset the scroll position because layout differs
+// from the main game during intermission
+play_sound(times_up_sound)
+sort(player.history.list, "points", true)
+sort(player.history.bonus, "points", true)
+player.history.scroll = 0

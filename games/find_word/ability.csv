@@ -18,7 +18,7 @@
 "Points/Match Stat",13,"Average Points per Match is now available in Stats!","stats_sprite[0][0]"
 "Avatar (TODO) 5",13,"New avatars (TODO)","avatar_sprite[47][12].x_flipped"
 "Total Words Stat",14,"Total Words count is now available in Stats!","stats_sprite[0][0]"
-"Bonus Round",15,"You can now enter the Bonus Round of every match!","shapes.unknown"
+"Free Mode",15,"You can now use Free Mode to make one unordered sequence per match!","free_mode_sprite[0][0]"
 "Total Matches Stat",16,"Total Matches count is now available in Stats!","stats_sprite[0][0]"
 "Avatar (TODO) 6",17,"New avatars (TODO)","avatar_sprite[43][6].x_flipped"
 "Badge XP",18,"You now gain an XP bonus for every match award you win!","stats_sprite[0][0]"

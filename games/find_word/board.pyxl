@@ -215,7 +215,7 @@ def _board_validate_word(board, word):
         
 
 
-def board_pixel_size():
+def get_board_pixel_size():
     return xy(COLS, ROWS) * TILE_EXTENT + xy(COLS - 1, ROWS - 1) * TILE_GUTTER
 
 

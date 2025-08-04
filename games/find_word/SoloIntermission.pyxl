@@ -7,6 +7,10 @@ let unfound_word_array
 /* Q-decoded */
 let shown_array
 
+let selection_index = 0
+
+const STATS_BUTTON_INDEX = 1
+
 def update_button():
     const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
     const size = xy(150, 17)
@@ -85,3 +89,15 @@ local:
 
 update_button()
 
+if player.has_ability["Stats Tracker"]:
+    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 * xy(2, 2), shape: "disk"}
+    if touch.hover:
+        selection_index = if overlaps(touch.hover, region) then STATS_BUTTON_INDEX else 0
+    else if player.using_gamepad:
+        selection_index = 0
+        draw_text({font: leaderboard_font, pos: region.pos + xy(-12, 4), text: joy.prompt["(q)"], color: #DDD, outline: #000, z: 10})
+            
+    draw_stats_button(region.pos, selection_index == STATS_BUTTON_INDEX, ½ region.size.x)
+    
+    if (touch.pressed_a and overlaps(touch.xy, region)) or joy.pressed_q:
+        push_mode(DisplayStats) because "Button"

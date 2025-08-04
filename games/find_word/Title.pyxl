@@ -80,8 +80,7 @@ def update_button(pos, text, index):
         mode_frames > 2 and 
         ((touch.pressed_a and overlaps(touch.xy, rect)) or
          (selected and gamepad_array[0].pressed_a)))
-         or (DEBUG_INTERMISSION and index == GLOBAL)
-         or (DEBUG_BONUS_ROUND and index == SOLO)):
+         or (DEBUG_INTERMISSION and index == GLOBAL)):
         game_type = index
         
         // When did the previous game start?
@@ -215,7 +214,7 @@ draw_background_words()
 const θ = -0.2° max(0, mode_frames - INTRO_DURATION)
 const pos = ½ SCREEN_SIZE
 player_update_board(player, pos, θ, false)
-draw_rect(pos, board_pixel_size() + 22, player.board.selection_color, ∅, θ, -1) 
+draw_rect(pos, get_board_pixel_size() + 22, player.board.selection_color, ∅, θ, -1) 
 
 // How far to slide the buttons, 0 if the intro has been skipped
 const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - SLIDE_FRAMES), 0)) else 0

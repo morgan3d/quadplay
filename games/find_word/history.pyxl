@@ -171,10 +171,10 @@ def history_add(history, list_name, word, points):
     
 
 /* Draw the word history and manage touch dragging */
-def history_update(history, list_rect)
+def history_update(history, history_rect)
 & with drag_start, scroll_screen_size, scroll_history_size in history
 & preserving_transform:
-    set_clip(list_rect)
+    set_clip(history_rect)
     
     if not equivalent(SCREEN_SIZE, scroll_screen_size):
         // Reset on window change
@@ -184,14 +184,14 @@ def history_update(history, list_rect)
     let max_width
     
     preserving_transform:
-        set_transform(list_rect.corner - xy(history.scroll, 0))
-        max_width = history_draw(history, pos, list_rect.size.y)
+        set_transform(history_rect.corner - xy(history.scroll, 0))
+        max_width = history_draw(history, pos, history_rect.size.y)
 
-    const overflow = pos.x + max_width - list_rect.size.x + 1
+    const overflow = pos.x + max_width - history_rect.size.x + 1
 
     if not drag_start.pos:
         // Start drag
-        if touch.pressed_a and overlaps(touch.xy, list_rect):
+        if touch.pressed_a and overlaps(touch.xy, history_rect):
             drag_start.pos = xy(touch.xy)
             drag_start.scroll = history.scroll
     else if touch.a:
@@ -213,6 +213,24 @@ def history_update(history, list_rect)
     if overflow < 0:
         history.scroll = 0
         
-        
+
+
+/* Gets the history rect in `Play` and `FreeMode` modes. */
+def get_history_rect():
+    const board_pos = get_board_pos()
+    const board_size = get_board_pixel_size()
+
+    if landscape():
+        return {
+            corner: xy(1, 1), 
+            size: xy(
+                board_pos.x - ½ board_size.x - ¼ TILE_EXTENT + 1, 
+                SCREEN_SIZE.y - (if player.has_ability["Free Mode"] then 42 else 8))}
+    else:
+        // Portrait
+        return {
+            corner: xy(1, 1),
+            size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_size.y - 32)}
+
 
         

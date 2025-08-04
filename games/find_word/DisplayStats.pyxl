@@ -90,9 +90,9 @@ if player.has_ability["Best Word Stat"]:
         if better then HIGHLIGHT else ∅,
         if better then "↑" else ∅)
 
-if player.has_ability["Bonus Round"]:
+if player.has_ability["Free Mode"]:
     const better = today.best_bonus_word_text and (today.best_bonus_word_points ≥ lifetime.best_bonus_word_points)
-    y += draw_row(y, "Best Bonus Word",
+    y += draw_row(y, "Best Free Word",
         if (lifetime.best_bonus_word_text ≠ "") then lifetime.best_bonus_word_text + " " + lifetime.best_bonus_word_points else "-",
         if (today.best_bonus_word_text ≠ "") then (today.best_bonus_word_text + " " + today.best_bonus_word_points) else "-",
         DIM,

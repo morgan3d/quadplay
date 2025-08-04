@@ -29,7 +29,7 @@
         "GenerateBoard",
         "Play",
         "Rotate",
-        "BonusRound",
+        "FreeMode",
         "SoloIntermission",
         "GatherGlobalResults",
         "GlobalIntermission"
@@ -69,11 +69,13 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json",
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
-        "bonus_round_sound": "quad://sounds/good-02.sound.json",
         "moo_00_sound": "moo-00.sound.json",
-        "moo_01_sound": "moo-01.sound.json"
+        "moo_01_sound": "moo-01.sound.json",
+        "free_mode_sprite": "free.sprite.json",
+        "check_sprite": "check.sprite.json",
+        "level_up_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.293",
+    "version": "0.294",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -88,6 +90,16 @@
             "type": "table",
             "transpose": true,
             "url": "ability.csv"
+        },
+        "NETWORK_CONNECT_TIME_SECONDS": {
+            "type": "number",
+            "value": 10,
+            "description": "Time in seconds to connect into the network before the game ends, so that everyone is exchange word lists on game end."
+        },
+        "NETWORK_CONNECT_MAX_DELAY_SECONDS": {
+            "type": "number",
+            "value": "3",
+            "description": " Within the NETWORK_CONNECT_TIME window, what is the maximum time to randomly delay so that all nodes aren't competing to connect at exactly the same moment."
         },
         "TILE_EXTENT": {
             "type": "number",
@@ -1167,10 +1179,6 @@
             "max": 30,
             "format": "0",
             "quantum": 1
-        },
-        "DEBUG_BONUS_ROUND": {
-            "type": "boolean",
-            "value": false
         },
         "tile_small_font": {
             "type": "reference",

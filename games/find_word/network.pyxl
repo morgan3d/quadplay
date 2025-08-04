@@ -1,27 +1,19 @@
-/* The group conduit for exchanging scores */
+/* The group conduit for exchanging scores. */
 let conduit
 
-/* Called from `update_player()` */
+
+/* Called from `update_player()` and `FreeMode.frame` */
 def maybe_connect_to_network():
     if in_waiting_room or game_type ≠ GLOBAL or DEBUG_OFFLINE or DEBUG_INTERMISSION:
         return
     
-    // Time in seconds to connect into the network
-    // before the game ends, so that everyone is exchange word lists 
-    // on game end.
-    const NETWORK_CONNECT_TIME = 10
-    
-    // Within the NETWORK_CONNECT_TIME window, what is the maximum time
-    // to randomly delay so that all nodes aren't competing to connect
-    // at exactly the same moment.
-    const NETWORK_CONNECT_MAX_DELAY = 3
-    
     // Create a stable offset based on the player's name and their first word
     const τ = hash(player.avatar.name + (last_value(player.history.list) default {text:"x"}).text)
     
-    const my_connect_time = end_time - NETWORK_CONNECT_TIME + τ * NETWORK_CONNECT_MAX_DELAY
+    // Delay the connection time for each so that there is not contention
+    const my_connect_time = end_time - NETWORK_CONNECT_TIME_SECONDS + τ * NETWORK_CONNECT_MAX_DELAY_SECONDS
 
-    // Create the conduit    
+    // Create the conduit when it is time   
     if not conduit and frame_utc_now > my_connect_time:
         conduit = make_conduit()
 
@@ -30,9 +22,16 @@ def maybe_connect_to_network():
 /* Called from `GatherGlobalResults.enter` */
 def share_results_with_network(player_competitor):
     if conduit:
-        // The conduit may have failed to connect, but that will just enqueue
-        // the message, which is still safe
-        conduit_send(conduit, player_competitor)
+        if conduit.status == "online":
+            conduit_send(conduit, player_competitor)
+        else:
+            // We may be offline, or the netid may be
+            // having an issue with the signalling server.
+            // Reset everything, since this game doesn't need
+            // a stable connection.
+            reset_conduits()
+            conduit = ∅
+    
     
 
 /* Handle incoming network messages. The only messages sent by this

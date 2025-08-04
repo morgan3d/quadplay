@@ -6,6 +6,9 @@ def make_player():
     return {
         board: make_board(),
         
+        // Tiles for the bonus word construction
+        bonus_row: [],
+
         stats: stats,
         
         avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
@@ -27,7 +30,8 @@ def make_player():
         gamepad: gamepad_array[0],
                         
         // Q-encoded upper case words that have already been found
-        // and are represented in history.list
+        // and are represented in history.list. This does NOT include
+        // history.bonus. use `player_already_found()` to test both.
         already_found: {},
         
         // Used for display.
@@ -39,6 +43,11 @@ def make_player():
         
         // Where the cursor is
         cursor_tile_index: xy(0, 0)}
+
+
+
+def player_already_found(player, word):
+    return player.already_found[word] or contains(player.history.bonus, {word: word}, word_property_equals)
 
 
 
@@ -81,36 +90,29 @@ def player_spawn_score_animation(player):
    Returns true if there was a new word. As a side effect,
    plays a sound and sets the state for visualizing the word
    if there is one. */
-def player_selection_change_callback(player):
-
-    const board = player.board
-    const word = board_selected_word(board)
+def player_selection_change_callback(player)
+& with board in player:
+    
+    const word   = board_selected_word(board)
     const points = score_word(word)
 
     // Reset selection color
     board.selection_color = TILE_CENTER_SELECTED_COLOR
     
-    if player.already_found[word]:
+    if player_already_found(player, word):
         
         // Show that we've already seen this word by 
         // finding and emphasizing it
         player_emphasize_history_word(player, word)
-        play_sound(select_tile_sound, false, 150%, ∅, 40%)
         return true
                 
     else if points > 0:
+        
         // Score the word, even without the player releasing their touch
-        const color = player_add_to_history(player, word, points)
-        board.selection_color = color
+        player.board.selection_color = player_add_to_history(player, word, points)
         player_spawn_score_animation(player)
         play_points_sound(points, last_value(board.selection))    
         return true
-
-
-
-/* Abstracted to make an argument-less callback */
-def play_big_points_sound():
-    play_sound(big_points_sound)
 
 
 
@@ -133,19 +135,21 @@ def player_add_to_history(player, word, points):
    appear emphasized for a few frames to make it obvious 
    to the player */
 def player_emphasize_history_word(player, word, duration default 30):
-    for entry in player.history.list:
-        if entry.word == word:
-            entry.emphasize_frame = game_frames + duration
-            return
+    for list in [player.history.list, player.history.bonus]:
+        for entry in list:
+            if entry.word == word:
+                entry.emphasize_frame = game_frames + duration
+                play_sound(select_tile_sound, false, 150%, ∅, 40%)
+                return
         
     assert(false, "Could not find " + word + " which should already be in history")
 
 
 
-/* For the rotate button in `Play` mode and the delete button in `BonusRound` mode */
+/* For the rotate button in `Play` mode and the delete button in `FreeMode` */
 def player_update_aux_button(player, board_pos, callback, sprite, button, button2 default button, square default false):
     assert(sprite)
-    const button_pos = board_pos + xy(-4, -16) + xy(½, -½) board_pixel_size()
+    const button_pos = board_pos + xy(-4, -16) + xy(½, -½) get_board_pixel_size()
 
     if square:
         draw_rect(button_pos, xy(16, 16), ∅, #FFF)
@@ -162,18 +166,11 @@ def player_update_aux_button(player, board_pos, callback, sprite, button, button
 
 
 
-def _player_update_rotate_button(player, board_pos):
-    def callback():
-        push_mode(Rotate) because "Rotate button"
-    player_update_aux_button(player, board_pos, callback, shapes.curved_arrow.rotated_270, "d", "f")
-
-
-
 /* Also draws button prompts */
 def player_draw_score(player, board_pos)
 & with gamepad, board, score in player:
     
-    const score_pos = board_pos + xy(+½, -½) * board_pixel_size() - xy(18, 16)
+    const score_pos = board_pos + xy(+½, -½) * get_board_pixel_size() - xy(18, 16)
     
     if in_waiting_room:
         draw_text({
@@ -186,25 +183,40 @@ def player_draw_score(player, board_pos)
             z: TILE_LETTER_Z})
             
     else:
-        let score_text = format_number(score, "commas") + " pts"
+        let score_text = format_number(score, "commas")
 
-        let bonus_score = 0
-        for points in entry in player.history.bonus:
-            bonus_score += points
-
-        if player.has_ability["Bonus Round"]:
-            score_text = bonus_score + "+" + score_text
+        // Extend the score with the bonus points, color
+        // coded to make it more obvious this is coming
+        // from the bonus points
+        if player.has_ability["Free Mode"]:
+            let bonus_score = 0
+            for points in entry in player.history.bonus:
+                bonus_score += points
                 
+            let bonus_text = "" + bonus_score
+            
+            // Add color markup
+            const best_entry = last_value(player.history.bonus)
+            if best_entry:
+                bonus_text = "{color:" + unparse(best_entry.color) + bonus_text + "}"
+                if best_entry.outline:
+                    bonus_text = "{outline:" + unparse(best_entry.outline) + bonus_text + "}"
+                    
+            score_text += "+" + bonus_text
+        
+        score_text += " pts"
+         
         draw_text({
             pos: score_pos,
             font: if player.using_gamepad and size(score_text) > 9 then leaderboard_font else score_font,
             text: score_text,
             color: #FFF,
+            markup: true,
             y_align: "center",
             x_align: "right"})
     
-    // Button prompts (no space during bonus round for this)
-    if player.using_gamepad and get_mode() ≠ BonusRound:
+    // Button prompts (no space during Free Mode for this)
+    if player.using_gamepad and get_mode() ≠ FreeMode:
         draw_text({
             pos: score_pos + xy(-136, -7),
             font: button_prompt_font,
@@ -290,13 +302,13 @@ def player_update(player, angle default 0°, allow_selection default false):
     player_draw_score(player, board_pos)
     
     if allow_selection:
-        _player_update_rotate_button(player, board_pos)
+        def callback():
+            push_mode(Rotate) because "Rotate button"
+        player_update_aux_button(player, board_pos, callback, shapes.curved_arrow.rotated_270, "d", "f")
 
-    let history_rect
-    if landscape():
-        history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
-    else:
-        history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 32)}
+    
+    const history_rect = get_history_rect()
+        
     history_update(player.history, history_rect)
 
     // Show the words left at the bottom of the history.
@@ -324,15 +336,13 @@ def get_board_pos():
     // to portrait until all of the UI will be visible
     if landscape():
         // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
-        // Leave some space on the right so that if someone has the bad idea to play on a phone in this orientation
-        // they won't be jammed against the edge with their thumb.
-        board_pos = xy(SCREEN_SIZE.x - ½ board_pixel_size().x - 16, ½ SCREEN_SIZE.y + 8)
+        board_pos = xy(SCREEN_SIZE.x - ½ get_board_pixel_size().x - 8, ½ SCREEN_SIZE.y + 8)
     else:
         // Portrait. Put at the bottom, centered, unless the screen is not very high
-        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ board_pixel_size().y - 18)
+        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ get_board_pixel_size().y - 18)
         
         // Slide up a little on narrow screens so that it is easier to swipe on a phone
-        board_pos.y -= ⅓ max(SCREEN_SIZE.y - (board_pixel_size().y + 60), 0)
+        board_pos.y -= ⅓ max(SCREEN_SIZE.y - (get_board_pixel_size().y + 60), 0)
 
     return board_pos
 
@@ -355,7 +365,7 @@ def player_update_board(player, pos, angle, allow_selection)
 & preserving_transform
 & with board, gamepad, background_color in player:
     
-    const grid_size = board_pixel_size()
+    const grid_size = get_board_pixel_size()
     const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
     
     // Make the selection target slightly small to make 
@@ -431,6 +441,7 @@ def player_update_board(player, pos, angle, allow_selection)
 def player_reset_match(player, game_type, board_string default ∅):
     player.score = 0
     player.background_color = BOARD_COLOR
+    remove_all(player.bonus_row)
     remove_all(player.already_found)
     remove_all(player.history.list)
     remove_all(player.history.bonus)

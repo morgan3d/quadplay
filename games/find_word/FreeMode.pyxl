@@ -1,51 +1,35 @@
-BonusRound
+FreeMode
 ════════════════════════════════════════════════════════════════════════
-todo("Bonus round enter button/gamepad")
-todo("Bonus round exit button/gamepad")
-todo("Handle game ending in either mode")
-todo("Show bonus round points separately")
-
-/* Tiles for the bonus word construction */
-let bonus_row = []
-
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
-/* Computed in `enter` */
-let bonus_round_text
-
-
-/* Searches player.history.bonus for the word */
-def player_already_found_bonus(player, word):
-    return contains(player.history.bonus, {word: word}, word_property_equals)
-
-
+todo("**Putting letters back doesn't work (can't repro) **")
+todo("Word count disappears")
+todo("Rename bonus -> free")
 
 def player_update_back_button(player, board_pos):
-    if size(bonus_row):
+    if size(player.bonus_row):
         player_update_aux_button(player, board_pos, remove_last_tile, shapes.arrow.x_flipped, "b", ∅, true)
 
 
 
-/* Recompute `player.history.bonus` from `bonus_row` and return the `bonus_selection_color`.
+/* Recompute `player.history.bonus` from `player.bonus_row` and return the `bonus_selection_color`.
    See also `player_selection_change_callback()` for the `Play` mode. */
-def player_bonus_selection_change_callback(player, bonus_row):    
+def player_bonus_selection_change_callback(player):    
     // Clean up the list for any removals
-    player_remove_destroyed_bonus_words(player, bonus_row)
+    player_remove_destroyed_bonus_words(player)
 
     // Look for any additions, tracking the most points seen for sound triggers
     let word = ""
     let max_points = 0
     let best_new_word = ∅
     let best_new_color = ∅
-    for tile at t in bonus_row:
+    for tile at t in player.bonus_row:
         word += tile.letter
-        if dictionary[word] and not player_already_found_bonus(player, word):
-            if player.already_found[word]:
-                if t == size(bonus_row):
-                    // Show that we've already seen this just-completed word by 
-                    // finding and emphasizing it
-                    player_emphasize_history_word(player, word)
-                    play_sound(select_tile_sound, false, 150%, ∅, 40%)
+        if dictionary[word]:
+            if player_already_found(player, word):
+                // Show that we've already seen this just-completed word by 
+                // finding and emphasizing it
+                player_emphasize_history_word(player, word)
             else:
                 const points = score_word(word)
                 const color = player_add_to_bonus(player, word, points)
@@ -89,7 +73,7 @@ def player_spawn_bonus_score_animation(player, word, color):
         if not entry: return sequence.BREAK
         
         for i < size(word):
-            const tile = bonus_row[i]
+            const tile = player.bonus_row[i]
             
             if not tile or tile.letter ≠ word[i]: return sequence.BREAK
             
@@ -110,9 +94,9 @@ def player_spawn_bonus_score_animation(player, word, color):
 
 
 /* Remove any previous entry of player.history.bonus that does not belong */
-def player_remove_destroyed_bonus_words(player, bonus_row):
+def player_remove_destroyed_bonus_words(player):
     let word = ""
-    for tile at t in bonus_row:
+    for tile at t in player.bonus_row:
         word += tile.letter
         
     def maybe_remove(entry):
@@ -131,35 +115,35 @@ def add_tile_to_word(index):
     _board_play_sound(select_tile_sound, 85%, 100%, index)
     
     tile.used = true
-    push(bonus_row, {
+    push(player.bonus_row, {
         letter: tile.letter,
         index: xy(index),
         points: LETTER_POINT_TABLE[tile.letter]})
     
-    selection_color = player_bonus_selection_change_callback(player, bonus_row)
+    selection_color = player_bonus_selection_change_callback(player, player.bonus_row)
 
 
 
 /* Remove the last tile from the bonus row */
 def remove_last_tile():
-    remove_tile_at_index(size(bonus_row) - 1)
+    remove_tile_at_index(size(player.bonus_row) - 1)
         
 
 
 /* Remove a specific tile from the bonus row by index */
 def remove_tile_at_index(index):
-    assert(index ≥ 0 and index < size(bonus_row))
-    const tile = bonus_row[index]
+    assert(index ≥ 0 and index < size(player.bonus_row))
+    const tile = player.bonus_row[index]
     // Put back into the board
     player.board.tile[tile.index.x][tile.index.y].used = false
 
-    // Remove from the bonus_row
-    remove_values(bonus_row, tile)
+    // Remove from the player.bonus_row
+    remove_values(player.bonus_row, tile)
     
     play_sound(select_tile_sound, false, 150%, ∅, 40%)
 
     // Update selection
-    selection_color = player_bonus_selection_change_callback(player, bonus_row)
+    selection_color = player_bonus_selection_change_callback(player, player.bonus_row)
 
 
 
@@ -175,17 +159,11 @@ def draw_bonus_row(board_pos)
     const [board_grid_size, board_tile_size, board_gutter] = get_bonus_round_board_dims()
     const board_width = board_grid_size.x + ¼ board_tile_size.x
     
-    let history_rect
-    if landscape():
-        // Make room for instructions
-        history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 28)}
-    else:
-        // Make room for the bonus row
-        history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 34)}
+    let history_rect = get_history_rect()
         
     // Choose tile size. Leave room for one extra tile until we hit 16
     // to imply that the player can keep going
-    const tile_slots = clamp(size(bonus_row) + 1, if landscape() then 8 else 6, ROWS * COLS)
+    const tile_slots = clamp(size(player.bonus_row) + 1, if landscape() then 8 else 6, ROWS * COLS)
     
     const tile_area_width = if landscape() then board_grid_size.x else (history_rect.size.x - 10)
     
@@ -238,8 +216,8 @@ def draw_bonus_row(board_pos)
 
     let i = 0
     let removed_already = false
-    while i < size(bonus_row):
-        const tile = bonus_row[i]
+    while i < size(player.bonus_row):
+        const tile = player.bonus_row[i]
         tile.pos = xy(start_x + i * tile_spacing, tile_y)
         
         tile.selected = i < selection_length
@@ -263,7 +241,7 @@ def draw_bonus_row(board_pos)
 
 
 /* Returns `[grid_size, tile_size, gutter]` for the
-   bonus round board, which is shrunk in landscape mode. */    
+   Free Mode board, which is shrunk in landscape mode. */    
 def get_bonus_round_board_dims():
     let tile_size = xy(TILE_EXTENT, TILE_EXTENT)
     
@@ -272,9 +250,10 @@ def get_bonus_round_board_dims():
         // The player may not notice as we blacked the screen
         // between rounds
         tile_size = ⌊85% tile_size⌋
-
-    const gutter = ⌊tile_size.x / 9⌋
+        
+    const gutter = ⌊tile_size.x / 8.8⌋
     const grid_size = xy(COLS, ROWS) * tile_size + xy(COLS - 1, ROWS - 1) * gutter
+
     return [grid_size, tile_size, gutter]
 
 
@@ -286,7 +265,7 @@ def draw_bonus_round_board(pos)
     // the board in a special way to make it smaller and have missing tiles
 
     const [grid_size, tile_size, gutter] = get_bonus_round_board_dims()
-    const center_size = tile_size - 5
+    const center_size = tile_size - gutter
     
     set_transform(pos)
     
@@ -325,53 +304,22 @@ def draw_bonus_round_board(pos)
 
 
 def draw_instructions(board_pos):
-    const args = {text: "Choose tiles in any order to\nmake one bonus sequence", color: #CCC, shadow: #111, font: leaderboard_font}
-    if landscape():
-        draw_text({…args, pos: xy(¼ SCREEN_SIZE.x, SCREEN_SIZE.y - 13), wrap_width: SCREEN_SIZE.x - 10})
-    else:
-        // Portrait
-        draw_text({…args, pos: ½(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y) + board_pos + xy(0, 100)), wrap_width: SCREEN_SIZE.x - 10})
+    draw_text({
+        text: "Choose tiles in any order",
+        pos: board_pos + (if landscape() then xy(-93, 46) else xy(0, 107)),
+        x_align: if landscape() then "right" else "center",
+        y_align: "top",
+        color: #EEE,
+        wrap_width: if landscape() then SCREEN_SIZE.x - 280 else ∅,
+        shadow: #111,
+        font: leaderboard_font})
 
-
-def done():
-    for points in entry in player.history.bonus:        
-        player.score += points
-    
-    // Reset the scroll position because layout differs
-    // from the main game during intermission
-    play_sound(times_up_sound)
-    sort(player.history.list, "points", true)
-    sort(player.history.bonus, "points", true)
-    player.history.scroll = 0
-    
-    if game_type == SOLO:
-        set_mode(SoloIntermission) because "SOLO and timer"
-    else:
-        set_mode(GatherGlobalResults) because "GLOBAL and timer"
-    
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
-// Assumes end_time was previously set by `Play`
-end_time += bonus_round_time()
-
-// Skip this mode entirely if there is no bonus time
-if frame_utc_now ≥ end_time or DEBUG_INTERMISSION: done()
-
-play_sound(bonus_round_sound)
-
-bonus_row = []
-
-bonus_round_text = ""
-const text = "BONUS ROUND"
-for letter at i in text:
-    const α = i / (size(text) - 1)
-    if letter == " ":
-        bonus_round_text += " "
-    else:
-        bonus_round_text += "{color:" + unparse(perceptual_lerp_color(#E1B, #0AE, α)) + " " + letter + "}"
-
+//play_sound(bonus_round_sound)
+todo("New enter sound")
 
 
 frame
@@ -407,24 +355,20 @@ const history_rect = draw_bonus_row(board_pos)
 
 history_update(player.history, history_rect)
 
-// Draw the bonus round animation over the history
-preserving_transform:
-    set_clip(history_rect)
-        
-    draw_text({
-        font: giant_score_font,
-        text: bonus_round_text,
-        pos: xy(history_rect.corner.x + 1.2 history_rect.size.x - 2 mode_frames, history_rect.corner.y + ½ history_rect.size.y),
-        x_align: "left",
-        markup: true,
-        outline: #FFF,
-        shadow: #000})
-
 draw_instructions(board_pos)
+
+local:
+    def callback():
+        todo("New leave sound")
+        pop_mode() because "Button"
+    handle_bonus_button(callback)
+    
 
 if time_left ≤ 20/60:
     // Grace frames drawn in black
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 100)
 
-if time_left ≤ 0: done()
+if time_left ≤ 0:
+    // Go back to Play, which will then go to the intermission
+    pop_mode() because "Timer"
 

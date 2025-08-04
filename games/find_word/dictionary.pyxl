@@ -15,7 +15,7 @@
  - In-game text representing a dictionary play word is shown in all caps
  - In-game letter tiles are capital letters, except for "Qu" 
  - All other text is mixed case, except for: logos, avatar names,
-   and the bonus round animation
+   and the Free Mode animation
  - The primary emphasis color is #E1B pink
  - The primary button/cursor/UI selection color is green
 */

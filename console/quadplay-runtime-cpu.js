@@ -5196,7 +5196,7 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
         end = $Math.min(op, cl);
         
         if (end >= str.length) {
-            $error('Unbalanced {} in draw_text() with markup');
+            $error(`Unbalanced "{}" in draw_text() with markup: true, text: "${str}"`);
         }
         
         if (str[end - 1] !== '\\') {

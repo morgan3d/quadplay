@@ -1,3 +1,5 @@
+/* Common code across modes. Mostly UI and timing. */
+
 /* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
 let game_type = SOLO
 
@@ -77,7 +79,7 @@ def _update_frame_utc_now():
 
 /* Hook that automaticaly switches the detected input mechanism */
 def detect_input():
-    if player.gamepad.pressed_a or player.gamepad.pressed_b or player.gamepad.xx or player.gamepad.yy:
+    if player.gamepad.pressed_a or player.gamepad.pressed_q or player.gamepad.pressed_b or player.gamepad.xx or player.gamepad.yy:
         player.using_gamepad = true
     else if touch.dx or touch.dy or touch.pressed_a or touch.hover:
         // Used touch screen or mouse
@@ -128,8 +130,6 @@ def set_hooks():
 /* Cooldown used in `draw_timer()`. Reset in `Play.enter` */
 let last_countdown_sound_time
 
-
-
 /* Draws the count-down timer for `end_time` relative to the board, and handles
    the countdown beeping and flashing */
 def draw_timer(board_pos):
@@ -159,7 +159,7 @@ def draw_timer(board_pos):
     time_left -= 3/60
     
     draw_text({
-        pos: board_pos + xy(-½, -½) * board_pixel_size() - xy(-28, 16),
+        pos: board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16),
         font: score_font,
         text: format_number(time_left, "timer"),
         color: if in_waiting_room then #0F0 else #FFF,
@@ -180,24 +180,60 @@ def draw_timer(board_pos):
 
 
 
-/* Number of seconds in the bonus round based on the game type and player abilities. */
-def bonus_round_time():
-    if DEBUG_BONUS_ROUND:
-        // Force bonus round even of still locked
-        return 10000
-    else if player.has_ability["Bonus Round"] and not DEBUG_INTERMISSION:
-        return (if game_type == SOLO then SOLO_BONUS_ROUND_TIME else GLOBAL_BONUS_ROUND_TIME)
-    else:
-        return 0
-
-
-
 def draw_round_selection(pos, radius):
     draw_disk(pos - xy(0, 1), radius + 0.5, ∅, #FFF, 2)
     draw_disk(pos - xy(0, 1), radius + 1.5, CURSOR_COLOR, ∅, -0.5)
     draw_disk(pos - xy(0, 1), radius + 4.5, rgba(CURSOR_COLOR, 25%), ∅, -0.6)
     draw_disk(pos - xy(0, 1), radius + 7.5, rgba(CURSOR_COLOR, 15%), ∅, -0.7)
 
+
+
+/* For Play and FreeMode switch */
+def handle_bonus_button(callback):
+    const radius = 14
+    const region = {
+        pos: xy(radius + 4, SCREEN_SIZE.y - radius - 1),
+        size: radius * xy(2, 2),
+        shape: "disk"}
+    
+    draw_disk(region.pos, radius, #FFF)
+    
+    draw_text({
+        pos: region.pos - xy(0, ½ region.size.y + 7),
+        color: #fff,
+        font: leaderboard_font,
+        text: if get_mode() == FreeMode then "Done" else "Free"})
+    
+    draw_sprite(if get_mode() == FreeMode then check_sprite[0][0] else free_mode_sprite[0][0], region.pos)
+    
+    if player.using_gamepad:
+        draw_text({
+            pos: region.pos + xy(80% radius, 70% radius), 
+            color: #fff,
+            outline: #000,
+            font: score_font,
+            x_align: "left",
+            z: 20,
+            text: joy.prompt["(q)"]})
+    
+    if touch.hover:
+        handle_bonus_button.selected = overlaps(region, touch.hover)
+    else if player.using_gamepad:
+        handle_bonus_button.selected = false
+    
+    if handle_bonus_button.selected:
+        draw_round_selection(region.pos, radius)
+        
+    if (mode_frames > 10 and 
+        ((touch.pressed_a and overlaps(touch.xy, region))
+        or joy.pressed_q)):
+        callback()
+
+
+
+/* Abstracted to make an argument-less callback */
+def play_big_points_sound():
+    play_sound(big_points_sound)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
