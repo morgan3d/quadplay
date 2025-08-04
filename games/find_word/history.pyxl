@@ -101,20 +101,31 @@ def history_draw(history, pos, max_height):
         // Track if this makes the column larger
         max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
-        
-    // Regular list
-    for entry in history.list:
-        history_draw_entry(entry)
-        
-    if size(history.bonus):
+
+
+    if get_mode() ≠ GlobalIntermission:
+        // Regular list first
+        for entry in history.list:
+            history_draw_entry(entry)
         // Separator
-        if size(history.list):
+        if size(history.list) and size(history.bonus):
             history_draw_entry({text: "    ~    ", color: #888, reveal_frame: 0, emphasize_frame: 0})
-        
+            
+    if size(history.bonus):        
         // Bonus list
         for entry in history.bonus:
             history_draw_entry(entry)
-        
+    
+    if get_mode() == GlobalIntermission:
+        // Separator
+        if size(history.list) and size(history.bonus):
+            history_draw_entry({text: "    ~    ", color: #888, reveal_frame: 0, emphasize_frame: 0})
+            
+        // Regular list second
+        for entry in history.list:
+            history_draw_entry(entry)
+
+    
     return max_width
     
     

@@ -333,6 +333,7 @@ def done():
     // from the main game during intermission
     play_sound(times_up_sound)
     sort(player.history.list, "points", true)
+    sort(player.history.bonus, "points", true)
     player.history.scroll = 0
     
     if game_type == SOLO:

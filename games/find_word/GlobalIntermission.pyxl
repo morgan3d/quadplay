@@ -1,9 +1,10 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("Favoriting UI + save")
-todo("* XP Awards for in-game awards *")
+todo("*** XP Awards for in-game awards ***")
 todo("** Award for best bonus word **")
 todo("Change layout to make awards more central")
+todo("Favoriting UI + save")
+todo("Send emotes?!")
 
 let prev_xp
 let prev_level
@@ -291,7 +292,6 @@ def update_countdown():
     draw_corner_rect(countdown_rect.corner, countdown_rect.size, #000, #FFF)
     draw_corner_rect(countdown_rect.corner + 1, xy(α * (countdown_rect.size.x - 2), countdown_rect.size.y - 2), #0F0)
     
-    todo("Shrink countdown")
     draw_text({
         font: score_font,
         text: "Next match in " + format_number(time_left, "timer"),
