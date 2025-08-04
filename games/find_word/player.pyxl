@@ -6,8 +6,8 @@ def make_player():
     return {
         board: make_board(),
         
-        // Tiles for the bonus word construction
-        bonus_row: [],
+        // Tiles for the free word construction
+        free_row: [],
 
         stats: stats,
         
@@ -31,7 +31,7 @@ def make_player():
                         
         // Q-encoded upper case words that have already been found
         // and are represented in history.list. This does NOT include
-        // history.bonus. use `player_already_found()` to test both.
+        // history.free. use `player_already_found()` to test both.
         already_found: {},
         
         // Used for display.
@@ -47,7 +47,7 @@ def make_player():
 
 
 def player_already_found(player, word):
-    return player.already_found[word] or contains(player.history.bonus, {word: word}, word_property_equals)
+    return player.already_found[word] or contains(player.history.free, {word: word}, word_property_equals)
 
 
 
@@ -117,8 +117,8 @@ def player_selection_change_callback(player)
 
 
 /* Does not update the score. Returns the color */
-def player_add_to_bonus(player, word, points):
-    return history_add(player.history, "bonus", word, points)
+def player_add_to_free(player, word, points):
+    return history_add(player.history, "free", word, points)
     
     
 
@@ -135,7 +135,7 @@ def player_add_to_history(player, word, points):
    appear emphasized for a few frames to make it obvious 
    to the player */
 def player_emphasize_history_word(player, word, duration default 30):
-    for list in [player.history.list, player.history.bonus]:
+    for list in [player.history.list, player.history.free]:
         for entry in list:
             if entry.word == word:
                 entry.emphasize_frame = game_frames + duration
@@ -185,24 +185,24 @@ def player_draw_score(player, board_pos)
     else:
         let score_text = format_number(score, "commas")
 
-        // Extend the score with the bonus points, color
+        // Extend the score with the free points, color
         // coded to make it more obvious this is coming
-        // from the bonus points
+        // from the free points
         if player.has_ability["Free Mode"]:
-            let bonus_score = 0
-            for points in entry in player.history.bonus:
-                bonus_score += points
+            let free_score = 0
+            for points in entry in player.history.free:
+                free_score += points
                 
-            let bonus_text = "" + bonus_score
+            let free_text = "" + free_score
             
             // Add color markup
-            const best_entry = last_value(player.history.bonus)
+            const best_entry = last_value(player.history.free)
             if best_entry:
-                bonus_text = "{color:" + unparse(best_entry.color) + bonus_text + "}"
+                free_text = "{color:" + unparse(best_entry.color) + free_text + "}"
                 if best_entry.outline:
-                    bonus_text = "{outline:" + unparse(best_entry.outline) + bonus_text + "}"
+                    free_text = "{outline:" + unparse(best_entry.outline) + free_text + "}"
                     
-            score_text += "+" + bonus_text
+            score_text += "+" + free_text
         
         score_text += " pts"
          
@@ -428,10 +428,10 @@ def player_update_board(player, pos, angle, allow_selection)
 def player_reset_match(player, game_type, board_string default ∅):
     player.score = 0
     player.background_color = BOARD_COLOR
-    remove_all(player.bonus_row)
+    remove_all(player.free_row)
     remove_all(player.already_found)
     remove_all(player.history.list)
-    remove_all(player.history.bonus)
+    remove_all(player.history.free)
     player.history.scroll = 0
     player.history.scroll_history_size = 0
     

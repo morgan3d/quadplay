@@ -1,7 +1,7 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
 todo("** XP Awards for in-game awards **")
-todo("** Award for best bonus word **")
+todo("** Award for best free word **")
 todo("Change layout to make awards more central")
 todo("Favoriting UI + save")
 todo("Send emotes?!")
@@ -214,7 +214,7 @@ def draw_leaderboard()
 & preserving_transform:
     todo("Manual vertical scroll")
     
-    todo("**Scroll Bonus words in on leaderboard**")
+    todo("**Scroll free words in on leaderboard**")
 
     
     set_clip(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, SCREEN_SIZE.y - 22))

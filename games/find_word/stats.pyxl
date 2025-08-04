@@ -14,8 +14,8 @@ const XP_VALUE = {
 def make_empty_stats_entry():
     return {
         longest_text: "",
-        best_bonus_word_text: "", 
-        best_bonus_word_points: 0,
+        best_free_word_text: "", 
+        best_free_word_points: 0,
         best_word_text: "", 
         best_word_points: 0,
         best_score: 0,
@@ -185,9 +185,9 @@ def stats_load():
         day.xp = decode_xp(day.xp)
         day.word_list = decompress_word_list(day.word_list default "")
         
-        if day.best_bonus_word_points == ∅:
-            day.best_bonus_word_points = 0
-            day.best_bonus_word_text = ""
+        if day.best_free_word_points == ∅:
+            day.best_free_word_points = 0
+            day.best_free_word_text = ""
 
         // Upgrade legacy formats
         if day.longest ≠ ∅:
@@ -227,9 +227,9 @@ def stats_merge_previous_days(stats):
             lifetime.best_word_points = day.best_word_points
             lifetime.best_word_text = day.best_word_text
 
-        if day.best_bonus_word_points > lifetime.best_bonus_word_points:
-            lifetime.best_bonus_word_points = day.best_bonus_word_points
-            lifetime.best_bonus_word_text = day.best_bonus_word_text
+        if day.best_free_word_points > lifetime.best_free_word_points:
+            lifetime.best_free_word_points = day.best_free_word_points
+            lifetime.best_free_word_text = day.best_free_word_text
 
         lifetime.most_words = max(lifetime.most_words, day.most_words)
         lifetime.best_score = max(lifetime.best_score, day.best_score)
@@ -299,9 +299,9 @@ def stats_update(stats, competitor, joined_late):
     if size(competitor.longest_text) > size(entry.longest_text):
         entry.longest_text = competitor.longest_text
 
-    if competitor.best_bonus_word_points > (entry.best_bonus_word_points default 0):
-        entry.best_bonus_word_points = competitor.best_bonus_word_points
-        entry.best_bonus_word_text = competitor.best_bonus_word_text
+    if competitor.best_free_word_points > (entry.best_free_word_points default 0):
+        entry.best_free_word_points = competitor.best_free_word_points
+        entry.best_free_word_text = competitor.best_free_word_text
         
     if competitor.best_word_points > entry.best_word_points:
         entry.best_word_points = competitor.best_word_points
@@ -310,7 +310,7 @@ def stats_update(stats, competitor, joined_late):
     if competitor.score > entry.best_score:
         entry.best_score = competitor.score
     
-    const N = size(competitor.word_list) + size(competitor.bonus_list)
+    const N = size(competitor.word_list) + size(competitor.free_list)
     if N > entry.most_words:
         entry.most_words = N
     
@@ -328,7 +328,7 @@ def stats_update(stats, competitor, joined_late):
             word_set[word] = 1
     
     // Add the new words
-    for list in [competitor.word_list, competitor.bonus_list]:
+    for list in [competitor.word_list, competitor.free_list]:
         for word in list:
             if not word_set[word]:
                 push(entry.word_list, word)

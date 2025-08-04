@@ -25,7 +25,7 @@ def make_board():
                 // Last position rendered to in screen space
                 pos: ∅,
                 
-                // Has this been consumed for bonus word construction?
+                // Has this been consumed for free word construction?
                 // If so, draw as missing.
                 used: false,
                                 

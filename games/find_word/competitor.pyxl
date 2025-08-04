@@ -12,12 +12,12 @@
         longest_text
         best_word_points
         best_word_text
-        best_bonus_word_points
-        best_bonus_word_text
+        best_free_word_points
+        best_free_word_text
         best_rare_points
         best_rare_text
         word_list
-        bonus_word_list
+        free_word_list
         score
     }```
    
@@ -217,7 +217,7 @@ last_hour: 1
         const competitor = {
             avatar: avatar,
             score: 0,
-            bonus_list: []}
+            free_list: []}
     
         competitor.avatar.id = id
     
@@ -286,7 +286,7 @@ last_hour: 1
         competitor.word_list = keys(word_set)
                 
         sort(competitor.word_list, size_comparator, true)
-        sort(competitor.bonus_list, size_comparator, true)
+        sort(competitor.free_list, size_comparator, true)
         
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
@@ -353,13 +353,13 @@ def make_player_competitor():
         avatar: player.avatar,
         score: player.score,
         word_list: [],
-        bonus_list: []}
+        free_list: []}
     
     for entry in player.history.list:
         push(competitor.word_list, entry.word)
         
-    for entry in player.history.bonus:
-        push(competitor.bonus_list, entry.word)
+    for entry in player.history.free:
+        push(competitor.free_list, entry.word)
     
     return competitor
 
@@ -381,13 +381,13 @@ def competitor_analyze(competitor_array):
         if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
 
-        competitor.best_bonus_word_points = 0
-        competitor.best_bonus_word_text = ""
-        for word in competitor.bonus_list:
+        competitor.best_free_word_points = 0
+        competitor.best_free_word_text = ""
+        for word in competitor.free_list:
             const points = score_word(word)
-            if points > competitor.best_bonus_word_points:
-                competitor.best_bonus_word_points = points
-                competitor.best_bonus_word_text = q_decode(word)
+            if points > competitor.best_free_word_points:
+                competitor.best_free_word_points = points
+                competitor.best_free_word_text = q_decode(word)
             
 
         competitor.best_word_points = 0

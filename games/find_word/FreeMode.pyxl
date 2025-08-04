@@ -2,26 +2,25 @@ FreeMode
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
-todo("Rename bonus -> free")
 
 def player_update_back_button(player, board_pos):
-    if size(player.bonus_row):
+    if size(player.free_row):
         player_update_aux_button(player, board_pos, remove_last_tile, shapes.arrow.x_flipped, "b", ∅, true)
 
 
 
-/* Recompute `player.history.bonus` from `player.bonus_row` and return the `bonus_selection_color`.
+/* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
    See also `player_selection_change_callback()` for the `Play` mode. */
-def player_bonus_selection_change_callback(player):    
+def player_free_selection_change_callback(player):    
     // Clean up the list for any removals
-    player_remove_destroyed_bonus_words(player)
+    player_remove_destroyed_free_words(player)
 
     // Look for any additions, tracking the most points seen for sound triggers
     let word = ""
     let max_points = 0
     let best_new_word = ∅
     let best_new_color = ∅
-    for tile at t in player.bonus_row:
+    for tile at t in player.free_row:
         word += tile.letter
         if dictionary[word]:
             if player_already_found(player, word):
@@ -30,7 +29,7 @@ def player_bonus_selection_change_callback(player):
                 player_emphasize_history_word(player, word)
             else:
                 const points = score_word(word)
-                const color = player_add_to_bonus(player, word, points)
+                const color = player_add_to_free(player, word, points)
                 if points > max_points:
                     max_points = points
                     best_new_word = word
@@ -38,12 +37,12 @@ def player_bonus_selection_change_callback(player):
 
     // At least one word was added
     if max_points > 0:
-        player_spawn_bonus_score_animation(player, best_new_word, best_new_color)
+        player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
     
     // Choose the color based on the best selection
     max_points = 0
-    for points in entry in player.history.bonus:
+    for points in entry in player.history.free:
         max_points = max(max_points, points)
 
     if max_points > 0:
@@ -53,14 +52,14 @@ def player_bonus_selection_change_callback(player):
 
 
 
-/* Creates animation going from the selection to the last word in the bonus list */
-def player_spawn_bonus_score_animation(player, word, color):
+/* Creates animation going from the selection to the last word in the free list */
+def player_spawn_free_score_animation(player, word, color):
     let target
     
     let letter_array = []
     let start_array = []
     
-    const entry = player.history.bonus[find(player.history.bonus, {word: word}, ∅, word_property_equals)]
+    const entry = player.history.free[find(player.history.free, {word: word}, ∅, word_property_equals)]
     assert(entry)
     
     // Have to wait until callback time for this so that the 
@@ -71,7 +70,7 @@ def player_spawn_bonus_score_animation(player, word, color):
         if not entry: return sequence.BREAK
         
         for i < size(word):
-            const tile = player.bonus_row[i]
+            const tile = player.free_row[i]
             
             if not tile or tile.letter ≠ word[i]: return sequence.BREAK
             
@@ -91,10 +90,10 @@ def player_spawn_bonus_score_animation(player, word, color):
 
 
 
-/* Remove any previous entry of player.history.bonus that does not belong */
-def player_remove_destroyed_bonus_words(player):
+/* Remove any previous entry of player.history.free that does not belong */
+def player_remove_destroyed_free_words(player):
     let word = ""
-    for tile at t in player.bonus_row:
+    for tile at t in player.free_row:
         word += tile.letter
         
     def maybe_remove(entry):
@@ -102,66 +101,66 @@ def player_remove_destroyed_bonus_words(player):
             todo("Sound and animation for removal")
             return iterate.REMOVE
         
-    iterate(player.history.bonus, maybe_remove)
+    iterate(player.history.free, maybe_remove)
     
     
     
-/* Add a tile to the bonus row */
+/* Add a tile to the free row */
 def add_tile_to_word(index):
     const tile = player.board.tile[index.x][index.y]
     assert(not tile.used)    
     _board_play_sound(select_tile_sound, 85%, 100%, index)
     
     tile.used = true
-    push(player.bonus_row, {
+    push(player.free_row, {
         letter: tile.letter,
         index: xy(index),
         points: LETTER_POINT_TABLE[tile.letter]})
     
-    selection_color = player_bonus_selection_change_callback(player, player.bonus_row)
+    selection_color = player_free_selection_change_callback(player, player.free_row)
 
 
 
-/* Remove the last tile from the bonus row */
+/* Remove the last tile from the free row */
 def remove_last_tile():
-    remove_tile_at_index(size(player.bonus_row) - 1)
+    remove_tile_at_index(size(player.free_row) - 1)
         
 
 
-/* Remove a specific tile from the bonus row by index */
+/* Remove a specific tile from the free row by index */
 def remove_tile_at_index(index):
-    assert(index ≥ 0 and index < size(player.bonus_row))
-    const tile = player.bonus_row[index]
+    assert(index ≥ 0 and index < size(player.free_row))
+    const tile = player.free_row[index]
     // Put back into the board
     player.board.tile[tile.index.x][tile.index.y].used = false
 
-    // Remove from the player.bonus_row
-    remove_values(player.bonus_row, tile)
+    // Remove from the player.free_row
+    remove_values(player.free_row, tile)
     
     play_sound(select_tile_sound, false, 150%, ∅, 40%)
 
     // Update selection
-    selection_color = player_bonus_selection_change_callback(player, player.bonus_row)
+    selection_color = player_free_selection_change_callback(player, player.free_row)
 
 
 
-/* Draw the bonus word construction area. Returns the history rect
+/* Draw the free word construction area. Returns the history rect
    because that is computed as a side effect of layout. */
-def draw_bonus_row(board_pos)
+def draw_free_row(board_pos)
 & preserving_transform:
     // Move in front of the history
     set_transform(∅, ∅, 2)
     
-    todo("Show empty tile slots on bonus row")
+    todo("Show empty tile slots on free row")
 
-    const [board_grid_size, board_tile_size, board_gutter] = get_bonus_round_board_dims()
+    const [board_grid_size, board_tile_size, board_gutter] = get_free_round_board_dims()
     const board_width = board_grid_size.x + ¼ board_tile_size.x
     
     let history_rect = get_history_rect()
         
     // Choose tile size. Leave room for one extra tile until we hit 16
     // to imply that the player can keep going
-    const tile_slots = clamp(size(player.bonus_row) + 1, if landscape() then 8 else 6, ROWS * COLS)
+    const tile_slots = clamp(size(player.free_row) + 1, if landscape() then 8 else 6, ROWS * COLS)
     
     const tile_area_width = if landscape() then board_grid_size.x else (history_rect.size.x - 10)
     
@@ -184,38 +183,38 @@ def draw_bonus_row(board_pos)
     // Spacing between tiles
     const tile_spacing = tile_size.x + (if tile_size.x > 21 then 2 else (if tile_size.x > 12 then 1 else 0))
 
-    const last_entry = last_value(player.history.bonus) default {word: "", color: TILE_CENTER_SELECTED_COLOR}
+    const last_entry = last_value(player.history.free) default {word: "", color: TILE_CENTER_SELECTED_COLOR}
     let selection_length = size(last_entry.word)
     const selection_color = last_entry.color
 
     
-    let bonus_rect
+    let free_rect
     if landscape():
-        // Landscape: bonus over board
-        bonus_rect = {
+        // Landscape: free over board
+        free_rect = {
             corner: board_pos - xy(½ board_width, ½ board_width + tile_size.y + 14),
             size: xy(board_width, tile_size.y + 6)}
     else: 
-        // Portrait: bonus over reduced history
+        // Portrait: free over reduced history
         history_rect.size.y -= tile_size.y + 4
         
-        bonus_rect = {
+        free_rect = {
             corner: history_rect.corner + xy(1, history_rect.size.y),
             size: xy(history_rect.size.x - 2, tile_size.y + 6)}    
     
-    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size, player.background_color, selection_color)
+    draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size, player.background_color, selection_color)
     // Double wide outline
-    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size + 2, ∅, selection_color)
-    draw_rect(bonus_rect.corner + ½ bonus_rect.size, bonus_rect.size + 4, ∅, selection_color)
+    draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size + 2, ∅, selection_color)
+    draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size + 4, ∅, selection_color)
         
     // Draw tiles in the word
-    const start_x = bonus_rect.corner.x + ⌈½ tile_spacing⌉ + 2
-    const tile_y = bonus_rect.corner.y + ⌊½ bonus_rect.size.y⌋
+    const start_x = free_rect.corner.x + ⌈½ tile_spacing⌉ + 2
+    const tile_y = free_rect.corner.y + ⌊½ free_rect.size.y⌋
 
     let i = 0
     let removed_already = false
-    while i < size(player.bonus_row):
-        const tile = player.bonus_row[i]
+    while i < size(player.free_row):
+        const tile = player.free_row[i]
         tile.pos = xy(start_x + i * tile_spacing, tile_y)
         
         tile.selected = i < selection_length
@@ -240,11 +239,11 @@ def draw_bonus_row(board_pos)
 
 /* Returns `[grid_size, tile_size, gutter]` for the
    Free Mode board, which is shrunk in landscape mode. */    
-def get_bonus_round_board_dims():
+def get_free_round_board_dims():
     let tile_size = xy(TILE_EXTENT, TILE_EXTENT)
     
     if landscape():
-        // Make the board smaller to make room for the bonus row.
+        // Make the board smaller to make room for the free row.
         // The player may not notice as we blacked the screen
         // between rounds
         tile_size = ⌊85% tile_size⌋
@@ -257,12 +256,12 @@ def get_bonus_round_board_dims():
 
 
 /* Draw the board with used tiles shown as blank */
-def draw_bonus_round_board(pos)
+def draw_free_round_board(pos)
 & preserving_transform:
     // Duplicates some `player_update_board()` code because it has to draw
     // the board in a special way to make it smaller and have missing tiles
 
-    const [grid_size, tile_size, gutter] = get_bonus_round_board_dims()
+    const [grid_size, tile_size, gutter] = get_free_round_board_dims()
     const center_size = tile_size - gutter
     
     set_transform(pos)
@@ -316,7 +315,7 @@ def draw_instructions(board_pos):
 
 enter
 ────────────────────────────────────────────────────────────────────────
-//play_sound(bonus_round_sound)
+//play_sound(free_round_sound)
 todo("New enter sound")
 
 
@@ -342,14 +341,14 @@ local:
 
 
 if landscape():
-    // Move the board down to make room for the bonus row
+    // Move the board down to make room for the free row
     board_pos.y += 17
 
 // Draw the board with used tiles as blank
-draw_bonus_round_board(board_pos)
+draw_free_round_board(board_pos)
 
-// Draw bonus word construction area
-const history_rect = draw_bonus_row(board_pos)
+// Draw free word construction area
+const history_rect = draw_free_row(board_pos)
 
 history_update(player.history, history_rect)
 
@@ -359,7 +358,7 @@ local:
     def callback():
         todo("New leave sound")
         pop_mode() because "Button"
-    handle_bonus_button(callback)
+    handle_free_button(callback)
     
 
 if time_left ≤ 20/60:

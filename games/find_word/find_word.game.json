@@ -75,7 +75,7 @@
         "check_sprite": "check.sprite.json",
         "level_up_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.300",
+    "version": "0.301",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1162,7 +1162,7 @@
             "type": "boolean",
             "value": false
         },
-        "GLOBAL_BONUS_ROUND_TIME": {
+        "GLOBAL_free_ROUND_TIME": {
             "type": "number",
             "value": "18",
             "description": "In seconds. Zero = none",
@@ -1171,7 +1171,7 @@
             "format": "0",
             "quantum": 1
         },
-        "SOLO_BONUS_ROUND_TIME": {
+        "SOLO_free_ROUND_TIME": {
             "type": "number",
             "value": "25",
             "description": "In seconds. Zero = none",

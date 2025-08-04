@@ -50,7 +50,7 @@ if player.has_ability["Free Mode"]:
         board_deselect_all(player.board, player)
         push_mode(FreeMode) because "Button"
         
-    handle_bonus_button(callback)
+    handle_free_button(callback)
 
     
 
@@ -77,12 +77,12 @@ if time_left ≤ 0 or DEBUG_INTERMISSION:
 
 leave
 ────────────────────────────────────────────────────────────────────────
-for points in entry in player.history.bonus:        
+for points in entry in player.history.free:        
     player.score += points
 
 // Reset the scroll position because layout differs
 // from the main game during intermission
 play_sound(times_up_sound)
 sort(player.history.list, "points", true)
-sort(player.history.bonus, "points", true)
+sort(player.history.free, "points", true)
 player.history.scroll = 0

@@ -189,7 +189,7 @@ def draw_round_selection(pos, radius):
 
 
 /* For Play and FreeMode switch */
-def handle_bonus_button(callback):
+def handle_free_button(callback):
     const radius = 14
     const region = {
         pos: xy(radius + 4, SCREEN_SIZE.y - radius - 1),
@@ -197,18 +197,18 @@ def handle_bonus_button(callback):
         shape: "disk"}
         
     if touch.hover:
-        handle_bonus_button.selected = overlaps(region, touch.hover)
+        handle_free_button.selected = overlaps(region, touch.hover)
     else if player.using_gamepad:
-        handle_bonus_button.selected = false
+        handle_free_button.selected = false
         
-    if not handle_bonus_button.selected:
+    if not handle_free_button.selected:
         draw_disk(region.pos, radius, #EEE)
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
         font: leaderboard_font,
-        color: if handle_bonus_button.selected then #FFF else #EEE,
-        outline: if handle_bonus_button.selected then rgba(CURSOR_COLOR, 50%) else ∅,
+        color: if handle_free_button.selected then #FFF else #EEE,
+        outline: if handle_free_button.selected then rgba(CURSOR_COLOR, 50%) else ∅,
         text: if get_mode() == FreeMode then "Done" else "Free"})
     
     draw_sprite(if get_mode() == FreeMode then check_sprite[0][0] else free_mode_sprite[0][0], region.pos)
@@ -223,7 +223,7 @@ def handle_bonus_button(callback):
             z: 20,
             text: joy.prompt["(q)"]})
         
-    if handle_bonus_button.selected:
+    if handle_free_button.selected:
         draw_round_selection(region.pos, radius)
         
     if (mode_frames > 10 and 

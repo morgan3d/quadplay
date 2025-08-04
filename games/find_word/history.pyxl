@@ -8,13 +8,13 @@ def make_history():
         list: [],
         
         /* 
-          `[{text, word, points}, …]`. Recomputed by `update_bonus_row_list()`
-          in the `BonusPhase` mode.
+          `[{text, word, points}, …]`. Recomputed by `update_free_row_list()`
+          in the `freePhase` mode.
             
          `size(last_value().word)` is the number of tiles used in a word.
          `color_for_points(last_value().points)` is the color to use.
         */
-        bonus: [],
+        free: [],
         
         // Auto computed and overriden on new word spawn or resize,
         // but can be manually affected by the player
@@ -107,17 +107,17 @@ def history_draw(history, pos, max_height):
         for entry in history.list:
             history_draw_entry(entry)
         // Separator
-        if size(history.list) and size(history.bonus):
+        if size(history.list) and size(history.free):
             history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
             
-    if size(history.bonus):        
-        // Bonus list
-        for entry in history.bonus:
+    if size(history.free):        
+        // free list
+        for entry in history.free:
             history_draw_entry(entry)
     
     if get_mode() == GlobalIntermission:
         // Separator
-        if size(history.list) and size(history.bonus):
+        if size(history.list) and size(history.free):
             history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
             
         // Regular list second
@@ -149,10 +149,10 @@ def history_add(history, list_name, word, points):
         outline = lerp(color, #000, 25%)
         text_color = lerp(color, #FFF, 50%)
     
-    // Put bonus words in quotes to clarify that they
+    // Put free words in quotes to clarify that they
     // were not found during the regular game
     let text = q_decode(word)
-    if list_name == "bonus":
+    if list_name == "free":
         text = "«" + text + "»"
         
     push(history[list_name], {
@@ -190,7 +190,7 @@ def history_update(history, history_rect)
         draw_text({
             pos: history_rect.corner + history_rect.size - xy(2, 1),
             font: history_font,
-            text: "" + size(history.list) + "/" + player.board.word_count,
+            text: "Found " + size(history.list) + "/" + player.board.word_count,
             color: #DDD,
             outline: get_background(),
             x_align: "right",
@@ -210,7 +210,7 @@ def history_update(history, history_rect)
         // End drag
         drag_start.pos = ∅
     
-    const history_size = size(history.list) + size(history.bonus)
+    const history_size = size(history.list) + size(history.free)
     
     if not drag_start.pos and (not equivalent(SCREEN_SIZE, scroll_screen_size) or scroll_history_size ≠ history_size):
         scroll_screen_size = xy(SCREEN_SIZE)
