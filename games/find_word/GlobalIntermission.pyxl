@@ -1,10 +1,11 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("*** XP Awards for in-game awards ***")
+todo("** XP Awards for in-game awards **")
 todo("** Award for best bonus word **")
 todo("Change layout to make awards more central")
 todo("Favoriting UI + save")
 todo("Send emotes?!")
+todo("**Special sound when Moo or caf wins and award**")
 
 let prev_xp
 let prev_level
@@ -204,7 +205,10 @@ def draw_most_words_award(winner):
 /* Draw the ranked competitors and perform UI logic */
 def draw_leaderboard()
 & preserving_transform:
-    todo("Scroll")
+    todo("Manual vertical scroll")
+    
+    todo("**Scroll Bonus words in on leaderboard**")
+
     
     set_clip(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, SCREEN_SIZE.y - 22))
     set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 72))

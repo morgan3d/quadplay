@@ -31,10 +31,9 @@ for word in player.board.word_list:
     if not offensive[lowercase(word)] and not player.already_found[q_encode(word)]:
         push(unfound_word_array, word)
 
-
 // Sort from shortest to longest to emphasize impressive words
 sort(unfound_word_array, size_comparator)
-
+    
 // Now swap some of the other words towards the back so that
 // the player also feels like they could have gotten these
 if size(unfound_word_array) > 10:

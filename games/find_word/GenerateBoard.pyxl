@@ -29,12 +29,13 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 if mode_frames > 3:
-    player_reset_match(player, game_type, if DEBUG_INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅)
+    player_reset_match(player, game_type/*, if DEBUG_INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅ */)
     
-    if DEBUG_HISTORY or DEBUG_INTERMISSION:
+    if DEBUG_HISTORY or DEBUG_INTERMISSION or DEBUG_BONUS_ROUND:
         for i < 35:
-            const word = q_encode(player.board.word_list[i])
-            player_add_to_history(player, word, score_word(word))
+            const word = random_value(player.board.word_list)
+            if not player.already_found[word]:
+                player_add_to_history(player, word, score_word(word))
     
     if in_waiting_room:
         set_mode(WaitingRoom) because "No GLOBAL in progress"

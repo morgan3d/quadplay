@@ -1,8 +1,7 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
-
+todo("Option to enter bonus round at any time")
 todo("add bonus to unique words")
-todo("scroll Bonus words in on leaderboard")
 
 /* Tiles for the bonus word construction */
 let bonus_row = []
@@ -176,8 +175,10 @@ def draw_bonus_row(board_pos)
     
     let history_rect
     if landscape():
-        history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
+        // Make room for instructions
+        history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 28)}
     else:
+        // Make room for the bonus row
         history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 34)}
         
     // Choose tile size. Leave room for one extra tile until we hit 16
@@ -322,11 +323,12 @@ def draw_bonus_round_board(pos)
 
 
 def draw_instructions(board_pos):
-    const args = {text: "Choose tiles in any order for one bonus word", color: #CCC, shadow: #111}
+    const args = {text: "Choose tiles in any order to\nmake one bonus sequence", color: #CCC, shadow: #111, font: leaderboard_font}
     if landscape():
+        draw_text({…args, pos: xy(¼ SCREEN_SIZE.x, SCREEN_SIZE.y - 13), wrap_width: SCREEN_SIZE.x - 10})
     else:
         // Portrait
-        draw_text({…args, font: leaderboard_font, pos: ½(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y) + board_pos + xy(0, 100)), wrap_width: SCREEN_SIZE.x - 10})
+        draw_text({…args, pos: ½(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y) + board_pos + xy(0, 100)), wrap_width: SCREEN_SIZE.x - 10})
 
 
 def done():

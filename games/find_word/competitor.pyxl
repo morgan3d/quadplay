@@ -39,6 +39,7 @@ def competitor_is_friend(competitor):
     todo("Remove when we have a friending UI")
     // For now, friend all humans. Bots have a `base_ability` property
     return ((competitor.avatar.id == MOO_ID and player.has_ability["Friend Moo"]) or
+            (competitor.avatar.id == CAF_ID and player.has_ability["Friend caf"]) or    
             ((competitor ≠ player_competitor) and player.friends[competitor.avatar.id]) or
              (not competitor.avatar.base_ability))
         
@@ -253,23 +254,38 @@ last_hour: 1
                     if word_table[w]:
                         word_set[w] = 1
         
-        // Special case for moo, who always finds *all* cow-related words
-        if competitor.avatar.name == "Moo":
+        // Special case for Moo, who always finds *all* cow-related words
+        if competitor.avatar.id == MOO_ID:
             for word in MOOCABULARY:
                 if not word_set[word] and contains(player.board.word_list, word):
                     word_set[word] = 1
-                        
-        // Pick up a bunch of cheap words first
-        const short_word_length = if competitor.avatar.name == "Moo" then 3 else 4
-        let tries = 0
-        while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
-            ++tries
-            const word = random_value(player.board.word_list, match_rng)
-            if size(word) ≤ short_word_length:
-                maybe_add_word(word)
+                    
+        // Special case for caf, who sometimes finds a great word, finds all
+        // three-letter cow words, and otherwise finds nothing
+        if competitor.avatar.id == CAF_ID:
+            if ξ < 10% or DEBUG_CAF:                        
+                const word = player.board.word_list[random_integer(max(0, size(player.board.word_list) - 7), size(player.board.word_list) - 1)]
+                if word and not word_set[word]:
+                    // Find this word
+                    word_set[word] = 1
+                    
+            // look for a short cow word
+            for word in MOOCABULARY:
+                if size(word) ≤ 3 and not word_set[word] and contains(player.board.word_list, word):
+                    word_set[word] = 1
+                    
+        let tries = 0        
+        if competitor.avatar.id ≠ CAF_ID:
+            // Pick up a bunch of cheap words first
+            const short_word_length = if competitor.avatar.id == MOO_ID then 3 else 4
+            while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
+                ++tries
+                const word = random_value(player.board.word_list, match_rng)
+                if size(word) ≤ short_word_length:
+                    maybe_add_word(word)
     
         // Moo cannot find non-cow words greater than 4 letters    
-        if competitor.avatar.name ≠ "Moo":
+        if competitor.avatar.id ≠ MOO_ID and competitor.avatar.id ≠ CAF_ID:
             tries = 0
             while size(word_set) < words_found and tries < 2 words_found:
                 ++tries
@@ -298,6 +314,17 @@ last_hour: 1
                     first_hour: 0,
                     last_hour: 22},
                 MOO_ID))
+    
+    if (player.has_ability["See caf"] and ((hour + ⌊minute / 5⌋) mod 5 == 0)) or DEBUG_CAF:
+        push(competitor_array,
+            make_bot_competitor({
+                    name: "caf",
+                    sprite: avatar_sprite[33][22],
+                    base_ability: 0.0,
+                    short_word_preference: 0.80,
+                    first_hour: 0,
+                    last_hour: 23},
+                CAF_ID))
     
     let c = 0
     while size(competitor_array) < target_count and avatar_set[c]:       

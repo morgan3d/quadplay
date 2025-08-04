@@ -167,6 +167,8 @@ def _player_find_good_board(player, game_type):
     
     player.board.word_list = word_array
     player.board.word_count = size(word_array)
+    sort(player.board.word_list, size_comparator)
+    
     if DEBUG_BOARD_SEARCH:
         debug_print(join(player.board.word_list, ", "))
         debug_print("very_long_word_count =", very_long_word_count)
