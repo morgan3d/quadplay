@@ -356,6 +356,10 @@ def grant_new_abilities():
             def grant_ability():
                 play_sound(award_sound, false, ∅, ∅, 150%)
                 player.has_ability[name] = true
+                // Save new abilities
+                if not DEBUG_INTERMISSION:
+                    save_local("has_ability", player.has_ability)
+                
             
             if ability.description ≠ "SILENT":
                 todo("sound")
@@ -368,8 +372,5 @@ def grant_new_abilities():
                 // Grant the ability immediately because there is no notification
                 grant_ability()
     
-    // Save new abilities
-    if not DEBUG_INTERMISSION:
-        save_local("has_ability", player.has_ability)
 
     

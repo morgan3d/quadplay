@@ -160,7 +160,11 @@ def remove_tile_at_index(index):
 
 /* Draw the bonus word construction area. Returns the history rect
    because that is computed as a side effect of layout. */
-def draw_bonus_row(board_pos):
+def draw_bonus_row(board_pos)
+& preserving_transform:
+    // Move in front of the history
+    set_transform(∅, ∅, 2)
+    
     todo("Show empty tile slots on bonus row")
 
     const [board_grid_size, board_tile_size, board_gutter] = get_bonus_round_board_dims()
@@ -170,7 +174,7 @@ def draw_bonus_row(board_pos):
     if landscape():
         history_rect = {corner: xy(1, 5), size: xy(board_pos.x - ½ board_pixel_size().x - ¼ TILE_EXTENT + 1, SCREEN_SIZE.y - 8)}
     else:
-        history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 32)}
+        history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - 2, board_pos.y - ½ board_pixel_size().y - 34)}
         
     // Choose tile size. Leave room for one extra tile until we hit 16
     // to imply that the player can keep going

@@ -429,6 +429,7 @@ def player_reset_match(player, game_type, board_string default ∅):
     player.background_color = BOARD_COLOR
     remove_all(player.already_found)
     remove_all(player.history.list)
+    remove_all(player.history.bonus)
     player.history.scroll = 0
     player.history.scroll_history_size = 0
     
