@@ -186,15 +186,19 @@ def player_draw_score(player, board_pos)
             z: TILE_LETTER_Z})
             
     else:
-        let total_score = score
-        if get_mode() == BonusRound:
-            for points in entry in player.history.bonus:
-                total_score += points
-        
+        let score_text = format_number(score, "commas") + " pts"
+
+        let bonus_score = 0
+        for points in entry in player.history.bonus:
+            bonus_score += points
+
+        if player.has_ability["Bonus Round"]:
+            score_text = bonus_score + "+" + score_text
+                
         draw_text({
             pos: score_pos,
-            font: score_font,
-            text: format_number(total_score, "commas") + " pts",
+            font: if player.using_gamepad and size(score_text) > 9 then leaderboard_font else score_font,
+            text: score_text,
             color: #FFF,
             y_align: "center",
             x_align: "right"})

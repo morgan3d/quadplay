@@ -244,10 +244,13 @@ def encode_xp(xp):
         
 /* Used for lightly protecting the saved value from casual abuse via a checksum */
 def decode_xp(str):
+    if DEBUG_GRANT_ALL_ABILITIES:
+        return 20000
+    
     if type(str) ≠ "string":
         // Was not properly encoded
         return 0
-        
+    
     const xp = parse(split(str, ".")[1])
     if encode_xp(xp) == str:
         return xp

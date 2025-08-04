@@ -1,6 +1,9 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
-todo("Option to enter bonus round at any time")
+todo("Bonus round enter button/gamepad")
+todo("Bonus round exit button/gamepad")
+todo("Handle game ending in either mode")
+todo("Show bonus round points separately")
 
 /* Tiles for the bonus word construction */
 let bonus_row = []
