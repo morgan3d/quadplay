@@ -367,6 +367,7 @@ for letter at i in text:
 
 frame
 ────────────────────────────────────────────────────────────────────────
+maybe_connect_to_network()
 const time_left = end_time - frame_utc_now
 
 // Handle gamepad cursor movement

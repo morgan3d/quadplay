@@ -25,6 +25,7 @@
    */
 const competitor_array = []
 
+todo("*** Sort bonus word history ***")
 
 let player_competitor
 
@@ -279,6 +280,7 @@ last_hour: 1
         competitor.word_list = keys(word_set)
                 
         sort(competitor.word_list, size_comparator, true)
+        sort(competitor.bonus_list, size_comparator, true)
         
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
@@ -320,7 +322,7 @@ def make_player_competitor():
         
     for entry in player.history.bonus:
         push(competitor.bonus_list, entry.word)
-        
+    
     return competitor
 
 
@@ -384,7 +386,7 @@ def competitor_analyze(competitor_array):
     // Update the history rare fields for the player competitor
     // as these are used for display. We don't need this for others
     for entry in player.history.list:
-        if count[entry.word] <= rare_threshold:
+        if count[entry.word] ≤ rare_threshold:
             entry.rare = true
     
     competitor_assign_awards(competitor_array)

@@ -115,8 +115,6 @@ def history_draw(history, pos, max_height):
         for entry in history.bonus:
             history_draw_entry(entry)
         
-    todo("** Auto-scroll history when previous width exceeded so that bonus words/scores show properly **")
-
     return max_width
     
     
