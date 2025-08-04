@@ -23,5 +23,5 @@
 "Avatar (TODO) 6",17,"New avatars (TODO)","avatar_sprite[43][6].x_flipped"
 "Badge XP",18,"You now gain an XP bonus for every match award you win!","stats_sprite[0][0]"
 "Avatar (TODO) 7",19,"New avatars (TODO)","avatar_sprite[39][14].x_flipped"
-"Possible Words",20,"You can now see the total number of possible words while playing!","<default>"
+"Know Word Count",20,"You can now see the total number of possible words while playing!","<default>"
 "Avatar (TODO) 8",21,"New avatars (TODO)","avatar_sprite[10][2].x_flipped"

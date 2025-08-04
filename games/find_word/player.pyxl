@@ -310,19 +310,6 @@ def player_update(player, angle default 0°, allow_selection default false):
     const history_rect = get_history_rect()
         
     history_update(player.history, history_rect)
-
-    // Show the words left at the bottom of the history.
-    // use in_waiting_room instead of get_game_mode because
-    // all modes push into Rotate
-    if game_type == SOLO or in_waiting_room:
-        draw_text({
-            pos: history_rect.corner + history_rect.size - xy(2, 1),
-            font: history_font,
-            text: "" + size(history.list) + "/" + player.board.word_count,
-            color: #DDD,
-            x_align: "right",
-            y_align: "bottom"})
-    
     
     draw_timer(board_pos)
 

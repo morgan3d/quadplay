@@ -109,7 +109,7 @@ def history_draw(history, pos, max_height):
             history_draw_entry(entry)
         // Separator
         if size(history.list) and size(history.bonus):
-            history_draw_entry({text: "    ~    ", color: #888, reveal_frame: 0, emphasize_frame: 0})
+            history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
             
     if size(history.bonus):        
         // Bonus list
@@ -119,15 +119,14 @@ def history_draw(history, pos, max_height):
     if get_mode() == GlobalIntermission:
         // Separator
         if size(history.list) and size(history.bonus):
-            history_draw_entry({text: "    ~    ", color: #888, reveal_frame: 0, emphasize_frame: 0})
+            history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
             
         // Regular list second
         for entry in history.list:
             history_draw_entry(entry)
-
     
     return max_width
-    
+   
     
 
 /* Adds to `history[list_name]`. Returns the color to use for the selection. */
@@ -174,6 +173,7 @@ def history_add(history, list_name, word, points):
 def history_update(history, history_rect)
 & with drag_start, scroll_screen_size, scroll_history_size in history
 & preserving_transform:
+
     set_clip(history_rect)
     
     if not equivalent(SCREEN_SIZE, scroll_screen_size):
@@ -186,6 +186,16 @@ def history_update(history, history_rect)
     preserving_transform:
         set_transform(history_rect.corner - xy(history.scroll, 0))
         max_width = history_draw(history, pos, history_rect.size.y)
+
+    if player.has_ability["Know Word Count"] or in_waiting_room:
+        draw_text({
+            pos: history_rect.corner + history_rect.size - xy(2, 1),
+            font: history_font,
+            text: "" + size(history.list) + "/" + player.board.word_count,
+            color: #DDD,
+            outline: get_background(),
+            x_align: "right",
+            y_align: "bottom"})
 
     const overflow = pos.x + max_width - history_rect.size.x + 1
 

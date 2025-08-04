@@ -2,8 +2,6 @@ FreeMode
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
-todo("**Putting letters back doesn't work (can't repro) **")
-todo("Word count disappears")
 todo("Rename bonus -> free")
 
 def player_update_back_button(player, board_pos):
@@ -306,7 +304,7 @@ def draw_bonus_round_board(pos)
 def draw_instructions(board_pos):
     draw_text({
         text: "Choose tiles in any order",
-        pos: board_pos + (if landscape() then xy(-93, 46) else xy(0, 107)),
+        pos: board_pos + (if landscape() then xy(-107, 46) else xy(0, 107)),
         x_align: if landscape() then "right" else "center",
         y_align: "top",
         color: #EEE,

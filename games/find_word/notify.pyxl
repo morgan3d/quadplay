@@ -11,7 +11,7 @@ def notify(sprite, title, description, begin_callback default ∅, duration_seco
         begin_callback: begin_callback,
         // Real time of display
         first_shown:    ∅,
-        duration_seconds: duration_seconds})
+        duration_seconds: if DEBUG_REGRANT_ALL_ABILITIES then 1 else duration_seconds})
     
     
     

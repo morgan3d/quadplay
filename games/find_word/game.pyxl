@@ -195,13 +195,20 @@ def handle_bonus_button(callback):
         pos: xy(radius + 4, SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
-    
-    draw_disk(region.pos, radius, #FFF)
+        
+    if touch.hover:
+        handle_bonus_button.selected = overlaps(region, touch.hover)
+    else if player.using_gamepad:
+        handle_bonus_button.selected = false
+        
+    if not handle_bonus_button.selected:
+        draw_disk(region.pos, radius, #EEE)
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
-        color: #fff,
         font: leaderboard_font,
+        color: if handle_bonus_button.selected then #FFF else #EEE,
+        outline: if handle_bonus_button.selected then rgba(CURSOR_COLOR, 50%) else ∅,
         text: if get_mode() == FreeMode then "Done" else "Free"})
     
     draw_sprite(if get_mode() == FreeMode then check_sprite[0][0] else free_mode_sprite[0][0], region.pos)
@@ -215,12 +222,7 @@ def handle_bonus_button(callback):
             x_align: "left",
             z: 20,
             text: joy.prompt["(q)"]})
-    
-    if touch.hover:
-        handle_bonus_button.selected = overlaps(region, touch.hover)
-    else if player.using_gamepad:
-        handle_bonus_button.selected = false
-    
+        
     if handle_bonus_button.selected:
         draw_round_selection(region.pos, radius)
         
