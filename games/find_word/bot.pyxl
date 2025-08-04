@@ -218,7 +218,7 @@ last_hour: 1
                     
         let tries = 0        
         // Special case for caf, who sometimes finds a great word, finds all
-        // three-letter cow words, and otherwise finds nothing
+        // three-letter cow words, and with a low probability finds a terrible word
         if competitor.avatar.id == CAF_ID:
             caf_ai(word_set, player.board.word_list, match_rng)
         else:
@@ -302,3 +302,8 @@ def caf_ai(word_set, word_list, rng):
     for word in player.board.word_list:
         if contains(word, "CAF") and not word_set[word]:
             word_set[word] = 1
+            
+    if match_rng() < 50% and size(word_set) == 0 and size(word_list):
+        // Try to find another word so that caf doesn't complain too often
+        if not word_set[word_list[0]]:
+            word_set[word_list[0]] = 1
