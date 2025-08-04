@@ -70,7 +70,7 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "bonus_round_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.276",
+    "version": "0.277",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
