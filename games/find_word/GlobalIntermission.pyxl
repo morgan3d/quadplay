@@ -21,35 +21,6 @@ let selection_index = 0
 const STATS_BUTTON_INDEX = 1
 
 
-def level_up():
-    // Look for any abilities that should be unlocked
-    let any = false
-    for ability at name in ABILITY_TABLE:
-        if player.avatar.level ≥ ability.level:
-            any = true
-            def grant_ability():
-                play_sound(award_sound, false, ∅, ∅, 150%)
-                player.has_ability[name] = true
-            
-            if ability.description ≠ "SILENT":
-                todo("sound")
-                let sprite = player.avatar.sprite.x_flipped
-                if ability.sprite_name ≠ "<default>":
-                    sprite = evaluate_constant_expression(ability.sprite_name)
-                    
-                notify(sprite, name, ability.description, grant_ability)
-            else:
-                // Grant the ability immediately because there is no notification
-                grant_ability()
-    if not any:
-        play_sound(award_sound, false, ∅, 90%, 150%)
-
-    
-    // Save new abilities
-    if not DEBUG_INTERMISSION:
-        save_local("has_ability", player.has_ability)
-        
-
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
@@ -100,7 +71,12 @@ def draw_award_summary()
     const xp_hi = level_to_xp(level + 1)
     
     if frames > 1 and (draw_award_summary.last_level_displayed ≠ level):
-        level_up()
+        // Level up
+        if not grant_new_abilities():
+            // Play a sound if no new abilities so that there is still
+            // a "level up" effect
+            play_sound(award_sound, false, ∅, 90%, 150%)
+
     
     draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
     draw_award_summary.last_level_displayed = level

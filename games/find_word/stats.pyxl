@@ -344,4 +344,32 @@ def draw_stats_button(pos, selected, radius):
 
     return {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
 
+
+
+/* Returns true if any new abilities were granted */
+def grant_new_abilities():
+    // Look for any abilities that should be unlocked
+    let any = false
+    for ability at name in ABILITY_TABLE:
+        if player.avatar.level ≥ ability.level:
+            any = true
+            def grant_ability():
+                play_sound(award_sound, false, ∅, ∅, 150%)
+                player.has_ability[name] = true
+            
+            if ability.description ≠ "SILENT":
+                todo("sound")
+                let sprite = player.avatar.sprite.x_flipped
+                if ability.sprite_name ≠ "<default>":
+                    sprite = evaluate_constant_expression(ability.sprite_name)
+                    
+                notify(sprite, name, ability.description, grant_ability)
+            else:
+                // Grant the ability immediately because there is no notification
+                grant_ability()
+    
+    // Save new abilities
+    if not DEBUG_INTERMISSION:
+        save_local("has_ability", player.has_ability)
+
     
