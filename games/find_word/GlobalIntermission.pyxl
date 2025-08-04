@@ -7,6 +7,7 @@ todo("* Award for best free word *")
 todo("Change layout to make awards more central")
 todo("Favoriting UI + save")
 
+
 let prev_xp
 let prev_level
 let new_xp
@@ -41,11 +42,16 @@ def grant_badge_xp():
         
         todo("XP Award icons")
         const xp_value = XP_VALUE.badge_per_competitor * min(size(competitor_array) - 1, 15)
+        
+        def grant():
+            play_sound({sound: award_sound, playback_rate: 150%})
+            player.stats[today_date].xp += xp_value
+
         notify(
             player.avatar.sprite.x_flipped,
             "XP Award",
-            "+" + format_number(xp_value, "commas") + " XP for winning " + uppercase(title) + " in a " + size(competitor_array) + "-player match!")
-        player.stats[today_date].xp += xp_value
+            "+" + format_number(xp_value, "commas") + " XP for winning " + uppercase(title) + " in a " + size(competitor_array) + "-player match!",
+            grant)
 
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
@@ -379,6 +385,13 @@ else:
     player.avatar.level = xp_to_level(new_xp)
 
 if prev_level == player.avatar.level:
+    // See if caf has any commentary
+    for competitor in competitor_array:
+        if competitor.avatar.id == CAF_ID and competitor.score == 0:
+            def bleat():
+                play_sound({sound: moo_03_sound, pitch: 150%})          
+            notify(competitor.avatar.sprite, "caf", "`too hard!!!!!'", bleat)
+    
     // Not leveling up, give badge XP now
     grant_badge_xp()
 
@@ -399,7 +412,6 @@ else:
 
 prev_stage = stage
 first_frame_this_stage = 0
-
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -468,4 +480,11 @@ if player.has_ability["Stats Tracker"]:
 
 // Countdown
 update_countdown()
+
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+// Save again in case of XP awards
+stats_save(player.stats)
 
