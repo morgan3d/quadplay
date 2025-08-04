@@ -15,6 +15,7 @@
         best_rare_points
         best_rare_text
         word_list
+        bonus_word_list
         score
     }```
    
@@ -23,6 +24,7 @@
    
    */
 const competitor_array = []
+
 
 let player_competitor
 
@@ -48,12 +50,12 @@ def competitor_is_friend(competitor):
 def insert_bots(competitor_array, target_count):
     const avatar_set = [
 {
-name: "411",
-sprite: avatar_sprite[24][18],
-base_ability: 0.02,
-short_word_preference: 0.92,
-first_hour: 21,
-last_hour: 10
+name: "THX",
+sprite: avatar_sprite[13][4],
+base_ability: 0.22,
+short_word_preference: 0.16354711555742432,
+first_hour: 11,
+last_hour: 19
 },
 {
 name: "o_o",
@@ -62,14 +64,6 @@ base_ability: 0.02,
 short_word_preference: 0.92,
 first_hour: 17,
 last_hour: 7
-},
-{
-name: "THX",
-sprite: avatar_sprite[13][4],
-base_ability: 0.22,
-short_word_preference: 0.16354711555742432,
-first_hour: 11,
-last_hour: 19
 },
 {
 name: "AMS",
@@ -88,14 +82,6 @@ first_hour: 8,
 last_hour: 12
 },
 {
-name: "Bob",
-sprite: avatar_sprite[28][26],
-base_ability: 0.09596281621507843,
-short_word_preference: 0.6161487351396863,
-first_hour: 0,
-last_hour: 7
-},
-{
 name: "I♥U",
 sprite: avatar_sprite[3][20],
 base_ability: 0.02,
@@ -112,6 +98,14 @@ first_hour: 7,
 last_hour: 11
 },
 {
+name: "411",
+sprite: avatar_sprite[24][18],
+base_ability: 0.02,
+short_word_preference: 0.92,
+first_hour: 21,
+last_hour: 10
+},
+{
 name: "RLL",
 sprite: avatar_sprite[33][24],
 base_ability: 0.21281131767993983,
@@ -126,6 +120,14 @@ base_ability: 0.02,
 short_word_preference: 0.92,
 first_hour: 15,
 last_hour: 0
+},
+{
+name: "Bob",
+sprite: avatar_sprite[28][26],
+base_ability: 0.09596281621507843,
+short_word_preference: 0.6161487351396863,
+first_hour: 0,
+last_hour: 7
 },
 {
 name: "TTT",
@@ -212,7 +214,8 @@ last_hour: 1
     def make_bot_competitor(avatar, id):
         const competitor = {
             avatar: avatar,
-            score: 0}
+            score: 0,
+            bonus_list: []}
     
         competitor.avatar.id = id
     
@@ -309,10 +312,14 @@ def make_player_competitor():
     const competitor = {
         avatar: player.avatar,
         score: player.score,
-        word_list: []}
+        word_list: [],
+        bonus_list: []}
     
     for entry in player.history.list:
         push(competitor.word_list, entry.word)
+        
+    for entry in player.history.bonus:
+        push(competitor.bonus_list, entry.word)
         
     return competitor
 

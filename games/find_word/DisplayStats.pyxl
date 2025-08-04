@@ -2,8 +2,6 @@ DisplayStats
 ════════════════════════════════════════════════════════════════════════
 const WIDTH = 224
 
-todo("* Level progression: Test player.has_ability[] in game for stats *")
-
 /*
  - `caption`  Left column value
  - `lifetime` Center column value
