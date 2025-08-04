@@ -218,7 +218,9 @@ def draw_free_row(board_pos)
         tile.selected = i < selection_length
         tile_draw(tile, tile.pos, false, 0°, selection_color, tile_size, true)
         
-        if not removed_already and touch.pressed_a and overlaps(touch.xy, {pos: tile.pos, size: tile_size}):
+        // Use touch.a instead of touch.pressed_a so that the player can swipe across
+        // to remove all
+        if not removed_already and touch.a and overlaps(touch.xy, {pos: tile.pos, size: tile_size}):
             --selection_length
             removed_already = true
             remove_tile_at_index(i)
