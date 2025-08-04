@@ -33,7 +33,7 @@ def grant_new_abilities():
                     save_local("has_ability", player.has_ability)
                 
             
-            if ability.description ≠ "SILENT" and not DEBUG_GRANT_ALL_ABILITIES:
+            if ability.description ≠ "SILENT" and not DEBUG_REGRANT_ALL_ABILITIES:
                 let sprite = player.avatar.sprite.x_flipped
                 if ability.sprite_name ≠ "<default>":
                     sprite = evaluate_constant_expression(ability.sprite_name)
