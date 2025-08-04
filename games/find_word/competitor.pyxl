@@ -317,7 +317,7 @@ last_hour: 1
                     last_hour: 22},
                 MOO_ID))
     
-    if (player.has_ability["See caf"] and ((hour + ⌊minute / 5⌋) mod 5 == 0)) or DEBUG_CAF:
+    if player.has_ability["See caf"]:// and ((hour + ⌊minute / 5⌋) mod 5 == 0)) or DEBUG_CAF:
         push(competitor_array,
             make_bot_competitor({
                     name: "caf",
