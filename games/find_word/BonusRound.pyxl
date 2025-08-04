@@ -1,7 +1,6 @@
 BonusRound
 ════════════════════════════════════════════════════════════════════════
 todo("Option to enter bonus round at any time")
-todo("add bonus to unique words")
 
 /* Tiles for the bonus word construction */
 let bonus_row = []

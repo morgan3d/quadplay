@@ -12,6 +12,8 @@
         longest_text
         best_word_points
         best_word_text
+        best_bonus_word_points
+        best_bonus_word_text
         best_rare_points
         best_rare_text
         word_list
@@ -367,6 +369,15 @@ def competitor_analyze(competitor_array):
         // looks-like thwarting
         if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
+
+        competitor.best_bonus_word_points = 0
+        competitor.best_bonus_word_text = ""
+        for word in competitor.bonus_list:
+            const points = score_word(word)
+            if points > competitor.best_bonus_word_points:
+                competitor.best_bonus_word_points = points
+                competitor.best_bonus_word_text = q_decode(word)
+            
 
         competitor.best_word_points = 0
         competitor.longest_size = 0

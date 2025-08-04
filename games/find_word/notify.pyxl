@@ -1,7 +1,5 @@
 /* Popup notification system. Only shows one at a time and enqueues the rest. */
 
-todo("**Fix bonus explanation notification too long**")
-
 // The notification at the front of the queue is currently displayed
 const _notification_queue = []
 

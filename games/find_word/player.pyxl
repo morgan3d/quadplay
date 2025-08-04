@@ -2,11 +2,7 @@
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
-
-    const has_ability = load_local("has_ability") default {}
-
-    todo("Clean outdated abilities")
-
+        
     return {
         board: make_board(),
         
@@ -18,7 +14,7 @@ def make_player():
         // We do this instead of testing the player level so that during playtesting
         // save files don't have to be updated; instead upgrades are sticky
         // and automatically appear on level up retroactively
-        has_ability: has_ability,
+        has_ability: ability_load(),
         
         // Maps player GUIDs to their most recent name.
         // The names are only for debugging.

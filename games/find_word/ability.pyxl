@@ -3,7 +3,6 @@
 def ability_load():
     const has_ability = load_local("has_ability") default {}
 
-    remove_
     // Remove obsolete abilities from the save game
     // that have been removed from the game
     let removed_any = false

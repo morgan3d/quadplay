@@ -5,7 +5,6 @@ todo("** Award for best bonus word **")
 todo("Change layout to make awards more central")
 todo("Favoriting UI + save")
 todo("Send emotes?!")
-todo("**Special sound when Moo or caf wins and award**")
 
 let prev_xp
 let prev_level
@@ -136,15 +135,23 @@ def draw_award_summary()
     
 
 
-def maybe_player_award_sound(winner):
-    if player_competitor == winner and stage ≠ prev_stage:
+/* Special sounds for player, Moo, and caf */
+def maybe_play_award_sound(winner):
+    if stage == prev_stage: return
+
+    if player_competitor == winner:
         play_sound(award_sound)
+    else if winner.avatar.id == MOO_ID:
+        play_sound(moo_00_sound)
+    else if winner.avatar.id == CAF_ID:
+        play_sound({sound: moo_01_sound, playback_rate: 200%})
+
 
 
 
 /* Used for best_word, longest, The title is used to compute the field */
 def draw_word_award(title, winner):
-    maybe_player_award_sound(winner)
+    maybe_play_award_sound(winner)
         
     const field = replace(lowercase(title), {" ": "_"})
     const text = winner[field + "_text"]
@@ -180,7 +187,7 @@ def draw_award_background(rect, field, color)
 
 
 def draw_most_words_award(winner):
-    maybe_player_award_sound(winner)
+    maybe_play_award_sound(winner)
     ++draw_most_words_award.frames
     player.board.selection_color = #E1B
 

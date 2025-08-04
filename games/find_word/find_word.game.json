@@ -12,6 +12,7 @@
         "board.pyxl",
         "history.pyxl",
         "stats.pyxl",
+        "ability.pyxl",
         "avatar.pyxl",
         "notify.pyxl",
         "player.pyxl",
@@ -68,9 +69,11 @@
         "stats_sprite": "stats.sprite.json",
         "xp_sound": "quad://sounds/powerup-02.sound.json",
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
-        "bonus_round_sound": "quad://sounds/good-02.sound.json"
+        "bonus_round_sound": "quad://sounds/good-02.sound.json",
+        "moo_00_sound": "moo-00.sound.json",
+        "moo_01_sound": "moo-01.sound.json"
     },
-    "version": "0.287",
+    "version": "0.290",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

@@ -7,6 +7,17 @@
  
  The full boggle board contains about 57M possible 
  sequences (nodes in the search tree).
+ 
+ In this game:
+ 
+ - "word" as a variable name means an all-caps, Q-encoded word (Q = Qu)
+ - "text" as a variable name is something that can be shown to the player
+ - In-game text representing a dictionary play word is shown in all caps
+ - In-game letter tiles are capital letters, except for "Qu" 
+ - All other text is mixed case, except for: logos, avatar names,
+   and the bonus round animation
+ - The primary emphasis color is #E1B pink
+ - The primary button/cursor/UI selection color is green
 */
 
 /* Longest possible word */
@@ -18,12 +29,12 @@ set_random_seed()
  
    - No capitalized words
    - No words shorter than `MIN_WORD_LENGTH`
-   - No words with "q" not followed by "u"
+   - No words with "Q" not followed by "U"
    - All words capitalized
-   - All "qu" replaced with "q", so that it counts as a single letter/tile
+   - All "QU" replaced with "Q", so that it counts as a single letter/tile
      for comparison purposes
      
-   Use `q_decode()` for expanding the "q" back to "qu" before displaying
+   Use `q_decode()` for expanding the "Q" back to "QU" before displaying
    to the user.
 */
 const dictionary = {}

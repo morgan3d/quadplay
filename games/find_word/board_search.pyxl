@@ -1,3 +1,57 @@
+/* Returns an alphabetically-sorted array of all possible dictionary 
+   words of `MIN_WORD_LEN` on this board. The words are q-encoded 
+   and are uppercase. */
+def board_find_all_words(board):
+    const before = now()
+
+    // Words discovered during n-gram search
+    const word_set = {}
+    
+    // This produces the 5-grams used for filtering and in the process
+    // also finds all words of length 3, 4, 5.
+    const quintgram_set = _board_ngram_set(board, 5, word_set)
+
+    // Used for performance profiling
+    let long_count = 0
+    const short_count = size(word_set)
+    
+    // Search all words of length > 5 in the dictionary for likely hits
+    for word in dictionary_array:
+        const k = size(word)
+        
+        if (k > 5 and
+            // 6+-letter word prefix
+            quintgram_set[slice(word, 0, 5)] and
+         
+            // 6+-letter word suffix
+            (k < 6 or quintgram_set[slice(word, k - 5)]) and
+
+            // 8+-letter word middle
+            (k < 8 or quintgram_set[slice(word, 2, 7)])):
+
+            // This long word is very likely to appear, but we
+            // must validate it.
+            if _board_validate_word(board, word):
+                word_set[word] = 1
+            ++long_count
+
+    /*    
+    debug_print("\nAfter n-gram filtering:\n", 
+        short_count, "words with 3-5 letters\n",
+        long_count, "likely words with 6+ letters\nAfter validation:\n",
+        short_count, "words with 3-5 letters\n",
+        size(word_set) - short_count, "actual words with 6+ letters\n")
+    */
+
+    if DEBUG_BOARD_SEARCH:
+        debug_print(round((now() - before) * 1000), "ms to find all", size(word_set), "words")
+    
+    const word_array = keys(word_set)
+    sort(word_array)
+    return word_array
+
+
+
 /* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
 def _player_find_good_board(player, game_type):
     let done = false
