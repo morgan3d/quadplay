@@ -351,7 +351,7 @@ def grant_new_abilities():
     // Look for any abilities that should be unlocked
     let any = false
     for ability at name in ABILITY_TABLE:
-        if player.avatar.level ≥ ability.level:
+        if player.avatar.level ≥ ability.level and not contains(name, "TODO"):
             any = true
             def grant_ability():
                 play_sound(award_sound, false, ∅, ∅, 150%)

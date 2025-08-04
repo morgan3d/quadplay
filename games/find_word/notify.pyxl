@@ -84,7 +84,7 @@ def update_notifications()
             draw_sprite({
                 sprite: notification.sprite,
                 pos: xy(-½ rect.size.x + padding + ½ sprite_width, 0),
-                override_color: if equivalent(notification.sprite.mean_color, #FFF) then #000 else ∅,
+                override_color: if equivalent(rgb(notification.sprite.mean_color), #FFF) then #000 else ∅,
                 scale: sprite_width / notification.sprite.size.x})
     
             draw_text({
