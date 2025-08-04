@@ -262,22 +262,12 @@ last_hour: 1
                 if not word_set[word] and contains(player.board.word_list, word):
                     word_set[word] = 1
                     
+        let tries = 0        
         // Special case for caf, who sometimes finds a great word, finds all
         // three-letter cow words, and otherwise finds nothing
         if competitor.avatar.id == CAF_ID:
-            if ξ < 10% or DEBUG_CAF:                        
-                const word = player.board.word_list[random_integer(max(0, size(player.board.word_list) - 7), size(player.board.word_list) - 1)]
-                if word and not word_set[word]:
-                    // Find this word
-                    word_set[word] = 1
-                    
-            // look for a short cow word
-            for word in MOOCABULARY:
-                if size(word) ≤ 3 and not word_set[word] and contains(player.board.word_list, word):
-                    word_set[word] = 1
-                    
-        let tries = 0        
-        if competitor.avatar.id ≠ CAF_ID:
+            caf_ai(word_set, player.board.word_list)
+        else:
             // Pick up a bunch of cheap words first
             const short_word_length = if competitor.avatar.id == MOO_ID then 3 else 4
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
@@ -317,7 +307,7 @@ last_hour: 1
                     last_hour: 22},
                 MOO_ID))
     
-    if player.has_ability["See caf"]:// and ((hour + ⌊minute / 5⌋) mod 5 == 0)) or DEBUG_CAF:
+    if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG_CAF:
         push(competitor_array,
             make_bot_competitor({
                     name: "caf",
@@ -333,6 +323,27 @@ last_hour: 1
         const competitor = make_bot_competitor(avatar_set[c], "BOT_" + c)
         ++c
         push(competitor_array, competitor)
+
+
+
+/* Special case AI for the caf bot. `word_list` is the input,
+   `word_set` is the output found words */
+def caf_ai(word_set, word_list):
+    if ξ < 10% or DEBUG_CAF:            
+        const word = word_list[random_integer(max(0, size(word_list) - 6), size(word_list) - 1)]
+        if word and not word_set[word]:
+            // Find this word
+            word_set[word] = 1
+            
+    // Look for short cow words
+    for word in MOOCABULARY:
+        if size(word) ≤ 3 and not word_set[word] and contains(word_list, word):
+            word_set[word] = 1
+
+    // Find all words with "CAF" as a substring
+    for word in player.board.word_list:
+        if contains(word, "CAF") and not word_set[word]:
+            word_set[word] = 1
 
 
 

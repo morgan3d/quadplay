@@ -102,7 +102,6 @@ def history_draw(history, pos, max_height):
         max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
 
-
     if get_mode() ≠ GlobalIntermission:
         // Regular list first
         for entry in history.list:
@@ -187,7 +186,7 @@ def history_update(history, history_rect)
         set_transform(history_rect.corner - xy(history.scroll, 0))
         max_width = history_draw(history, pos, history_rect.size.y)
 
-    if player.has_ability["Know Word Count"] or in_waiting_room:
+    if (player.has_ability["Know Word Count"] or in_waiting_room):
         draw_text({
             pos: history_rect.corner + history_rect.size - xy(2, 1),
             font: history_font,

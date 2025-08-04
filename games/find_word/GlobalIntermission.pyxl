@@ -408,15 +408,6 @@ if stage == STAGE.SUMMARY and α > 0%
                 pos: pos,
                 text: letter,
                 color: history_board_color})
-
-draw_text({
-    font: history_font, 
-    pos: history_rect.corner + history_rect.size - xy(5, 2),
-    text: "Found " + size(player.history.list) + "/" + player.board.word_count,
-    x_align: "right",
-    y_align: "bottom",
-    outline: #333,
-    color: #CCC})
     
 draw_awards()
 

@@ -1,5 +1,5 @@
-/* See `xp_to_level()`. Chosen to make Level 20 ~= 25k XP */
-const LEVEL_EXPONENT = 0.75
+/* See `xp_to_level()`. Higher is easier to level up. Chosen to make Level 20 ~= 25k XP */
+const LEVEL_EXPONENT = 0.72
 
 /* See `xp_to_level()` */
 const LEVEL_DIVISOR  = 500
@@ -44,6 +44,7 @@ def level_to_xp(level):
     else:
         return floor((level - 1)^(1 / LEVEL_EXPONENT), ½) * LEVEL_DIVISOR
 
+
 /*
 // Testing levels
 for i < 20:
@@ -52,7 +53,13 @@ for i < 20:
     debug_print(level, ":", level_to_xp(level), "≤", xp, "<", level_to_xp(level + 1))
     assert(level_to_xp(level) ≤ xp)
     assert(xp < level_to_xp(level + 1)) 
-*/
+    */
+/*
+local:
+    for level < 25:
+        debug_print(level, level_to_xp(level))
+        */
+
 
 /* Assumes the input is a list of q-encoded, all-caps words. 
    Returns a string packing them into a form that serializes
