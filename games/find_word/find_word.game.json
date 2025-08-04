@@ -73,7 +73,7 @@
         "moo_00_sound": "moo-00.sound.json",
         "moo_01_sound": "moo-01.sound.json"
     },
-    "version": "0.292",
+    "version": "0.293",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
