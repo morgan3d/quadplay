@@ -75,7 +75,7 @@
         "check_sprite": "check.sprite.json",
         "level_up_sound": "quad://sounds/good-02.sound.json"
     },
-    "version": "0.297",
+    "version": "0.298",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

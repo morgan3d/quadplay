@@ -13,7 +13,7 @@ def notify(sprite, title, description, begin_callback default ∅, duration_seco
         first_shown:    ∅,
         duration_seconds: if DEBUG_REGRANT_ALL_ABILITIES then 1 else duration_seconds})
     
-    
+
     
 def notifications_pending():
     return size(_notification_queue)    
