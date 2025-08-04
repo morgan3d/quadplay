@@ -73,9 +73,10 @@
         "moo_01_sound": "moo-01.sound.json",
         "free_mode_sprite": "free.sprite.json",
         "check_sprite": "check.sprite.json",
-        "level_up_sound": "quad://sounds/good-02.sound.json"
+        "level_up_sound": "quad://sounds/good-02.sound.json",
+        "blip_alt_sound": "quad://sounds/blip-17.sound.json"
     },
-    "version": "0.301",
+    "version": "0.302",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -99,7 +100,12 @@
         "NETWORK_CONNECT_MAX_DELAY_SECONDS": {
             "type": "number",
             "value": "3",
-            "description": " Within the NETWORK_CONNECT_TIME window, what is the maximum time to randomly delay so that all nodes aren't competing to connect at exactly the same moment."
+            "description": "Within the NETWORK_CONNECT_TIME window, what is the maximum time to randomly delay so that all nodes aren't competing to connect at exactly the same moment."
+        },
+        "TILE_HOLE_COLOR": {
+            "type": "rgb",
+            "value": "#AAA",
+            "description": "Color of the hole left when a tile is used in Free Mode"
         },
         "TILE_EXTENT": {
             "type": "number",

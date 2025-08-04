@@ -151,8 +151,6 @@ def draw_free_row(board_pos)
     // Move in front of the history
     set_transform(∅, ∅, 2)
     
-    todo("Show empty tile slots on free row")
-
     const [board_grid_size, board_tile_size, board_gutter] = get_free_round_board_dims()
     const board_width = board_grid_size.x + ¼ board_tile_size.x
     
@@ -227,6 +225,10 @@ def draw_free_row(board_pos)
         else:
             ++i
             
+    for size(player.free_row) ≤ i < tile_slots:
+        draw_rect(xy(start_x + i * tile_spacing, tile_y), tile_size - 2, TILE_HOLE_COLOR)
+        
+            
     // Draw the connectors between letters if it is a word. Intentionally
     // do not draw the selected-but-not-a-word line, as it makes them not 
     // look like tiles any more
@@ -291,7 +293,7 @@ def draw_free_round_board(pos)
             if not tile.used:
                 tile_draw(tile, tile_pos, is_cursor_tile, 0°, #CCC, tile_size)
             else:
-                draw_rect(tile_pos, xy(35, 35), 90% player.background_color)
+                draw_rect(tile_pos, xy(35, 35), TILE_HOLE_COLOR)
                 
                 // Cursor on used tile: border only
                 if is_cursor_tile:
@@ -315,8 +317,7 @@ def draw_instructions(board_pos):
 
 enter
 ────────────────────────────────────────────────────────────────────────
-//play_sound(free_round_sound)
-todo("New enter sound")
+play_sound({sound: blip_alt_sound, pitch: 75%, volume: 80%})
 
 
 frame
@@ -356,7 +357,7 @@ draw_instructions(board_pos)
 
 local:
     def callback():
-        todo("New leave sound")
+        play_sound({sound: blip_alt_sound, volume: 80%})
         pop_mode() because "Button"
     handle_free_button(callback)
     
