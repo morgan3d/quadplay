@@ -1,0 +1,45 @@
+/* Manage player abilities. See also `ABILITY_TABLE` */
+
+def ability_load():
+    const has_ability = load_local("has_ability") default {}
+
+    remove_
+    // Remove obsolete abilities from the save game
+    // that have been removed from the game
+    let removed_any = false
+    for key in keys(has_ability):
+        if not ABILITY_TABLE[key]:
+            removed_any = true
+            remove_key(has_ability, key)
+    
+    if removed_any:
+        save_local("has_ability", has_ability)
+        
+    return has_ability
+
+
+
+/* Returns true if any new abilities were granted */
+def grant_new_abilities():
+    // Look for any abilities that should be unlocked
+    let any = false
+    for ability at name in ABILITY_TABLE:
+        if not player.has_ability[name] and player.avatar.level ≥ ability.level and not contains(name, "TODO"):
+            any = true
+            def grant_ability():
+                play_sound(award_sound, false, ∅, ∅, 150%)
+                player.has_ability[name] = true
+                // Save new abilities
+                if not DEBUG_INTERMISSION:
+                    save_local("has_ability", player.has_ability)
+                
+            
+            if ability.description ≠ "SILENT":
+                let sprite = player.avatar.sprite.x_flipped
+                if ability.sprite_name ≠ "<default>":
+                    sprite = evaluate_constant_expression(ability.sprite_name)
+                    
+                notify(sprite, name, ability.description, grant_ability)
+            else:
+                // Grant the ability immediately because there is no notification
+                grant_ability()
