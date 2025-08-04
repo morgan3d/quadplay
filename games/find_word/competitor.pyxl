@@ -37,7 +37,7 @@ let most_words_winner
 def competitor_is_friend(competitor):
     todo("Remove when we have a friending UI")
     // For now, friend all humans. Bots have a `base_ability` property
-    return ((competitor.avatar.id == MOO_ID) or
+    return ((competitor.avatar.id == MOO_ID and player.has_ability["Friend Moo"]) or
             ((competitor ≠ player_competitor) and player.friends[competitor.avatar.id]) or
              (not competitor.avatar.base_ability))
         
@@ -204,6 +204,7 @@ last_hour: 1
     
     // Used for determining which players are active
     const hour = utc_time().hours
+    const minute = utc_time().minute
     
     // Shift everybody's ability by this amount
     const match_shift = match_rng(-10%, 0%)
@@ -282,17 +283,18 @@ last_hour: 1
         return competitor
     
     // Moo is a special case
-    todo("ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if it is an odd 10 minute interval right now")
-    
-    push(competitor_array,
-        make_bot_competitor({
-                name: "Moo",
-                sprite: avatar_sprite[34][22],
-                base_ability: 0.1,
-                short_word_preference: 0.80,
-                first_hour: 0,
-                last_hour: 22},
-            MOO_ID))
+    // ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if
+    // it is an odd 10 minute interval right now    
+    if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2):
+        push(competitor_array,
+            make_bot_competitor({
+                    name: "Moo",
+                    sprite: avatar_sprite[34][22],
+                    base_ability: 0.1,
+                    short_word_preference: 0.80,
+                    first_hour: 0,
+                    last_hour: 22},
+                MOO_ID))
     
     let c = 0
     while size(competitor_array) < target_count and avatar_set[c]:       

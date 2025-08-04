@@ -314,7 +314,22 @@ String
 
 `ends_with(string, target)`
 : Returns true if `string` ends with the substring `target`.
-  
+
+`evaluate_constant_expression(expr)`
+: Parse the code expression `expr` and evaluate it. This is useful for embedding <quadplay/> constant literals
+  and constant expressions inside of data files. For example, to have a CSV file with a 
+  table that contains references to sprites. Creates an error if parsing fails.
+
+  Handles:
+   
+   - Simple constant literals such as `true`, `3`, `nil`, `"hi"`, `#E1B`
+   - Literal object or array definitions that do not reference assets or game constants.
+     For example, `{name: "Electra", health: 100}`
+   - identifier expressions from ASSET or CONSTANT that use only strings, identifiers, and integers.
+     For example, `spritesheet[2][1]`. Does not allow mixing with other literals.
+
+  Does not support arithmetic or other operators, only literals.
+
 `extended(a, b)`
 : Returns a new string that is `a + b`.
 

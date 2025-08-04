@@ -2904,6 +2904,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$navigator          = navigator;
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
+        QRuntime.evaluate_constant_expression = evaluate_constant_expression;
 
         // Conduit API is entirely implemented outside of the runtime files
         QRuntime.make_conduit        = conduitNetwork.make_conduit;
@@ -3630,6 +3631,94 @@ function redefineReference(environment, key, globalReference) {
     //console.dir(identifier);
     Object.defineProperty(environment, key, descriptor);
     Object.defineProperty(environment.CONSTANTS, key, descriptor);
+}
+
+
+/**
+   Parses identifier expressions such as "foo.bar[0]" or 'foo["bar"].baz'.
+   Returns {base, modifiers} where modifiers is [{op, expr}].
+   op is '[' or '.', expr is a string, integer, or identifier (string).
+ */
+function parseIdentifierExpression(input) {
+    const baseMatch = input.match(/^\s*([^\s\[\]"\()\.]+)/);
+    if (! baseMatch) { throw "Cannot parse"; }
+    
+    const base = baseMatch[1];
+    const modifier_array = [];
+    let remaining = input.slice(baseMatch[0].length);
+    
+    while (remaining.length > 0) {
+        const modMatch = remaining.match(/^\s*(\[("([^"]*)"|(\d+))\]|\.([^\s\[\]"\()\.]+))/);
+        if (! modMatch) { break; }
+
+        modifier_array.push({
+            op: modMatch[1][0] === '[' ? '[' : '.',
+            expr: modMatch[3] ? modMatch[3] : 
+                        modMatch[4] ? parseInt(modMatch[4]) : modMatch[5]
+        });
+        remaining = remaining.slice(modMatch[0].length);
+    }
+    
+    return {base, modifier_array};
+}
+
+
+/* 
+   Handles:
+   
+   - simple constant literals
+   - literal object or array definitions (that do not reference ASSET or CONSTANT values)
+   - identifier expressions from ASSET or CONSTANT that use only strings, identifiers, and integers
+
+For example, these are legal inputs:
+``````````````````````````````````````
+   "nil" 
+   "foo.bar[\"hello\"]"
+   "#E1B"
+   "32"
+   "true"
+   "spritesheet[1][7]"
+``````````````````````````````````````
+ */
+function evaluate_constant_expression(expr) {
+    console.assert(QRuntime.ASSETS);
+    expr = expr.trim();
+
+    // Color literals
+    if (expr[0] === '#') {
+        return parseHexColor(json.value.substring(1));
+    }
+
+    // Try to parse as a simple constant
+    const {result, next, isError} = $parse(expr);
+
+    // Trivial case of a simple constant
+    if (! isError) {
+        return result;
+    }
+
+    // Constant or asset. Parse the expression
+    const {base, modifier_array} = parseIdentifierExpression(expr);
+    
+    console.log(base, modifier_array);
+
+    let value;
+    if (QRuntime.ASSETS.hasOwnProperty(base)) {
+        value = QRuntime.ASSETS[base];
+    } else if (QRuntime.CONSTANTS.hasOwnProperty(base)) {
+        value = QRuntime.CONSTANTS[base];
+    } else {
+        throw "Illegal expresion";
+    }
+
+    for (const modifier of modifier_array) {
+        if (value === undefined) {
+            throw "Cannot evaluate proprties of a nil asset or constant";
+        } else {
+            value = value[modifier.expr];
+        }
+    }
+    return value;
 }
 
 

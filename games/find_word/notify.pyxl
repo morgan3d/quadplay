@@ -1,16 +1,12 @@
 /* Popup notification system. Only shows one at a time and enqueues the rest. */
 
-todo("**** Popup System ****")
-
 // The notification at the front of the queue is currently displayed
 const _notification_queue = []
 
-def notify(sprite, title, description, sound default ∅, begin_callback default ∅, duration_seconds default 5, sprite_scale default 200%):
+def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 5):
     push(_notification_queue, {
         sprite:         sprite,
-        sprite_scale:   sprite_scale,
         title:          title,
-        sound:          sound,
         description:    description,
         begin_callback: begin_callback,
         // Real time of display
@@ -27,6 +23,7 @@ def notifications_pending():
 /* Hook to process notification animation every frame */
 def update_notifications()
 & preserving_transform:
+    const BACKGROUND_COLOR = #EEE
     const TITLE_FONT       = score_font
     const DESCRIPTION_FONT = leaderboard_font
 
@@ -42,13 +39,11 @@ def update_notifications()
 
     // Peek the queue
     const notification = _notification_queue[0]
-    with first_shown, duration_seconds, sprite, sprite_scale, sound, begin_callback in notification:
+    with first_shown, duration_seconds, sprite, begin_callback in notification:
         const time_now = now()
         
         if first_shown == ∅:
             first_shown = time_now
-            if sound:
-                play_sound(sound)
             if begin_callback():
                 begin_callback()
 
@@ -76,17 +71,21 @@ def update_notifications()
         draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
 
         // Window
-        draw_rect(rect.pos, rect.size, #FFF, #E1B)
+        draw_rect(rect.pos, rect.size, BACKGROUND_COLOR, #E1B)
         draw_rect(rect.pos, rect.size - 2, ∅, #E1B)
         draw_rect(rect.pos, rect.size + 2, ∅, #000)
         
         if α == 100%:
             // Show contents when the window is full size
-            const sprite_width = sprite.size.x * sprite_scale
+            const sprite_width = 32
             const padding = 7
             const text_width = rect.size.x - sprite_width - 3 padding 
 
-            draw_sprite(notification.sprite, xy(-½ rect.size.x + padding + ½ sprite_width, 0), ∅, notification.sprite_scale)
+            draw_sprite({
+                sprite: notification.sprite,
+                pos: xy(-½ rect.size.x + padding + ½ sprite_width, 0),
+                override_color: if equivalent(notification.sprite.mean_color, #FFF) then #000 else ∅,
+                scale: sprite_width / notification.sprite.size.x})
     
             draw_text({
                 text: notification.title,
@@ -98,11 +97,10 @@ def update_notifications()
 
             draw_text({
                 text: notification.description,
-                pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
+                pos: xy(-½ rect.size.x + sprite_width + 2 padding, -1),
                 font: DESCRIPTION_FONT,
                 color: #000,
                 wrap_width: text_width,
                 x_align: "left",
                 y_align: "top"})
-            todo("Text")
 

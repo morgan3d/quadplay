@@ -2253,8 +2253,8 @@ function regexIndexOf(text, re, i) {
 }
 
 
-/** Parse the JSON value starting at character i. Also used by the
-   runtime as QRuntime.parse(str) */
+/** Parse the quadplay constant expression starting at character i. Also used by the
+   runtime as QRuntime.parse(str). */
 function $parse(source, i) {
     i = i || 0;
     if (typeof source !== 'string') {
@@ -2355,7 +2355,7 @@ function $parse(source, i) {
             case 'function': return {result: (function () {}), next: end};
             case 'infinity': case '∞': case '+infinity': case '+∞': return {result: Infinity, next: end};
             case '-infinity': case '-∞': return {result: -Infinity, next: end};
-            case 'nan': return {result: NaN, next: end};
+            case 'nan': return {result: NaN, next: end}; 
             case 'pi': case 'π': case '+pi': case '+π': return {result: Math.PI, next: end};
             case '-pi': case '-π': return {result: -Math.PI, next: end};
             case '¼pi': case '¼π': case '+¼pi': case '+¼π': return {result: Math.PI/4, next: end};
@@ -2406,7 +2406,13 @@ function $parse(source, i) {
                 } else if (/%$/.test(token)) {
                     return {result: parseFloat(token) / 100, next: end};
                 } else {
-                    return {result: parseFloat(token), next: end};
+                    // Assume it is some kind of float
+                    const value = parseFloat(token);
+                    if (isNaN(value)) {
+                        return {result: undefined, next: end, isError: true};
+                    } else {
+                        return {result: value, next: end};
+                    }
                 }
             } // switch on token
         } // switch on character

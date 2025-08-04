@@ -3,7 +3,6 @@ GlobalIntermission
 todo("Favoriting UI + save")
 todo("Award for best bonus word")
 todo("Change layout to make awards more central")
-todo("Suppress awards while notifications pending")
 
 let prev_xp
 let prev_level
@@ -23,23 +22,28 @@ const STATS_BUTTON_INDEX = 1
 
 
 def level_up():
-    play_sound(award_sound, false, ∅, 90%, 150%)
     // Look for any abilities that should be unlocked
+    let any = false
     for ability at name in ABILITY_TABLE:
         if player.avatar.level ≥ ability.level:
-            def grant_ability():           
+            any = true
+            def grant_ability():
+                play_sound(award_sound, false, ∅, ∅, 150%)
                 player.has_ability[name] = true
             
             if ability.description ≠ "SILENT":
                 todo("sound")
                 let sprite = player.avatar.sprite.x_flipped
                 if ability.sprite_name ≠ "<default>":
-                    todo("Get a sprite by name")
-                notify(sprite, name, ability.description, ∅, grant_ability)
+                    sprite = evaluate_constant_expression(ability.sprite_name)
+                    
+                notify(sprite, name, ability.description, grant_ability)
             else:
                 // Grant the ability immediately because there is no notification
                 grant_ability()
-    
+    if not any:
+        play_sound(award_sound, false, ∅, 90%, 150%)
+
     
     // Save new abilities
     if not DEBUG_INTERMISSION:
