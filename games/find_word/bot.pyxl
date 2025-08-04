@@ -303,7 +303,7 @@ def caf_ai(word_set, word_list, rng):
         if contains(word, "CAF") and not word_set[word]:
             word_set[word] = 1
             
-    if match_rng() < 50% and size(word_set) == 0 and size(word_list):
+    if rng() < 50% and size(word_set) == 0 and size(word_list):
         // Try to find another word so that caf doesn't complain too often
         if not word_set[word_list[0]]:
             word_set[word_list[0]] = 1
