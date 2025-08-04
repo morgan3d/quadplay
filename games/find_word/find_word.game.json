@@ -76,7 +76,7 @@
         "level_up_sound": "quad://sounds/good-02.sound.json",
         "blip_alt_sound": "quad://sounds/blip-17.sound.json"
     },
-    "version": "0.302",
+    "version": "0.303",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
