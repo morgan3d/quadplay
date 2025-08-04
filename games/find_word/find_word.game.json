@@ -78,7 +78,7 @@
         "blip_alt_sound": "quad://sounds/blip-17.sound.json",
         "moo_03_sound": "moo-03.sound.json"
     },
-    "version": "0.313",
+    "version": "0.315",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -612,7 +612,7 @@
         },
         "GLOBAL_GAME_TIME_SECONDS": {
             "type": "number",
-            "value": "125",
+            "value": "126",
             "min": 10,
             "max": 480,
             "format": "0",
@@ -1103,7 +1103,7 @@
         },
         "GATHER_TIME_SECONDS": {
             "type": "number",
-            "value": "3.3",
+            "value": "3.7",
             "description": "How many seconds GatherGlobalResults runs for",
             "min": 0,
             "max": 15,
@@ -1192,15 +1192,6 @@
         "DEBUG_STATS": {
             "type": "boolean",
             "value": false
-        },
-        "GLOBAL_free_ROUND_TIME": {
-            "type": "number",
-            "value": "18",
-            "description": "In seconds. Zero = none",
-            "min": 0,
-            "max": 30,
-            "format": "0",
-            "quantum": 1
         },
         "SOLO_free_ROUND_TIME": {
             "type": "number",
