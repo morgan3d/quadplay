@@ -179,6 +179,11 @@
       </script>
       <br class="IDEOnly"/>
       <label><input id="autoPauseCheckbox" type="checkbox" title="Sleep the game when not in focus or not recently interacted (unless hosting)" onclick="onAutoPauseCheckbox(event)" autocomplete="off"><span id="autoPauseLabel"><span class="IDEOnly">Pause</span><span class="noIDE">Sleep</span> when inactive</span></label>
+      <!-- TODO
+      <hr>
+      <div><a>Import Save Game</a></div>
+      <div><a>Export Save Game</a></div>
+      -->
       <hr>
       <label><input name="keyboardType" id="NormalKeyboardRadio" type="radio" title="Normal quadplay keyboard mapping for P1 and P2" onclick="event.stopPropagation() || setKeyboardMappingMode('Normal')" autocomplete="off" checked="1">Normal Keyboard</label>
       <br/><label><input name="keyboardType" id="MiniPACKeyboardRadio" type="radio" title="Use the Ultimarc Mini PAC mapping for an arcade installation that sends keyboard commands. Only P1 has a Pause button." onclick="event.stopPropagation() || setKeyboardMappingMode('MiniPAC')" autocomplete="off">Ultimarc Mini PAC</label>
@@ -212,15 +217,14 @@
         }
       </script>
       <div><a onclick="enterKioskMode()">Enter Kiosk</a></div>
+      <!--
       <script>
         if (! isQuadserver) {
             document.write('<div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>');
         }
-      </script>
-      <!-- <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>-->
-      <!-- <div>
-        <a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a>
-      </div> -->
+            </script>
+      -->
+      <!-- <div><a href="" target="_blank" title="The online quadplay✜ discord">Discord</a></div>-->
 
       <script>if (! useIDE) { writeCloseOption(); }</script>
 
