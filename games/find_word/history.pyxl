@@ -234,7 +234,7 @@ def get_history_rect():
             corner: xy(1, 1), 
             size: xy(
                 board_pos.x - ½ board_size.x - ¼ TILE_EXTENT + 1, 
-                SCREEN_SIZE.y - (if player.has_ability["Free Mode"] then 42 else 8))}
+                SCREEN_SIZE.y - (if player.has_ability["Free Mode"] and not in_waiting_room then 42 else 8))}
     else:
         // Portrait
         return {
