@@ -271,7 +271,7 @@ last_hour: 1
     
     // Process caf after Moo. Everyone who can see caf can also see Moo, so
     // this keeps it deterministic
-    if DEBUG_CAF or player.has_ability["See caf"] and match_rng() < 50%:// and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG_CAF:
+    if DEBUG_CAF or (player.has_ability["See caf"] and match_rng() < 50%):// and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG_CAF:
         push(competitor_array,
             make_bot_competitor({
                     name: "caf",

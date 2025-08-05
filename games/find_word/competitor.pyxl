@@ -42,8 +42,8 @@ def competitor_is_friend(competitor):
     // For now, friend all humans. Bots have a `base_ability` property
     return ((competitor.avatar.id == MOO_ID and player.has_ability["Friend of Moo"]) or
             (competitor.avatar.id == CAF_ID and player.has_ability["Friend of caf"]) or    
-            ((competitor ≠ player_competitor) and player.friends[competitor.avatar.id]) or
-             (not competitor.avatar.base_ability))
+            ((competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or
+             not competitor.avatar.base_ability)))
         
 
 

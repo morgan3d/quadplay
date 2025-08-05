@@ -7,23 +7,6 @@ const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.s
 todo("** Lock avatars by level **")
 
 todo("Introduce KAT, kit, and evil(er) K4T")
-
-/* Prevent players from using these */
-const AVATAR_RESTRICTED_INDEXES = [
-    // caf (Baby Moo)
-    xy(33, 22), 
-    
-    // Moo
-    xy(34, 22)
-    
-    // kit (Baby KAT)
-    xy(47, 6)
-    
-    // KAT
-    xy(0, 8),
-    
-    // KAT doppleganger
-    xy(1, 8)]
     
     
 

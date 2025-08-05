@@ -7,7 +7,7 @@
 const _notification_queue = []
 
 
-def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 4):
+def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 7):
     assert(begin_callback == ∅ or type(begin_callback) == "function")
     
     push(_notification_queue, {
@@ -56,13 +56,7 @@ def update_notifications()
             if begin_callback:
                 begin_callback()
 
-        const relative_time = time_now - first_shown    
-        if relative_time > duration_seconds:        
-            if relative_time > duration_seconds + DELAY_AFTER_SECONDS:
-                // Done! remove
-                pop_front(_notification_queue)
-                
-            return
+        const relative_time = time_now - first_shown
         
         // Size fraction
         let α = 100%        
@@ -73,36 +67,53 @@ def update_notifications()
             // Shrink
             α = clamp((duration_seconds - relative_time) / EXIT_DURATION_SECONDS, 0%, 100%)
 
+        const rect = {pos: xy(0, 0), size: α * xy(204, 80)}
         
-        const rect = {pos: xy(0, 0), size: α * xy(204, 60)}
-        // Drop shadow
-        draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
-
-        // Window
-        draw_rect(rect.pos, rect.size, BACKGROUND_COLOR, #E1B)
-        draw_rect(rect.pos, rect.size - 2, ∅, #E1B)
-        draw_rect(rect.pos, rect.size + 2, ∅, #000)
-        
-        if α == 100%:
-            // Show contents when the window is full size
-            const sprite_width = 32
-            const padding = 7
-            const text_width = rect.size.x - sprite_width - 2.5 padding 
-
-            draw_sprite({
-                sprite: notification.sprite,
-                pos: xy(-½ rect.size.x + padding + ½ sprite_width, 0),
-                override_color: if equivalent(rgb(notification.sprite.mean_color), #FFF) then #000 else ∅,
-                scale: sprite_width / notification.sprite.size.x})
+        if α > 0%:
+            // Drop shadow
+            draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
     
-            draw_text({
-                text: "{font:" + TITLE_FONT + " {color:#E1B " + notification.title + "}{br}}" + notification.description,
-                pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
-                font: DESCRIPTION_FONT,
-                color: #000,
-                markup: true,
-                wrap_width: text_width,
-                x_align: "left",
-                y_align: "center"})
+            // Window
+            draw_rect(rect.pos, rect.size, BACKGROUND_COLOR, #E1B)
+            draw_rect(rect.pos, rect.size - 2, ∅, #E1B)
+            draw_rect(rect.pos, rect.size + 2, ∅, #000)
+            
+            if α == 100%:
+                // Show contents when the window is full size
+                const sprite_width = 32
+                const padding = 7
+                const text_width = rect.size.x - sprite_width - 2.5 padding 
+    
+                draw_sprite({
+                    sprite: notification.sprite,
+                    pos: xy(-½ rect.size.x + padding + ½ sprite_width, 0),
+                    override_color: if equivalent(rgb(notification.sprite.mean_color), #FFF) then #000 else ∅,
+                    scale: sprite_width / notification.sprite.size.x})
+        
+                draw_text({
+                    text: "{font:" + TITLE_FONT + " {color:#E1B " + notification.title + "}{br}}" + notification.description,
+                    pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
+                    font: DESCRIPTION_FONT,
+                    color: #000,
+                    markup: true,
+                    wrap_width: text_width,
+                    x_align: "left",
+                    y_align: "center"})
+                    
+                if player.using_gamepad:
+                    draw_text({
+                        pos: rect.pos + ½ rect.size - 4,
+                        text: joy.prompt["(b)"],
+                        x_align: "right",
+                        y_align: "bottom",
+                        color: #666})                        
+
+        // Only allow cancel during the full size window to ensure
+        // the player didn't click mistakenly
+        const cancel = (α == 100%) and (joy.pressed_b or (touch.pressed_a and overlaps(rect, touch.xy)))
+        
+        if (relative_time > duration_seconds + DELAY_AFTER_SECONDS) or cancel:
+            // Done! remove
+            pop_front(_notification_queue)
 
 
