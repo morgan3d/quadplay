@@ -2,7 +2,6 @@ FreeMode
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
-todo("Rework how already used words work during the FreeMode so that you can still score them in the main mode but they are only shown and counted at the end once")
 
 def player_update_back_button(player, board_pos):
     if size(player.free_row):
@@ -23,18 +22,19 @@ def player_free_selection_change_callback(player):
     let best_new_color = ∅
     for tile at t in player.free_row:
         word += tile.letter
-        if dictionary[word]:
-            if player_already_found(player, word):
-                // Show that we've already seen this just-completed word by 
-                // finding and emphasizing it
-                player_emphasize_history_word(player, word)
-            else:
-                const points = score_word(word)
-                const color = player_add_to_free(player, word, points)
-                if points > max_points:
-                    max_points = points
-                    best_new_word = word
-                    best_new_color = color
+        
+    if dictionary[word]:
+        if player.already_found[word] or player_free_row_contains(player, word):
+            // Show that we've already seen this just-completed word by 
+            // finding and emphasizing it
+            player_emphasize_history_word(player, word)
+        else:
+            const points = score_word(word)
+            const color = player_add_to_free(player, word, points)
+            if points > max_points:
+                max_points = points
+                best_new_word = word
+                best_new_color = color
 
     // At least one word was added
     if max_points > 0:

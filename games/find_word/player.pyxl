@@ -45,9 +45,8 @@ def make_player():
         cursor_tile_index: xy(0, 0)}
 
 
-
-def player_already_found(player, word):
-    return player.already_found[word] or contains(player.history.free, {word: word}, word_property_equals)
+def player_free_row_contains(player, word):
+    return contains(player.history.free, {word: word}, word_property_equals)
 
 
 
@@ -99,14 +98,20 @@ def player_selection_change_callback(player)
     // Reset selection color
     board.selection_color = TILE_CENTER_SELECTED_COLOR
     
-    if player_already_found(player, word):
+    if player.already_found[word]:
         
-        // Show that we've already seen this word by 
+        // Show that we've already seen this word by
         // finding and emphasizing it
         player_emphasize_history_word(player, word)
         return true
+        
                 
     else if points > 0:
+        if player_free_row_contains(player, word):
+            // This word was made in free mode unnecessarily. Steal it
+            // so that it is locked in if they later change the free row
+            todo("Animate going away")
+            remove_values(player.history.free, {word: word}, word_property_equals)
         
         // Score the word, even without the player releasing their touch
         player.board.selection_color = player_add_to_history(player, word, points)

@@ -79,7 +79,7 @@
         "blip_alt_sound": "quad://sounds/blip-17.sound.json",
         "moo_03_sound": "moo-03.sound.json"
     },
-    "version": "0.318",
+    "version": "0.320",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

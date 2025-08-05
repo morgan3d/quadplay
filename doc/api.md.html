@@ -236,10 +236,10 @@ Array
 `remove_key(array, i)`
 : Remove element `i` from the array, preserving order. O(n) expected time.
 
-`remove_values(array, x)`
-: Remove every instance of `x` in the array, maintaining order. O(n)
+`remove_values(array, v, comparator default ==)`
+: Remove every value `x` for which `comparator(x, v)` in the array, maintaining order. O(n)
   time in the original length of the array. Returns true if any value
-  was removed.vDoes nothing if `x` is not in the array. See also
+  was removed. Does nothing if `v` is not in the array. See also
   `fast_remove_value()`
 
 `remove_all(array)`
@@ -512,9 +512,9 @@ Object
 : Remove a key-value pair by key. Does nothing if `k` is not in the object.
   Use `object[k] ≠ ∅` to test for containment explicitly.
 
-`remove_values(object, v)`
-: Remove every instance of `v` from the object. Returns true if any
-  value was removed. See also `fast_remove_value()`.
+`remove_values(object, v, comparator default ==)`
+: Remove every value `x` for which `comparator(x, v)` from the object. Returns true if any
+  value was removed. See also `fast_remove_value()`.  
 
 `remove_all(object)`
 : Remove everything from the object. It is faster to assign to a new, empty object than to

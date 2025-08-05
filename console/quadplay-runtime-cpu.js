@@ -798,7 +798,9 @@ function remove_all(t) {
 }
 
 
-function remove_values(t, value) {
+function $equalComparator(A, B) { return A === B; }
+
+function remove_values(t, value, comparator = $equalComparator) {
     let any = false;
     
     if ($iteratorCount.get(t)) {
@@ -810,7 +812,7 @@ function remove_values(t, value) {
         let dst = 0;
         for (let src = 0; src < t.length; ++src) {
             if (src > dst) { t[dst] = t[src]; }
-            if (t[src] !== value) { ++dst; }
+            if (! comparator(t[src], value)) { ++dst; }
         }
         if (dst !== t.length) {
             t.length = dst;
@@ -818,7 +820,7 @@ function remove_values(t, value) {
         }
     } else if (typeof t === 'object') {
         for (let k in t) {
-            if (t[k] === value) {
+            if (comparator(t[k], value)) {
                 delete t[k];
                 any = true;
             }
