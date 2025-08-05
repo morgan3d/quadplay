@@ -749,8 +749,12 @@ div.debugOverride.disabled {
     width:32px; height:16px    
 }
 
-#pMenuButtonContainer .buttonIcon {
+#systemMenuButtonContainer .buttonIcon {
     background-image: url('icons/button-p.png');
+}
+
+#metaMenuButtonContainer .buttonIcon {
+    background-image: url('icons/button-meta.png');
 }
 
 #restartButtonContainer .buttonIcon {
