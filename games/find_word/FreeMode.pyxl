@@ -2,6 +2,7 @@ FreeMode
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
+todo("Rework how already used words work during the FreeMode so that you can still score them in the main mode but they are only shown and counted at the end once")
 
 def player_update_back_button(player, board_pos):
     if size(player.free_row):

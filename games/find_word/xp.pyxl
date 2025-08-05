@@ -32,6 +32,7 @@ def notify_xp_bonus(xp_value, text, ):
         grant)
 
 
+
 /* Called at mode enter before integrating stats */
 def grant_unique_word_xp(unique_word_list):
     assert(unique_word_list ≠ ∅)
@@ -42,11 +43,11 @@ def grant_unique_word_xp(unique_word_list):
         push(decoded, q_decode(word))
     
     let text
-    if size(unique_word_list) < 6:
+    if size(unique_word_list) ≤ 4:
         text = join(decoded, ", ", ", and ", " and ")
     else:
-        text = "" + size(unique_word_list) + " words including " + join(slice(decoded, 0, 5), ", ", ", and ")
-        
+        text = "" + size(unique_word_list) + " words including " + join(slice(decoded, 0, 4), ", ", ", and ")
+    
     notify_xp_bonus(
         size(unique_word_list) * XP_VALUE.unique_word,
         "finding " + text + " for the first time!")        

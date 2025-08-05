@@ -7,7 +7,7 @@
 const _notification_queue = []
 
 
-def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 3.5):
+def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 4):
     assert(begin_callback == ∅ or type(begin_callback) == "function")
     
     push(_notification_queue, {
