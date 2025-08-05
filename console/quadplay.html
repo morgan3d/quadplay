@@ -39,7 +39,7 @@
 
       function makeButton(label, id, title, onclick) {
         // type=button is needed to make chromium not think this is a password stealer
-         document.write(`<div ${id ? 'id="' + id + 'Container" ' : ''} class="button" ${id ? 'id="' + id + 'Container" ' : ''}><label><input type="button" ${id ? 'id="' + id + '" ' : ''} onmousedown="event.stopPropagation()" onclick="if (event.target.parentElement.parentElement.enabled !== false) ${onclick || ''}" autocomplete="off" title="${title || label}"><span class="label" ${id ? 'id="' + id + 'Label"' : ''}>${label}</span></label></div>`);
+         document.write(`<div ${id ? 'id="' + id + 'Container" ' : ''} class="button" ${id ? 'id="' + id + 'Container" ' : ''}><label><input type="button" ${id ? 'id="' + id + '" ' : ''} onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); if (event.target.parentElement.parentElement.enabled !== false) {${onclick || ''}}" autocomplete="off" title="${title || label}"><span class="label" ${id ? 'id="' + id + 'Label"' : ''}>${label}</span></label></div>`);
       }
     
       function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {
@@ -268,7 +268,11 @@
         </span>
 
         <script>
-          document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="consoleMenuButton">${useIDE ? 'Console' : 'quadplay✜'}</a>`);
+          if (useIDE) {
+            document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="systeaMenuButton">Console</a>`);
+          } else {
+            makeButton('<div class="buttonIcon"></div>', 'consoleMenuButton', 'Options', "onMenuButton(event)");
+          }
         </script>
         
         <span class="IDEOnly">        

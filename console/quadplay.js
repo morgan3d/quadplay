@@ -897,11 +897,13 @@ function setScreenBorderScale(screenBorder, scale) {
 
 
 function onMenuButton(event) {
-    closeDropdowns();
     const button = document.getElementById(event.target.id);
     const menu = document.getElementById(event.target.id.replace(/Button$/, ''));
+    let prevVisibility = menu.style.visibility;
 
-    if (menu.style.visibility === 'visible') {
+    closeDropdowns();
+
+    if (prevVisibility === 'visible') {
         menu.style.visibility = 'hidden';
     } else {
         menu.style.visibility = 'visible';
@@ -1964,9 +1966,12 @@ window.onclick = function(event) {
         event.target.classList.add('hidden');
     }
     */
-    
-    // Hide dropdown menus
-    closeDropdowns();
+
+    if (event.target.parentElement.id !== 'consoleMenuButtonLabel') {
+        // Hide dropdown menus if this isn't the menu itself; the IF is needed so that
+        // menus aren't closed before we know their state
+        closeDropdowns();
+    }
 } 
 
 

@@ -753,7 +753,7 @@ div.debugOverride.disabled {
     background-image: url('icons/button-p.png');
 }
 
-#metaMenuButtonContainer .buttonIcon {
+#consoleMenuButtonContainer .buttonIcon {
     background-image: url('icons/button-meta.png');
 }
 
