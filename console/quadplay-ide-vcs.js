@@ -40,7 +40,7 @@ function gitDoMergeAndCommit(mergeOptions, commitFileList) {
     // No conflict, ok to proceed
     serverGitCommand('merge ' + mergeOptions, function (text, code) {
         console.log('Reloading after git merge.');
-        loadGameIntoIDE(window.gameURL, null, true);
+        loadGame(window.gameURL, null, true);
 
         const dialog = document.getElementById('versionControlCommitMessage');
         dialog.classList.remove('hidden');
@@ -110,7 +110,7 @@ function onGitSync() {
                     // Directly merge. Since no files changed locally there is no chance of conflict.
                     serverGitCommand('merge', function (text, code) {
                         console.log('Reloading after git merge.');
-                        loadGameIntoIDE(window.gameURL, null, true);
+                        loadGame(window.gameURL, null, true);
 
                         closeButton.disabled = false;
                         closeButton.focus();

@@ -117,7 +117,7 @@ function onProjectMetadataChanged() {
         serverSaveDebugJSON();
     }
     
-    serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL, null, true); } : undefined);
+    serverSaveGameJSON(titleChanged ? function () { loadGame(window.gameURL, null, true); } : undefined);
 }
 
 
@@ -164,7 +164,7 @@ const licenseTable = {
 
 function onProjectInitialModeChange(newStartModeName) {
     gameSource.json.start_mode = newStartModeName;
-    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+    serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
 }
 
 
@@ -180,7 +180,7 @@ function onProjectDebugInitialModeChange(newStartModeName) {
         gameSource.debug.json.start_mode_enabled = true;
     }
     
-    serverSaveDebugJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+    serverSaveDebugJSON(function () { loadGame(window.gameURL, null, true); });
 }
 
 
@@ -356,7 +356,7 @@ function makeGame(srcURL) {
             },
             function (response, code) {
                 // Success. Load the new game and reselect the main page.
-                loadGameIntoIDE(response.game, function () {
+                loadGame(response.game, function () {
                     onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
                 });
             },

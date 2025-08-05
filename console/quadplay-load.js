@@ -228,6 +228,7 @@ function maybeRecordURLDependency(url) {
     }
 }
 
+
 /* Loads the game and then runs the callback() or errorCallback() */
 function afterLoadGame(gameURL, callback, errorCallback) {
     const isLauncher = gameURL.endsWith('/console/launcher/launcher.game.json') || gameURL.endsWith('/console/launcher/') || gameURL.endsWith('/console/launcher');
@@ -292,7 +293,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         sounds: 0,
         sourceStatementsByURL: {},
         spritePixelsByURL: {},
-        soundKilobytesByURL: {}
+        soundKilobytesByURL: {},
+
+        // Maps API functions to a list of scripts that use each API, or undefined if no scripts use it
+        usesAPI: {}
     };
 
     const debugURL = gameURL.replace(/\.game\.json$/, '.debug.json');
@@ -2102,6 +2106,7 @@ function getImageData(image) {
 }
 
 
+/* Also tracks the usage of certain features, such as `save_local()` */
 function addCodeToSourceStats(code, scriptURL) {
     if ((scriptURL.replace(/^.*\//, '')[0] === '_') ||
         scriptURL.startsWith('quad://scripts/') ||
@@ -2151,6 +2156,14 @@ function addCodeToSourceStats(code, scriptURL) {
     // Remove blank lines
     code = code.replace(/\n\s*\n/g, '\n');
 
+    for (const api of ['save_local', 'load_local', 'midi_send_raw']) {
+        if (code.match(new RegExp('\\b' +api + '\\('))) {
+            if (! resourceStats.usesAPI[api]) {
+                resourceStats.usesAPI[api] = [];
+            }
+            resourceStats.usesAPI[api].push(scriptURL);
+        }
+    }
     const count = Math.max(1, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
 
     resourceStats.sourceStatementsByURL[scriptURL] = count;

@@ -9878,9 +9878,11 @@ function load_local(key, default_value) {
     table = JSON.parse(table);
 
     if (arguments.length === 0) {
-        // Return everything
+        // Return everything except the internal quadplay properties
         for (let key in table) {
-            table[key] = parse(table[key]);
+            if (key[0] !== '$') {
+                table[key] = parse(table[key]);
+            }
         }
         return table;
     } else {
@@ -9896,8 +9898,13 @@ function load_local(key, default_value) {
 
 function save_local(key, value) {
     if (arguments.length === 0) {
+        // Erase all storage
         $setLocalStorage('GAME_STATE_' + $gameURL, '{}');
         return;
+    }
+
+    if (key === undefined) {
+        $error('Cannot call save_local() with a nil key');
     }
 
     if (typeof key === 'object') {
@@ -9927,6 +9934,8 @@ function save_local(key, value) {
             $error('Cannot store_local() more than 64 separate keys.');
         }
     }
+
+    table.$modified_date = unparse(new Date().toUTCString(), 0);
 
     $setLocalStorage('GAME_STATE_' + $gameURL, JSON.stringify(table));
 }

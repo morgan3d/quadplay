@@ -30,7 +30,7 @@ def notifications_pending():
 def update_notifications()
 & preserving_transform:
     // Draw way on top of everything in Z
-    set_transform(xy(½ SCREEN_SIZE.x, 40), ∅, 110)
+    set_transform(xy(½ SCREEN_SIZE.x, 44), ∅, 110)
     
     const BACKGROUND_COLOR = #EEE
     const TITLE_FONT       = score_font

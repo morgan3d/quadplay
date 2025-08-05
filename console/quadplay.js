@@ -1228,7 +1228,7 @@ function onPlayButton(slow, skipStartAnimation, args, callback) {
             if (savesPending === 0) {
                 // Force a reload of the game
                 console.log('Reloading in case of external changes.')
-                loadGameIntoIDE(window.gameURL, doPlay, false);
+                loadGame(window.gameURL, doPlay, false);
             } else {
                 onStopButton();
                 if (pendingSaveCallbacks.length > 0 || ! alreadyInPlayButtonAttempt) {
@@ -2619,7 +2619,7 @@ function onOpenGameOpen() {
             history.replaceState({}, 'quadplay', url.replace('app.html', 'quadplay.html'));
         }
             
-        loadGameIntoIDE(game_url, function () {
+        loadGame(game_url, function () {
             hideOpenGameDialog();
             onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
 
@@ -2654,10 +2654,10 @@ setControlEnable('pause', false);
 let coroutine = null;
 let emwaFrameTime = 0;
 
-
+/* Load the quadplay "OS" */
 function goToLauncher() {
     onStopButton(false, true);
-    loadGameIntoIDE(launcherURL, function () {
+    loadGame(launcherURL, function () {
         onResize();
         // Prevent the boot animation
         onPlayButton(false, true);
@@ -2797,7 +2797,7 @@ function mainLoopStep() {
             }
         } else if (e.launch_game !== undefined) {
             console.log('Loading because launch_game() was called.');
-            loadGameIntoIDE(e.launch_game, function () {
+            loadGame(e.launch_game, function () {
                 onResize();
                 onPlayButton(false, true, e.args);
             });
@@ -2847,6 +2847,11 @@ function assert(x, m) {
     }
 }
 
+/* The URL that will be used inside of the runtime */
+function getRuntimeGameURL() {
+    return gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
+}
+
 
 /** When true, the system is waiting for a refresh to occur and mainLoopStep should yield
     as soon as possible. */
@@ -2878,9 +2883,9 @@ function reloadRuntime(oncomplete) {
         // more
         QRuntime.$updateIDEModeGraph = useIDE ? $updateIDEModeGraph : function () {};
         
-        QRuntime.$window = window;
+        QRuntime.$window             = window;
         // Remove any base URL that appears to include the quadplay URL
-        QRuntime.$gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
+        QRuntime.$gameURL            = getRuntimeGameURL();
         QRuntime.$debugPrintEnabled  = document.getElementById('debugPrintEnabled').checked && useIDE;
         QRuntime.$assertEnabled      = document.getElementById('assertEnabled').checked && useIDE;
         QRuntime.$todoEnabled        = document.getElementById('todoEnabled').checked && useIDE;
@@ -3868,18 +3873,182 @@ function appendToBootScreen(msg) {
 }
 
 
+/* Used for importSaveGame() and exportSaveGame() */
+function getSaveGameMetadata() {
+    const url = getRuntimeGameURL();
+
+    return {
+        type: 'savegame',
+        save_format_version: '2025.08.05.10',
+        quadplay_version: version,
+        game_version: gameSource.extendedJSON.version,
+        // Date of the data inside the save
+        save_date: QRuntime.load_local('$modified_date') || 'Thu, 01 Jan 1970 00:00:00 GMT',
+        // Date of this save / now
+        export_date: new Date().toString(),
+        game_title: gameSource.json.title,
+        game_name: url.match(/\/([^\/]+)\.game\.json/)[1],
+        game_url: url,
+    };
+}
+
+
+/* This could be called from a timer or in-game, but since import requires an input event
+   in practice we made both into explicit menu items. This is outside of the quadplay abstraction,
+   so it can require a mouse and not be solely gamepad based. */
+function exportSaveGame() {
+   // This forms the header for the downloaded file
+   const metadata = getSaveGameMetadata();
+   const metadataString = JSON.stringify(metadata);
+
+    // Extract all game state from localStorage
+    const gameState = localStorage.getItem('GAME_STATE_' + metadata.game_url);
+
+    // Create a binary blob consisting of:
+    //
+    //  - 32-bit integer of the size of the metadataString in bytes
+    //  - The metadataString
+    //  - A binary zipfile of the gameState
+
+    // Create the blob with metadata header and zipped gameState
+    const metadataBytes = new TextEncoder().encode(metadataString);
+    const metadataSizeBytes = new ArrayBuffer(4);
+    // Store the little-endian size in the first four bytes
+    new DataView(metadataSizeBytes).setUint32(0, metadataBytes.length, true); 
+    
+    // Compress the gameState using JSZip
+    const zip = new JSZip();
+    zip.file('gamestate.json', gameState || '{}');
+    
+    // Generate the zip file as a blob (async)
+    zip.generateAsync({type: 'arraybuffer'}).then(function(zipBlob) {
+        // Combine metadata size, metadata, and zip data into final blob
+        const blob = new Blob([metadataSizeBytes, metadataBytes, zipBlob], {type: 'application/octet-stream'});
+        
+        // Download the blob as a file with timestamp
+        const now = new Date();
+        const dateStr = now.getFullYear() + '-' + 
+            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(now.getDate()).padStart(2, '0') + '_' + 
+            String(now.getHours()).padStart(2, '0') + '-' + 
+            String(now.getMinutes()).padStart(2, '0');
+        const filename = metadata.game_name + '_' + dateStr + '.savegame';
+
+        // Download the blob as a file
+        download(URL.createObjectURL(blob), filename);
+    });
+}
+
+
+/* This must be called from an input event to satisfy browser security */
+function importSaveGame(event) {
+    const file = event.target.files[0];
+    if (! file) { return; }
+
+    const destMetadata = getSaveGameMetadata();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const arrayBuffer = e.target.result;
+            const dataView = new DataView(arrayBuffer);
+            
+            // Read the 32-bit metadata size (little-endian)
+            const metadataSize = dataView.getUint32(0, true);
+            
+            // Extract the metadata string
+            const metadataBytes = new Uint8Array(arrayBuffer, 4, metadataSize);
+            const metadataString = new TextDecoder().decode(metadataBytes);
+            const sourceMetadata = JSON.parse(metadataString);
+            
+            // Extract the zip data (everything after metadata)
+            const zipData = arrayBuffer.slice(4 + metadataSize);
+            
+            // Decompress the game state using JSZip
+            JSZip.loadAsync(zipData).then(function(zip) {
+                return zip.file('gamestate.json').async('string');
+            }).then(function(gameStateString) {
+                const gameState = gameStateString;
+                
+                // General validation - check type
+                if (sourceMetadata.type !== 'savegame') {
+                    alert(`This is not a valid ${destMetadata.game_title} savegame file.`);
+                    return;
+                }
+                
+                // Game name validation
+                if (sourceMetadata.game_title !== destMetadata.game_title || 
+                    sourceMetadata.game_name !== destMetadata.game_name ||
+                    sourceMetadata.game_url !== destMetadata.game_url) {
+                    
+                    const message = `This savegame appears to be from a different game:\n\n` +
+                        `File: ${sourceMetadata.game_title} v${sourceMetadata.game_version} (${sourceMetadata.game_url})\n` +
+                        `Current: ${destMetadata.game_title} v${destMetadata.game_version} (${destMetadata.game_url})\n\n` +
+                        `It could destroy ` +
+                        `your local save for the current game, which cannot be recovered.\n\n` +
+                        `Do you still want to proceed?`;
+                    
+                    if (! confirm(message)) {
+                        return;
+                    }
+                }
+                
+                // Date validation
+                const sourceDate = new Date(sourceMetadata.save_date);
+                const currentDate = new Date(destMetadata.export_date);
+                const localSaveDate = new Date(destMetadata.save_date);
+                
+                if (sourceDate > currentDate) {
+                    const message = `The import savegame has a date newer than today's date. At least one of the computers has a corrupt clock and so it is impossible to know if this file is newer than your local save. Do you still want to overwrite?`;
+                    if (! confirm(message)) {
+                        return;
+                    }
+                }
+                
+                // Final confirmation
+                const newerOlder = sourceDate > localSaveDate ? 'newer' : '!!! OLDER !!!';
+                const finalMessage = `Overwrite current local save\n\n` +
+                    `  ${destMetadata.game_title} from ${localSaveDate.toLocaleString()}\n\n` +
+                    `with ${newerOlder} save\n\n` +
+                    `  ${sourceMetadata.game_title} from ${sourceDate.toLocaleString()}?`;
+                
+                if (! confirm(finalMessage)) {
+                    return;
+                }
+                
+                // Write to localStorage
+                localStorage.setItem('GAME_STATE_' + destMetadata.game_url, gameState);
+                
+                // Restart the game to force reload
+                alert('Save game successfully imported.');
+
+                restartProgram(0);
+            }).catch(function(error) {
+                console.error('Error decompressing save game:', error);
+                alert('Error reading save game file. The file may be corrupted.');
+            });
+            
+        } catch (error) {
+            console.error('Error importing save game:', error);
+            alert('Error loading save game file. Please check the file format.');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+
 /** If loadFast is true, do not make any cosmetic delays. This is typically
     set for hot reloads or after configuration changes.
 
     If noUpdateCode is true, do not update code editors. This is used to
     prevent cursor jump when that file is itself being further updated
-    by typing in the editor.
-
-    This "loads the game". It does not depend on useIDE and is poorly named.
-*/
-function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
+    by typing in the editor. */
+function loadGame(url, callback, loadFast, noUpdateCode) {
     const oldVersionControl = gameSource && gameSource.versionControl;
     
+    // Hide these menu items until we know if they are needed
+    document.getElementById('saveGameMenuSection').style.display = 'none';
+
     if ((url !== gameURL) && useIDE) {
         // A new game is being loaded. Throw away the editor sessions.
         removeAllCodeEditorSessions();
@@ -3949,12 +4118,21 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
             onLoadFileComplete(url);
             hideBootScreen();
             page.document.title = gameSource.extendedJSON.title;
+
+            // This is the IDE's export game menu, not the user export SAVE GAME menu
             const exportMenu = document.getElementById('exportMenu');
             if (isQuadserver && editableProject) {
                 exportMenu.removeAttribute('disabled');
             } else {
                 exportMenu.setAttribute('disabled', '');
             }
+
+            // Only show the savegame menu item for regular games (not the launcher/OS), when in non-kiosk mode and
+            // the game uses load_local or save_local (technically only one should be required, but
+            // a game might do something wierd like save a key solely for the IDE to read.)
+            // This DOES intentionally show these menu items when in the IDE.
+            const showImportExport = (url !== launcherURL) && (getQueryString('kiosk') || '0') == '0' && (resourceStats.usesAPI['save_local'] || resourceStats.usesAPI['load_local']);
+            document.getElementById('saveGameMenuSection').style.display = showImportExport ? 'block' : 'none';
 
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
@@ -4254,7 +4432,7 @@ window.addEventListener('focus', function() {
             // Regained focus while stopped and in the IDE. Reload in case
             // anything changed on disk
             console.log('Reloading because the browser regained focus in the IDE.');
-            loadGameIntoIDE(window.gameURL, null, true);
+            loadGame(window.gameURL, null, true);
         }
     }
 }, false);
@@ -4594,7 +4772,7 @@ reloadRuntime(function () {
     }
 
     console.log('Loading because of initial page load.');
-    loadGameIntoIDE(url, function () {
+    loadGame(url, function () {
         
         // Set screen mode after checking for mobile_touch_gamepad in the game
         if (getQueryString('kiosk') !== '1') {

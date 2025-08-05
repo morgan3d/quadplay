@@ -749,6 +749,7 @@ div.debugOverride.disabled {
     width:32px; height:16px    
 }
 
+
 #systemMenuButtonContainer .buttonIcon {
     background-image: url('icons/button-p.png');
 }
@@ -1839,6 +1840,21 @@ canvas#screenOverlay {
 #volumeControl.noIDE {
     top:-6px;
     position: relative;
+}
+
+/*******************************************************************/
+
+/* Hide these options in kiosk mode (although the entire menus are hidden in kiosk mode as well) */
+.kiosk div#saveGameMenuSection {
+    display: none;
+}
+
+div#saveGameMenuSection {
+    margin-left: 0px;
+}
+
+div#saveGameMenuSection div {
+    margin-left: 19px;
 }
 
 /******************** macOS (not iOS) Safari Only Fix for Slider Track being Black ***************/

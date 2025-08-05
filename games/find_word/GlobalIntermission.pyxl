@@ -353,7 +353,7 @@ if not DEBUG_INTERMISSION:
     // Update level
     player.avatar.level = xp_to_level(new_xp)   
     stats_save(player.stats)
-    save_local(player.has_ability)
+    save_local("has_ability", player.has_ability)
 else:
     // Debugging, force a level up
     new_xp = level_to_xp(player.avatar.level + 1) + 100

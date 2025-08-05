@@ -101,13 +101,13 @@
 
        1. appLoadingOverlay: Blocks interaction during initial load for exported games until the 
           rest of the app is loaded.  Shows a loading spinner and prevents user input via 
-          event.stopPropagation(). Removed by a loadGameIntoIDE() callback.
+          event.stopPropagation(). Removed by a loadGame() callback.
        2. bootScreen: Shows file loading progress during game boot. Uses monospace font with pre-formatted 
           text display. Controlled by showBootScreen(), hideBootScreen(), and appendToBootScreen() 
           functions. Styled with a dark background and light text. 
        3. appWelcomeOverlay: Forces user interaction before game start to enable audio context and 
           fullscreen on mobile. Handled by onAppWelcomeTouch() which unlocks audio and sets up initial 
-          game state. Made visible by a loadGameIntoIDE() callback.
+          game state. Made visible by a loadGame() callback.
        4. introControlsScreen: Shows instructions for reaching pause and controls during emulator boot 
           for exported games. Appears as an image overlay with fade in/out animation controlled by _Message.pyxl.
        5. sleepOverlay: Blocks interaction when quadplay is sleeping due to inactivity or out of focus. 
@@ -179,11 +179,12 @@
       </script>
       <br class="IDEOnly"/>
       <label><input id="autoPauseCheckbox" type="checkbox" title="Sleep the game when not in focus or not recently interacted (unless hosting)" onclick="onAutoPauseCheckbox(event)" autocomplete="off"><span id="autoPauseLabel"><span class="IDEOnly">Pause</span><span class="noIDE">Sleep</span> when inactive</span></label>
-      <!-- TODO
+      <div id="saveGameMenuSection">
       <hr>
-      <div><a>Import Save Game</a></div>
-      <div><a>Export Save Game</a></div>
-      -->
+      <div style="margin-bottom: 3px"><a onclick="document.getElementById('saveGameFileInput').click()">Import Save Game</a></div>
+      <div><a onclick="exportSaveGame()">Export Save Game</a></div>
+      <input type="file" id="saveGameFileInput" accept=".savegame" onchange="importSaveGame(event)" style="display: none;">
+      </div>
       <hr>
       <label><input name="keyboardType" id="NormalKeyboardRadio" type="radio" title="Normal quadplay keyboard mapping for P1 and P2" onclick="event.stopPropagation() || setKeyboardMappingMode('Normal')" autocomplete="off" checked="1">Normal Keyboard</label>
       <br/><label><input name="keyboardType" id="MiniPACKeyboardRadio" type="radio" title="Use the Ultimarc Mini PAC mapping for an arcade installation that sends keyboard commands. Only P1 has a Pause button." onclick="event.stopPropagation() || setKeyboardMappingMode('MiniPAC')" autocomplete="off">Ultimarc Mini PAC</label>
@@ -273,13 +274,13 @@
 
         <script>
           if (useIDE) {
-            document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="systeaMenuButton">Console</a>`);
+            document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="consoleMenuButton">Console</a>`);
           } else {
             makeButton('<div class="buttonIcon"></div>', 'consoleMenuButton', 'Options', "onMenuButton(event)");
           }
         </script>
         
-        <span class="IDEOnly">        
+        <span class="IDEOnly">
             &nbsp;&nbsp; &middot; &nbsp;&nbsp; 
             <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
 
