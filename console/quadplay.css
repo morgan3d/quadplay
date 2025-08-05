@@ -228,7 +228,7 @@ input[type="radio"], input[type="checkbox"] {
 
 div#header {
     position: absolute;
-    top:0;
+    top:1px;
     right:0;
     left:0;
     height: 20px;
@@ -756,6 +756,9 @@ div.debugOverride.disabled {
 #consoleMenuButtonContainer .buttonIcon {
     background-image: url('icons/button-meta.png');
 }
+ #consoleMenuButtonContainer {
+    padding-top: 1px;
+ }
 
 #restartButtonContainer .buttonIcon {
     background-image: url('icons/button-reload.png');
@@ -1446,7 +1449,7 @@ code, .code {
     position:         absolute;
     right:            0px;
     top:              25px;
-    width:            410px;
+    width:            411px;
     height:           260px;
     margin-top: -1px;
     padding: 1px 1px 3px 1px;
