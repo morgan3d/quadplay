@@ -16,38 +16,6 @@ def make_empty_stats_entry():
         xp: 0}
         
 
-def xp_to_level(xp):
-    assert(xp ≠ ∅ and not is_nan(xp))
-    // Invert level_to_xp
-    let approx = floor(floor(xp / LEVEL_DIVISOR, ½)^LEVEL_EXPONENT) + 1
-    if level_to_xp(approx) > xp or xp ≥ level_to_xp(approx + 1):
-        ++approx
-        
-    return approx
-
-
-/* XP needed to reach this level */
-def level_to_xp(level):
-    if level ≤ 0:
-        return 0
-    else:
-        return floor((level - 1)^(1 / LEVEL_EXPONENT), ½) * LEVEL_DIVISOR
-
-
-/*
-// Testing levels
-for i < 20:
-    const xp = 100 i + 20
-    const level = xp_to_level(xp)
-    debug_print(level, ":", level_to_xp(level), "≤", xp, "<", level_to_xp(level + 1))
-    assert(level_to_xp(level) ≤ xp)
-    assert(xp < level_to_xp(level + 1)) 
-    */
-/*
-local:
-    for level < 25:
-        debug_print(level, level_to_xp(level))
-        */
 
 
 /* Assumes the input is a list of q-encoded, all-caps words. 
@@ -137,11 +105,6 @@ def decompress_word_list(string):
         
     return result
     
-
-/*
-for 1 ≤ level ≤  10:
-    const xp = level_to_xp(level)
-    debug_print(level, xp, xp_to_level(xp + 0))*/
 
 
 def stats_save(stats):
@@ -260,8 +223,8 @@ def decode_xp(str):
         return 0
     
 
-/* Don't let the value change except when stats are updated, otherwise
-   we'll access uncollected data. */
+/* Don't let the value change except when stats are updated in
+   `stats_merge_previous_days()`, otherwise we'll access uncollected data. */
 let today_date = ∅
 def today_date_string(update default false):
     if update:
@@ -270,10 +233,11 @@ def today_date_string(update default false):
     return today_date
 
 
-
 /* 
     Update the player's stats and level given the results in 
-    competitor from a global match. Do not save.
+    competitor from a global match. Does not save.
+    
+    Returns a list of new unique words
 */
 def stats_update(stats, competitor, joined_late):
 
@@ -317,12 +281,16 @@ def stats_update(stats, competitor, joined_late):
             word_set[word] = 1
     
     // Add the new words
+    const unique = []
     for list in [competitor.word_list, competitor.free_list]:
         for word in list:
             if not word_set[word]:
                 push(entry.word_list, word)
+                push(unique, word)
     
     sort(entry.word_list)
+    
+    return unique
     
     
 
@@ -353,6 +321,6 @@ def draw_stats_button(pos, selected, radius):
         z: 100})
 
     return {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
-    
+  
 
     

@@ -38,7 +38,7 @@ def grant_new_abilities():
                 if ability.sprite_name ≠ "<default>":
                     sprite = evaluate_constant_expression(ability.sprite_name)
                     
-                notify(sprite, name, ability.description, grant_ability)
+                notify(sprite, name, ability.description, grant_ability, if DEBUG_REGRANT_ALL_ABILITIES then 1 else 5)
             else:
                 // Grant the ability immediately because there is no notification
                 grant_ability()

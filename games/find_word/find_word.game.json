@@ -12,6 +12,7 @@
         "board.pyxl",
         "history.pyxl",
         "stats.pyxl",
+        "xp.pyxl",
         "ability.pyxl",
         "avatar.pyxl",
         "notify.pyxl",
@@ -78,7 +79,7 @@
         "blip_alt_sound": "quad://sounds/blip-17.sound.json",
         "moo_03_sound": "moo-03.sound.json"
     },
-    "version": "0.315",
+    "version": "0.316",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -108,7 +109,11 @@
                 },
                 "badge_per_competitor": {
                     "type": "number",
-                    "value": 10
+                    "value": 9
+                },
+                "unique_word": {
+                    "type": "number",
+                    "value": 11
                 }
             }
         },

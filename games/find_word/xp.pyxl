@@ -1,0 +1,87 @@
+
+def xp_to_level(xp):
+    assert(xp ≠ ∅ and not is_nan(xp))
+    // Invert level_to_xp
+    let approx = floor(floor(xp / LEVEL_DIVISOR, ½)^LEVEL_EXPONENT) + 1
+    if level_to_xp(approx) > xp or xp ≥ level_to_xp(approx + 1):
+        ++approx
+        
+    return approx
+
+
+/* XP needed to reach this level */
+def level_to_xp(level):
+    if level ≤ 0:
+        return 0
+    else:
+        return floor((level - 1)^(1 / LEVEL_EXPONENT), ½) * LEVEL_DIVISOR
+
+
+
+def notify_xp_bonus(xp_value, text, ):
+    todo("XP Award icons")
+    
+    def grant():
+        play_sound({sound: award_sound, playback_rate: 150%})
+        player.stats[today_date].xp += xp_value
+
+    notify(
+        player.avatar.sprite.x_flipped,
+        "XP Bonus",
+        "+" + format_number(xp_value, "commas") + " XP for " + text,
+        grant)
+
+
+/* Called at mode enter before integrating stats */
+def grant_unique_word_xp(unique_word_list):
+    assert(unique_word_list ≠ ∅)
+    if not player.has_ability["Unique Word XP"] or (size(unique_word_list) == 0): return
+    
+    let decoded = []
+    for word in unique_word_list:
+        push(decoded, q_decode(word))
+    
+    let text
+    if size(unique_word_list) < 6:
+        text = join(decoded, ", ", ", and ", " and ")
+    else:
+        text = "" + size(unique_word_list) + " words including " + join(slice(decoded, 0, 5), ", ", ", and ")
+        
+    notify_xp_bonus(
+        size(unique_word_list) * XP_VALUE.unique_word,
+        "finding " + text + " for the first time!")        
+
+
+
+/* If leveling up, called after leveling up. Otherwise called at mode enter. */
+def grant_badge_xp():
+    if not player.has_ability["Badge XP"]: return
+
+    for badge in player_competitor.badges:
+        // Convert the badge back into a title
+        let title = replace(find(BADGE_TABLE, badge), "_", " ")
+        if not contains(title, "word"):
+            title += " word"
+        
+        notify_xp_bonus(
+            XP_VALUE.badge_per_competitor * min(size(competitor_array) - 1, 15),
+            "winning " + uppercase(title) + " in a " + size(competitor_array) + "-player match!")
+
+
+// Testing levels
+/*
+for 0 < i < 30:
+    const xp = 100 i + 20
+    const level = xp_to_level(xp)
+    debug_print(level, ":", level_to_xp(level), "≤", xp, "<", level_to_xp(level + 1))
+    assert(level_to_xp(level) ≤ xp)
+    assert(xp < level_to_xp(level + 1)) 
+  */
+/*
+local:
+    for 0 < level ≤ 30:
+        debug_print(level, "|", format_number(level_to_xp(level), "commas"))
+*/
+
+
+        

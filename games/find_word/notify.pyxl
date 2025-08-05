@@ -1,9 +1,13 @@
-/* Popup notification system. Only shows one at a time and enqueues the rest. */
+/* Popup notification system. Only shows one at a time and enqueues the rest.
+   This code has some fonts hardcoded but is intended to be generalized towards
+   eventually becoming a library independent of the game. */
+
 
 // The notification at the front of the queue is currently displayed
 const _notification_queue = []
 
-def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 5):
+
+def notify(sprite, title, description, begin_callback default ∅, duration_seconds default 2.5):
     assert(begin_callback == ∅ or type(begin_callback) == "function")
     
     push(_notification_queue, {
@@ -13,7 +17,7 @@ def notify(sprite, title, description, begin_callback default ∅, duration_seco
         begin_callback: begin_callback,
         // Real time of display
         first_shown:    ∅,
-        duration_seconds: if DEBUG_REGRANT_ALL_ABILITIES then 1 else duration_seconds})
+        duration_seconds: duration_seconds})
     
 
     
@@ -35,16 +39,16 @@ def update_notifications()
     // These count against duration_seconds
     const ENTER_DURATION_SECONDS   = 0.17
     const EXIT_DURATION_SECONDS    = 0.17
-    
-    // Does not count against duration_seconds
-    const DELAY_AFTER_SECONDS      = 1.2
-    
+        
     // Nothing to do
     if not notifications_pending(): return
 
     // Peek the queue
     const notification = _notification_queue[0]
     with first_shown, duration_seconds, sprite, begin_callback in notification:
+        // Does not count against duration_seconds
+        const DELAY_AFTER_SECONDS      = clamp(25% duration_seconds, 0.6, 1.2)
+        
         const time_now = now()
         
         if first_shown == ∅:
