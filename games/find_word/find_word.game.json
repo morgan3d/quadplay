@@ -80,7 +80,7 @@
         "ability_icon": "ability_icon.sprite.json",
         "notify_icon": "notify_icon.sprite.json"
     },
-    "version": "0.327",
+    "version": "0.328",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

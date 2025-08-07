@@ -362,7 +362,7 @@ history_update(player.history, history_rect)
 
 draw_instructions(board_pos)
 
-handle_ability_button(0, "Free", "Done", action_icon.ok, "(q)", done)
+handle_ability_button(0, "Free", "Done", ability_icon.ok, "(q)", done)
     
 
 if time_left ≤ 20/60:
