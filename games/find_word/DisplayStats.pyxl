@@ -1,6 +1,8 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
-const WIDTH = 224
+// Stable size independent of aspect ratio
+const WIDTH = min(SCREEN_SIZE.x, SCREEN_SIZE.y)
+
 let scroll = 0
 
 /*
@@ -68,9 +70,8 @@ const lifetime = player.stats.lifetime
 const today    = player.stats[today_date_string()] default make_empty_stats_entry()
 
 let y = 36 + ½ (SCREEN_SIZE.y - 224)
-const HIGHLIGHT = #E1B
 
-y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT)
+y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT_COLOR)
 
 if player.has_ability["Longest Word Stat"]:
     const better = size(today.longest_text) ≥ size(lifetime.longest_text) and (today.longest_text ≠ "")
@@ -78,7 +79,7 @@ if player.has_ability["Longest Word Stat"]:
         lifetime.longest_text,
         today.longest_text or "-",
         ∅,
-        if better then HIGHLIGHT else ∅,
+        if better then HIGHLIGHT_COLOR else ∅,
         if better then "↑" else ∅)
 
 if player.has_ability["Best Word Stat"]:
@@ -87,7 +88,7 @@ if player.has_ability["Best Word Stat"]:
         if (lifetime.best_word_text ≠ "") then lifetime.best_word_text + " " + lifetime.best_word_points else "", 
         (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
         TABLE_ALT_ROW_COLOR,
-        if better then HIGHLIGHT else ∅,
+        if better then HIGHLIGHT_COLOR else ∅,
         if better then "↑" else ∅)
 
 if player.has_ability["Free Mode"]:
@@ -96,14 +97,14 @@ if player.has_ability["Free Mode"]:
         if (lifetime.best_free_word_text ≠ "") then lifetime.best_free_word_text + " " + lifetime.best_free_word_points else "-",
         if (today.best_free_word_text ≠ "") then (today.best_free_word_text + " " + today.best_free_word_points) else "-",
         TABLE_ALT_ROW_COLOR,
-        if better then HIGHLIGHT else ∅,
+        if better then HIGHLIGHT_COLOR else ∅,
         if better then "↑" else ∅)
 
 if player.has_ability["Most Words Stat"]:
-    y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT)
+    y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT_COLOR)
     
 if player.has_ability["High Score Stat"]:
-    y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT)
+    y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
 
 y += 5
 y += draw_row(y, "XP",           format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
@@ -119,10 +120,10 @@ if player.has_ability["Unique Words Stat"]:
 
 y += 5
 if player.has_ability["Words/Match Stat"]:
-    y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT)
+    y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
 
 if player.has_ability["Points/Match Stat"]:
-    y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT)
+    y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
 
 
 todo("Show unique words")

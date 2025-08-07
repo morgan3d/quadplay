@@ -1,5 +1,13 @@
 Play
 ════════════════════════════════════════════════════════════════════════
+def enter_free_mode():
+    board_deselect_all(player.board, player)
+    push_mode(FreeMode) because "Button"
+
+def enter_auto_mode():
+    board_deselect_all(player.board, player)
+    push_mode(AutoMode) because "Button"
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -20,7 +28,7 @@ else:
 
     assert(
         end_time > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or 
-        DEBUG_INTERMISSION,
+        DEBUG.INTERMISSION,
         "The game should not end so soon")
 
 set_background(
@@ -45,13 +53,11 @@ const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
 
 player_update(player, ∅, allow_rotate)
 
-if player.has_ability["Free Mode"]:
-    def callback():
-        board_deselect_all(player.board, player)
-        push_mode(FreeMode) because "Button"
-        
-    handle_free_button(callback)
+if player.has_ability["Free Mode"]:        
+    handle_ability_button(0, "Free", "Free", ability_icon.free_mode, "(q)", enter_free_mode)
 
+if player.has_ability["Auto 2x2"]:
+    handle_ability_button(1, "Auto", "Auto", ability_icon.auto_mode, "(d)", enter_auto_mode)
     
 
 if time_left ≤ 20/60:
@@ -63,7 +69,7 @@ if time_left ≤ 20/60:
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 100)
     
     
-if time_left ≤ 0 or DEBUG_INTERMISSION:
+if time_left ≤ 0 or DEBUG.INTERMISSION:
     board_deselect_all(player.board, player)
     if game_type == SOLO:
         set_mode(SoloIntermission) because "SOLO and timer"
@@ -77,12 +83,20 @@ if time_left ≤ 0 or DEBUG_INTERMISSION:
 
 leave
 ────────────────────────────────────────────────────────────────────────
-for points in entry in player.history.free:        
+play_sound(times_up_sound)
+if game_type == GLOBAL:
+    player_achieve(player, "Play Global Match")
+    
+
+// Accumulate the free mode points into the score
+// now that they're locked in
+for points in entry in player.history.free:       
     player.score += points
 
 // Reset the scroll position because layout differs
 // from the main game during intermission
-play_sound(times_up_sound)
+player.history.scroll = 0
+
+// Sort words by final score
 sort(player.history.list, "points", true)
 sort(player.history.free, "points", true)
-player.history.scroll = 0

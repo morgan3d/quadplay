@@ -31,13 +31,7 @@ def avatar_load():
         avatar_data = {
             sprite_index: random_integer(0, AVATAR_SPRITE_COUNT - 1),
             id: new_guid(),
-            name: ""}
-
-        // Generate a random name
-        while avatar_data.name == "" or sensitive[lowercase(avatar_data.name)]:
-            avatar_data.name = ""
-            for i < 3:
-                avatar_data.name += random_value(ALPHABET)
+            name: "?  "}
         
         // Persist the random avatar        
         save_local("avatar", avatar_data)
@@ -82,7 +76,7 @@ def avatar_draw_large(avatar, pos, background default true, color, shadow defaul
     draw_sprite({sprite: sprite, scale: 200%, pos: pos + xy(0, -1), z: 5})
     
     color = color default (if background then avatar.color else player.board.selection_color)
-    draw_text({font: score_font, text: avatar.name, color: color, shadow: shadow, pos: pos + xy(0, 27), z: 5})
+    draw_text({font: score_font, text: trim_spaces(avatar.name), color: color, shadow: shadow, pos: pos + xy(0, 27), z: 5})
 
 
 
@@ -129,6 +123,13 @@ def avatar_next_name_letter(letter, dir default +1):
     i = loop(i + dir, size(AVATAR_NAME_ALPHABET))
     return AVATAR_NAME_ALPHABET[i]
     
-    
+
+
+def idle_animate_avatar(sprite, alt):
+    return (
+        if alt 
+        then sprite_transfer_orientation(sprite, sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1])
+        else sprite)
+
     
     

@@ -54,7 +54,7 @@ def draw_awards()
 def draw_award_summary()
 & preserving_transform:
     
-    const highlight_color = #E1B    
+    const highlight_color = HIGHLIGHT_COLOR    
 
     const frames = mode_frames - first_frame_this_stage
     const flash = (⌊frames / 15⌋ mod 2) and (player.score > 0)
@@ -133,7 +133,7 @@ def draw_award_summary()
     draw_corner_rect(
         xp_rect.corner + 1,
         xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), 
-        if frames < XP_ANIMATION_DELAY_FRAMES and not flash then #000 else #E1B)
+        if frames < XP_ANIMATION_DELAY_FRAMES and not flash then #000 else HIGHLIGHT_COLOR)
     
     draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
@@ -194,7 +194,7 @@ def draw_award_background(rect, field, color)
 def draw_most_words_award(winner):
     maybe_play_award_sound(winner)
     ++draw_most_words_award.frames
-    player.board.selection_color = #E1B
+    player.board.selection_color = HIGHLIGHT_COLOR
 
     draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
     draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, "most_words", winner.avatar.color)
@@ -222,7 +222,7 @@ def draw_leaderboard()
     set_clip(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, SCREEN_SIZE.y - 22))
     set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 72))
     
-    draw_text({text: "Global Leaderboard", pos: xy(½ GLOBAL_LAYOUT.LEADERBOARD.WIDTH, -4), x_align: "center", font: leaderboard_font, color: #E1B, shadow: #000})
+    draw_text({text: "Global Leaderboard", pos: xy(½ GLOBAL_LAYOUT.LEADERBOARD.WIDTH, -4), x_align: "center", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
     
     // Alternating animation frames for avatar idle animations
     const alt = ⌊mode_frames / 30⌋ mod 2
@@ -239,13 +239,7 @@ def draw_leaderboard()
         // Highlight
         const highlight_color = if friend then lerp(competitor.avatar.color, #333, 75%) else (if me then competitor.avatar.color else ∅)
         draw_corner_rect(pos - xy(0, 9), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 18), highlight_color, ∅, ∅, -1)
-            
-        // Animate sprite
-        let sprite = competitor.avatar.sprite
-        
-        if alt: 
-            sprite = sprite_transfer_orientation(sprite, sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1])
-        
+
         const text_args = {
             font: leaderboard_font,
             shadow: if me then 60% competitor.avatar.color else ∅,
@@ -257,7 +251,7 @@ def draw_leaderboard()
                 pos: pos + xy(GLOBAL_LAYOUT.LEADERBOARD.AVATAR_X - 14, 0),
                 text: "♥"})
                 
-        draw_sprite(sprite.x_flipped, pos + xy(GLOBAL_LAYOUT.LEADERBOARD.AVATAR_X, 0))
+        draw_sprite(idle_animate_avatar(competitor.avatar.sprite.x_flipped, alt), pos + xy(GLOBAL_LAYOUT.LEADERBOARD.AVATAR_X, 0))
         
         draw_text({…text_args,
             text: competitor.avatar.level,
@@ -294,7 +288,6 @@ def draw_leaderboard()
 
         if competitor ≠ player_competitor: 
             text = censor(text)
-        
             
         draw_text({
             …text_args, 
@@ -324,7 +317,7 @@ def update_countdown():
         pos: timer_pos + xy(0, 1),
         color: #FFF})
     
-    if frame_utc_now ≥ end_time and not DEBUG_INTERMISSION:
+    if frame_utc_now ≥ end_time and not DEBUG.INTERMISSION:
         set_mode(GenerateBoard) because "Timer"
     
     
@@ -345,7 +338,7 @@ prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 
 
-if not DEBUG_INTERMISSION:
+if not DEBUG.INTERMISSION:
     const unique_word_list = stats_update(player.stats, player_competitor, joined_late)
     grant_unique_word_xp(unique_word_list)
     
@@ -387,6 +380,8 @@ else:
 
 prev_stage = stage
 first_frame_this_stage = 0
+
+
 
 frame
 ────────────────────────────────────────────────────────────────────────

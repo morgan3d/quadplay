@@ -317,6 +317,10 @@ def draw_instructions(board_pos):
         font: leaderboard_font})
 
 
+def done():
+    play_sound({sound: blip_alt_sound, volume: 80%})
+    pop_mode() because "Button"
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -358,11 +362,7 @@ history_update(player.history, history_rect)
 
 draw_instructions(board_pos)
 
-local:
-    def callback():
-        play_sound({sound: blip_alt_sound, volume: 80%})
-        pop_mode() because "Button"
-    handle_free_button(callback)
+handle_ability_button(0, "Free", "Done", action_icon.ok, "(q)", done)
     
 
 if time_left ≤ 20/60:

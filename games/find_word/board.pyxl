@@ -432,7 +432,7 @@ def board_draw_mini(board, pos)
 /* Force a selection in the intermission modes.
    `word` is Q-decoded. Does not select if already selected,
    so that pulse animation works */
-def board_select_word(board, word, color default #E1B):
+def board_select_word(board, word, color default HIGHLIGHT_COLOR):
     assert(word)
     if q_decode(board_selected_word(board)) == word: return
 

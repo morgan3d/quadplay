@@ -17,6 +17,13 @@ def make_empty_stats_entry():
         
 
 
+def stats_total_xp(stats):
+    let xp = 0
+    for entry in stats:
+        xp += entry.xp
+    return xp
+    
+    
 
 /* Assumes the input is a list of q-encoded, all-caps words. 
    Returns a string packing them into a form that serializes
@@ -118,7 +125,7 @@ def stats_save(stats):
     
 
 /* Returns a new stats object loaded from storage. */
-def stats_load():    
+def stats_load():
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
     
     // Encode the empty. The xp should be encoded but will be forced to 0
@@ -208,7 +215,7 @@ def encode_xp(xp):
         
 /* Used for lightly protecting the saved value from casual abuse via a checksum */
 def decode_xp(str):
-    if DEBUG_REGRANT_ALL_ABILITIES:
+    if DEBUG.REGRANT_ALL_ABILITIES:
         return 20000
     
     if type(str) ≠ "string":

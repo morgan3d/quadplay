@@ -1,7 +1,7 @@
 
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
-def insert_bots(competitor_array, target_count):
+def insert_bots(competitor_array, target_count, max_bots):
     const avatar_set = [
 {
 name: "THX",
@@ -20,20 +20,20 @@ first_hour: 17,
 last_hour: 7
 },
 {
-name: "AMS",
-sprite: avatar_sprite[37][14],
-base_ability: 0.3,
-short_word_preference: 0.3227786173178901,
-first_hour: 22,
-last_hour: 6
-},
-{
 name: "NT",
 sprite: avatar_sprite[17][6],
 base_ability: 0.08139577593236193,
 short_word_preference: 0.6744168962705523,
 first_hour: 8,
 last_hour: 12
+},
+{
+name: "AMS",
+sprite: avatar_sprite[37][14],
+base_ability: 0.3,
+short_word_preference: 0.3227786173178901,
+first_hour: 22,
+last_hour: 6
 },
 {
 name: "I♥U",
@@ -249,7 +249,7 @@ last_hour: 1
     
     
     let c = 0
-    while size(competitor_array) < target_count and avatar_set[c]:       
+    while size(competitor_array) < target_count and avatar_set[c] and c < max_bots:       
         const competitor = make_bot_competitor(avatar_set[c], "BOT_" + c)
         ++c
         push(competitor_array, competitor)
@@ -271,7 +271,7 @@ last_hour: 1
     
     // Process caf after Moo. Everyone who can see caf can also see Moo, so
     // this keeps it deterministic
-    if DEBUG_CAF or (player.has_ability["See caf"] and match_rng() < 50%):// and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG_CAF:
+    if DEBUG.CAF or (player.has_ability["See caf"] and match_rng() < 50%):// and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
         push(competitor_array,
             make_bot_competitor({
                     name: "caf",
@@ -287,7 +287,7 @@ last_hour: 1
 /* Special case AI for the caf bot. `word_list` is the input,
    `word_set` is the output found words */
 def caf_ai(word_set, word_list, rng):
-    if rng() < 10% or DEBUG_CAF:     
+    if rng() < 10% or DEBUG.CAF:     
         const word = word_list[random_integer(max(0, size(word_list) - 6), size(word_list) - 1, rng)]
         if word and not word_set[word]:
             // Find this word

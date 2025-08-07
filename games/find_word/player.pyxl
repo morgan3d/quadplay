@@ -1,8 +1,15 @@
+/* Grant this achievement */
+def player_achieve(player, name, make_notification default false):
+    if not player.has_achievement[name]:
+        player.has_achievement[name] = true
+        save_local("has_achievement", player.has_achievement)
+
+
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
-        
+    
     return {
         board: make_board(),
         
@@ -18,6 +25,8 @@ def make_player():
         // save files don't have to be updated; instead upgrades are sticky
         // and automatically appear on level up retroactively
         has_ability: ability_load(),
+        
+        has_achievement: load_local("has_achievement") default {},
         
         // Maps player GUIDs to their most recent name.
         // The names are only for debugging.
@@ -43,6 +52,7 @@ def make_player():
         
         // Where the cursor is
         cursor_tile_index: xy(0, 0)}
+
 
 
 def player_free_row_contains(player, word):
@@ -104,8 +114,7 @@ def player_selection_change_callback(player)
         // finding and emphasizing it
         player_emphasize_history_word(player, word)
         return true
-        
-                
+                        
     else if points > 0:
         if player_free_row_contains(player, word):
             // This word was made in free mode unnecessarily. Steal it
@@ -172,10 +181,12 @@ def player_update_aux_button(player, board_pos, callback, sprite, button, button
 
 
 /* Also draws button prompts */
-def player_draw_score(player, board_pos)
+def player_draw_score(player, board_pos, time_left)
 & with gamepad, board, score in player:
     
     const score_pos = board_pos + xy(+½, -½) * get_board_pixel_size() - xy(18, 16)
+    
+    let width = 0
     
     if in_waiting_room:
         draw_text({
@@ -209,27 +220,31 @@ def player_draw_score(player, board_pos)
                     
             score_text += "+" + free_text
         
-        score_text += " pts"
-         
-        draw_text({
+        width = draw_text({
             pos: score_pos,
-            font: if player.using_gamepad and size(score_text) > 9 then leaderboard_font else score_font,
-            text: score_text,
+            font: if player.using_gamepad and size(score_text) > 5 then leaderboard_font else score_font,
+            text: score_text + " pts",
             color: #FFF,
             markup: true,
             y_align: "center",
-            x_align: "right"})
+            x_align: "right"}).size.x 
     
     // Button prompts (no space during Free Mode for this)
-    if player.using_gamepad and get_mode() ≠ FreeMode:
-        draw_text({
-            pos: score_pos + xy(-136, -7),
-            font: button_prompt_font,
-            text: replace("(a) SELECT" + (if size(board.selection) > 1 then "\n(b) CANCEL" else ""), gamepad.prompt),
-            x_align: "left",
-            y_align: "top",
-            color: #FFF,
-            z: TILE_LETTER_Z})
+    if player.using_gamepad:
+        if get_mode() ≠ FreeMode:
+            draw_text({
+                pos: score_pos + xy(-136, -7),
+                font: button_prompt_font,
+                text: replace("(a) SELECT" + (if size(board.selection) > 1 then "\n(b) CANCEL" else ""), gamepad.prompt),
+                x_align: "left",
+                y_align: "top",
+                color: #FFF,
+                z: TILE_LETTER_Z})
+    else if not in_waiting_room:
+        // Gamepad prompts go in this space, so only draw the avatar in mouse/touch mode
+        const sprite = idle_animate_avatar(player.avatar.sprite, loop(time_left) < ½)
+        draw_sprite(if size(player.history.list) mod 2 then sprite else sprite.x_flipped, score_pos - xy(width + 10, 1))
+      
         
 
 
@@ -304,41 +319,34 @@ def player_update(player, angle default 0°, allow_selection default false):
 
     player_update_board(player, board_pos, angle, allow_selection)
 
-    player_draw_score(player, board_pos)
+    const time_left = draw_timer(board_pos)
+
+    player_draw_score(player, board_pos, time_left)
     
     if allow_selection:
         def callback():
             push_mode(Rotate) because "Rotate button"
         player_update_aux_button(player, board_pos, callback, shapes.curved_arrow.rotated_270, "d", "f")
-
     
-    const history_rect = get_history_rect()
-        
-    history_update(player.history, history_rect)
+    history_update(player.history, get_history_rect())
     
-    draw_timer(board_pos)
-
+    
 
 
 /* Compute the position of the center of the board based on the screen size */
-def get_board_pos():
-    let board_pos
-    
+def get_board_pos():    
     // Our board has some content at the top, so don't switch
     // to portrait until all of the UI will be visible
     if landscape():
         // Landscape. Put at the bottom right (feel "closer" to a right handed mouse player)
-        board_pos = xy(SCREEN_SIZE.x - ½ get_board_pixel_size().x - 8, ½ SCREEN_SIZE.y + 8)
+        return xy(SCREEN_SIZE.x - ½ get_board_pixel_size().x - 8, ½ SCREEN_SIZE.y + 8)
     else:
         // Portrait. Put at the bottom, centered, unless the screen is not very high
-        board_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ get_board_pixel_size().y - 18)
-        
         // Slide up a little on narrow screens so that it is easier to swipe on a phone
-        board_pos.y -= ⅓ max(SCREEN_SIZE.y - (get_board_pixel_size().y + 60), 0)
-
-    return board_pos
-
-
+        return xy(½ SCREEN_SIZE.x,
+            SCREEN_SIZE.y - ½ get_board_pixel_size().y - 18
+            - ⅓ max(SCREEN_SIZE.y - (get_board_pixel_size().y + 60), 0))
+        
 
 
 /* Draw the board and manage UI state changes.

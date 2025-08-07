@@ -1,31 +1,19 @@
 GatherGlobalResults
 ════════════════════════════════════════════════════════════════════════
 
-const color = #F3C
-
-def draw_arc(pos, radius, start, stop, color):
-    const N = 10
-    let prev = pos + angle_to_xy(start) * radius
-    for i < N:
-        const θ = lerp(start, stop, i / (N - 1),)
-        const curr = pos + radius * angle_to_xy(θ)
-        draw_line(prev, curr, color)
-        prev = curr
-
-
 def draw_globe(pos, radius):
-    draw_disk(pos, radius, ∅, color)
+    draw_disk(pos, radius, ∅, HIGHLIGHT_COLOR)
     
     const parallels = 7
     for 0 < p < parallels:
         const θ = 180° (p + 1) / (parallels + 1) 
-        draw_arc(pos, xy(1, cos θ) * radius, 12°, 168°, color)
+        draw_arc(pos, xy(1, cos θ) * radius, 12°, 168°, HIGHLIGHT_COLOR)
     
     const meridians = 15
     for m < meridians:
         const ϕ = loop(360° * m / meridians + 1° game_frames, 360°)
         if ϕ < 180°:
-            draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, color)
+            draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, HIGHLIGHT_COLOR)
 
 
 enter
@@ -39,18 +27,18 @@ share_results_with_network(player_competitor)
 
 end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
 
-if DEBUG_INTERMISSION:
+if DEBUG.INTERMISSION:
     end_time = frame_utc_now
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if mode_frames == (if DEBUG_INTERMISSION then 0 else 60):
+if mode_frames == (if DEBUG.INTERMISSION then 0 else 60):
     // Make some bots to fill out the competitor list if offline or
     // there are too few players. Do this after almost a second so that
     // other players could come in first
     const num_total_competitors = clamp(⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(6, 16), 3, 10)
-    insert_bots(competitor_array, num_total_competitors)
+    insert_bots(competitor_array, num_total_competitors, 4)
 
 const start_time = end_time - GATHER_TIME_SECONDS
 const τ = min((frame_utc_now - start_time) / GATHER_TIME_SECONDS, 100%)
@@ -62,14 +50,14 @@ set_background(GLOBAL_BACKGROUND_COLOR)
 draw_text({
     text: "Gathering Global Scores…",
     font: score_font,
-    color: color,
+    color: HIGHLIGHT_COLOR,
     y_align: "center",
     pos: ½ SCREEN_SIZE})
 
 const y = ½ SCREEN_SIZE.y + 20
 const w = 200
-draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w * τ, 10), color)
-draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w, 10), ∅, color)
+draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w * τ, 10), HIGHLIGHT_COLOR)
+draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w, 10), ∅, HIGHLIGHT_COLOR)
 
 draw_globe(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y - 40), 20)
 

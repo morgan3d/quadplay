@@ -32,6 +32,7 @@
         "Play",
         "Rotate",
         "FreeMode",
+        "AutoMode",
         "SoloIntermission",
         "GatherGlobalResults",
         "GlobalIntermission"
@@ -73,13 +74,13 @@
         "tile_small_point_font": "quad://fonts/deja-4.font.json",
         "moo_00_sound": "moo-00.sound.json",
         "moo_01_sound": "moo-01.sound.json",
-        "free_mode_sprite": "free.sprite.json",
-        "check_sprite": "check.sprite.json",
         "level_up_sound": "quad://sounds/good-02.sound.json",
         "blip_alt_sound": "quad://sounds/blip-17.sound.json",
-        "moo_03_sound": "moo-03.sound.json"
+        "moo_03_sound": "moo-03.sound.json",
+        "ability_icon": "ability_icon.sprite.json",
+        "notify_icon": "notify_icon.sprite.json"
     },
-    "version": "0.325",
+    "version": "0.327",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -102,7 +103,40 @@
         },
         "TABLE_ALT_ROW_COLOR": {
             "type": "rgb",
-            "value": "#6AD"
+            "value": {
+                "r": 0.4,
+                "g": 0.6666666666666666,
+                "b": 0.8666666666666667
+            }
+        },
+        "INTRO": {
+            "type": "object",
+            "value": {
+                "PRE_FRAMES": {
+                    "type": "number",
+                    "value": 9
+                },
+                "BEAT_FRAMES": {
+                    "type": "number",
+                    "value": 35
+                },
+                "NUM_BEATS": {
+                    "type": "number",
+                    "value": 6
+                },
+                "SLIDE_FRAMES": {
+                    "type": "number",
+                    "value": 40
+                }
+            }
+        },
+        "HIGHLIGHT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.9333333333333333,
+                "g": 0.06666666666666667,
+                "b": 0.7333333333333333
+            }
         },
         "AVATAR_RESTRICTED_INDEXES": {
             "type": "array",
@@ -184,7 +218,11 @@
         },
         "TILE_HOLE_COLOR": {
             "type": "rgb",
-            "value": "#AAA",
+            "value": {
+                "r": 0.6666666666666666,
+                "g": 0.6666666666666666,
+                "b": 0.6666666666666666
+            },
             "description": "Color of the hole left when a tile is used in Free Mode"
         },
         "TILE_EXTENT": {
@@ -268,7 +306,7 @@
         "AVATAR_NAME_ALPHABET": {
             "type": "string",
             "description": "Legal letters in an avatar name. Names are also run through a sensitive check before being displayed.",
-            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞!?ℵ♥★♦+-/ "
+            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789∞ℵ♥★♦+-/ !?"
         },
         "BADGE_TABLE": {
             "type": "object",
@@ -295,21 +333,34 @@
                 }
             }
         },
-        "TIMER_REMAP_SECONDS": {
-            "type": "number",
-            "value": 10,
-            "min": 0,
-            "max": 30,
-            "description": "Amount of distorted time to remap. I.e., remapping starts when this time is displayed"
-        },
-        "TIMER_END_TIME_SCALE": {
-            "type": "number",
-            "description": "How much to scale time after the pivot (< 100% = slower)",
-            "value": "88%",
-            "format": "%",
-            "quantum": 0.01,
-            "min": 0.5,
-            "max": 1.5
+        "TIMER": {
+            "type": "object",
+            "value": {
+                "REMAP_SECONDS": {
+                    "type": "number",
+                    "value": 10,
+                    "min": 0,
+                    "max": 30,
+                    "description": "Amount of distorted time to remap. I.e., remapping starts when this time is displayed"
+                },
+                "END_TIME_SCALE": {
+                    "type": "number",
+                    "description": "How much to scale time after the pivot (< 100% = slower)",
+                    "value": "88%",
+                    "format": "%",
+                    "quantum": 0.01,
+                    "min": 0.5,
+                    "max": 1.5
+                },
+                "BEEP_SECONDS": {
+                    "type": "number",
+                    "value": "5.0",
+                    "min": 0,
+                    "max": 30,
+                    "format": "0.0",
+                    "quantum": 0.1
+                }
+            }
         },
         "LETTER_POINT_TABLE": {
             "type": "raw",
@@ -553,10 +604,6 @@
             },
             "description": "Options for controlling the search for a good board in `player_reset()`"
         },
-        "DEBUG_BOARD_SEARCH": {
-            "type": "boolean",
-            "value": false
-        },
         "POINTS_ANIMATION_FRAMES": {
             "type": "number",
             "value": "35",
@@ -564,15 +611,6 @@
             "max": 128,
             "format": "0",
             "quantum": 1
-        },
-        "DEBUG_PORTRAIT": {
-            "type": "boolean",
-            "value": false,
-            "description": "Debug override this to true to force a mobile-device-like aspect ratio in the IDE"
-        },
-        "DEBUG_HISTORY": {
-            "type": "boolean",
-            "value": false
         },
         "CURSOR_COLOR": {
             "type": "rgb",
@@ -700,10 +738,6 @@
                 }
             }
         },
-        "DEBUG_WAITING_ROOM": {
-            "type": "boolean",
-            "value": false
-        },
         "GLOBAL_JOIN_MIN_REMAINING_TIME": {
             "type": "number",
             "value": "20",
@@ -712,10 +746,6 @@
             "max": 120,
             "format": "0",
             "quantum": 1
-        },
-        "DEBUG_LANDSCAPE": {
-            "type": "boolean",
-            "value": false
         },
         "TILE_COLOR": {
             "type": "rgb",
@@ -801,10 +831,6 @@
                     "value": "100%"
                 }
             }
-        },
-        "DEBUG_INTERMISSION": {
-            "type": "boolean",
-            "value": false
         },
         "BUTTON_REPEAT_DELAY": {
             "type": "number",
@@ -1093,6 +1119,9 @@
                 "SPOT",
                 "SPOTS",
                 "SPOTTED",
+                "STABLE",
+                "STABLES",
+                "STABLED",
                 "STALL",
                 "STEER",
                 "STEERS",
@@ -1138,15 +1167,36 @@
             "description": "These are words that the Moo AI automatically finds when present."
         },
         "STAGE": {
-            "type": "raw",
+            "type": "object",
             "value": {
-                "BEST_WORD": 0,
-                "MOST_WORDS": 1,
-                "MOST_WORDS2": 2,
-                "BEST_RARE": 3,
-                "LONGEST": 4,
-                "SUMMARY": 5,
-                "SUMMARY2": 6
+                "BEST_WORD": {
+                    "type": "number",
+                    "value": 0
+                },
+                "MOST_WORDS": {
+                    "type": "number",
+                    "value": 1
+                },
+                "MOST_WORDS2": {
+                    "type": "number",
+                    "value": 2
+                },
+                "BEST_RARE": {
+                    "type": "number",
+                    "value": 3
+                },
+                "LONGEST": {
+                    "type": "number",
+                    "value": 4
+                },
+                "SUMMARY": {
+                    "type": "number",
+                    "value": 5
+                },
+                "SUMMARY2": {
+                    "type": "number",
+                    "value": 6
+                }
             },
             "description": "Constants for intermission awards stages"
         },
@@ -1166,11 +1216,6 @@
             "max": 15,
             "format": "0.0",
             "quantum": 0.1
-        },
-        "DEBUG_OFFLINE": {
-            "type": "boolean",
-            "value": false,
-            "description": "Do not actually share results online if true"
         },
         "REBOOT_TIME_MINUTES": {
             "type": "number",
@@ -1246,19 +1291,6 @@
             },
             "description": "Constants for the GlobalIntermission layout"
         },
-        "DEBUG_STATS": {
-            "type": "boolean",
-            "value": false
-        },
-        "SOLO_free_ROUND_TIME": {
-            "type": "number",
-            "value": "25",
-            "description": "In seconds. Zero = none",
-            "min": 0,
-            "max": 30,
-            "format": "0",
-            "quantum": 1
-        },
         "tile_small_font": {
             "type": "reference",
             "value": "leaderboard_font"
@@ -1292,14 +1324,6 @@
                 }
             }
         },
-        "TIMER_BEEP_SECONDS": {
-            "type": "number",
-            "value": "5.0",
-            "min": 0,
-            "max": 30,
-            "format": "0.0",
-            "quantum": 0.1
-        },
         "HARPY_AVATAR_INDEX": {
             "type": "xz",
             "value": {
@@ -1326,14 +1350,57 @@
             "type": "string",
             "value": "SPECIAL_caf"
         },
-        "DEBUG_CAF": {
-            "type": "boolean",
-            "value": false
-        },
-        "DEBUG_REGRANT_ALL_ABILITIES": {
-            "type": "boolean",
-            "value": false,
-            "description": "Erases and then levels up to allow seeing all notifications."
+        "DEBUG": {
+            "type": "object",
+            "value": {
+                "RESET_PLAYER": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "INTERMISSION": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "LANDSCAPE": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "BOARD_SEARCH": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "PORTRAIT": {
+                    "type": "boolean",
+                    "value": false,
+                    "description": "Debug override this to true to force a mobile-device-like aspect ratio in the IDE"
+                },
+                "HISTORY": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "WAITING_ROOM": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "OFFLINE": {
+                    "type": "boolean",
+                    "value": false,
+                    "description": "Do not actually share results online if true"
+                },
+                "STATS": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "CAF": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "REGRANT_ALL_ABILITIES": {
+                    "type": "boolean",
+                    "value": false,
+                    "description": "Erases and then levels up to allow seeing all notifications."
+                }
+            }
         }
     },
     "screenshot_tag": "find_word",

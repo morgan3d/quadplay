@@ -16,9 +16,13 @@
  - In-game letter tiles are capital letters, except for "Qu" 
  - All other text is mixed case, except for: logos, avatar names,
    and the Free Mode animation
- - The primary emphasis color is #E1B pink
+ - The primary emphasis color is HIGHLIGHT_COLOR pink
  - The primary button/cursor/UI selection color is green
 */
+
+if DEBUG.RESET_PLAYER:
+    debug_print("RESET PLAYER")
+    save_local()
 
 /* Longest possible word */
 const MAX_WORD_LENGTH = ROWS * COLS

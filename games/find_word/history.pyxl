@@ -102,6 +102,27 @@ def history_draw(history, pos, max_height):
         max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
 
+    if not player.has_achievement["Make Second Word"]:
+        const text = (
+            if player.has_achievement["Make First Word"] 
+            then "Great! Keep going until the timer expires." 
+            else (
+                if player.using_gamepad
+                then replace("Select a chain of letters with (a) to spell a word", joy.prompt)
+                else "Swipe through a chain of letters to spell a word"))
+            
+        draw_text({
+            // Bounce if emphasized
+            pos: pos + xy(0, 10),
+            font: score_font,
+            x_align: "left",
+            y_align: "top",
+            color: #FFF,
+            outline: #000,
+            z: 100,
+            wrap_width: 150,
+            text: text})
+
     if get_mode() ≠ GlobalIntermission:
         // Regular list first
         for entry in history.list:
@@ -132,6 +153,10 @@ def history_draw(history, pos, max_height):
 def history_add(history, list_name, word, points):
     assert(word)
     assert(type(word) == "string")
+    
+    player_achieve(player, "Make First Word")
+    if size(history.list) == 2:
+        player_achieve(player, "Make Second Word")
     
     let color = color_for_points(points)
     

@@ -25,13 +25,13 @@ set_background(#000)
 draw_text({
     text: "Generating board…",
     font: score_font,
-    color: #F3C,
+    color: HIGHLIGHT_COLOR,
     pos: ½ SCREEN_SIZE})
 
 if mode_frames > 3:
-    player_reset_match(player, game_type/*, if DEBUG_INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅ */)
+    player_reset_match(player, game_type/*, if DEBUG.INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅ */)
     
-    if DEBUG_HISTORY or DEBUG_INTERMISSION:
+    if DEBUG.HISTORY or DEBUG.INTERMISSION:
         for i < 35:
             const word = random_value(player.board.word_list)
             if not player.already_found[word]:

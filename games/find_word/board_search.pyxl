@@ -43,7 +43,7 @@ def board_find_all_words(board):
         size(word_set) - short_count, "actual words with 6+ letters\n")
     */
 
-    if DEBUG_BOARD_SEARCH:
+    if DEBUG.BOARD_SEARCH:
         debug_print(round((now() - before) * 1000), "ms to find all", size(word_set), "words")
     
     const word_array = keys(word_set)
@@ -62,7 +62,7 @@ def _player_find_good_board(player, game_type):
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG_BOARD_SEARCH then 
+    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG.BOARD_SEARCH then 
             (10 utc_now())
         else
             // Use the seed for the curent game period, but look a few
@@ -85,7 +85,7 @@ def _player_find_good_board(player, game_type):
     let tries = -1  
     while tries < BOARD_SEARCH.RETRIES:
         ++tries
-        if tries > 0 and DEBUG_BOARD_SEARCH: debug_print("\n*** Rerolling because still bad after " + BOARD_SEARCH.SHUFFLE_RETRIES + " shuffles ***") 
+        if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because still bad after " + BOARD_SEARCH.SHUFFLE_RETRIES + " shuffles ***") 
 
         seed_base = random_integer(0x0, 0x7FFFFFFF, board_rng)
         
@@ -95,31 +95,31 @@ def _player_find_good_board(player, game_type):
 
             // Bwtween 4 and 7 vowels seems to be the sweet spot for 4x4 grid
             if vowels ≤ ROWS or vowels ≥ 2 ROWS:
-                if DEBUG_BOARD_SEARCH: debug_print("\n*** Rerolling because " + vowels + " ***") 
+                if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + vowels + " ***") 
                 continue
 
             word_array = board_find_all_words(player.board)
         
             if tries == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
                 // Last try, so just give up and accept the board
-                if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted " + seed_base)
+                if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted " + seed_base)
                 done = true
                 break
     
             if board_has_obvious_sensitive_word(player.board, tries > ½ BOARD_SEARCH.RETRIES or j > 0):
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it had an obvious sensitive word")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it had an obvious sensitive word")
                 continue
     
             if size(word_array) < BOARD_SEARCH.MIN_WORDS:
                 // Not enough words to even examine the board
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + size(word_array) + " words")        
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + size(word_array) + " words")        
                 continue
             
             if tries ≥ BOARD_SEARCH.RETRIES - 2:
                 // We're running out of tries. This board passes
                 // the min words test, so just accept it instead of getting
                 // stuck with the last board we generate
-                if DEBUG_BOARD_SEARCH: debug_print("Gave up and accepted board " + seed_base + " because we had two tries left and this passed minumum words")
+                if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted board " + seed_base + " because we had two tries left and this passed minumum words")
                 done = true
                 break
 
@@ -165,15 +165,15 @@ def _player_find_good_board(player, game_type):
                             ++valuable_letter_long_count[letter]
             
             if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + short_word_count + " short words")        
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + short_word_count + " short words")        
                 continue
             
             if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + long_word_count + " long words")        
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + long_word_count + " long words")        
                 continue
             
             if very_long_word_count < BOARD_SEARCH.MIN_VERY_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + very_long_word_count + " very long words")        
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + very_long_word_count + " very long words")        
                 continue
             
             // See if we used the valuable letters.
@@ -192,19 +192,19 @@ def _player_find_good_board(player, game_type):
             mean_valuable_letter_long_uses = total_valuable_letter_long_uses / max(num_valuable_letter_instances, 1)
             
             if mean_valuable_letter_uses < BOARD_SEARCH.MEAN_VALUABLE_LETTER_USES:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough on average")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough on average")
                 continue
             
             if mean_valuable_letter_long_uses < BOARD_SEARCH.MEAN_VALUABLE_LETTER_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + " long words on average")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + " long words on average")
                 continue
 
             if min_valuable_letter_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough")
                 continue
             
             if min_valuable_letter_long_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
-                if DEBUG_BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + " long words")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + " long words")
                 continue
     
             // Success!
@@ -213,7 +213,7 @@ def _player_find_good_board(player, game_type):
     
         if done:
             // Stop early as we have a good board
-            if DEBUG_BOARD_SEARCH: debug_print("Accepted board")
+            if DEBUG.BOARD_SEARCH: debug_print("Accepted board")
             break
         else:
             // Try again
@@ -223,7 +223,7 @@ def _player_find_good_board(player, game_type):
     player.board.word_count = size(word_array)
     sort(player.board.word_list, size_comparator)
     
-    if DEBUG_BOARD_SEARCH:
+    if DEBUG.BOARD_SEARCH:
         debug_print(join(player.board.word_list, ", "))
         debug_print("very_long_word_count =", very_long_word_count)
         debug_print("valuable_letter_table =", valuable_letter_table)
@@ -255,7 +255,7 @@ def board_reset(board, seed_base, permute_number default 0):
     // standard dice set. If false, choose using sampling from 
     // a bag of tiles without replacement.
     let dice = rnd() < 85%
-    if DEBUG_BOARD_SEARCH:
+    if DEBUG.BOARD_SEARCH:
         debug_print("Using " + (if dice then "DICE" else "TILE") + " generator")
     
     const VOWEL = {A:1, E:1, I:1, O:1, U:1}
@@ -291,6 +291,6 @@ def board_reset(board, seed_base, permute_number default 0):
             for x < COLS:
                 board.tile[x][y] = flat_array[x + y * COLS]
         
-    if DEBUG_BOARD_SEARCH: debug_print(board_to_string(board))
+    if DEBUG.BOARD_SEARCH: debug_print(board_to_string(board))
     return vowels
 

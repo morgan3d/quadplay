@@ -104,7 +104,11 @@ function showConstantEditor(choice) {
   
  */
 function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, compact) {
-    console.assert(json);
+    if (! json) { 
+        console.error('Bad json in makeConstantEditorControlHTML:', json);
+        return; 
+    }
+
     const type = json.type || typeof value;
     const disabled = editableProject ? '' : 'disabled';
     const controlName = (isDebugLayer ? 'debug_' : '') + constantName;
@@ -195,7 +199,6 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
         const onchange = `onConstantEditorVectorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', ${JSON.stringify(fields).replaceAll('"', "'")}, event)`;
 
         html += `<table style="margin-left:10px">`;
-
         for (let i = 0; i < fields.length; ++i) {
             const element = fields[i];
             const elementValue = json.value[element].type ? json.value[element].value : value[element];
@@ -358,6 +361,10 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
                     keyQuote = '"' + keyQuote + '"';
                 }
 
+                if (! json.value[key]) {
+                    console.error(`Bad json for key ${key} makeConstantEditorControlHTML: ${json.value[key]}`);
+                    
+                }
                 html += `<div class="${childIsContainer ? 'containerConstantEditor' : 'oneConstantEditor'}"><span class="constantName">${keyQuote}</span>:` +
                     makeConstantEditorControlHTML(
                         constantName + '.' + key.replace(/[^0-9a-zA-Z_]/g, '_'),
@@ -544,8 +551,6 @@ function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
         // don't know whether we are compact or not at this point)
 
         // Create the value
-        
-        console.log(name, debugJSON.object, gameSource.debug.constants);
         debugPane.innerHTML =
             `<span class="constantName">${name}</span> =` +
             makeConstantEditorControlHTML(name, debugJSON.object,

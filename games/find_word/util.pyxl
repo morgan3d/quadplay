@@ -1,7 +1,6 @@
 /* Utility functions that are not specific to this game */
 
 
-
 /* Returns the second to last value or ∅ */
 def penultimate_value(array):
     return array[size(array) - 2]
@@ -34,3 +33,13 @@ def swap(array, i, j):
     const temp = array[i]
     array[i] = array[j]
     array[j] = temp
+
+    
+def draw_arc(pos, radius, start, stop, color):
+    const N = 10
+    let prev = pos + angle_to_xy(start) * radius
+    for i < N:
+        const θ = lerp(start, stop, i / (N - 1),)
+        const curr = pos + radius * angle_to_xy(θ)
+        draw_line(prev, curr, color)
+        prev = curr

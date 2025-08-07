@@ -25,7 +25,7 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
     let text_color = if tile.selected then SELECTED_TEXT_COLOR else TEXT_COLOR
     if equivalent(text_color, selection_color):
         // Won't be able to see
-        text_color = #E1B
+        text_color = HIGHLIGHT_COLOR
 
     const font = (
         if tile_size.x > 25

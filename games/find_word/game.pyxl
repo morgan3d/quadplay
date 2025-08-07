@@ -9,6 +9,7 @@ let start_time
 /* In seconds, using frame_utc_now */
 let end_time
 
+
 /* If true, then the player is just warming
    up for a `GLOBAL` game that will start soon. */
 let in_waiting_room = false
@@ -114,12 +115,12 @@ def set_hooks():
         
     if not resolution_hook:
         // Fill the screen even at non-quadplay aspect ratios
-        // for a good mobile experience. See also `DEBUG_PORTRAIT`
+        // for a good mobile experience. See also `DEBUG.PORTRAIT`
         device_control("set_mouse_cursor", "pointer")
         
-        if DEBUG_LANDSCAPE:
+        if DEBUG.LANDSCAPE:
             set_screen_size(xy(384, 224))
-        else if DEBUG_PORTRAIT:
+        else if DEBUG.PORTRAIT:
             device_control("enable_feature", "custom_screen_size")
             set_screen_size(xy(224, 400))
         else:
@@ -131,7 +132,7 @@ def set_hooks():
 let last_countdown_sound_time
 
 /* Draws the count-down timer for `end_time` relative to the board, and handles
-   the countdown beeping and flashing */
+   the countdown beeping and flashing. Returns distored time left. */
 def draw_timer(board_pos):
     // Real seconds
     const real_time_left = max(0, end_time - frame_utc_now)
@@ -144,29 +145,30 @@ def draw_timer(board_pos):
         const game_total_time = end_time - start_time
         
         // Real time at which we pivot to expanding time
-        const pivot = TIMER_REMAP_SECONDS / TIMER_END_TIME_SCALE
+        const pivot = TIMER.REMAP_SECONDS / TIMER.END_TIME_SCALE
         
         // How much to scale time before the pivot
-        const begin_time_scale = (game_total_time - pivot) / (game_total_time - TIMER_REMAP_SECONDS)
+        const begin_time_scale = (game_total_time - pivot) / (game_total_time - TIMER.REMAP_SECONDS)
         
         if time_left > pivot:
-            time_left = (time_left - pivot) * begin_time_scale + TIMER_REMAP_SECONDS
+            time_left = (time_left - pivot) * begin_time_scale + TIMER.REMAP_SECONDS
         else:
-            time_left *= TIMER_END_TIME_SCALE
+            time_left *= TIMER.END_TIME_SCALE
         
     // Display slightly less time than is actually available
     // so it doesn't feel like we're ending too abruptly on 0
     time_left -= 3/60
     
+    const pos = board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16)
     draw_text({
-        pos: board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16),
+        pos: pos,
         font: score_font,
         text: format_number(time_left, "timer"),
         color: if in_waiting_room then #0F0 else #FFF,
         y_align: "center",
         x_align: "right"})
-      
-    if time_left > 0.1 and time_left < TIMER_BEEP_SECONDS + 0.5:
+        
+    if time_left > 0.1 and time_left < TIMER.BEEP_SECONDS + 0.5:
         if |loop(time_left, -0.5, 0.5)| ≤ 3/60 and now() - last_countdown_sound_time > 0.25:
             // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
             // but ensure that we play only once per timeout, converting from time to frames
@@ -177,7 +179,9 @@ def draw_timer(board_pos):
         else:
             // Fade back towards normal
             player.background_color = lerp(player.background_color, BOARD_COLOR, 4%)
-
+    
+    return time_left
+    
 
 
 def draw_round_selection(pos, radius):
@@ -188,30 +192,33 @@ def draw_round_selection(pos, radius):
 
 
 
-/* For Play and FreeMode switch */
-def handle_free_button(callback):
+def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
+    
     const radius = 14
     const region = {
-        pos: xy(radius + 4, SCREEN_SIZE.y - radius - 1),
+        pos: xy(radius + 4 + 48 index, SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
+    
+    // First call this frame for any button; deselect all on hover
+    if touch.hover and game_frames > handle_ability_button.last_frame:
+        handle_ability_button.selected_button = ∅
+    handle_ability_button.last_frame = game_frames
+
+    if touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
+        handle_ability_button.selected_button = name
         
-    if touch.hover:
-        handle_free_button.selected = overlaps(region, touch.hover)
-    else if player.using_gamepad:
-        handle_free_button.selected = false
-        
-    if not handle_free_button.selected:
+    if handle_ability_button.selected_button ≠ name:
         draw_disk(region.pos, radius, #EEE)
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
         font: leaderboard_font,
-        color: if handle_free_button.selected then #FFF else #EEE,
-        outline: if handle_free_button.selected then rgba(CURSOR_COLOR, 50%) else ∅,
-        text: if get_mode() == FreeMode then "Done" else "Free"})
+        color: if handle_ability_button.selected_button == name then #FFF else #EEE,
+        outline: if handle_ability_button.selected_button == name then rgba(CURSOR_COLOR, 50%) else ∅,
+        text: caption})
     
-    draw_sprite(if get_mode() == FreeMode then check_sprite[0][0] else free_mode_sprite[0][0], region.pos)
+    draw_sprite(sprite, region.pos)
     
     if player.using_gamepad:
         draw_text({
@@ -221,16 +228,17 @@ def handle_free_button(callback):
             font: score_font,
             x_align: "left",
             z: 20,
-            text: joy.prompt["(q)"]})
+            text: joy.prompt[gamepad_button]})
         
-    if handle_free_button.selected:
+    if handle_ability_button.selected_button == name:
         draw_round_selection(region.pos, radius)
         
     if (mode_frames > 10 and 
         ((touch.pressed_a and overlaps(touch.xy, region))
         or joy.pressed_q)):
-        callback()
+        activate_callback()
 
+handle_ability_button.last_frame = 0
 
 
 /* Abstracted to make an argument-less callback */

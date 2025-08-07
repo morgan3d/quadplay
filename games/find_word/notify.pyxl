@@ -74,8 +74,8 @@ def update_notifications()
             draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
     
             // Window
-            draw_rect(rect.pos, rect.size, BACKGROUND_COLOR, #E1B)
-            draw_rect(rect.pos, rect.size - 2, ∅, #E1B)
+            draw_rect(rect.pos, rect.size, BACKGROUND_COLOR, HIGHLIGHT_COLOR)
+            draw_rect(rect.pos, rect.size - 2, ∅, HIGHLIGHT_COLOR)
             draw_rect(rect.pos, rect.size + 2, ∅, #000)
             
             if α == 100%:
@@ -91,7 +91,7 @@ def update_notifications()
                     scale: sprite_width / notification.sprite.size.x})
         
                 draw_text({
-                    text: "{font:" + TITLE_FONT + " {color:#E1B " + notification.title + "}{br}}" + notification.description,
+                    text: "{font:" + TITLE_FONT + " {color:HIGHLIGHT_COLOR " + notification.title + "}{br}}" + notification.description,
                     pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
                     font: DESCRIPTION_FONT,
                     color: #000,

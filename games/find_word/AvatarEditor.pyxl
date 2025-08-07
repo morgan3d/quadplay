@@ -3,6 +3,7 @@ AvatarEditor
 const DONE_BUTTON_INDEX = 4
 const AVATAR_SCALE = 300%
 
+let first_time
 
 // Which button is selected
 let selection_index = -1
@@ -46,6 +47,7 @@ enter
 selection_index = -1
 
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
 draw_background_words()
@@ -65,7 +67,7 @@ const SPACING = 48
 preserving_transform:
     draw_text({
         font: score_font,
-        text: "Choose Your Avatar",
+        text: "Change Avatar and Name",
         pos: xy(½ SCREEN_SIZE.x, 20),
         color: #FFF})
         
@@ -113,7 +115,7 @@ preserving_transform:
             
 
 // Large done button            
-local:
+if player.avatar.name ≠ "?  " and player.avatar.name ≠ "   ":
     const rect = {pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), size: xy(150, 21)}
     
     if touch.hover and overlaps(touch.hover, rect):
@@ -145,20 +147,26 @@ local:
          player.gamepad.pressed_b or 
          (touch.pressed_a and overlaps(touch.xy, rect)))):
         pop_mode() because "Button"
+else:
+    
 
 // Gamepad selection
 if player.gamepad.xx:
     selection_index = clamp(selection_index + player.gamepad.xx, 0, DONE_BUTTON_INDEX - 1)
 
 // Use the (a) button for advancing to the next selection, including to the done button. Do this at 
-// the end of processing so that it is not considered accepting the 
+// after processing xx so that it is not considered accepting the 
 // done button.
 if player.gamepad.pressed_a:
-    selection_index = clamp(selection_index + 1, 0, DONE_BUTTON_INDEX)
+    selection_index = clamp(selection_index + 1, 0, DONE_BUTTON_INDEX - (if player.avatar.name == "?  " or player.avatar.name == "   " then 1 else 0))
+
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
+// 1xp = first time player who has edited avatar
+player.stats.lifetime.xp = max(1, player.stats.lifetime.xp)
 avatar_save(player.avatar)
+player_achieve(player, "Change Avatar")
 
     

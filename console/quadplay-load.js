@@ -591,8 +591,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         // Constants:
         gameSource.constants = {};
-        loadConstants(gameJSON.constants, gameURL, false, gameSource.constants);
-        
+        // Intentionally load from .json instead of .extendedJSON so that the source
+        // colors can be upgraded to objects if needed
+        loadConstants(gameSource.json.constants, gameURL, false, gameSource.constants);
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
         if (gameJSON.docs) {
@@ -641,6 +642,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
    Returns a table of evaluated constants. If constantsJson is undefined,
    that table is empty.
+
+   Mutates the input constants to have fields if needed.
 */
 function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
     if (! constantsJson) { return; }
@@ -2500,8 +2503,11 @@ function evalJSONGameConstant(json) {
                     b: evalJSONGameConstant(json.value.b)};
         } else if ((typeof json.value === 'string') && (json.value[0] === '#')) {
             // Parse color
-            const c = parseHexColor(json.value.substring(1));
-            return {r: c.r, g: c.g, b: c.b};
+            let c = parseHexColor(json.value.substring(1));
+            c = {r: c.r, g: c.g, b: c.b};
+            // Upgrade the source
+            json.value = c;
+            return c;
         } else {
             throw 'Illegal rgb value: ' + json.value;
         }
@@ -2514,7 +2520,10 @@ function evalJSONGameConstant(json) {
                     a: evalJSONGameConstant(json.value.a)};
         } else if (typeof json.value === 'string' && json.value[0] === '#') {
             // Parse color
-            return parseHexColor(json.value.substring(1));
+            const c = parseHexColor(json.value.substring(1));
+            // Upgrade the source
+            json.value = c;
+            return c;
         } else {
             throw 'Illegal rgba value: ' + json.value;
         }

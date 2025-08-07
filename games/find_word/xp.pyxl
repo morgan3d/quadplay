@@ -1,3 +1,9 @@
+/* Special values of XP:
+
+    0 = first time playing, no avatar
+    1 = avatar created, haven't played global yet
+*/
+
 
 def xp_to_level(xp):
     assert(xp ≠ ∅ and not is_nan(xp))
@@ -26,7 +32,7 @@ def notify_xp_bonus(xp_value, text, ):
         player.stats[today_date].xp += xp_value
 
     notify(
-        player.avatar.sprite.x_flipped,
+        notify_icon.xp,
         "XP Bonus",
         "+" + format_number(xp_value, "commas") + " XP for " + text,
         grant)
@@ -58,15 +64,21 @@ def grant_unique_word_xp(unique_word_list):
 def grant_badge_xp():
     if not player.has_ability["Badge XP"]: return
 
+    let title_array = []
+    let bonus = 0
     for badge in player_competitor.badges:
         // Convert the badge back into a title
         let title = replace(find(BADGE_TABLE, badge), "_", " ")
         if not contains(title, "word"):
             title += " word"
         
+        push(title_array, uppercase(title))
+        bonus += XP_VALUE.badge_per_competitor * min(size(competitor_array) - 1, 10)
+    
+    if bonus > 0:
         notify_xp_bonus(
-            XP_VALUE.badge_per_competitor * min(size(competitor_array) - 1, 15),
-            "winning " + uppercase(title) + " in a " + size(competitor_array) + "-player match!")
+            bonus,
+            "winning " + join(title_array, ", ", ", and ", " and ") + " in a " + size(competitor_array) + "-player match!")
 
 
 // Testing levels

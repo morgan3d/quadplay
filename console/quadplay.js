@@ -191,6 +191,16 @@ function updateLastInteractionTime() { lastInteractionTime = Date.now(); }
    set_screen_size() function, or temporarily due to streaming. */ 
 let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224, PRIVATE_VIEW = false;
 
+/*
+ {
+   json, // The original source file after parsing, except with colors upgraded to objects. This is used by the IDE when modifying files
+   extendedJSON, // json with injected additional assets. This is used by the runtime
+   constants, // The constants object, computed on load from .json
+   docs, // The docs object
+   assets, // The assets object
+   debug, // The debug object for overriding .extendedJSON with the debug layer
+  }
+*/
 let gameSource;
 
 // The image being written during preview recording
