@@ -1,0 +1,11 @@
+{
+    "url": "ability_icon.png",
+    "license": "By SHMUEL 2025, Released into the Public Domain/CC0",
+    "sprite_size": {"x": 19, "y": 19}, 
+    "names": {
+    "free_mode": {"x":0, "y":0},
+    "auto_mode": {"x":1, "y":0},
+    "ok": {"x": 1, "y": 0},
+    "cancel": {"x": 0, "y": 1}
+    }
+}

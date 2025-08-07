@@ -1,0 +1,8 @@
+{
+    "url": "notify_icon.png",
+    "license": "By SHMUEL 2025, Released into the Public Domain/CC0",
+    "sprite_size": {"x":32, "y":32},
+    "names":{
+        "xp": {"x":0, "y":0}
+        }
+}
