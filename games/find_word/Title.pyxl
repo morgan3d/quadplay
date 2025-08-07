@@ -169,7 +169,7 @@ def draw_tutorial(pos, text):
     draw_text({
         text: text,
         color: #FFF,
-        outline: #0008,
+        outline: #000,
         shadow: #0008,
         y_align: "bottom",
         font: score_font,
