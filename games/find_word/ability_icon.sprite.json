@@ -5,7 +5,7 @@
     "names": {
     "free_mode": {"x":0, "y":0},
     "auto_mode": {"x":1, "y":0},
-    "ok": {"x": 1, "y": 0},
-    "cancel": {"x": 0, "y": 1}
+    "ok": {"x": 0, "y": 1},
+    "cancel": {"x": 1, "y": 1}
     }
 }
