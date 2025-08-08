@@ -2478,10 +2478,10 @@ function pressed(ctrl) {
 
 /** Sets the visible enabled state of the button whose name starts with ctrl to e */
 function setControlEnable(ctrl, e) {
-    var b = document.getElementById(ctrl + 'Button');
+    const b = document.getElementById(ctrl + 'Button');
     if (b) { b.disabled = ! e; }
 
-    var container = document.getElementById(ctrl + 'ButtonContainer');
+    const container = document.getElementById(ctrl + 'ButtonContainer');
     if (e) {
         container.classList.remove('disabled');
     } else {

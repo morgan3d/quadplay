@@ -163,6 +163,7 @@ function setCodeEditorSessionMode(session, mode) {
 /* Controls the Find in Files button visibility based on current file type */
 function updateFindInFilesButtonVisibility(currentURL) {
     const isPyxlFile = currentURL && currentURL.endsWith('.pyxl');
+    const container = document.getElementById('findInFilesContainer');
     container.enabled = Boolean(isPyxlFile);
     container.style.visibility = isPyxlFile ? 'visible' : 'hidden';
 }
@@ -183,7 +184,7 @@ function setCodeEditorSession(url, assetName) {
 
     document.getElementById('codeEditorUndoContainer').enabled =
         document.getElementById('codeEditorRedoContainer').enabled =
-          !aceEditor.getReadOnly();
+          ! aceEditor.getReadOnly();
     
     // Enable/disable Find in Files button based on file type and toolbar visibility
     updateFindInFilesButtonVisibility(url);
