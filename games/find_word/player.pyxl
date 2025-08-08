@@ -9,7 +9,7 @@ def player_achieve(player, name, make_notification default false):
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
-    
+
     return {
         board: make_board(),
         

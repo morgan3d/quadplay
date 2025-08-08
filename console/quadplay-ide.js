@@ -21,176 +21,179 @@
     
     - `object` is the underlying gameSource child to modify
  */
-    function onProjectSelect(target, type, object) {
-        console.assert(useIDE);
-        // Don't do anything if the game hasn't loaded yet. Any
-        // editor is likely to crash at this point with undefined
-        // children.
-        if (! gameSource || ! gameSource.json || ! useIDE) { return; }
-        
-        // Hide all editors
-        const editorPane = document.getElementById('editorPane');
-        for (let i = 0; i < editorPane.children.length; ++i) {
-            editorPane.children[i].style.visibility = 'hidden';
-        }
-        
-        const gameEditor    = document.getElementById('gameEditor');
-        const modeEditor    = document.getElementById('modeEditor');
-        const codePlusFrame = document.getElementById('codePlusFrame');
+function onProjectSelect(target, type, object) {
+    console.assert(useIDE);
+    // Don't do anything if the game hasn't loaded yet. Any
+    // editor is likely to crash at this point with undefined
+    // children.
+    if (! gameSource || ! gameSource.json || ! useIDE) { return; }
     
-        // Hide the viewers within the content pane for the code editor
-        const editorContentFrame = document.getElementById('editorContentFrame');
-        for (let i = 0; i < editorContentFrame.children.length; ++i) {
-            editorContentFrame.children[i].style.visibility = 'hidden';
-        }
-    
-        const codeEditor     = document.getElementById('codeEditor');
-        const spriteEditor   = document.getElementById('spriteEditor');
-        const soundEditor    = document.getElementById('soundEditor');
-        const mapEditor      = document.getElementById('mapEditor');
-        const docEditor      = document.getElementById('docEditor');
-    
-        document.getElementById('spriteEditorHighlight').style.visibility =
-            document.getElementById('spriteEditorPivot').style.visibility = 'hidden';
-        
-        let list = document.getElementsByClassName('selectedProjectElement');
-        for (let i = 0; i < list.length; ++i) {
-            list[i].classList.remove('selectedProjectElement');
-        }
-    
-        if ((type === 'mode') && (object === undefined)) {
-            // Select the mode diagram itself
-            target.classList.add('selectedProjectElement');
-            // Skip visualization if game is running and useIDE is true since the mode diagram
-            // was already created during game restart to highlight the active mode for debugging
-            if (!(useIDE && QRuntime && QRuntime.$gameMode)) {
-                visualizeModes(modeEditor);
-            }
-            modeEditor.style.visibility = 'visible';
-            return;
-        }
-    
-        document.getElementById('codeEditorDivider').style.visibility = 'unset';    
-        if (type === 'doc') {
-            // Documents
-            target.classList.add('selectedProjectElement');
-            showGameDoc(object);
-            docEditor.style.visibility = 'visible';
-            codePlusFrame.style.visibility = 'visible';
-    
-            codePlusFrame.style.gridTemplateRows = `auto 0px 0px 1fr`;
-            
-            if (object.endsWith('.md') ||
-                object.endsWith('.html') ||
-                object.endsWith('.txt')) {
-    
-                // Show the editor after loading the content
-                if (fileContents[object] !== undefined) {
-                    setCodeEditorDividerFromLocalStorage();
-                    setCodeEditorSession(object);
-                } else {
-                    // Load and set the contents
-                    LoadManager.fetchOne({forceReload: true}, object, 'text', null, function (doc) {
-                        fileContents[object] = doc;
-                        setCodeEditorDividerFromLocalStorage();
-                        setCodeEditorSession(object);
-                    });
-                }
-            }
-            return;
-        }
-    
-        if (! target && type === 'mode' && object) {
-            target = document.getElementById('ModeItem_' + object.name);
-        }
-    
-        if (type === 'game') {
-            if (target) { target.classList.add('selectedProjectElement'); }
-            visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
-            gameEditor.style.visibility = 'visible';
-            codePlusFrame.style.visibility = 'visible';
-            setCodeEditorDividerFromLocalStorage();
-            setCodeEditorSession(gameSource.jsonURL);
-            return;
-        }
-    
-        // Find the parent .li
-        while (target && (target.tagName !== 'LI')) {
-            target = target.parentNode;
-        }
-    
-        if (target) {
-            target.classList.add('selectedProjectElement');
-        }
-    
-        switch (type) {
-        case 'constant':
-            // object may be undefined
-            showConstantEditor(object);
-            break;
-            
-        case 'mode':
-        case 'script':
-            {
-                // See if there is already an open editor session, and create one if it
-                // doesn't exist
-                const url = (type === 'mode') ? object.url : object;
-                setCodeEditorSession(url);
-                // Show the code editor and hide the content pane
-                codePlusFrame.style.visibility = 'visible';
-                codePlusFrame.style.gridTemplateRows = '0px 0px auto 1fr';
-                document.getElementById('codeEditorDivider').style.visibility = 'hidden';
-            }
-            break;
-            
-        case 'asset':
-            console.assert(object);
-            const url = object.$url || object.src;
-            // Find the underlying gameSource.asset key for this asset so
-            // that we can fetch it again if needed
-            let assetName;
-            for (const k in gameSource.assets) {
-                const asset = gameSource.assets[k];
-                if (asset === object) {
-                    assetName = k;
-                    break;
-                } else if (asset.spritesheet && asset.spritesheet === object) {
-                    // Spritesheet on a map
-                    assetName = asset.$name + '.spritesheet';
-                    break;
-                }
-            }
-            console.assert(assetName, 'Could not find asset name for ' + object);
-            setCodeEditorSession(object.$jsonURL, assetName);
-    
-            // Show the code editor and the content pane
-            codePlusFrame.style.visibility = 'visible';
-            setCodeEditorDividerFromLocalStorage();
-            const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
-            const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
-            const spriteEditorPivot = document.getElementById('spriteEditorPivot');
-            const spriteEditorInfo = document.getElementById('spriteEditorInfo');
-            spriteEditorHighlight.style.visibility = 'hidden';
-            spriteEditorPivot.style.visibility = 'hidden';
-            spriteEditorCanvas.onmousemove = spriteEditorCanvas.onmousedown = undefined;
-            spriteEditorAsset = object;
-            spriteEditorAssetName = assetName;
-    
-            if (/\.png$/i.test(url)) {
-                showPNGEditor(object, assetName);
-            } else if (/\.mp3$/i.test(url)) {
-                soundEditor.style.visibility = 'visible';
-                soundEditorCurrentSound = object;
-                document.querySelector('#soundEditor audio').src = object.$url;
-            } else if (/\.tmx$/i.test(url)) {
-                visualizeMap(object);
-                mapEditor.style.visibility = 'visible';
-            }
-            break;
-        }
+    // Hide all editors
+    const editorPane = document.getElementById('editorPane');
+    for (let i = 0; i < editorPane.children.length; ++i) {
+        editorPane.children[i].style.visibility = 'hidden';
     }
 
+    // Default to hiding the Find in Files button until a code editor session sets it
+    if (typeof updateFindInFilesButtonVisibility === 'function') { updateFindInFilesButtonVisibility(undefined); }
+    
+    const gameEditor    = document.getElementById('gameEditor');
+    const modeEditor    = document.getElementById('modeEditor');
+    const codePlusFrame = document.getElementById('codePlusFrame');
 
+    // Hide the viewers within the content pane for the code editor
+    const editorContentFrame = document.getElementById('editorContentFrame');
+    for (let i = 0; i < editorContentFrame.children.length; ++i) {
+        editorContentFrame.children[i].style.visibility = 'hidden';
+    }
+
+    const codeEditor     = document.getElementById('codeEditor');
+    const spriteEditor   = document.getElementById('spriteEditor');
+    const soundEditor    = document.getElementById('soundEditor');
+    const mapEditor      = document.getElementById('mapEditor');
+    const docEditor      = document.getElementById('docEditor');
+
+    document.getElementById('spriteEditorHighlight').style.visibility =
+        document.getElementById('spriteEditorPivot').style.visibility = 'hidden';
+    
+    let list = document.getElementsByClassName('selectedProjectElement');
+    for (let i = 0; i < list.length; ++i) {
+        list[i].classList.remove('selectedProjectElement');
+    }
+
+    if ((type === 'mode') && (object === undefined)) {
+        // Select the mode diagram itself
+        target.classList.add('selectedProjectElement');
+        // Skip visualization if game is running and useIDE is true since the mode diagram
+        // was already created during game restart to highlight the active mode for debugging
+        if (!(useIDE && QRuntime && QRuntime.$gameMode)) {
+            visualizeModes(modeEditor);
+        }
+        modeEditor.style.visibility = 'visible';
+        if (typeof updateFindInFilesButtonVisibility === 'function') { updateFindInFilesButtonVisibility(undefined); }
+        return;
+    }
+
+    document.getElementById('codeEditorDivider').style.visibility = 'unset';    
+    if (type === 'doc') {
+        // Documents
+        target.classList.add('selectedProjectElement');
+        showGameDoc(object);
+        docEditor.style.visibility = 'visible';
+        codePlusFrame.style.visibility = 'visible';
+
+        codePlusFrame.style.gridTemplateRows = `auto 0px 0px 1fr`;
+        
+        if (object.endsWith('.md') ||
+            object.endsWith('.html') ||
+            object.endsWith('.txt')) {
+
+            // Show the editor after loading the content
+            if (fileContents[object] !== undefined) {
+                setCodeEditorDividerFromLocalStorage();
+                setCodeEditorSession(object);
+            } else {
+                // Load and set the contents
+                LoadManager.fetchOne({forceReload: true}, object, 'text', null, function (doc) {
+                    fileContents[object] = doc;
+                    setCodeEditorDividerFromLocalStorage();
+                    setCodeEditorSession(object);
+                });
+            }
+        }
+        return;
+    }
+
+    if (! target && type === 'mode' && object) {
+        target = document.getElementById('ModeItem_' + object.name);
+    }
+
+    if (type === 'game') {
+        if (target) { target.classList.add('selectedProjectElement'); }
+        visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
+        gameEditor.style.visibility = 'visible';
+        codePlusFrame.style.visibility = 'visible';
+        setCodeEditorDividerFromLocalStorage();
+        setCodeEditorSession(gameSource.jsonURL);
+        // setCodeEditorSession will update visibility
+        return;
+    }
+
+    // Find the parent .li
+    while (target && (target.tagName !== 'LI')) {
+        target = target.parentNode;
+    }
+
+    if (target) {
+        target.classList.add('selectedProjectElement');
+    }
+
+    switch (type) {
+    case 'constant':
+        // object may be undefined
+        showConstantEditor(object);
+        break;
+        
+    case 'mode':
+    case 'script':
+        {
+            // See if there is already an open editor session, and create one if it
+            // doesn't exist
+            const url = (type === 'mode') ? object.url : object;
+            setCodeEditorSession(url);
+            // Show the code editor and hide the content pane
+            codePlusFrame.style.visibility = 'visible';
+            codePlusFrame.style.gridTemplateRows = '0px 0px auto 1fr';
+            document.getElementById('codeEditorDivider').style.visibility = 'hidden';
+        }
+        break;
+        
+    case 'asset':
+        console.assert(object);
+        const url = object.$url || object.src;
+        // Find the underlying gameSource.asset key for this asset so
+        // that we can fetch it again if needed
+        let assetName;
+        for (const k in gameSource.assets) {
+            const asset = gameSource.assets[k];
+            if (asset === object) {
+                assetName = k;
+                break;
+            } else if (asset.spritesheet && asset.spritesheet === object) {
+                // Spritesheet on a map
+                assetName = asset.$name + '.spritesheet';
+                break;
+            }
+        }
+        console.assert(assetName, 'Could not find asset name for ' + object);
+        setCodeEditorSession(object.$jsonURL, assetName);
+
+        // Show the code editor and the content pane
+        codePlusFrame.style.visibility = 'visible';
+        setCodeEditorDividerFromLocalStorage();
+        const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
+        const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
+        const spriteEditorPivot = document.getElementById('spriteEditorPivot');
+        const spriteEditorInfo = document.getElementById('spriteEditorInfo');
+        spriteEditorHighlight.style.visibility = 'hidden';
+        spriteEditorPivot.style.visibility = 'hidden';
+        spriteEditorCanvas.onmousemove = spriteEditorCanvas.onmousedown = undefined;
+        spriteEditorAsset = object;
+        spriteEditorAssetName = assetName;
+
+        if (/\.png$/i.test(url)) {
+            showPNGEditor(object, assetName);
+        } else if (/\.mp3$/i.test(url)) {
+            soundEditor.style.visibility = 'visible';
+            soundEditorCurrentSound = object;
+            document.querySelector('#soundEditor audio').src = object.$url;
+        } else if (/\.tmx$/i.test(url)) {
+            visualizeMap(object);
+            mapEditor.style.visibility = 'visible';
+        }
+        break;
+    }
+}
 
 
 let soundEditorCurrentSound = null;

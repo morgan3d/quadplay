@@ -60,13 +60,17 @@ function onCodeEditorSearchButton() {
 }
 
 
-function onCodeEditorUndoButton() {
-    aceEditor.session.getUndoManager().undo();
+function onCodeEditorUndoButton(event) {
+    if (aceEditor) {
+        aceEditor.undo();
+    }
 }
 
 
-function onCodeEditorRedoButton() {
-    aceEditor.session.getUndoManager().redo();
+function onCodeEditorRedoButton(event) {
+    if (aceEditor) {
+        aceEditor.redo();
+    }
 }
 
 
@@ -156,6 +160,23 @@ function setCodeEditorSessionMode(session, mode) {
 }
 
 
+// Controls the Find in Files button visibility based on current file and toolbar visibility
+function updateFindInFilesButtonVisibility(currentURL) {
+    const isPyxlFile = currentURL && currentURL.endsWith('.pyxl');
+    const toolbar = document.getElementById('codeToolbar');
+    const toolbarVisible = toolbar && (toolbar.offsetHeight > 0) && (getComputedStyle(toolbar).visibility !== 'hidden');
+    const show = Boolean(isPyxlFile && toolbarVisible);
+
+    const findInFilesButtons = document.querySelectorAll('input[onclick*="showFindInFilesDialog"]');
+    for (const button of findInFilesButtons) {
+        const container = button.parentElement.parentElement;
+        container.enabled = show;
+        container.style.visibility = show ? 'visible' : 'hidden';
+        container.style.display = show ? '' : 'none';
+    }
+}
+
+
 /* Loads url into the code editor, creating a new editor if needed and
    reusing a cached one if available.
 
@@ -171,7 +192,10 @@ function setCodeEditorSession(url, assetName) {
 
     document.getElementById('codeEditorUndoContainer').enabled =
         document.getElementById('codeEditorRedoContainer').enabled =
-          aceEditor.getReadOnly();
+          !aceEditor.getReadOnly();
+    
+    // Enable/disable Find in Files button based on file type and toolbar visibility
+    updateFindInFilesButtonVisibility(url);
     
     // Reset the mode so that it is visible
     setCodeEditorSessionMode(session, session.aux.mode);
@@ -1417,17 +1441,16 @@ function updateTodoList() {
                         // Entering a function
                         currentParseFunction.name = defMatch[1] + '()';
                         currentParseFunction.line = line;
+                    } else {
+                        // Any other top-level line (not a function definition) means
+                        // we're no longer inside the previous function
+                        currentParseFunction.name = undefined;
                     }
                 }
                 prevNewLinePos = b;
                 
             } else if (a < b) {
                 // "todo(" appears before the next newline
-                
-                if (a === prevNewLinePos + 1) {
-                    // todo() was at top level
-                    currentParseFunction.name = undefined;
-                }
                     
                 // Find the end
                 a += 'todo('.length;
@@ -1454,6 +1477,9 @@ function updateTodoList() {
 
                 // b is now the close quote position
                 const message = escapeHTMLEntities(source.substring(a, b));
+                
+                // Use the current function context (which gets reset to undefined 
+                // when we encounter top-level code)
                 const displaySection =
                       currentParseFunction.name ?
                       currentParseFunction :
@@ -1814,6 +1840,597 @@ function onRemoveDoc(docURL) {
     console.assert(index !== -1);
     gameSource.json.docs.splice(index, 1);
     serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
+}
+
+
+function showFindInFilesDialog() {
+    document.getElementById('findInFilesDialog').classList.remove('hidden');
+    document.getElementById('findInFilesQuery').focus();
+}
+
+
+function hideFindInFilesDialog() {
+    document.getElementById('findInFilesDialog').classList.add('hidden');
+}
+
+
+function executeFindInFiles() {
+    const query = document.getElementById('findInFilesQuery').value;
+    const caseSensitive = document.getElementById('findInFilesCaseSensitive').checked;
+    const wholeWord = document.getElementById('findInFilesWholeWord').checked;
+    
+    if (query.trim() === '') {
+        return;
+    }
+    
+    const options = {
+        caseSensitive: caseSensitive,
+        wholeWord: wholeWord
+    };
+    
+    findInFiles(query, options, 'code');
+    hideFindInFilesDialog();
+}
+
+
+/**
+  Searches for a query string across multiple files in the project and displays the 
+  results in the output window..
+  
+  `query`
+  : The search query string
+  
+  `options`
+  : Search options: `{ caseSensitive: boolean, wholeWord: boolean }`
+  
+  `scope`
+  : The scope of the search. Currently only "code" is supported
+ */
+function findInFiles(query, options, scope) {
+    const PREVIEW_LENGTH = 40;
+    
+    if (scope !== 'code') {
+        $outputAppend('<span style="color:#f55">Error: Only "code" scope is currently supported for find in files.</span>\n');
+        return;
+    }
+    
+    if (! query || query.trim() === '') {
+        return;
+    }
+    
+    // Switch to develop mode if not in Develop or Debug mode to guarantee results are visible
+    if (uiMode !== 'IDE' && uiMode !== 'WideIDE') {
+        setUIMode('IDE');
+    }
+    
+    const results = [];
+    let totalMatches = 0;
+    
+    // Search through all .pyxl files in fileContents
+    for (const [url, content] of Object.entries(fileContents)) {
+        if (url.endsWith('.pyxl') && typeof content === 'string') {
+            const matches = searchInFile(url, content, query, options);
+            if (matches.length > 0) {
+                results.push({ url, matches });
+                totalMatches += matches.length;
+            }
+        }
+    }
+    
+    // Output results
+    if (results.length === 0) {
+        $outputAppend(`<i>No matches found for "${escapeHTMLEntities(query)}"</i>\n`);
+    } else {
+        $outputAppend(`<b>Found ${totalMatches} match${totalMatches === 1 ? '' : 'es'} in ${results.length} file${results.length === 1 ? '' : 's'} for "${escapeHTMLEntities(query)}":</b>\n`);
+        
+        for (const fileResult of results) {
+            const shortUrl = fileResult.url.replace(/^.*\//, '');
+            $outputAppend(`\n<b><a style="cursor: pointer" onclick="editorGotoFileLine('${fileResult.url}', 1)">${shortUrl}</a></b> (${fileResult.matches.length} match${fileResult.matches.length === 1 ? '' : 'es'}):\n`);
+            
+            for (const match of fileResult.matches) {
+                const loc = {url: fileResult.url, line_number: match.lineNumber};
+                let linePreview = match.lineContent.trim();
+                if (linePreview.length >= PREVIEW_LENGTH) {
+                    linePreview = linePreview.substring(0, PREVIEW_LENGTH) + '…';
+                }
+                $outputAppend(`  ${linePreview}\n`, loc);
+            }
+        }
+        $outputAppend('\n');
+    }
+}
+
+
+/**
+  Searches for matches within a single file's content.
+  
+  `url`
+  : The file URL
+  
+  `content`
+  : The file content
+  
+  `query`
+  : The search query
+  
+  `options`
+  : Search options
+  
+  Returns and array of match objects with lineNumber and lineContent
+ */
+function searchInFile(url, content, query, options) {
+    const matches = [];
+    const lines = content.split('\n');
+    
+    const flags = 'g' + (options.caseSensitive ? '' : 'i');
+    const searchQuery = options.wholeWord ? 
+        '\\b' + escapeRegExp(query) + '\\b' : 
+        escapeRegExp(query);
+    
+    const regex = new RegExp(searchQuery, flags);
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (regex.test(line)) {
+            matches.push({lineNumber: i + 1, lineContent: line});
+        } // if
+    } // for
+    
+    return matches;
+}
+
+
+/**
+  Escapes special regex characters in a string.
+  
+  `string`
+  : The string to escape
+  
+  Returns the escaped string
+ */
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+
+/*
+Shows a custom context menu for the editor with options based on selection or word under cursor
+
+`event`
+: The right-click event
+*/
+function showEditorContextMenu(event) {
+    const selectedText = aceEditor.getSelectedText();
+    const hasSelection = selectedText && selectedText.trim().length > 0;
+    
+    // Get word under cursor if no selection
+    let wordUnderCursor = null;
+    if (! hasSelection) {
+        wordUnderCursor = getWordUnderCursor();
+    }
+    
+    // Platform-specific key symbols
+    const cmdKey = isApple ? '⌘' : '^';
+    const shiftKey = isApple ? '⇧' : 'Shift+';
+    
+    // Define menu items
+    const cutItem = `<div onmousedown="onEditorCut()">Cut\t${cmdKey}X</div>`;
+    const copyItem = `<div onmousedown="onEditorCopy()">Copy\t${cmdKey}C</div>`;
+    const pasteItem = `<div onmousedown="onEditorPaste()">Paste\t${cmdKey}V</div>`;
+    const separator = `<div style="border-top: 1px solid rgba(255,255,255,20%); margin: 2px 0;"></div>`;
+    const findInFilesItem = `<div onmousedown="onEditorFindInFiles()">Find in Files...\t${cmdKey}${shiftKey}F</div>`;
+    const goToDefinitionItem = `<div onmousedown="onEditorGoToDefinition()">Go to Definition</div>`;
+    const findAndReplaceItem = `<div onmousedown="onEditorFindAndReplace()">Find and Replace...\t${cmdKey}F</div>`;
+    
+    let menuHTML = pasteItem;
+    
+    if (hasSelection) {
+        // Show all options when text is selected
+        menuHTML = cutItem + copyItem + menuHTML;
+    }
+    
+    if (hasSelection || (wordUnderCursor && ! isLanguageKeyword(wordUnderCursor))) {
+        // Show advanced options when cursor is on a non-keyword word
+        menuHTML = menuHTML + separator + goToDefinitionItem + findInFilesItem + findAndReplaceItem;
+    }
+    
+    customContextMenu.innerHTML = menuHTML;
+    showContextMenu('ace');
+}
+
+
+/*
+Gets the word under the cursor in the editor
+
+Returns the word as a string, or null if cursor is not on a word
+*/
+function getWordUnderCursor() {
+    const session = aceEditor.session;
+    const cursor = aceEditor.getCursorPosition();
+    const line = session.getLine(cursor.row);
+    
+    // Find word boundaries around cursor position
+    const wordRegex = /[a-zA-Z_][a-zA-Z0-9_]*/g;
+    let match;
+    
+    while ((match = wordRegex.exec(line)) !== null) {
+        const start = match.index;
+        const end = match.index + match[0].length;
+        
+        if (cursor.column >= start && cursor.column <= end) {
+            return match[0];
+        }
+    }
+    
+    return null;
+}
+
+
+/*
+Checks if a word is a language keyword that should not have context menu actions
+
+`word`
+: The word to check
+
+Returns true if the word is a language keyword
+*/
+function isLanguageKeyword(word) {
+    const keywords = {
+        // PyXL/Python keywords
+        'if': true, 'else': true, 'elif': true, 'then': true,
+        'for': true, 'while': true, 'with': true, 'in': true,
+        'def': true, 'return': true, 'break': true, 'continue': true,
+        'let': true, 'const': true, 'local': true,
+        'and': true, 'or': true, 'not': true, 'xor': true,
+        'true': true, 'false': true, 'nil': true, 'infinity': true,
+        'try': true, 'catch': true, 'finally': true,
+        'import': true, 'from': true, 'as': true
+    };
+    
+    return keywords[word] || false;
+}
+
+/*
+Checks if a word is a built-in API function that should not show "not found" errors
+
+`word`
+: The word to check
+
+Returns true if the word is a built-in API function
+*/
+function isBuiltInAPI(word) {
+    return documentationBuiltInAPIOverloads && (word in documentationBuiltInAPIOverloads);
+}
+
+/*
+Checks if a word is at its definition point in the current file
+
+`identifier`
+: The identifier to check
+
+`cursorPos`
+: Current cursor position
+
+Returns true if the cursor is at the definition of the identifier
+*/
+function isAtDefinitionPoint(identifier, cursorPos) {
+    const currentSession = aceEditor.session;
+    const currentUrl = currentSession.aux ? currentSession.aux.url : null;
+    
+    if (! currentUrl || ! fileContents[currentUrl]) {
+        return false;
+    }
+    
+    const content = fileContents[currentUrl];
+    const lines = content.split('\n');
+    const currentLine = lines[cursorPos.row];
+    
+    if (! currentLine) {
+        return false;
+    }
+    
+    // Check if current line contains a definition of the identifier
+    const defRegex = new RegExp(`^\\s*def\\s+(${escapeRegExp(identifier)})\\s*\\(`);
+    const varRegex = new RegExp(`^\\s*(?:let|const)\\s+(${escapeRegExp(identifier)})\\s*[=:]`);
+    
+    return defRegex.test(currentLine) || varRegex.test(currentLine);
+}
+
+
+/*
+Cut selected text from editor
+*/
+function onEditorCut() {
+    const selectedText = aceEditor.getSelectedText();
+    if (selectedText) {
+        copyToClipboard(selectedText);
+        // Use ace's insert method which properly integrates with undo when replacing selection
+        aceEditor.insert('');
+    }
+    customContextMenu.style.visibility = 'hidden';
+}
+
+
+/*
+Copy selected text from editor
+*/
+function onEditorCopy() {
+    const selectedText = aceEditor.getSelectedText();
+    if (selectedText) {
+        copyToClipboard(selectedText);
+    }
+    customContextMenu.style.visibility = 'hidden';
+}
+
+
+/*
+Paste text into editor
+*/
+function onEditorPaste() {
+    pasteFromClipboard(function(text) {
+        aceEditor.session.getDocument().replace(aceEditor.getSelectionRange(), text);
+    }, function() {
+        console.log('Paste failed - clipboard may be empty or inaccessible');
+    });
+    customContextMenu.style.visibility = 'hidden';
+}
+
+
+/*
+Find selected text or word under cursor in all files
+*/
+function onEditorFindInFiles() {
+    let searchText = aceEditor.getSelectedText();
+    if (! searchText || ! searchText.trim()) {
+        searchText = getWordUnderCursor();
+    }
+    
+    if (searchText && searchText.trim() && ! isLanguageKeyword(searchText.trim())) {
+        // Use existing find in files functionality
+        document.getElementById('findInFilesQuery').value = searchText.trim();
+        showFindInFilesDialog();
+    }
+    customContextMenu.style.visibility = 'hidden';
+}
+
+
+/*
+Go to definition of selected text or word under cursor
+*/
+function onEditorGoToDefinition() {
+    let identifier = aceEditor.getSelectedText();
+    if (! identifier || ! identifier.trim()) {
+        identifier = getWordUnderCursor();
+    }
+    
+    if (! identifier || isLanguageKeyword(identifier)) {
+        customContextMenu.style.visibility = 'hidden';
+        return;
+    }
+    
+    identifier = identifier.trim();
+    
+    // Check if this is a built-in API function - do nothing if so
+    if (isBuiltInAPI(identifier)) {
+        customContextMenu.style.visibility = 'hidden';
+        return;
+    }
+    
+    // Check if identifier is in constants
+    if (gameSource && gameSource.constants && (identifier in gameSource.constants)) {
+        // Open constant editor - pass the constant name, not the value
+        const constantElement = document.getElementById('projectConstant_' + identifier);
+        if (constantElement) {
+            onProjectSelect(constantElement, 'constant', identifier);
+        } else {
+            // If element doesn't exist, create a temporary one for the call
+            const tempElement = document.createElement('div');
+            tempElement.id = 'projectConstant_' + identifier;
+            onProjectSelect(tempElement, 'constant', identifier);
+        }
+        customContextMenu.style.visibility = 'hidden';
+        return;
+    }
+    
+    // Check if identifier is an asset
+    if (gameSource && gameSource.assets && (identifier in gameSource.assets)) {
+        // Open asset editor
+        const assetElement = document.getElementById('projectAsset_' + identifier);
+        if (assetElement) {
+            onProjectSelect(assetElement, 'asset', gameSource.assets[identifier]);
+        } else {
+            // If element doesn't exist, create a temporary one for the call
+            const tempElement = document.createElement('div');
+            tempElement.id = 'projectAsset_' + identifier;
+            onProjectSelect(tempElement, 'asset', gameSource.assets[identifier]);
+        }
+        customContextMenu.style.visibility = 'hidden';
+        return;
+    }
+    
+    const cursorPos = aceEditor.getCursorPosition();
+    
+    // Check if we're already at the definition point
+    if (isAtDefinitionPoint(identifier, cursorPos)) {
+        // Already at definition, just stay here (no error)
+        customContextMenu.style.visibility = 'hidden';
+        return;
+    }
+    
+    // Search for user-defined functions and variables
+    const definition = findDefinitionInProject(identifier);
+    if (definition) {
+        editorGotoFileLine(definition.url, definition.line, definition.character, true);
+    } else {
+        showPopupMessage(`Definition not found for "${identifier}"`);
+    }
+    
+    customContextMenu.style.visibility = 'hidden';
+}
+
+
+/*
+Searches for the definition of an identifier in the project files
+
+`identifier`
+: The variable or function name to search for
+
+Returns an object with `url`, `line`, and `character` properties if found, null otherwise
+*/
+function findDefinitionInProject(identifier) {
+    const currentSession = aceEditor.session;
+    const currentUrl = currentSession.aux ? currentSession.aux.url : null;
+    
+    // Get current cursor position for context
+    const cursorPos = aceEditor.getCursorPosition();
+    
+    // Search order: current file first, then other files
+    const filesToSearch = [];
+    
+    // Add current file first if it exists
+    if (currentUrl) {
+        filesToSearch.push(currentUrl);
+    }
+    
+    // Add all script files
+    if (gameSource.scripts) {
+        for (const scriptUrl of gameSource.scripts) {
+            if (scriptUrl !== currentUrl) {
+                filesToSearch.push(scriptUrl);
+            }
+        }
+    }
+    
+    // Add all mode files
+    if (gameSource.modes) {
+        for (const mode of gameSource.modes) {
+            if (mode.url !== currentUrl) {
+                filesToSearch.push(mode.url);
+            }
+        }
+    }
+    
+    // Search each file
+    for (const url of filesToSearch) {
+        const content = fileContents[url];
+        if (! content) continue;
+        
+        const definition = searchForDefinitionInFile(identifier, content, url, currentUrl, cursorPos);
+        if (definition) {
+            return definition;
+        }
+    }
+    
+    return null;
+}
+
+
+/*
+Searches for a definition within a single file
+
+`identifier`
+: The identifier to search for
+
+`content`
+: The file content to search in
+
+`fileUrl`
+: URL of the file being searched
+
+`currentUrl`
+: URL of the currently active file (for scoping rules)
+
+`cursorPos`
+: Current cursor position (for lexical scoping)
+
+Returns definition object or null
+*/
+function searchForDefinitionInFile(identifier, content, fileUrl, currentUrl, cursorPos) {
+    const lines = content.split('\n');
+    const isCurrentFile = (fileUrl === currentUrl);
+    const isMode = gameSource.modes && gameSource.modes.some(mode => mode.url === fileUrl);
+    
+    // For modes, only search if we're in the same mode file (file-scoped)
+    if (isMode && ! isCurrentFile) {
+        return null;
+    }
+    
+    // Search for function definitions: def identifier(...)
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const defMatch = line.match(new RegExp(`^\\s*def\\s+(${escapeRegExp(identifier)})\\s*\\(`));
+        if (defMatch) {
+            // If in current file, check if definition is before cursor (lexical scoping)
+            if (isCurrentFile && i >= cursorPos.row) {
+                continue; // Definition must be before usage in lexical scoping
+            }
+            return {
+                url: fileUrl,
+                line: i + 1,
+                character: defMatch.index + defMatch[0].indexOf(identifier) + 1
+            };
+        }
+        
+        // Search for variable declarations: let identifier = ... or const identifier = ...
+        const varMatch = line.match(new RegExp(`^\\s*(?:let|const)\\s+(${escapeRegExp(identifier)})\\s*[=:]`));
+        if (varMatch) {
+            // If in current file, check lexical scoping
+            if (isCurrentFile && i >= cursorPos.row) {
+                continue;
+            }
+            return {
+                url: fileUrl,
+                line: i + 1,
+                character: varMatch.index + varMatch[0].indexOf(identifier) + 1
+            };
+        }
+        
+        // Search for function parameters in def statements
+        const paramMatch = line.match(new RegExp(`^\\s*def\\s+\\w+\\s*\\([^)]*\\b(${escapeRegExp(identifier)})\\b`));
+        if (paramMatch) {
+            // Parameters are only visible within the function, so only match if cursor is after this line
+            if (isCurrentFile && cursorPos.row > i) {
+                return {
+                    url: fileUrl,
+                    line: i + 1,
+                    character: paramMatch.index + paramMatch[0].indexOf(identifier) + 1
+                };
+            }
+        }
+        
+        // TODO: Handle with and for statement variable declarations
+        // These have complex syntax and scoping rules that need careful parsing
+    }
+    
+    return null;
+}
+
+
+/*
+Find and replace selected text or word under cursor
+*/
+function onEditorFindAndReplace() {
+    let searchText = aceEditor.getSelectedText();
+    if (! searchText || ! searchText.trim()) {
+        searchText = getWordUnderCursor();
+        // If we found a word under cursor, select it so ace's find/replace will use it
+        if (searchText && ! isLanguageKeyword(searchText)) {
+            const cursor = aceEditor.getCursorPosition();
+            const line = aceEditor.session.getLine(cursor.row);
+            const wordStart = line.lastIndexOf(searchText, cursor.column);
+            if (wordStart !== -1) {
+                const Range = ace.require('ace/range').Range;
+                const range = new Range(cursor.row, wordStart, cursor.row, wordStart + searchText.length);
+                aceEditor.selection.setRange(range);
+            }
+        }
+    }
+    
+    if (searchText && searchText.trim() && ! isLanguageKeyword(searchText.trim())) {
+        // Use ace's built-in find and replace, pre-filled with selected text
+        aceEditor.execCommand('replace');
+    }
+    customContextMenu.style.visibility = 'hidden';
 }
 
 

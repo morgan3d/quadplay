@@ -6,6 +6,7 @@
     "packages": [],
     "scripts": [
         "quad://scripts/screen_lib.pyxl",
+        "quad://scripts/cursor_lib.pyxl",
         "util.pyxl",
         "dictionary.pyxl",
         "tile.pyxl",

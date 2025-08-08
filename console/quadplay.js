@@ -2173,6 +2173,17 @@ function onDocumentKeyDown(event) {
         }
         break;
         
+    case 70: // F
+        if (useIDE && (event.ctrlKey || event.metaKey)) {
+            if (event.shiftKey) {
+                // Ctrl+Shift+F = find in files
+                event.preventDefault();
+                event.stopPropagation();
+                showFindInFilesDialog();
+            }
+        }
+        break;
+        
     case 80: // Ctrl+P = pause
         if (! event.ctrlKey && ! event.metaKey) { 
             return;
@@ -2228,6 +2239,24 @@ if (useIDE) {
         name: "go to line",
         bindKey: {win: "Ctrl-G", linux: "Ctrl-G", mac: "Command-G"},
         exec: onCodeEditorGoToLineButton});
+
+    // Add custom undo/redo commands to ensure they work properly
+    aceEditor.commands.addCommand({
+        name: "undo",
+        bindKey: {win: "Ctrl-Z", linux: "Ctrl-Z", mac: "Command-Z"},
+        exec: function(editor) { editor.undo(); }});
+        
+    aceEditor.commands.addCommand({
+        name: "redo",
+        bindKey: {win: "Ctrl-Y", linux: "Ctrl-Y", mac: "Command-Shift-Z"},
+        exec: function(editor) { editor.redo(); }});
+
+    // Add custom context menu for ace editor
+    aceEditor.container.addEventListener('contextmenu', function(event) {
+        event.preventDefault();
+        showEditorContextMenu(event);
+        return false;
+    });
 }
 
 

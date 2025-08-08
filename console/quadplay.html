@@ -39,7 +39,7 @@
 
       function makeButton(label, id, title, onclick) {
         // type=button is needed to make chromium not think this is a password stealer
-         document.write(`<div ${id ? 'id="' + id + 'Container" ' : ''} class="button" ${id ? 'id="' + id + 'Container" ' : ''}><label><input type="button" ${id ? 'id="' + id + '" ' : ''} onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); if (event.target.parentElement.parentElement.enabled !== false) {${onclick || ''}}" autocomplete="off" title="${title || label}"><span class="label" ${id ? 'id="' + id + 'Label"' : ''}>${label}</span></label></div>`);
+         document.write(`<div ${id ? 'id="' + id + 'Container" ' : ''} class="button" ${id ? 'id="' + id + 'Container" ' : ''}><label title="${title || label}"><input type="button" ${id ? 'id="' + id + '" ' : ''} onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); if (event.target.parentElement.parentElement.enabled !== false) {${onclick || ''}}" autocomplete="off"><span class="label" ${id ? 'id="' + id + 'Label"' : ''}>${label}</span></label></div>`);
       }
     
       function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {
@@ -329,7 +329,7 @@
 
         <span class="IDEOnly">
             <script>
-              makeButton('<div class="buttonIcon"></div>', 'restartButton', `Reload and Play (^R)`, 'onRestartButton(event)');
+              makeButton('<div class="buttonIcon"></div>', 'restartButton', `Reload and Play (${shift}R)`, 'onRestartButton(event)');
               makeRadio('<div class="buttonIcon"></div>', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'stepButton', false, 'title="Step (F10)"', 'controls');
@@ -422,13 +422,14 @@
         <div id="codeToolbar" class="toolbar">
           <script>
             makeButton('<img src="icons/ui-undo.png" width="26" style="position:relative; top:-2px;">', 'codeEditorUndo', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton(event)');
-            makeButton('<img src="icons/ui-redo.png" width="26" style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton(event)');
+            makeButton('<img src="icons/ui-redo.png" width="26" style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Shift+Z)`, 'onCodeEditorRedoButton(event)');
             makeButton('<img src="icons/ui-smallfont.png" width="26" style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton(event)');
             makeButton('<img src="icons/ui-bigfont.png" width="26" style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton(event)');
             makeButton('<img src="icons/ui-find.png" width="26" style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton(event)');
+            makeButton('<img src="icons/ui-find-in-files.png" width="26" style="position:relative; top:-2px;">', undefined, `Find in Files (${cmd}Shift+F)`, 'showFindInFilesDialog()');
             makeButton('<img src="icons/ui-goto.png" width="26" style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton(event)');
           </script>
-          <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
+          <div style="position: absolute; left: 270px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>
         </div>
 
@@ -1155,6 +1156,24 @@
           </p>
           <button type="button" onclick="hideExportDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
           <button type="button" onclick="onExportDialogOK()">OK</button>
+        </center>
+      </div>
+    </div>
+
+    <div id="findInFilesDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 400px">
+        <center>
+          <span class="title">Find in Files</span>
+          <div style="text-align: left; margin: 20px;">
+            <label>Search for:</label><br>
+            <input type="text" id="findInFilesQuery" style="width: 95%; margin-bottom: 10px;" onkeydown="if (event.key === 'Enter') executeFindInFiles()">
+            <div style="margin-bottom: 10px;">
+              <label><input type="checkbox" id="findInFilesCaseSensitive"> Case sensitive</label><br>
+              <label><input type="checkbox" id="findInFilesWholeWord"> Whole word</label>
+            </div>
+          </div>
+          <button type="button" onclick="hideFindInFilesDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" onclick="executeFindInFiles()">Find All</button>
         </center>
       </div>
     </div>

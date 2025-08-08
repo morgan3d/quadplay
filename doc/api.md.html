@@ -206,6 +206,9 @@ Array
   
   Use `size(array)` to determine the length of a 1D array.
 
+`penultimate_value(array)`
+: Returns `array[last_key(array) - 1]`.
+
 `pop(array)`
 : Remove the last element from the array and return it, or `∅` if the array is empty. O(1) expected amortized time.
 
@@ -384,6 +387,9 @@ String
 `parse(s)`
 : Parse a string that was encoded using `unparse()` and convert it back into the original
   data structure. Functions, built-ins, and recursive arrays cannot be converted.
+
+`penultimate_value(string)`
+: Returns `string[last_key(string) - 1]`.
 
 `replace(string, src, dst)`
 : Replace all occurances of `src` in `string` with `dst`.

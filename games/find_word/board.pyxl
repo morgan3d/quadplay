@@ -45,6 +45,7 @@ def make_board():
     
     return board
     
+    
 /* Convert base 10 number to base 36 string */
 const DECIMAL_TO_BASE36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

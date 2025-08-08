@@ -4,7 +4,7 @@ def ability_load():
     const has_ability = if DEBUG.REGRANT_ALL_ABILITIES then {} else (load_local("has_ability") default {})
 
     // Remove obsolete abilities from the save game
-    // that have been removed from the game
+    // that have been removed from the game   
     let removed_any = false
     for key in keys(has_ability):
         if not ABILITY_TABLE[key]:

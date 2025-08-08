@@ -1,5 +1,7 @@
 Title
 ════════════════════════════════════════════════════════════════════════
+todo("** Rewrite cursor code to be more generic **")
+
 todo("Fix gamepad selection")
 
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS

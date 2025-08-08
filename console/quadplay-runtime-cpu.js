@@ -185,7 +185,6 @@ var $mode_framesStack = [];
 var $postFX;
 
 // Deprecated
-var is_NaN = Number.isNaN;
 var is_nan = Number.isNaN;
 
 // Maps container objects to the count of how many iterators
@@ -443,14 +442,26 @@ function draw_previous_mode() {
 // Array
 
 function last_value(s) {
+    if (! Array.isArray(s) && typeof s !== 'string') {
+        $error('last_value() argument must be an array or string');
+    }
     return s[s.length - 1];
 }
 
+
 function last_key(s) {
-    if (! Array.isArray(s) || typeof s === 'string') {
+    if (! Array.isArray(s) && typeof s !== 'string') {
         $error('Argument to last_key() must be a string or array');
     }
     return size(s) - 1;
+}
+
+/* Returns the second to last value or ∅ */
+function penultimate_value(array) {
+    if (! Array.isArray(array) && typeof array !== 'string') {
+        $error('penultimate_value() argument must be an array or string');
+    }
+    return array[array.length - 2];
 }
 
 
