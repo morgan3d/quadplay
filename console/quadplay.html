@@ -425,9 +425,9 @@
             makeButton('<img src="icons/ui-redo.png" width="26" style="position:relative; top:-2px;">', 'codeEditorRedo', `Redo (${cmd}Shift+Z)`, 'onCodeEditorRedoButton(event)');
             makeButton('<img src="icons/ui-smallfont.png" width="26" style="position:relative; top:-2px;">', undefined, `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton(event)');
             makeButton('<img src="icons/ui-bigfont.png" width="26" style="position:relative; top:-2px;">', undefined, `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton(event)');
-            makeButton('<img src="icons/ui-find.png" width="26" style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton(event)');
-            makeButton('<img src="icons/ui-find-in-files.png" width="26" style="position:relative; top:-2px;">', undefined, `Find in Files (${cmd}Shift+F)`, 'showFindInFilesDialog()');
             makeButton('<img src="icons/ui-goto.png" width="26" style="position:relative; top:-2px;">', undefined, `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton(event)');
+            makeButton('<img src="icons/ui-find.png" width="26" style="position:relative; top:-2px;">', undefined, `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton(event)');
+            makeButton('<img src="icons/ui-find-in-files.png" width="26" style="position:relative; top:-2px;">', 'findInFiles', `Find in Files (${cmd}Shift+F)`, 'showFindInFilesDialog()');
           </script>
           <div style="position: absolute; left: 270px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>

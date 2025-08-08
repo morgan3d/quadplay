@@ -114,10 +114,10 @@ function updateAllCodeEditorSessions() {
 }
 
 
-/* bodyText can also be json, which will be immediately serialized. 
+/* `bodyText` can also be json, which will be immediately serialized. 
    Does not update fileContents[url].
    
-   Assumes that the code editor is open for url already.
+   Assumes that the code editor is open for `url` already.
  */
 function updateCodeEditorSession(url, bodyText) {
     console.assert(bodyText !== undefined, 'bodyText required');
@@ -160,27 +160,18 @@ function setCodeEditorSessionMode(session, mode) {
 }
 
 
-// Controls the Find in Files button visibility based on current file and toolbar visibility
+/* Controls the Find in Files button visibility based on current file type */
 function updateFindInFilesButtonVisibility(currentURL) {
     const isPyxlFile = currentURL && currentURL.endsWith('.pyxl');
-    const toolbar = document.getElementById('codeToolbar');
-    const toolbarVisible = toolbar && (toolbar.offsetHeight > 0) && (getComputedStyle(toolbar).visibility !== 'hidden');
-    const show = Boolean(isPyxlFile && toolbarVisible);
-
-    const findInFilesButtons = document.querySelectorAll('input[onclick*="showFindInFilesDialog"]');
-    for (const button of findInFilesButtons) {
-        const container = button.parentElement.parentElement;
-        container.enabled = show;
-        container.style.visibility = show ? 'visible' : 'hidden';
-        container.style.display = show ? '' : 'none';
-    }
+    container.enabled = Boolean(isPyxlFile);
+    container.style.visibility = isPyxlFile ? 'visible' : 'hidden';
 }
 
 
 /* Loads url into the code editor, creating a new editor if needed and
    reusing a cached one if available.
 
-   assetName may be undefined */
+   `assetName` may be undefined */
 function setCodeEditorSession(url, assetName) {
     console.assert(url);
     setEditorTitle(url);

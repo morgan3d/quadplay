@@ -9,6 +9,8 @@ let start_time
 /* In seconds, using frame_utc_now */
 let end_time
 
+/* `cursor.lib` cursor */
+const cursor = make_cursor()
 
 /* If true, then the player is just warming
    up for a `GLOBAL` game that will start soon. */
