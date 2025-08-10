@@ -83,7 +83,7 @@
         "tutorial_arrow": "tutorial_arrow.sprite.json",
         "auto_find_sound": "quad://sounds/explode-12.sound.json"
     },
-    "version": "0.335",
+    "version": "0.336",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
