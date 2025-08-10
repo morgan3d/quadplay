@@ -194,7 +194,9 @@ def draw_round_selection(pos, radius):
 
 
 
-/* If `activate_callback` is ∅, the button is drawn disabled */
+/* If `activate_callback` is ∅, the button is drawn disabled.
+
+   Returns the button region. */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
     
     const radius = 14
@@ -245,6 +247,8 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
             or joy.pressed_q)):
             activate_callback()
 
+    return region
+
 handle_ability_button.last_frame = 0
 
 
@@ -267,7 +271,13 @@ def handle_buttons(
     aux_sprite,  aux_callback, aux_allow_b default false):
 
     if player.has_ability["Free Mode"]:
-        handle_ability_button(0, "Free", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
+        const region = handle_ability_button(0, "Free", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
+        if not player.has_achievement["Free Mode Word"]:
+            if get_mode() ≠ FreeMode:
+                draw_tutorial(region.pos - xy(0, 20), "Enter\nFree Mode", ∅, "left")
+        else if not player.has_achievement["Exit Free Mode"] and get_mode() == FreeMode:
+            draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
+            
 
     if player.has_ability["Auto 2x2"]:
         handle_ability_button(1, "Auto", auto_caption, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
@@ -292,14 +302,27 @@ def handle_buttons(
 
 
 
-/* Draw a tutorial arrow. `pos` is the position of the target to highlight */
-def draw_tutorial(pos, text, angle default 270°, text_x_align default "center"):
+/* Draw a tutorial arrow. `pos` is the position of the target to highlight. */
+def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
     const bounce = ⌊mode_frames / 30⌋ mod 2
-    const dir = sin(angle)
+
+    if angle == 0°:
+        text_x_align = text_x_align default "right"        
+        text_y_align = text_y_align default "center"
+    else if angle == 90°:
+        text_x_align = text_x_align default "center"
+        text_y_align = text_y_align default "top"
+    else if angle == 180°:
+        text_x_align = text_x_align default "left"
+        text_y_align = text_y_align default "center"
+    else if angle == 270°:
+        text_x_align = text_x_align default "center"
+        text_y_align = text_y_align default "bottom"
 
     const args = {
-        sprite: if angle == 270° then tutorial_arrow[0][0].rotated_270 else tutorial_arrow[0][0].rotated_90,
-        pos: pos + xy(0, dir * (22 + bounce)),
+        sprite: tutorial_arrow[0][0],
+        angle: angle,
+        pos: pos - angle_to_xy(angle) * (18 + bounce),
         z: TUTORIAL_Z}
         
     // Drop shadow
@@ -317,9 +340,9 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align default "center")
         outline: #000,
         shadow: #0008,
         x_align: text_x_align,
-        y_align: if angle == 270° then "bottom" else "top",
+        y_align: text_y_align,
         font: score_font,
-        pos: pos + dir * xy(0, 30 + bounce),
+        pos: pos - angle_to_xy(angle) * (34 + bounce),
         z: TUTORIAL_Z})
 
 

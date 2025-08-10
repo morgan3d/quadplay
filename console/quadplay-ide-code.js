@@ -1881,13 +1881,23 @@ function executeFindInFiles() {
 function findInFiles(query, options, scope) {
     const PREVIEW_LENGTH = 40;
     
-    if (scope !== 'code') {
-        $outputAppend('<span style="color:#f55">Error: Only "code" scope is currently supported for find in files.</span>\n');
-        return;
-    }
+    console.assert(scope === 'code', "Only code scope is currently supported for find in files");
     
     if (! query || query.trim() === '') {
         return;
+    }
+    const results = [];
+    let totalMatches = 0;
+    
+    // Search through all .pyxl files in fileContents
+    for (const [url, content] of Object.entries(fileContents)) {
+        if (url.endsWith('.pyxl') && typeof content === 'string') {
+            const matches = searchInFile(url, content, query, options);
+            if (matches.length > 0) {
+                results.push({url, matches});
+                totalMatches += matches.length;
+            }
+        }
     }
     
     // Switch to develop mode if not in Develop or Debug mode to guarantee results are visible
@@ -1898,21 +1908,9 @@ function findInFiles(query, options, scope) {
     // Activate the output tab to show results
     document.getElementById('outputTab').checked = true;
     
-    const results = [];
-    let totalMatches = 0;
-    
-    // Search through all .pyxl files in fileContents
-    for (const [url, content] of Object.entries(fileContents)) {
-        if (url.endsWith('.pyxl') && typeof content === 'string') {
-            const matches = searchInFile(url, content, query, options);
-            if (matches.length > 0) {
-                results.push({ url, matches });
-                totalMatches += matches.length;
-            }
-        }
-    }
     
     // Output results
+    $outputAppend('<hr>');
     if (results.length === 0) {
         $outputAppend(`<i>No matches found for "${escapeHTMLEntities(query)}"</i>\n`);
     } else {

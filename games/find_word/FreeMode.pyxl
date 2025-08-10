@@ -34,6 +34,7 @@ def player_free_selection_change_callback(player):
     if max_points > 0:
         player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
+        player_achieve(player, "Free Mode Word")
     
     // Choose the color based on the best selection
     max_points = 0
@@ -264,11 +265,17 @@ def draw_free_round_board(pos)
     const center_size = tile_size - gutter
     
     set_transform(pos)
-    
-    draw_rect(xy(0, 0), grid_size + ¼ tile_size.x, player.background_color, player.board.selection_color)
-    draw_rect(xy(0, 0), grid_size + ¼ tile_size.x + 2, ∅, player.board.selection_color)
-    draw_rect(xy(0, 0), grid_size + ¼ tile_size.x + 4, ∅, player.board.selection_color)
-    
+        
+    const board_size = grid_size + ¼ tile_size.x
+    for 0 ≤ i ≤ 2:
+        draw_rect(xy(0, 0), board_size + 2 i, if i then ∅ else player.background_color, player.board.selection_color)
+
+    if not player.has_achievement["Free Mode Word"]:
+        draw_tutorial(
+            if landscape() then xy(-½ board_size.x, 0) else xy(0, -½ board_size.y),
+            "Choose letters in\nany order to spell\none long word",
+            if landscape() then 0° else 270°)
+
     for col at i in player.board.tile:
         for tile at j in col:
             const index = xy(i, j)
@@ -298,21 +305,9 @@ def draw_free_round_board(pos)
                         draw_rect(tile_pos, tile_size - 2 i, ∅, CURSOR_COLOR)
 
 
-
-def draw_instructions(board_pos):
-    draw_text({
-        text: "Choose tiles in any order",
-        pos: board_pos + (if landscape() then xy(-107, 46) else xy(0, 107)),
-        x_align: if landscape() then "right" else "center",
-        y_align: "top",
-        color: #EEE,
-        wrap_width: if landscape() then SCREEN_SIZE.x - 280 else ∅,
-        shadow: #111,
-        font: leaderboard_font})
-
-
 def done():
     play_sound({sound: blip_alt_sound, volume: 80%})
+    player_achieve(player, "Exit Free Mode")
     pop_mode() because "Button"
 
 
@@ -339,7 +334,6 @@ const board_pos = get_board_pos()
 draw_timer(board_pos)
 player_draw_score(player, board_pos)
 
-
 if landscape():
     // Move the board down to make room for the free row
     board_pos.y += 17
@@ -351,8 +345,6 @@ draw_free_round_board(board_pos)
 const history_rect = draw_free_row(board_pos)
 
 history_update(player.history, history_rect)
-
-draw_instructions(board_pos)
 
 handle_buttons(
     ability_icon.ok, "Done", done,

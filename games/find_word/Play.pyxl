@@ -61,7 +61,6 @@ handle_buttons(
     ability_icon.auto_mode, "Auto", enter_auto_mode,
     aux_icon.rotate, enter_rotate_mode)
 
-
 if time_left ≤ 20/60:
     // Make a few frames black at the end so that a player can
     // still trace a little further but can't see. This makes
