@@ -284,20 +284,22 @@ def handle_buttons(
 
     if player.has_ability["Rotate"] and aux_sprite:
         const button_pos = get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size()
+
+        todo("Turn aux button green when hover")
         draw_sprite({
             sprite: aux_sprite,
             pos: button_pos,
             opacity: if aux_callback then 100% else DISABLED_ABILITY_COLOR.a})
 
         if aux_callback:
-
             if aux_sprite == aux_icon.rotate and not player.has_achievement["Rotate Board"]:
-                draw_tutorial(button_pos, "Rotate\nthe\nBoard", 90°, "right")
+                draw_tutorial(button_pos, "Rotate\nthe\nboard", 90°, "right")
 
             if player.using_gamepad:
                 draw_text({font: button_prompt_font, text: player.gamepad.prompt["(f)"], x_align: "right", pos: button_pos + xy(-5, 7), color: #FFF, outline: #000, z: 10})
 
-            if (touch.pressed_a and overlaps({pos: button_pos, size: aux_sprite.size}, touch.xy)) or (aux_allow_b and joy.pressed_b) or joy.pressed_f:
+            // Slightly oversize the aux button touch area, as they are small
+            if (touch.pressed_a and overlaps({pos: button_pos, size: 135% aux_sprite.size}, touch.xy)) or (aux_allow_b and joy.pressed_b) or joy.pressed_f:
                 aux_callback()
 
 
@@ -322,7 +324,7 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
     const args = {
         sprite: tutorial_arrow[0][0],
         angle: angle,
-        pos: pos - angle_to_xy(angle) * (18 + bounce),
+        pos: pos - angle_to_xy(angle) * (20 + bounce),
         z: TUTORIAL_Z}
         
     // Drop shadow
@@ -335,14 +337,14 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
     draw_sprite(args)
         
     draw_text({
+        font: score_font,
         text: text,
+        pos: pos - angle_to_xy(angle) * (30 + bounce) + xy(if angle ≠ 0° then {left: -6, center: 0, right: +6}[text_x_align] else 0, 0),
         color: #FFF,
         outline: #000,
         shadow: #0008,
         x_align: text_x_align,
         y_align: text_y_align,
-        font: score_font,
-        pos: pos - angle_to_xy(angle) * (34 + bounce),
         z: TUTORIAL_Z})
 
 

@@ -209,7 +209,7 @@ local:
     const region = {pos: xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36), size: xy(32, 32)}
     
     if not player.has_achievement["Change Avatar"]:
-        draw_tutorial(region.pos - xy(0, 20), "Change\nyour\navatar")
+        draw_tutorial(region.pos - xy(0, 25), "Change\nyour\navatar")
     
     if cursor_register_target(cursor, region, if intro then ∅ else go_to_avatar):
         draw_round_selection(region.pos, 20)

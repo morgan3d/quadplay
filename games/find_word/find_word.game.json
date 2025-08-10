@@ -83,7 +83,7 @@
         "aux_icon": "aux_button.sprite.json",
         "tutorial_arrow": "tutorial_arrow.sprite.json"
     },
-    "version": "0.331",
+    "version": "0.332",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1428,7 +1428,7 @@
         },
         "TUTORIAL_Z": {
             "type": "number",
-            "value": "100",
+            "value": "120",
             "min": 0,
             "max": 128,
             "format": "0",

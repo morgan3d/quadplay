@@ -5406,7 +5406,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
             // TODO: pos
             firstLineBounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
             if (restBounds.size.y > 0) {
-                firstLineBounds.size.y += referenceFont.spacing.y + restBounds.size.y;
+                firstLineBounds.size.y += restBounds.size.y - 3;
             }
             return firstLineBounds;
         }
@@ -5459,7 +5459,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
             // TODO: pos
             firstLineBounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
             if (restBounds.size.y > 0) {
-                firstLineBounds.size.y += referenceFont.spacing.y + restBounds.size.y;
+                firstLineBounds.size.y += restBounds.size.y - 3;
             }
             return firstLineBounds;
         }
