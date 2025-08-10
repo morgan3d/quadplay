@@ -66,14 +66,13 @@ def compress_word_list(array):
             // Because of the way that the game scores words,
             // it is actually impossible to have found the suffix
             // plural without the singular. However, this logic is good
-            // for cases where the word ending in ES or S is not actually
-            // plural as well as for later generalizing to other suffixes
+            // for later generalizing to other suffixes
             // and prefixes.
             const strip2 = slice(text, 0, size(text) - 2)
             const strip1 = slice(text, 0, size(text) - 1)
             if ends_with(text, "ES") and set[strip2] == PRESENT:
                 set[strip2] = ALREADY_SAVED
-                push(dest, strip2 + "§")
+                push(dest, strip2 + "&")
             else if ends_with(text, "S") and set[strip1] == PRESENT:
                 set[strip1] = ALREADY_SAVED
                 push(dest, strip1 + "$")
@@ -87,7 +86,7 @@ def compress_word_list(array):
         
     // Perform a single join at the end instead of string concatenation as we go
     // so that native code can do this more efficiently
-    return join(dest, ",")
+    return COMPRESSED_HEADER + string_compress(join(dest, ","))
     
     
 
@@ -97,6 +96,11 @@ def decompress_word_list(string):
     
     if string == "": return []
     
+    if starts_with(string, COMPRESSED_HEADER):
+        // Compressed with LZ as well. All current save games have this
+        // but legacy files do not
+        string = string_decompress(slice(string, size(COMPRESSED_HEADER)))
+    
     const result = []
     const array = split(string, ",")
     for i < size(array):
@@ -104,12 +108,14 @@ def decompress_word_list(string):
         if ends_with(text, "$"):
             text = slice(text, 0, size(text) - 1)
             push(result, text + "S")
-        else if ends_with(text, "§"):
+        else if ends_with(text, "&") or ends_with(text, "§"):
+            // § is legacy support. Avoiding unicode characters
+            // increases our compression options
             text = slice(text, 0, size(text) - 1)
             push(result, text + "ES")
             
         push(result, text)
-        
+    
     return result
     
 
@@ -119,7 +125,6 @@ def stats_save(stats):
     for day at date in s:
         day.xp = encode_xp(day.xp)
         day.word_list = compress_word_list(day.word_list)
-        
     save_local("stats", s)
     
     
@@ -127,23 +132,13 @@ def stats_save(stats):
 /* Returns a new stats object loaded from storage. */
 def stats_load():
     const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
-    
-    // Encode the empty. The xp should be encoded but will be forced to 0
-    // by the incorrect coding
     if not size(stats.lifetime.word_list): stats.lifetime.word_list = ""
-
-    // Legacy word list upgrades    
-    if stats.word_list:
-        if type(stats.word_list) == "array":
-            stats.word_list = compress_word_list(stats.word_list)
-        stats.lifetime.word_list = stats.word_list
-        remove_key(stats, "word_list")
 
     // Clean up and decode all entries
     for day at date in stats:
         day.xp = decode_xp(day.xp)
         day.word_list = decompress_word_list(day.word_list default "")
-        
+                
         if day.best_free_word_points == ∅:
             day.best_free_word_points = 0
             day.best_free_word_text = ""
@@ -221,13 +216,10 @@ def decode_xp(str):
     if type(str) ≠ "string":
         // Was not properly encoded
         return 0
-    
+
+    // Decode and then re-encode and verify match
     const xp = parse(split(str, ".")[1])
-    if encode_xp(xp) == str:
-        return xp
-    else:
-        // Was not properly encoded
-        return 0
+    return if (encode_xp(xp) == str) then xp else 0
     
 
 /* Don't let the value change except when stats are updated in
@@ -238,6 +230,7 @@ def today_date_string(update default false):
         const date = local_time()
         today_date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
     return today_date
+
 
 
 /* 
@@ -267,8 +260,8 @@ def stats_update(stats, competitor, joined_late):
         entry.best_word_points = competitor.best_word_points
         entry.best_word_text = competitor.best_word_text
     
-    if competitor.score > entry.best_score:
-        entry.best_score = competitor.score
+    entry.best_score = max(competitor.score, entry.best_score)
+    
     
     const N = size(competitor.word_list) + size(competitor.free_list)
     if N > entry.most_words:

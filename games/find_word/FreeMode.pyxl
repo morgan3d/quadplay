@@ -41,10 +41,10 @@ def player_free_selection_change_callback(player):
     for points in entry in player.history.free:
         max_points = max(max_points, points)
 
-    if max_points > 0:
-        return color_for_points(max_points) 
-    else:
-        return TILE_CENTER_SELECTED_COLOR
+    return (
+        if max_points > 0 
+        then color_for_points(max_points) 
+        else TILE_CENTER_SELECTED_COLOR)
 
 
 
@@ -55,7 +55,7 @@ def player_spawn_free_score_animation(player, word, color):
     let letter_array = []
     let start_array = []
     
-    const entry = player.history.free[find(player.history.free, {word: word}, ∅, word_property_equals)]
+    const entry = player.history.free[find(player.history.free, {word: word}, ∅, "word")]
     assert(entry)
     
     // Have to wait until callback time for this so that the 
@@ -79,7 +79,7 @@ def player_spawn_free_score_animation(player, word, color):
         const α = linstep(total_frames, 0, frames_left)^1.5
         for i < size(letter_array):
             const pos = lerp(start_array[i], target, α)
-            draw_disk(pos, 12 * (1 - α), color, ∅, 9)
+            draw_disk(pos, 12 (1 - α), color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
         
     sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
@@ -158,7 +158,8 @@ def draw_free_row(board_pos)
     
     const tile_area_width = if landscape() then board_grid_size.x else (history_rect.size.x - 10)
     
-    let tile_size = xy(1, 1) * tile_area_width / tile_slots
+    let tile_size = xy(1, 1) * (tile_area_width / tile_slots)
+    
     if tile_slots < ROWS * COLS:
         // Round up, we have some room
         tile_size = ceil(tile_size)
@@ -196,10 +197,8 @@ def draw_free_row(board_pos)
             corner: history_rect.corner + xy(1, history_rect.size.y),
             size: xy(history_rect.size.x - 2, tile_size.y + 6)}    
     
-    draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size, player.background_color, selection_color)
-    // Double wide outline
-    draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size + 2, ∅, selection_color)
-    draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size + 4, ∅, selection_color)
+    for i ≤ 2:
+        draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size + 2i, if i == 0 then player.background_color else ∅, selection_color)
         
     // Draw tiles in the word
     const start_x = free_rect.corner.x + ⌈½ tile_spacing⌉ + 2
@@ -346,7 +345,7 @@ history_update(player.history, history_rect)
 
 handle_buttons(
     ability_icon.ok, "Done", done,
-    ability_icon.auto_mode, "Auto", ∅,
+    ability_icon.auto_find, ∅,
     aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true)
 
 

@@ -2955,6 +2955,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.$prompt             = prompt;
         QRuntime.evaluate_constant_expression = evaluate_constant_expression;
 
+        QRuntime.string_compress     = LZString.compress;
+        QRuntime.string_decompress   = LZString.decompress;
+
         // Conduit API is entirely implemented outside of the runtime files
         QRuntime.make_conduit        = conduitNetwork.make_conduit;
         QRuntime.conduit_iterate     = conduitNetwork.conduit_iterate;
@@ -3981,6 +3984,7 @@ function exportSaveGame() {
 
 /* This must be called from an input event to satisfy browser security */
 function importSaveGame(event) {
+    console.log(event);
     const file = event.target.files[0];
     if (! file) { return; }
 
@@ -4073,6 +4077,9 @@ function importSaveGame(event) {
         }
     };
     reader.readAsArrayBuffer(file);
+
+    // Force the game to restart immediately so that it loads fresh data
+    onRestartButton();
 }
 
 

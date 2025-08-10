@@ -2,6 +2,8 @@ Title
 ════════════════════════════════════════════════════════════════════════
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
+todo("Warn user to back up save game file")
+
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
 
@@ -145,6 +147,9 @@ set_hooks()
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 
+
+stats_save(player.stats)
+
 def sound():
     play_sound(times_up_sound)
     
@@ -163,8 +168,7 @@ intro = sequence(
 if DEBUG.INTERMISSION:
     start_match(GLOBAL)
 
-
-
+    
 frame
 ────────────────────────────────────────────────────────────────────────
 if game_frames == 30:

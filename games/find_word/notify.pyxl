@@ -29,17 +29,25 @@ def notifications_pending():
 /* Hook to process notification animation every frame */
 def update_notifications()
 & preserving_transform:
-    // Draw way on top of everything in Z
-    set_transform(xy(½ SCREEN_SIZE.x, 44), ∅, 110)
-    
-    const BACKGROUND_COLOR = #EEE
-    const TITLE_FONT       = score_font
-    const DESCRIPTION_FONT = leaderboard_font
+    const NOTIFY = {
+        BACKGROUND_COLOR: #EEE,
+        TITLE_FONT:       score_font,
+        DESCRIPTION_FONT: leaderboard_font,
+        HIGHLIGHT_COLOR:  HIGHLIGHT_COLOR,
 
-    // These count against duration_seconds
-    const ENTER_DURATION_SECONDS   = 0.17
-    const EXIT_DURATION_SECONDS    = 0.17
+        // These count against duration_seconds
+        ENTER_DURATION_SECONDS:   0.17,
+        EXIT_DURATION_SECONDS:    0.17,
+
+        Z: 110,
         
+        SPRITE_WIDTH: 32,
+        PADDING: 7
+    }
+
+    // Draw way on top of everything in Z
+    set_transform(xy(½ SCREEN_SIZE.x, 44), ∅, NOTIFY.Z)
+    
     // Nothing to do
     if not notifications_pending(): return
 
@@ -47,7 +55,7 @@ def update_notifications()
     const notification = _notification_queue[0]
     with first_shown, duration_seconds, sprite, begin_callback in notification:
         // Does not count against duration_seconds
-        const DELAY_AFTER_SECONDS      = clamp(25% duration_seconds, 0.6, 1.2)
+        const delay_after_seconds = clamp(25% duration_seconds, 0.6, 1.2)
         
         const time_now = now()
         
@@ -60,12 +68,12 @@ def update_notifications()
         
         // Size fraction
         let α = 100%        
-        if relative_time < ENTER_DURATION_SECONDS:
+        if relative_time < NOTIFY.ENTER_DURATION_SECONDS:
             // Grow
-            α = clamp(relative_time / ENTER_DURATION_SECONDS, 0%, 100%)
-        else if relative_time > EXIT_DURATION_SECONDS:
+            α = clamp(relative_time / NOTIFY.ENTER_DURATION_SECONDS, 0%, 100%)
+        else if relative_time > NOTIFY.EXIT_DURATION_SECONDS:
             // Shrink
-            α = clamp((duration_seconds - relative_time) / EXIT_DURATION_SECONDS, 0%, 100%)
+            α = clamp((duration_seconds - relative_time) / NOTIFY.EXIT_DURATION_SECONDS, 0%, 100%)
 
         const rect = {pos: xy(0, 0), size: α * xy(204, 80)}
         
@@ -74,29 +82,26 @@ def update_notifications()
             draw_rect(rect.pos + xy(0, 4), rect.size + 4, #0008, ∅, ∅, -1)
     
             // Window
-            draw_rect(rect.pos, rect.size, BACKGROUND_COLOR, HIGHLIGHT_COLOR)
-            draw_rect(rect.pos, rect.size - 2, ∅, HIGHLIGHT_COLOR)
+            draw_rect(rect.pos, rect.size, NOTIFY.BACKGROUND_COLOR, NOTIFY.HIGHLIGHT_COLOR)
+            draw_rect(rect.pos, rect.size - 2, ∅, NOTIFY.HIGHLIGHT_COLOR)
             draw_rect(rect.pos, rect.size + 2, ∅, #000)
             
+            // Show contents when the window reaches full size
             if α == 100%:
-                // Show contents when the window is full size
-                const sprite_width = 32
-                const padding = 7
-                const text_width = rect.size.x - sprite_width - 2.5 padding 
-    
-                draw_sprite({
-                    sprite: notification.sprite,
-                    pos: xy(-½ rect.size.x + padding + ½ sprite_width, 0),
-                    override_color: if equivalent(rgb(notification.sprite.mean_color), #FFF) then #000 else ∅,
-                    scale: sprite_width / notification.sprite.size.x})
+                if notification.sprite:
+                    draw_sprite({
+                        sprite: notification.sprite,
+                        pos: xy(-½ rect.size.x + NOTIFY.PADDING + ½ NOTIFY.SPRITE_WIDTH, 0),
+                        override_color: if equivalent(rgb(notification.sprite.mean_color), #FFF) then #000 else ∅,
+                        scale: NOTIFY.SPRITE_WIDTH / notification.sprite.size.x})
         
                 draw_text({
-                    text: "{font:" + TITLE_FONT + " {color:HIGHLIGHT_COLOR " + notification.title + "}{br}}" + notification.description,
-                    pos: xy(-½ rect.size.x + sprite_width + 2 padding, 0),
-                    font: DESCRIPTION_FONT,
+                    text: "{font:" + NOTIFY.TITLE_FONT + " {color:" + unparse(NOTIFY.HIGHLIGHT_COLOR) + " " + notification.title + "}{br}}" + notification.description,
+                    pos: xy(-½ rect.size.x + NOTIFY.SPRITE_WIDTH + 2 NOTIFY.PADDING, 0),
+                    font: NOTIFY.DESCRIPTION_FONT,
                     color: #000,
                     markup: true,
-                    wrap_width: text_width,
+                    wrap_width: rect.size.x - NOTIFY.SPRITE_WIDTH - 2.5 NOTIFY.PADDING,
                     x_align: "left",
                     y_align: "center"})
                     
@@ -112,8 +117,6 @@ def update_notifications()
         // the player didn't click mistakenly
         const cancel = (α == 100%) and (joy.pressed_b or (touch.pressed_a and overlaps(rect, touch.xy)))
         
-        if (relative_time > duration_seconds + DELAY_AFTER_SECONDS) or cancel:
+        if (relative_time > duration_seconds + delay_after_seconds) or cancel:
             // Done! remove
             pop_front(_notification_queue)
-
-

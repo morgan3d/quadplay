@@ -4,12 +4,31 @@ def enter_free_mode():
     board_deselect_all(player.board, player)
     push_mode(FreeMode) because "Button"
 
-def enter_auto_mode():
-    board_deselect_all(player.board, player)
-    push_mode(AutoMode) because "Button"
+
+
+def execute_auto():
+    todo("auto: tutorial")
+    todo("auto: achievement")
+    
+    play_sound({sound: auto_find_sound, volume: 50%, playback_rate: 200%})
+    sort(player.auto_list, size_comparator)
+    for word at w in player.auto_list:
+        const points = score_word(word)
+        player_add_to_history(player, word, points)
+        player_spawn_score_animation(player, "Auto")
+        
+        // Per-word sound
+        def sound(): play_points_sound(points)    
+        if w < 7: delay(sound, 7 w)
+    
+    --player.auto_uses_left
+    player.auto_list = ∅
+    
+    
 
 def enter_rotate_mode():
     push_mode(Rotate) because "button"
+    
     
 
 enter
@@ -29,10 +48,11 @@ else:
     
     end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
 
+    /*
     assert(
         end_time > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or 
         DEBUG.INTERMISSION,
-        "The game should not end so soon")
+        "The game should not end so soon")*/
 
 set_background(
     if game_type == GLOBAL 
@@ -58,7 +78,7 @@ player_update(player, get_board_pos(), ∅, allow_rotate)
 
 handle_buttons(
     ability_icon.free_mode, "Free", enter_free_mode,
-    ability_icon.auto_mode, "Auto", enter_auto_mode,
+    ability_icon.auto_find, if player.auto_uses_left and size(player.auto_list) then execute_auto else ∅,
     aux_icon.rotate, enter_rotate_mode)
 
 if time_left ≤ 20/60:

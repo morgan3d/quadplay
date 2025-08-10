@@ -40,13 +40,6 @@ def make_history():
     }
 
 
-    
-/* True if A and B have the same value for their `word` property.
-   Useful for comparing two history list entries. */
-def word_property_equals(A, B):
-    return A.word == B.word
-
-
 
 /* Mutates `pos`, returns `max_width`. Called from `history_update()`. */
 def history_draw(history, pos, max_height):

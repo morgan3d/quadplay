@@ -1,12 +1,6 @@
 /* Utility functions that are not specific to this game */
 
 
-/* Returns the second to last value or ∅ */
-def penultimate_value(array):
-    return array[size(array) - 2]
-
-
-
 /* Returns a boolean that is true if the button has just been
    pressed or is on a repeat press this frame, where `button_frames`
    is the value of a gamepad button. */
@@ -33,6 +27,7 @@ def swap(array, i, j):
     const temp = array[i]
     array[i] = array[j]
     array[j] = temp
+    
 
     
 def draw_arc(pos, radius, start, stop, color):

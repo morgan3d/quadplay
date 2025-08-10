@@ -342,6 +342,10 @@ if not DEBUG.INTERMISSION:
     const unique_word_list = stats_update(player.stats, player_competitor, joined_late)
     grant_unique_word_xp(unique_word_list)
     
+    // Update the vocabulary
+    for word in unique_word_list:
+        player.vocabulary[word] = 1
+    
     new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
     // Update level
     player.avatar.level = xp_to_level(new_xp)   

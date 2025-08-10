@@ -1,7 +1,7 @@
 name,level,description,sprite_name
 Stats Tracker,2,You now have a Stats tracker for your XP!,stats_sprite[0][0]
 See Moo,2,SILENT,
-Rotate,2,You can now rotate the board during play!,aux_icon.rotate
+Rotate,2,New ability: Rotate the board for a new perspective,aux_icon.rotate
 Most Words Stat,3,Most Words per match is now available in Stats!,stats_sprite[0][0]
 Friend of Moo,3,"`Hi I'm Moo, Let's Be Friends!'",avatar_sprite[34][22].x_flipped
 High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprite[0][0]
@@ -19,11 +19,11 @@ Words/Match Stat,13,Average Words per Match is now available in Stats!,stats_spr
 Points/Match Stat,14,Average Points per Match is now available in Stats!,stats_sprite[0][0]
 Avatar (TODO) 5,14,New avatars (TODO),avatar_sprite[47][12].x_flipped
 Total Words Stat,15,Total Words count is now available in Stats!,stats_sprite[0][0]
-Free Mode,16,You can now use Free Mode to make one unordered sequence per match!,ability_icon.free_mode]
+Free Mode,16,New ability: Use Free Mode to make one unordered sequence per match,ability_icon.free_mode
 Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprite[0][0]
 Avatar (TODO) 6,18,New avatars (TODO),avatar_sprite[43][6].x_flipped
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Avatar (TODO) 7,20,New avatars (TODO),avatar_sprite[39][14].x_flipped
 Know Word Count,21,You can now see the total number of possible words while playing!,<default>
 Avatar (TODO) 8,22,New avatars (TODO),avatar_sprite[10][2].x_flipped
-Auto 2x2,1023,Automatically completes all words in you found in previous matches on a 2x2 square,ability_icon.auto_mode
+Auto,23,New ability: Once per match, auto-find short words within your previous word (for words found before),ability_icon.auto_find

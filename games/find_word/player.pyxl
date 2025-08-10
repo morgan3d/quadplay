@@ -9,7 +9,14 @@ def player_achieve(player, name, make_notification default false):
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
-
+    
+    const vocabulary = {}
+    for list in [stats.lifetime.word_list, stats[today_date_string()].word_list]:
+        for word in list:
+            vocabulary[word] = 1
+    
+    // debug_print(vocabulary)
+    
     return {
         board: make_board(),
         
@@ -17,6 +24,19 @@ def make_player():
         free_row: [],
 
         stats: stats,
+        
+        // Q-encoded dictionary of all words this player has ever
+        // found
+        vocabulary: vocabulary,
+        
+        // The words that the Auto ability will find if activated.
+        // Updated when the player completes a word. When ∅ the 
+        // auto button is not available.        
+        auto_list: ∅,
+        auto_uses_left: 0,
+        // Button position, computed during rendering and then used
+        // for score animation
+        auto_pos: xy(0,0),
         
         avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
         
@@ -56,37 +76,45 @@ def make_player():
 
 
 def player_free_row_contains(player, word):
-    return contains(player.history.free, {word: word}, word_property_equals)
+    return contains(player.history.free, {word: word}, "word")
 
 
 
-/* Creates animation going from the selection to the last word in the history */
-def player_spawn_score_animation(player):
+/* Creates animation going from the selection (if source == "board") or 
+   auto button (if source == "Auto") to the last word in the history */
+def player_spawn_score_animation(player, source default "board"):
     let target
     
-    // Capture the color at the time of the animation spawn
+    // Capture the entry at the time of the animation spawn from
+    // the history list
     const entry = last_value(player.history.list)
-    
+
     let letter_array = []
     let start_array = []
-    for tile_index in player.board.selection:  
-        with pos, letter in player.board.tile[tile_index.x][tile_index.y]:
-            push(start_array, xy(pos))
-            push(letter_array, q_decode(letter))
     
-    // Have to wait until callback time for this so that the 
-    // target actually gets rendered and assigned a pos first
-    def capture_target():        
-        target = entry.pos + xy(4 size(entry.word), 4)
-
+    if source == "Auto":
+        for letter in entry.word:
+            push(letter_array, q_decode(letter))
+    else:
+        for tile_index in player.board.selection:  
+            with pos, letter in player.board.tile[tile_index.x][tile_index.y]:
+                push(start_array, xy(pos))
+                push(letter_array, q_decode(letter))
+    
     def callback(frames_left, total_frames):
+        // Have to wait a frame for this so that the 
+        // target actually gets rendered and assigned a pos first
+        if not entry.pos: return
+    
+        const target = entry.pos + xy(4 size(entry.word), 4)
+        
         const α = linstep(total_frames, 0, frames_left)^1.5
         for i < size(letter_array):
-            const pos = lerp(start_array[i], target, α)
+            const pos = lerp(if source == "Auto" then player.auto_pos else start_array[i], target, α)
             draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), entry.color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
         
-    sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
+    sequence({callback: callback, frames: POINTS_ANIMATION_FRAMES})
 
 
 
@@ -109,18 +137,25 @@ def player_selection_change_callback(player)
         // finding and emphasizing it
         player_emphasize_history_word(player, word)
         return true
-                        
+
     else if points > 0:
-        if player_free_row_contains(player, word):
-            // This word was made in free mode unnecessarily. Steal it
-            // so that it is locked in if they later change the free row
-            todo("Animate going away")
-            remove_values(player.history.free, {word: word}, word_property_equals)
+        // Note that words can also be added by the Auto ability
+        // implemented in Play.
         
         // Score the word, even without the player releasing their touch
         player.board.selection_color = player_add_to_history(player, word, points)
         player_spawn_score_animation(player)
         play_points_sound(points, last_value(board.selection))    
+        
+        // Update the auto button's list. Do this after player_add_to_history
+        // so that the full word isn't found again
+        if player.has_ability["Auto"]:
+            const previously_available = size(player.auto_list)
+            player.auto_list = find_short_words_from_selection()
+            if player.auto_uses_left and size(player.auto_list) and not previously_available:
+                play_sound({sound: blip_alt_sound, playback_rate: 50%, volume: 80%})
+
+
         return true
 
 
@@ -134,6 +169,12 @@ def player_add_to_free(player, word, points):
 /* Returns the color. Updates the score. Does not verify that the word has
    not been found previously. `word` is Q-encoded */ 
 def player_add_to_history(player, word, points):
+    if player_free_row_contains(player, word):
+        // This word was made in free mode unnecessarily. Steal it
+        // so that it is locked in if they later change the free row
+        todo("Animate going away")
+        remove_values(player.history.free, {word: word}, "word")
+    
     player.already_found[word] = true
     player.score += points
     return history_add(player.history, "list", word, points)
@@ -415,6 +456,8 @@ def player_reset_match(player, game_type, board_string default ∅):
     remove_all(player.history.free)
     player.history.scroll = 0
     player.history.scroll_history_size = 0
+    player.auto_list = ∅
+    player.auto_uses_left = if player.has_ability["Auto"] then 1 else 0
     
     if board_string:
         

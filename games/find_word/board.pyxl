@@ -17,21 +17,7 @@ def make_board():
         seed: ∅,
         
         // The tiles
-        tile: make_array(
-            xy(COLS, ROWS), {
-                // uppercase, Q means Qu
-                letter: "?",
-                
-                // Last position rendered to in screen space
-                pos: ∅,
-                
-                // Has this been consumed for free word construction?
-                // If so, draw as missing.
-                used: false,
-                                
-                // mode_frame at which this was selected
-                selected: 0},
-            deep_clone),
+        tile: make_array(xy(COLS, ROWS), make_tile(), deep_clone),
                 
         // The UI selection as xy() indices, in order of selection
         selection: [],
@@ -46,10 +32,14 @@ def make_board():
     return board
     
     
-/* Convert base 10 number to base 36 string */
+    
+/* Convert base 10 number to base 36 string. We use this to assign a unique
+   character to each tile when searching for words, so that a string
+   is a path through the board. Base 16 would be sufficient for a 4x4 board,
+   this is implemented in base 36 for generality. */
 const DECIMAL_TO_BASE36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-/* Convert single digit base 36 string to base 10 number */
+/* Convert single digit base 36 string to base 10 number. See also `DECIMAL_TO_BASE36`. */
 const BASE36_TO_DECIMAL = {};
 for letter at index in DECIMAL_TO_BASE36:
     BASE36_TO_DECIMAL[letter] = index;
@@ -112,6 +102,7 @@ def board_find_unencoded_word(board, unencoded_word):
     board_visit_subpaths(board, visit)
     
     return path
+
 
 
 /*
@@ -301,10 +292,12 @@ def _index_to_pos(index):
 /* Add the `xy()` value `index` to the current selection, playing sounds
    as appropriate.  */
 def board_select(board, index, player):
-    const tile = board.tile[index.x][index.y]
-    assert(not tile.selected)
     push(board.selection, index)
-    tile.selected = game_frames
+    board.tile[index.x][index.y].selected = game_frames
+
+    if size(board.selection) == 1:
+        // This is a new selection starting, so disable the auto list
+        player.auto_list = ∅
 
     // Pan sound with position
     if not player_selection_change_callback(player):
@@ -314,10 +307,6 @@ def board_select(board, index, player):
 
 def board_deselect_last(board, player):
     board.selection_color = TILE_CENTER_SELECTED_COLOR
-    if not board.selection: 
-        // Bug workaround
-        board.selection = []
-        return
     
     const index = pop(board.selection)
     board.tile[index.x][index.y].selected = false
@@ -329,13 +318,10 @@ def board_deselect_last(board, player):
 
 def board_deselect_all(board, player):
     board.selection_color = TILE_CENTER_SELECTED_COLOR
-    if not board.selection: 
-        // Bug workaround
-        board.selection = []
-        return
 
     for index in board.selection:
         board.tile[index.x][index.y].selected = false
+
     resize(board.selection, 0)
     // Could play a deselect sound here
         
@@ -378,11 +364,8 @@ def board_reverse_rotate(board):
 /* Returns the Q-encoded upper-case text word that is selected, 
    or "" if no selection */
 def board_selected_word(board):
-    if not board.selection:
-        // Bug workaround
-        return ""
-        
     let word = ""
+
     for s in board.selection:
         word += board.tile[s.x][s.y].letter
         
@@ -440,13 +423,8 @@ def board_select_word(board, word, color default HIGHLIGHT_COLOR):
     if q_decode(board_selected_word(board)) == word: return
 
     board_deselect_all(player.board)
-    board.selection = board_find_unencoded_word(board, word)
+    board.selection = board_find_unencoded_word(board, word) default []
     board.selection_color = color
-
-    if not board.selection:
-        // Bug workaround for rare crash
-        debug_print(word)
-        return
     
     // Select these letters
     for index at i in board.selection:

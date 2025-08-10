@@ -1,3 +1,20 @@
+def make_tile():
+    return {
+        // uppercase, Q means Qu
+        letter: "?",
+        
+        // Last position rendered to in screen space
+        pos: ∅,
+        
+        // Has this been consumed for free word construction?
+        // If so, draw as missing.
+        used: false,
+                        
+        // mode_frame at which this was selected
+        selected: 0}
+        
+        
+
 /* Draws a tile, adjusting fonts appropriately for the size */
 def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, force_background default false):
     // Shrink by 5 at 44
@@ -54,4 +71,62 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
             text: LETTER_POINT_TABLE[tile.letter], 
             color: #AAA,
             z: TILE_LETTER_Z})
+            
+
+            
+/* Given an unordered array of tile indices into `player.board.tile[][]`, finds all words that can be
+   made from those tiles such that the words:
+       
+   - Trace through the tiles using adjacency in the board
+   - Have of length between `MIN_WORD_LENGTH` and `max_word_length` 
+     tiles
+   - Are words the player found in previous games (are in their vocabulary, which is a subset of dictionary[])
+   - Are words the player has not yet found in this game
+
+   The words are returned q-encoded.
+   
+   Used to implement Auto.
+*/
+def find_short_words_from_selection(max_word_length default 4):
+    // Precompute adjacency. Parallel array to tile_array 
+    // in which each element is an array of neighbor INDICES
+    // into player.board.selection.
+    const neighborhood_array = []
+    for A in player.board.selection:
+        const neighbor_array = []
+        for B at t in player.board.selection:
+            if A ≠ B and ‖A - B‖ < 1.5:
+                push(neighbor_array, t)
+        push(neighborhood_array, neighbor_array)
+    
+    const word_set = []
+    
+    def search(last_index, word, used_mask):
+        if size(word) ≥ MIN_WORD_LENGTH:
+            if player.vocabulary[word] and not player.already_found[word]:
+                // Found a new word, record it
+                word_set[word] = 1
+        
+        if size(word) < max_word_length:
+            // Try to visit each unused neighbor next
+            const neighbor_array = neighborhood_array[last_index]
+         
+            for n < size(neighbor_array):
+                const t = neighbor_array[n]
+                if not ((used_mask bitshr t) ∩ 1):
+                    // This tile has not been used yet for this search path,
+                    // so recursively explore it
+                    const tile_index = player.board.selection[t]
+                    search(t, word + player.board.tile[tile_index.x][tile_index.y].letter, used_mask ∪ (1 bitshl t))
+    
+
+    // Start with each letter in turn
+    for tile_index at t in player.board.selection:
+        search(t, player.board.tile[tile_index.x][tile_index.y].letter, 1 bitshl t, player.board.selection, neighborhood_array, word_set, max_word_length)
+
+    return keys(word_set)
+    
+            
+    
+
             

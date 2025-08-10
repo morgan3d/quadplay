@@ -5,6 +5,7 @@ js-yaml.min.js   4.1.0         YAML parsing     https://github.com/nodeca/js-yam
 dagre.min.js     2023          Mode graph gen   https://github.com/dagrejs/dagre
 decomp.min.js    2017          Polygon decomp for physics. Not maintained https://github.com/schteppe/poly-decomp.js/
 matter.js        0.20.0        Physics          http://brm.io/matter-js/
+lz-string.min.js 1.5.0         Compression      https://github.com/pieroxy/lz-string
 jszip.min.js     3.10.1        Zipfiles         https://stuk.github.io/jszip/
 serialize.js     2025.07.24    Serialization    https://github.com/morgan3d/serializejs/
 ../ace/ace.js    1.37.1        Code editor      https://github.com/ajaxorg/ace-builds/

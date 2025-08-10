@@ -5,11 +5,9 @@
 const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 9
 
 todo("** Lock avatars by level **")
-
 todo("Introduce KAT, kit, and evil(er) K4T")
     
     
-
 def avatar_save(avatar):
     // Other properties are recomputed on load
     save_local("avatar", {
@@ -35,7 +33,7 @@ def avatar_load():
         
         // Persist the random avatar        
         save_local("avatar", avatar_data)
-    
+
     const sprite = avatar_sprite_from_linear_index(avatar_data.sprite_index)
     
     return {
@@ -50,14 +48,15 @@ def avatar_load():
 
 def avatar_compute_color(sprite):
     const color = hsv(sprite.mean_color)
-    color.s *= 130%
-    color.v = max(color.v, 70%)
-    return rgb(color)
+    return rgb({h: color.h, s: 130% color.s, v: max(color.v, 70%)})
 
 
         
 def avatar_draw_large(avatar, pos, background default true, color, shadow default #000, spin default false):
     
+    color = color default (if background then avatar.color else player.board.selection_color)
+    draw_text({font: score_font, text: trim_spaces(avatar.name), color: color, shadow: shadow, pos: pos + xy(0, 27), z: 5})
+
     let sprite = avatar.sprite
     
     if ⌊(game_frames + 15) / 30⌋ mod 2:
@@ -65,18 +64,21 @@ def avatar_draw_large(avatar, pos, background default true, color, shadow defaul
         sprite = sprite_transfer_orientation(avatar.sprite, sprite)
         if spin: sprite = sprite.x_flipped
 
-    sprite = sprite.x_flipped
-    
+    const args = {
+        sprite: sprite.x_flipped, 
+        scale: 200%, 
+        override_color: #000,
+        pos: pos + xy(0, -1),
+        z: 5}
+        
     // Outline
     for -1 ≤ dx ≤ +1:
         if dx ≠ 0:
-            draw_sprite({sprite: sprite, scale: 200%, override_color: #000, pos: pos + xy(dx, -1), z: 5})
-            draw_sprite({sprite: sprite, scale: 200%, override_color: #000, pos: pos + xy(0, dx - 1), z: 5})
+            draw_sprite({…args, pos: args.pos + xy(dx, 0)})
+            draw_sprite({…args, pos: args.pos + xy(0, dx)})
     
-    draw_sprite({sprite: sprite, scale: 200%, pos: pos + xy(0, -1), z: 5})
+    draw_sprite({…args, override_color: ∅})
     
-    color = color default (if background then avatar.color else player.board.selection_color)
-    draw_text({font: score_font, text: trim_spaces(avatar.name), color: color, shadow: shadow, pos: pos + xy(0, 27), z: 5})
 
 
 
@@ -104,14 +106,10 @@ def avatar_sprite_from_linear_index(index):
 
 def avatar_next_sprite(sprite, dir default +1):
     // Advance one
-    let i = avatar_sprite_to_linear_index(sprite)
-    i = loop(i + dir, AVATAR_SPRITE_COUNT)
+    const i = loop(avatar_sprite_to_linear_index(sprite) + dir, AVATAR_SPRITE_COUNT)
     sprite = avatar_sprite_from_linear_index(i)
     
-    if (contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent) or
-        // Harpy's special avatar
-        ((player.avatar.name ≠ "bug" or player.level < 8) and equivalent(sprite.tile_index, HARPY_AVATAR_INDEX))):
-            
+    if contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent):
         return avatar_next_sprite(sprite, dir)
     else:
         return sprite
@@ -119,8 +117,7 @@ def avatar_next_sprite(sprite, dir default +1):
 
 
 def avatar_next_name_letter(letter, dir default +1):
-    let i = find(AVATAR_NAME_ALPHABET, letter)
-    i = loop(i + dir, size(AVATAR_NAME_ALPHABET))
+    const i = loop(find(AVATAR_NAME_ALPHABET, letter) + dir, size(AVATAR_NAME_ALPHABET))
     return AVATAR_NAME_ALPHABET[i]
     
 

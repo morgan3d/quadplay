@@ -818,6 +818,8 @@ function computeCredits(gameSource) {
     CREDITS.quadplay.push('matter.js ©2017-2025 Liam Brummitt and others, used under the MIT license');
     CREDITS.quadplay.push('poly-decomp.js ©2013 Stefan Hedman, used under the MIT license');
     CREDITS.quadplay.push('serialize.js ©2025 Morgan McGuire, used under the MIT license');
+    CREDITS.quadplay.push('jszip ©2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso, used under the MIT license');
+    CREDITS.quadplay.push('lz-string.js ©2012-2016 Pierre-Luc Paour, used under the MIT license');
 }
 
 

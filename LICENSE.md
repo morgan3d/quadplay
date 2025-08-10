@@ -83,6 +83,9 @@ license.
 [`jszip`](https://stuk.github.io/jszip/) is Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso,
 used under the MIT license
 
+[`lz-string.js`](https://github.com/pieroxy/lz-string) is Copyright (c) 2012-2016 Pierre-Luc Paour,
+used under the MIT license.
+
 The boot screen font used in the emulator is
 [https://int10h.org/oldschool-pc-fonts](PxPlus_AmstradPC1512-2y) copyright 2016
 [Int10h](https://int10h.org/), used under the [CC-BY 4.0](http://creativecommons.org/licenses/by-sa/4.0/) license.

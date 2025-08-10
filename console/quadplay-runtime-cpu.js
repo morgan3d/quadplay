@@ -513,6 +513,10 @@ function contains(a, x, comparator) {
 function find(a, x, start, comparator) {
     // Type of what we are looking for
     const t = typeof x;
+
+    if (typeof comparator === 'string' || typeof comparator === 'number') {
+        comparator = function (A, B) { return A[comparator] === B[comparator]; }
+    }
     
     // Run the regular find if using equivalent() on trivial values or
     // if there is no comparator. Otherwise, do the general case
@@ -813,9 +817,13 @@ function $equalComparator(A, B) { return A === B; }
 
 function remove_values(t, value, comparator = $equalComparator) {
     let any = false;
-    
+
     if ($iteratorCount.get(t)) {
         $error('Cannot remove_values() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
+
+    if (typeof comparator === 'string' || typeof comparator === 'number') {
+        comparator = function (A, B) { return A[comparator] === B[comparator]; }
     }
     
     if (Array.isArray(t)) {
@@ -9937,8 +9945,9 @@ function save_local(key, value) {
         delete table[key];
     } else {
         const v = unparse(value, 0);
-        if (v.length > 16384) {
-            $error('Cannot store_local() a value that is greater than 16384 characters after unparse()');
+        const limit = 32768;
+        if (v.length > limit) {
+            $error('Cannot store_local() a value that is greater than ' + limit + ' characters after unparse()');
         }
         table[key] = v;
         if ($Object.keys(table).length > 64) {

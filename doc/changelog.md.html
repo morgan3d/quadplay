@@ -20,8 +20,11 @@ of [<quadplay/>](manual.md.html).
   - `penultimate_value()`
   - `local_time()` and `utc_time()` are now constant throughout a frame
   - `remove_values()` now accepts an optional comparator
+  - `contains()` and `find()` now accept a string or integer as a comparator key
   - Removed long-deprecated `is_NaN()`
   - PyxlScript now supports general-purpose `pop_mode` handlers with no `from` clause
+  - `string_compress()` and `string_decompress()`
+  - Increased `save_local()` size per key to 32,768 characters from 16,384
 - Exported games
   - Added import/export of save games to a local file to the console menu. Automatically appears
     for all quadplay games that use `save_local` or `load_local`

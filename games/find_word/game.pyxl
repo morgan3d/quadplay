@@ -196,6 +196,7 @@ def draw_round_selection(pos, radius):
 
 /* If `activate_callback` is ∅, the button is drawn disabled.
 
+   `name` is a unique identifier
    Returns the button region. */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
     
@@ -225,8 +226,19 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         color: if handle_ability_button.selected_button == name then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
         outline: if handle_ability_button.selected_button == name then rgba(CURSOR_COLOR, 50%) else ∅,
         text: caption})
-    
+            
     draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
+    
+    // Special case for the auto button, where the sprite itself shows a number
+    if name == "Auto" and size(player.auto_list):
+        // Save this position for later score animation
+        player.auto_pos = region.pos
+        draw_text({
+            text: size(player.auto_list),
+            pos: region.pos + 1,
+            font: tile_font,
+            color: if enabled then HIGHLIGHT_COLOR else rgba(HIGHLIGHT_COLOR, 40%),
+            outline: if enabled then #FFF else #FFF5})
     
     if enabled:
         if player.using_gamepad:
@@ -267,7 +279,7 @@ def play_big_points_sound():
    Set a callback to ∅ for any button to render it disabled. */
 def handle_buttons(
     free_sprite, free_caption, free_callback,
-    auto_sprite, auto_caption, auto_callback,
+    auto_sprite, auto_callback,
     aux_sprite,  aux_callback, aux_allow_b default false):
 
     if player.has_ability["Free Mode"]:
@@ -279,27 +291,33 @@ def handle_buttons(
             draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
             
 
-    if player.has_ability["Auto 2x2"]:
-        handle_ability_button(1, "Auto", auto_caption, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
+    if player.has_ability["Auto"]:
+        todo("Bug: Auto button disappears when used until mouse moves")
+        handle_ability_button(1, "Auto", "Auto x" + player.auto_uses_left, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
 
     if player.has_ability["Rotate"] and aux_sprite:
-        const button_pos = get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size()
+        const region = {
+            pos: get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size(), 
+            size: 140% aux_sprite.size}
 
-        todo("Turn aux button green when hover")
+        if aux_callback and touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
+            handle_ability_button.selected_button = "aux"
+
         draw_sprite({
             sprite: aux_sprite,
-            pos: button_pos,
+            pos: region.pos,
+            override_color: if handle_ability_button.selected_button == "aux" then CURSOR_COLOR else ∅,
             opacity: if aux_callback then 100% else DISABLED_ABILITY_COLOR.a})
 
         if aux_callback:
             if aux_sprite == aux_icon.rotate and not player.has_achievement["Rotate Board"]:
-                draw_tutorial(button_pos, "Rotate\nthe\nboard", 90°, "right")
+                draw_tutorial(region.pos, "Rotate\nthe\nboard", 90°, "right")
 
             if player.using_gamepad:
-                draw_text({font: button_prompt_font, text: player.gamepad.prompt["(f)"], x_align: "right", pos: button_pos + xy(-5, 7), color: #FFF, outline: #000, z: 10})
+                draw_text({font: button_prompt_font, text: player.gamepad.prompt["(f)"], x_align: "right", pos: region.pos + xy(-5, 7), color: #FFF, outline: #000, z: 10})
 
             // Slightly oversize the aux button touch area, as they are small
-            if (touch.pressed_a and overlaps({pos: button_pos, size: 135% aux_sprite.size}, touch.xy)) or (aux_allow_b and joy.pressed_b) or joy.pressed_f:
+            if (touch.pressed_a and overlaps(region, touch.xy)) or (aux_allow_b and joy.pressed_b) or joy.pressed_f:
                 aux_callback()
 
 

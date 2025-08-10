@@ -53,6 +53,9 @@ Array
 
 `contains(array, value, comparator default ==)`
 : Return `true` if `value` appears at least once in `array` and `false` otherwise.
+  The `comparator` may be `nil`, a function that returns
+  a non-falsy value if the values are equivalent, or a string or integer that is the
+  key of the property to compare using `==` (similar to `sort()`).
 
 `deep_clone(array)`
 : Return a deep clone of `array`. Pointer structures are preserved and loops
@@ -92,6 +95,11 @@ Array
   called `index_of` or `indexOf` in some other programming languages.
   Note that if `is_nan(x)`, then `find()` cannot find any match.
   
+  The `comparator` may be `nil`, a function that returns
+  a non-falsy value if the values are equivalent, or a string or integer that is the
+  key of the property to compare using `==` (similar to `sort()`).
+  See also `equivalent()`.
+
 `insert(array, i, x, ...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
   and returns the first value inserted. Similar to Python insert and JavaScript splice functions.
@@ -244,6 +252,11 @@ Array
   time in the original length of the array. Returns true if any value
   was removed. Does nothing if `v` is not in the array. See also
   `fast_remove_value()`
+
+  The `comparator` may be `nil`, a function that returns
+  a non-falsy value if the values are equivalent, or a string or integer that is the
+  key of the property to compare using `==` (similar to `sort()`).
+  See also `equivalent()`.
 
 `remove_all(array)`
 : Remove everything from the array. Same as `resize(array, 0)`.
@@ -428,6 +441,14 @@ String
 `starts_with(string, target)`
 : Returns true if `string` begins with the substring `target`. See also `ends_with()`.
 
+`string_compress(string)`
+: Returns a compressed version of the string (as a different string). Good for conserving
+  space in `save_local()`.
+
+`string_decompress(string)`
+: Returns a decompressed version of the string. The compression ratio varies with content.
+  Expect between 2x and 10x reduction in length for typical text or word lists.
+
 `trim_spaces(string)`
 : Returns a new string that is the original with whitespace removed
   from the start and end. See also `resized()`
@@ -470,7 +491,10 @@ Object
 
 `contains(object, value, comparator default ==)`
 : Returns `true` if there is some key that maps to `value` in `object`
-  and `false` otherwise.
+  and `false` otherwise. The `comparator` may be `nil`, a function that returns
+  a non-falsy value if the values are equivalent, or a string or integer that is the
+  key of the property to compare using `==` (similar to `sort()`).
+  See also `equivalent()`.
 
 `deep_clone(object)`
 : Return a deep clone of `object`. Pointer structures are preserved and loops
@@ -500,6 +524,10 @@ Object
   O(n) time in the number of key-value pairs. The `ignored` parameter is
   present to match the signature of the array and string versions of
   `find()` but does nothing in the object case.
+  The `comparator` may be `nil`, a function that returns
+  a non-falsy value if the values are equivalent, or a string or integer that is the
+  key of the property to compare using `==` (similar to `sort()`).
+  See also `equivalent()`.
 
 `keys(object)`
 : An array of the keys in the object. You almost never need this because
@@ -521,6 +549,10 @@ Object
 `remove_values(object, v, comparator default ==)`
 : Remove every value `x` for which `comparator(x, v)` from the object. Returns true if any
   value was removed. See also `fast_remove_value()`.  
+  The `comparator` may be `nil`, a function that returns
+  a non-falsy value if the values are equivalent, or a string or integer that is the
+  key of the property to compare using `==` (similar to `sort()`).
+  See also `equivalent()`.
 
 `remove_all(object)`
 : Remove everything from the object. It is faster to assign to a new, empty object than to
@@ -4572,7 +4604,7 @@ determined to hack save games.
 `save_local(key, value)`
 : The value will be serialized to a string with `unparse(value, 0)` and then
   stored associated with `key` and the URL of the game. Save a value
-  of `∅` to delete the key. There is a maximum size of 16384
+  of `∅` to delete the key. There is a maximum size of 32,768
   characters for the unparsed value for each key and a maximum size of
   64 keys per application. There is no way for two different games to
   read each other's values.

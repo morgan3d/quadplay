@@ -93,7 +93,7 @@ if player.has_ability["Best Word Stat"]:
 
 if player.has_ability["Free Mode"]:
     const better = today.best_free_word_text and (today.best_free_word_points ≥ lifetime.best_free_word_points)
-    y += draw_row(y, "Best Free Word",
+    y += draw_row(y, "Best Free",
         if (lifetime.best_free_word_text ≠ "") then lifetime.best_free_word_text + " " + lifetime.best_free_word_points else "-",
         if (today.best_free_word_text ≠ "") then (today.best_free_word_text + " " + today.best_free_word_points) else "-",
         TABLE_ALT_ROW_COLOR,

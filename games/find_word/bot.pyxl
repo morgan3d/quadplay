@@ -6,24 +6,24 @@ def insert_bots(competitor_array, target_count, max_bots):
 {
 name: "THX",
 sprite: avatar_sprite[13][4],
-base_ability: 0.22,
-short_word_preference: 0.16354711555742432,
+base_ability: 22%,
+short_word_preference: 16%,
 first_hour: 11,
 last_hour: 19
 },
 {
 name: "o_o",
 sprite: avatar_sprite[20][14],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 17,
 last_hour: 7
 },
 {
 name: "NT",
 sprite: avatar_sprite[17][6],
-base_ability: 0.08139577593236193,
-short_word_preference: 0.6744168962705523,
+base_ability: 8%,
+short_word_preference: 67%,
 first_hour: 8,
 last_hour: 12
 },
@@ -31,119 +31,119 @@ last_hour: 12
 name: "AMS",
 sprite: avatar_sprite[37][14],
 base_ability: 0.3,
-short_word_preference: 0.3227786173178901,
+short_word_preference: 32%,
 first_hour: 22,
 last_hour: 6
 },
 {
 name: "I♥U",
 sprite: avatar_sprite[3][20],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 19,
 last_hour: 6
 },
 {
 name: "jen",
 sprite: avatar_sprite[39][8],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 7,
 last_hour: 11
 },
 {
 name: "411",
 sprite: avatar_sprite[24][18],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 21,
 last_hour: 10
 },
 {
 name: "RLL",
 sprite: avatar_sprite[33][24],
-base_ability: 0.21281131767993983,
-short_word_preference: 0.2136182478620353,
+base_ability: 21%,
+short_word_preference: 21%,
 first_hour: 15,
 last_hour: 2
 },
 {
 name: "CJ",
 sprite: avatar_sprite[39][24],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 15,
 last_hour: 0
 },
 {
 name: "Bob",
 sprite: avatar_sprite[28][26],
-base_ability: 0.09596281621507843,
-short_word_preference: 0.6161487351396863,
+base_ability: 10%,
+short_word_preference: 62%,
 first_hour: 0,
 last_hour: 7
 },
 {
 name: "TTT",
 sprite: avatar_sprite[39][16],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 2,
 last_hour: 9
 },
 {
 name: "HCD",
 sprite: avatar_sprite[39][6],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 12,
 last_hour: 20
 },
 {
 name: "GEW",
 sprite: avatar_sprite[39][2],
-base_ability: 0.3037478105091114,
-short_word_preference: 0.45393640967962884,
+base_ability: 30%,
+short_word_preference: 45%,
 first_hour: 11,
 last_hour: 15
 },
 {
 name: "jr",
 sprite: avatar_sprite[9][18],
-base_ability: 0.02798352169998617,
-short_word_preference: 0.8880659132000553,
+base_ability: 3%,
+short_word_preference: 89%,
 first_hour: 18,
 last_hour: 6
 },
 {
 name: "FLA",
 sprite: avatar_sprite[9][16],
-base_ability: 0.02,
-short_word_preference: 0.92,
+base_ability: 2%,
+short_word_preference: 92%,
 first_hour: 1,
 last_hour: 7
 },
 {
 name: "Lou",
 sprite: avatar_sprite[8][18],
-base_ability: 0.0711575915744297,
-short_word_preference: 0.7153696337022812,
+base_ability: 7%,
+short_word_preference: 71%,
 first_hour: 6,
 last_hour: 12
 },
 {
 name: "RON",
 sprite: avatar_sprite[8][16],
-base_ability: 0.034604881436825705,
-short_word_preference: 0.8615804742526971,
+base_ability: 3%,
+short_word_preference: 86%,
 first_hour: 4,
 last_hour: 18
 },
 {
 name: "CPU",
 sprite: avatar_sprite[21][2],
-base_ability: 0.08,
-short_word_preference: 0.92,
+base_ability: 8%,
+short_word_preference: 92%,
 first_hour: 12,
 last_hour: 1
 }]
