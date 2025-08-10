@@ -455,7 +455,10 @@ def player_reset_match(player, game_type, board_string default ∅):
     player.history.scroll = 0
     player.history.scroll_history_size = 0
     player.auto_list = ∅
-    player.auto_uses_left = if player.has_ability["Auto"] then 1 else 0
+    player.auto_uses_left = (
+        if player.has_ability["Auto 3x"] then 3
+        else (if player.has_ability["Auto 2x"] then 2
+        else (if player.has_ability["Auto"] then 1 else 0)))
     
     if board_string:
         

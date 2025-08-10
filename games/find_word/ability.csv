@@ -25,5 +25,6 @@ Avatar (TODO) 6,18,New avatars (TODO),avatar_sprite[43][6].x_flipped
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Avatar (TODO) 7,20,New avatars (TODO),avatar_sprite[39][14].x_flipped
 Know Word Count,21,You can now see the total number of possible words while playing!,<default>
-Avatar (TODO) 8,22,New avatars (TODO),avatar_sprite[10][2].x_flipped
-Auto,23,"New ability: 1x per match, auto-find short words within your previous word (if found before)",ability_icon.auto_find
+Auto,22,"New ability: 1x per match, auto-find short words within your previous word (if found before)",ability_icon.auto_find,
+Auto 2x,24,"New ability: Use Auto 2x per match",ability_icon.auto_find,
+Auto 3x,26,"New ability: Use Auto 3x per match",ability_icon.auto_find
