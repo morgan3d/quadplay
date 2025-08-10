@@ -217,7 +217,7 @@ def draw_most_words_award(winner):
 /* Draw the ranked competitors and perform UI logic */
 def draw_leaderboard()
 & preserving_transform:
-    todo("***Manual vertical scroll***")
+    todo("Manual vertical scroll")
     
     set_clip(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, SCREEN_SIZE.y - 22))
     set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 72))

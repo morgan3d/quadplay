@@ -231,6 +231,8 @@
     "copyright": "©2019 Stephan Steinbach",
     "description": "The evil Wizzard trapped you atop their tower and summoned hordes of Bombgobblins. Intense score chase action.",
     "developer": "Stephan Steinbach",
+    "dual_dpad": false,
+    "show_arcade_keyboard_options": true,
     "y_up": false,
     "high_scores": true,
     "license": "code: MIT / Assets: Creative Commons Attribution 4.0 International",

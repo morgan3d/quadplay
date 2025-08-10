@@ -185,10 +185,12 @@
       <div><a onclick="exportSaveGame()">Export Save Game</a></div>
       <input type="file" id="saveGameFileInput" accept=".savegame" onchange="importSaveGame(event)" style="display: none;">
       </div>
+      <div id="arcadeKeyboardMenuSection">
       <hr>
       <label><input name="keyboardType" id="NormalKeyboardRadio" type="radio" title="Normal quadplay keyboard mapping for P1 and P2" onclick="event.stopPropagation() || setKeyboardMappingMode('Normal')" autocomplete="off" checked="1">Normal Keyboard</label>
       <br/><label><input name="keyboardType" id="MiniPACKeyboardRadio" type="radio" title="Use the Ultimarc Mini PAC mapping for an arcade installation that sends keyboard commands. Only P1 has a Pause button." onclick="event.stopPropagation() || setKeyboardMappingMode('MiniPAC')" autocomplete="off">Ultimarc Mini PAC</label>
       <br/><label><input name="keyboardType" id="MAMEKeyboardRadio" type="radio" title="Use the MAME mapping for controllers that send keyboard commands. P3 and P4 only have partial support in MAME." onclick="event.stopPropagation() || setKeyboardMappingMode('MAME')" autocomplete="off">MAME Default</label>
+      </div>
       <hr>
       <table style="margin: 0; padding: 0; border-collapse:collapse" class="IDEOnly">
         <tr valign="top">
@@ -254,6 +256,8 @@
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
       <div><a href="../doc/manual.md.html" target="_blank">Manual <small>↗</small></a></div>
       <hr>
+      <div><a onclick="previewExportedGame()">Preview Export <small>↗</small></a></div>
+      <hr>
       <div><a href="../tools/quantize.html" target="_blank">quantize <small>↗</small></a></div>
       <div><a href="../tools/fontgen.html" target="_blank">fontgen <small>↗</small></a></div>
       <div><a href="../tools/fontpack.html" target="_blank">fontpack <small>↗</small></a></div>
@@ -274,7 +278,7 @@
 
         <script>
           if (useIDE) {
-            document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="consoleMenuButton">Console</a>`);
+            document.write(`<a style="cursor:pointer;" onclick="onMenuButton(event)" id="consoleMenuButton"><span style="font-size:150%; height:0px; top: -6px;display:inline-block; position: absolute">⚙</span>&nbsp;&nbsp;&nbsp;&nbsp;Console</a>`);
           } else {
             makeButton('<div class="buttonIcon"></div>', 'consoleMenuButton', 'Options', "onMenuButton(event)");
           }
@@ -286,9 +290,9 @@
 
             <span id="recordingControls">
               &nbsp;&nbsp; &middot; &nbsp;&nbsp;
-              <a style="cursor:pointer" onclick="downloadScreenshot()">PNG(F6)</a>
+              <a style="cursor:pointer" onclick="downloadScreenshot()">PNG (F6)</a>
               &nbsp;&nbsp; &middot; &nbsp;&nbsp;
-              <a style="cursor:pointer" onclick="toggleGIFRecording()">GIF(F8)</a>
+              <a style="cursor:pointer" onclick="toggleGIFRecording()">GIF (F8)</a>
           </span>
         </span>
         <span id="recording" class="blink hidden" style="margin-left: 10px; color:#F00">RECORDING</span>

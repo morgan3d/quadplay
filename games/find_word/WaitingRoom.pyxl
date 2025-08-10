@@ -19,7 +19,7 @@ set_post_effects({color: #CFC, color_blend: "multiply"})
 frame
 ────────────────────────────────────────────────────────────────────────
 
-player_update(player, ∅, true)
+player_update(player, get_board_pos(), ∅, true)
 
 if frame_utc_now ≥ end_time or DEBUG.INTERMISSION:
     in_waiting_room = false

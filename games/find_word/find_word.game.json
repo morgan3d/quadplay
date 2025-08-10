@@ -79,9 +79,11 @@
         "blip_alt_sound": "quad://sounds/blip-17.sound.json",
         "moo_03_sound": "moo-03.sound.json",
         "ability_icon": "ability_icon.sprite.json",
-        "notify_icon": "notify_icon.sprite.json"
+        "notify_icon": "notify_icon.sprite.json",
+        "aux_icon": "aux_button.sprite.json",
+        "tutorial_arrow": "tutorial_arrow.sprite.json"
     },
-    "version": "0.329",
+    "version": "0.330",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -94,7 +96,7 @@
     "constants": {
         "LEVEL_EXPONENT": {
             "type": "number",
-            "value": 0.73,
+            "value": 0.7,
             "description": "See `xp_to_level()`. Higher is easier to level up. Chosen to make Level 20 ~= 40k XP"
         },
         "LEVEL_DIVISOR": {
@@ -1396,17 +1398,47 @@
                     "type": "boolean",
                     "value": false
                 },
-                "REGRANT_ALL_ABILITIES": {
+                "GRANT_ALL_ABILITIES": {
                     "type": "boolean",
                     "value": false,
                     "description": "Erases and then levels up to allow seeing all notifications."
                 }
             }
+        },
+        "DISABLED_ABILITY_COLOR": {
+            "type": "rgba",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "a": {
+                    "type": "number",
+                    "value": "30%"
+                }
+            }
+        },
+        "TUTORIAL_Z": {
+            "type": "number",
+            "value": "100",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "find_word",
     "show_start_animation": false,
     "mobile_touch_gamepad": false,
     "show_controls_button": false,
-    "online_menu": false
+    "online_menu": false,
+    "show_arcade_keyboard_options": false
 }

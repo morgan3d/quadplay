@@ -1849,11 +1849,11 @@ canvas#screenOverlay {
     display: none;
 }
 
-div#saveGameMenuSection {
+div#saveGameMenuSection, div#arcadeKeyboardMenuSection   {
     margin-left: 0px;
 }
 
-div#saveGameMenuSection div {
+div#saveGameMenuSection div, div#arcadeKeyboardMenuSection div {
     margin-left: 19px;
 }
 

@@ -10,12 +10,20 @@ angle = 0°
 play_sound({sound: rotate_sound, playback_rate: 180%})
 board_deselect_all(player.board, player)
 
+player_achieve(player, "Rotate Board")
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
 angle -= ROTATION_SPEED
 
-player_update(player, angle, false)
+player_update(player, get_board_pos(), angle, false)
+
+handle_buttons(
+    ability_icon.free_mode, "Free", ∅,
+    ability_icon.auto_mode, "Auto", ∅,
+    aux_icon.rotate, ∅)
+
 
 if angle - ROTATION_SPEED < -90°:
     // Finish the rotation by swapping elements

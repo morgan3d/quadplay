@@ -50,7 +50,7 @@ def draw_trend_row(y, caption, format, lifetime, today, color, highlight_color):
 
 enter
 ────────────────────────────────────────────────────────────────────────
-
+player_achieve(player, "Check Stats")
 
 
 frame

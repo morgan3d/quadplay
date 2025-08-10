@@ -3,12 +3,6 @@ FreeMode
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
 
-def player_update_back_button(player, board_pos):
-    if size(player.free_row):
-        player_update_aux_button(player, board_pos, remove_last_tile, shapes.arrow.x_flipped, "b", ∅, true)
-
-
-
 /* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
    See also `player_selection_change_callback()` for the `Play` mode. */
 def player_free_selection_change_callback(player):    
@@ -326,6 +320,8 @@ enter
 ────────────────────────────────────────────────────────────────────────
 play_sound({sound: blip_alt_sound, pitch: 75%, volume: 80%})
 
+todo("Make free mode achievements")
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -339,13 +335,9 @@ if player.using_gamepad:
         player.cursor_tile_index = target
 
 const board_pos = get_board_pos()
-// Draw timer, score, and back button in the usual height but squeeze
-// closer to align
-local:
-    const offset = if landscape() then xy(16, 0) else xy(0, 0)
-    draw_timer(board_pos + offset)
-    player_update_back_button(player, board_pos - offset)
-    player_draw_score(player, board_pos - offset)
+
+draw_timer(board_pos)
+player_draw_score(player, board_pos)
 
 
 if landscape():
@@ -362,8 +354,11 @@ history_update(player.history, history_rect)
 
 draw_instructions(board_pos)
 
-handle_ability_button(0, "Free", "Done", ability_icon.ok, "(q)", done)
-    
+handle_buttons(
+    ability_icon.ok, "Done", done,
+    ability_icon.auto_mode, "Auto", ∅,
+    aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true)
+
 
 if time_left ≤ 20/60:
     // Grace frames drawn in black

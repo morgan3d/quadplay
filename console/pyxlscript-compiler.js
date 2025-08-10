@@ -1453,11 +1453,20 @@ function compile(gameSource, fileContents, isOS) {
                 if ((name !== 'enter') && (name !== 'pop_mode') && (args !== undefined)) { throw {url:mode.url, lineNumber:line, message:'Only the enter() and pop_mode() sections in a mode may take arguments'}; }
 
                 if (name === 'pop_mode') {
-                    // Generate the section
-                    const otherMode = from.replace(/^from[ ]*/,'');
-                    if ((otherMode[0] === '_' || otherMode[0] === '$') && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in pop_mode() from section: "' + otherMode + '"'}; }
-                    name = name + 'From' + otherMode;
-                    sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};
+                    // Handle both "pop_mode from X" and bare "pop_mode"
+                    if (from) {
+                        // Specific source mode handler
+                        const otherMode = from.replace(/^from[ ]*/, '');
+                        if ((otherMode[0] === '_' || otherMode[0] === '$') && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in pop_mode() from section: "' + otherMode + '"'}; }
+                        name = name + 'From' + otherMode;
+                        sectionTable[name] = {pyxlCode: '', args: args || '()', jsCode: '', offset: 0};
+                    } else {
+                        // Catch-all pop_mode handler for any source mode. Store under the plain key
+                        // and generate specific wrappers after compilation.
+                        sectionTable[name] = {pyxlCode: body, args: args || '()', jsCode: '', offset: line};
+                        line += countLines(body);
+                        continue;
+                    }
                 }
                 
                 const section = sectionTable[(doubleLineChars.indexOf(type) !== -1) ? 'init' : name];
@@ -1496,6 +1505,28 @@ function compile(gameSource, fileContents, isOS) {
 ${sectionSeparator}
 function $${name}${section.args} {
 ${section.jsCode}
+}
+
+`;
+                }
+            }
+        }
+
+        // If there was a bare "pop_mode" section, generate wrappers for all modes
+        if (sectionTable.pop_mode && sectionTable.pop_mode.pyxlCode.trim() !== '') {
+            const generic = sectionTable.pop_mode;
+            for (let m = 0; m < gameSource.modes.length; ++m) {
+                const otherName = gameSource.modes[m].name;
+                if (otherName === '$SystemMenu') { continue; }
+                const specificKey = 'pop_modeFrom' + otherName;
+                if (! sectionTable[specificKey] || sectionTable[specificKey].pyxlCode.trim() === '') { 
+                // Bind and emit a wrapper that calls the generic body
+                pop_modeBindings += `, $${specificKey}:$${specificKey}`;
+                wrappedPopModeFromCode += `
+// pop_mode from ${otherName}
+${sectionSeparator}
+function $${specificKey}${generic.args} {
+${generic.jsCode}
 }
 
 `;

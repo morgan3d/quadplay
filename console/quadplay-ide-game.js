@@ -145,6 +145,12 @@ function onProjectOnlineMenuChange(target) {
 }
 
 
+function onProjectArcadeKeyboardOptionsChange(target) {
+    gameSource.json.show_arcade_keyboard_options = (target.checked === true);
+    serverSaveGameJSON();
+}
+
+
 function onProjectScreenSizeChange(target) {
     const res = JSON.parse(target.value);
     gameSource.json.screen_size = res;

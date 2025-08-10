@@ -4173,6 +4173,10 @@ function loadGame(url, callback, loadFast, noUpdateCode) {
             const showImportExport = (url !== launcherURL) && (getQueryString('kiosk') || '0') == '0' && (resourceStats.usesAPI['save_local'] || resourceStats.usesAPI['load_local']);
             document.getElementById('saveGameMenuSection').style.display = showImportExport ? 'block' : 'none';
 
+            // Show arcade keyboard options based on game setting and IDE status
+            const showArcadeKeyboard = useIDE || gameSource.json.show_arcade_keyboard_options;
+            document.getElementById('arcadeKeyboardMenuSection').style.display = showArcadeKeyboard ? 'block' : 'none';
+
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
             setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y, false);

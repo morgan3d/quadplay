@@ -1,62 +1,88 @@
 Title
 ════════════════════════════════════════════════════════════════════════
-todo("** Rewrite cursor code to be more generic **")
-
-todo("Fix gamepad selection")
-
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
-
-/* Value for selected_index */
-const AVATAR_EDITOR_INDEX = 2
-const STATS_INDEX = 3
-
-/* Currently selected button (0-3) */
-let selected_index = GLOBAL
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
 
+const cursor = make_cursor(∅, ∅, false, select_tile_sound)
+
+
+def go_to_stats():
+    push_mode(DisplayStats) because "Button"
+
+
+
+def go_to_avatar():
+    push_mode(AvatarEditor) because "Selected avatar"
+
+
 
 def update_stats_button(pos):
-    const radius = 20
-    const selected = selected_index == STATS_INDEX
+    const region = {pos: pos, shape: "disk", size: 20 * xy(2, 2)}
+    const selected = cursor_register_target(cursor, region, if intro then ∅ else go_to_stats)
+    draw_stats_button(pos, selected, ½ region.size.x)
+
+
     
-    const region = draw_stats_button(pos, selected, radius)
-    if touch.hover and overlaps(touch.hover, region):
-        if selected_index ≠ STATS_INDEX:
-            play_sound(select_tile_sound, ∅, ∅, 100%)
-            selected_index = STATS_INDEX
-        
-    if ((not intro and
-        mode_frames > 2 and 
-        ((touch.pressed_a and overlaps(touch.xy, region)) or
-         (selected and gamepad_array[0].pressed_a) or
-         gamepad_array[0].pressed_q))
-         or DEBUG.STATS):
-        push_mode(DisplayStats)        
+def start_match(index):
+    game_type = index
+    
+    // When did the previous game start?
+    const prev_start = prev_global_game_utc_start_time()
+    
+    // Did the previous game finish (i.e., there is no current game)
+    const prev_game_finished = frame_utc_now ≥ prev_start + GLOBAL_GAME_TIME
             
+    // Is the next game about to begin? If they are within 2 seconds of the next
+    // game just send them to the game a little early, it isn't a huge
+    // advantage and avoids any race condition
+    const next_game_imminent = frame_utc_now > prev_start + GLOBAL_PERIOD - 2
+    
+    // How much time is left in the current game?
+    const curr_game_remaining_time = max((prev_start + GLOBAL_GAME_TIME) - frame_utc_now, 0)
+
+    /*        
+    debug_print(
+        "prev_start =", prev_start,
+        "\nprev_game_finished =", prev_game_finished,
+        "\nnext_game_imminent =", next_game_imminent,
+        "\ncurr_game_remaining_time =", curr_game_remaining_time) */
+    
+    if ((index == GLOBAL and
+        (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
+        not next_game_imminent) or DEBUG.WAITING_ROOM):
+        // There is no game currently running because the global game is in 
+        // the GameOver state, or about to be so. Send this player to the waiting room
+        // so that they aren't bored. 
+        in_waiting_room = true
+    
+    play_sound(blip_sound)
+    set_mode(GenerateBoard) because "Chose game type"
+
     
     
 def update_button(pos, text, index):
-    const selected = selected_index == index
+    const rect = {pos: pos, size: xy(132, 24)}
     
-    const BUTTON_SIZE = xy(132, 24)
     
+    const selected = cursor_register_target(cursor, rect, if intro then ∅ else start_match, index)
+        
     if selected:
         // Drop shadow
-        draw_rect(pos + xy(0, 4), BUTTON_SIZE + 6, #0004, ∅, ∅, 100)
+        draw_rect(pos + xy(0, 4), rect.size + 6, #0004, ∅, ∅, 100)
         
         // Highlight
         for 1 ≤ i < 4: 
-            draw_rect(pos, BUTTON_SIZE + 2 i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
-        draw_rect(pos, BUTTON_SIZE, CURSOR_COLOR, #FFF, ∅, 100)
+            draw_rect(pos, rect.size + 2 i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
+        draw_rect(pos, rect.size, CURSOR_COLOR, #FFF, ∅, 100)
         
     else:
         // Drop shadow
-        draw_rect(pos + xy(0, 2), BUTTON_SIZE, #0003, ∅, ∅, 100)
+        draw_rect(pos + xy(0, 2), rect.size, #0003, ∅, ∅, 100)
         
         // Background
-        draw_rect(pos, BUTTON_SIZE, #FFFD, #666, ∅, 100)
+        draw_rect(pos, rect.size, #FFFD, #666, ∅, 100)
         
     draw_text({
         text: text, 
@@ -65,53 +91,7 @@ def update_button(pos, text, index):
         color: if selected then #FFF else #000,
         outline: if selected then #090 else ∅,
         z: 101})
-    
-    const rect = {pos: pos, size: BUTTON_SIZE}
-    if touch.hover and overlaps(touch.hover, rect):
-        if index ≠ selected_index:
-            play_sound(select_tile_sound)
-            selected_index = index
-    
-    
-    if ((not intro and
-        mode_frames > 2 and 
-        ((touch.pressed_a and overlaps(touch.xy, rect)) or
-         (selected and gamepad_array[0].pressed_a)))
-         or (DEBUG.INTERMISSION and index == GLOBAL)):
-        game_type = index
-        
-        // When did the previous game start?
-        const prev_start = prev_global_game_utc_start_time()
-        
-        // Did the previous game finish (i.e., there is no current game)
-        const prev_game_finished = frame_utc_now ≥ prev_start + GLOBAL_GAME_TIME
-                
-        // Is the next game about to begin? If they are within 2 seconds of the next
-        // game just send them to the game a little early, it isn't a huge
-        // advantage and avoids any race condition
-        const next_game_imminent = frame_utc_now > prev_start + GLOBAL_PERIOD - 2
-        
-        // How much time is left in the current game?
-        const curr_game_remaining_time = max((prev_start + GLOBAL_GAME_TIME) - frame_utc_now, 0)
-
-        /*        
-        debug_print(
-            "prev_start =", prev_start,
-            "\nprev_game_finished =", prev_game_finished,
-            "\nnext_game_imminent =", next_game_imminent,
-            "\ncurr_game_remaining_time =", curr_game_remaining_time) */
-        
-        if ((index == GLOBAL and
-            (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
-            not next_game_imminent) or DEBUG.WAITING_ROOM):
-            // There is no game currently running because the global game is in 
-            // the GameOver state, or about to be so. Send this player to the waiting room
-            // so that they aren't bored. 
-            in_waiting_room = true
-        
-        play_sound(blip_sound)
-        set_mode(GenerateBoard) because "Chose game type"
-        
+            
 
 
 def bounce_row(y, sound default select_tile_sound, color default TILE_CENTER_SELECTED_COLOR):
@@ -141,7 +121,7 @@ def intro_cleanup():
     
     
 def ease_out(f):
-    return sign(f) * pow(abs(f), 1.3)
+    return sign(f) * |f|^1.3
     
     
 
@@ -152,31 +132,6 @@ def skip_intro():
     intro = ∅
 
 
-
-def draw_tutorial(pos, text):
-    const bounce = ⌊mode_frames / 30⌋ mod 2
-    const z = 100
-    draw_sprite({
-        sprite: shapes.arrow.rotated_270, 
-        pos: pos - xy(0, 22 + bounce), 
-        scale: 55%,
-        override_color:#000,
-        opacity: 50%,
-        z: z})
-    draw_sprite({
-        sprite: shapes.arrow.rotated_270, 
-        pos: pos - xy(0, 23 + bounce), 
-        scale: 50%,
-        z: z})
-    draw_text({
-        text: text,
-        color: #FFF,
-        outline: #000,
-        shadow: #0008,
-        y_align: "bottom",
-        font: score_font,
-        pos: pos - xy(0, 30 + bounce),
-        z: z})
 
 // Initialize the fake board
 player_reset_match(player, SOLO, "FIND WORD ALLL NITE")
@@ -205,16 +160,9 @@ intro = sequence(
     100,
     intro_cleanup)
 
+if DEBUG.INTERMISSION:
+    start_match(GLOBAL)
 
-
-pop_mode from AvatarEditor
-────────────────────────────────────────────────────────────────────────
-intro_cleanup()
-
-
-pop_mode from DisplayStats
-────────────────────────────────────────────────────────────────────────
-intro_cleanup()
 
 
 frame
@@ -246,59 +194,39 @@ const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - INTR
 
 if player.has_achievement["Play Global Match"]:
     update_button(pos + xy(slide, -30), "Solo", 0)
+    
 if player.has_achievement["Change Avatar"]:
     if not intro and not player.has_achievement["Play Global Match"]:
         draw_tutorial(pos + xy(0, 25), "Join a match")
-
     update_button(pos - xy(slide, -30), "Global", 1)
+
 
 // Logo
 draw_sprite({sprite: logo_sprite, pos: xy(SCREEN_SIZE.x - 32 + slide, 20), z: -0.6})
 
 // Avatar
 local:
-    const pos = xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36)
-    const bounds = {pos: pos, size: xy(32, 32)}
-    const radius = 20
+    const region = {pos: xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36), size: xy(32, 32)}
     
     if not player.has_achievement["Change Avatar"]:
-        draw_tutorial(pos - xy(0, 20), "Change\nyour\navatar")
+        draw_tutorial(region.pos - xy(0, 20), "Change\nyour\navatar")
     
-    if touch.hover and overlaps(touch.hover, bounds) and selected_index ≠ AVATAR_EDITOR_INDEX:
-        play_sound(select_tile_sound, ∅, ∅, -100%)
-        selected_index = AVATAR_EDITOR_INDEX
-        
-    if selected_index == AVATAR_EDITOR_INDEX:
-        draw_round_selection(pos, radius)
+    if cursor_register_target(cursor, region, if intro then ∅ else go_to_avatar):
+        draw_round_selection(region.pos, 20)
     else:
-        draw_disk(pos, radius, rgba(player.avatar.color, 75%), 75% player.avatar.color)
+        draw_disk(region.pos, 20, rgba(player.avatar.color, 75%), 75% player.avatar.color)
         
-    avatar_draw_large({…player.avatar, sprite: player.avatar.sprite.x_flipped}, pos)
-    draw_text({text: "Level " + player.avatar.level, z: 102, pos: pos - xy(0, 26), color: player.avatar.color, outline: #0008, font: leaderboard_font})
+    avatar_draw_large({…player.avatar, sprite: player.avatar.sprite.x_flipped}, region.pos)
+    draw_text({text: "Level " + player.avatar.level, z: 102, pos: region.pos - xy(0, 26), color: player.avatar.color, outline: #0008, font: leaderboard_font})
     
-    if (not intro and
-        ((touch.pressed_a and overlaps(touch.xy, bounds)) or
-         (player.gamepad.pressed_a and selected_index == AVATAR_EDITOR_INDEX))):
-        push_mode(AvatarEditor) because "Selected avatar"
-    
+
 // Stats button
 if player.has_ability["Stats Tracker"]:
-    const pos = xy(32 - slide, SCREEN_SIZE.y - 36)
-    update_stats_button(pos)
+    update_stats_button(xy(32 - slide, SCREEN_SIZE.y - 36))
 
 
-if gamepad_array[0].xx or gamepad_array[0].yy:
-    if intro: skip_intro()
-    
-    todo("** Skip over unavailable options: stats, buttons... **")
-    
-    // Change selection
-    selected_index = loop(selected_index + (gamepad_array[0].xx or gamepad_array[0].yy), STATS_INDEX + 1)
-    if not player.has_achievement["Change Avatar"]:
-        selected_index = AVATAR_INDEX
-    play_sound(select_tile_sound)
-
-
-if any_button_press() or touch.pressed_a:
+if intro and (any_button_press() or touch.pressed_a):
     skip_intro()
+
+cursor_update(cursor)
 

@@ -64,31 +64,26 @@ def player_free_row_contains(player, word):
 def player_spawn_score_animation(player):
     let target
     
-    const board = player.board
-    const color = last_value(player.history.list).color
+    // Capture the color at the time of the animation spawn
+    const entry = last_value(player.history.list)
     
     let letter_array = []
     let start_array = []
-    for tile_index in board.selection:  
-        const tile = board.tile[tile_index.x][tile_index.y]        
-        push(start_array, xy(tile.pos))
-        push(letter_array, q_decode(tile.letter))
+    for tile_index in player.board.selection:  
+        with pos, letter in player.board.tile[tile_index.x][tile_index.y]:
+            push(start_array, xy(pos))
+            push(letter_array, q_decode(letter))
     
     // Have to wait until callback time for this so that the 
     // target actually gets rendered and assigned a pos first
-    def capture_target():
-        const entry = last_value(player.history.list)
-        
-        // Abort if the mode ends and history is cleared while 
-        // waiting for this callback
-        if not entry: return sequence.BREAK
+    def capture_target():        
         target = entry.pos + xy(4 size(entry.word), 4)
 
     def callback(frames_left, total_frames):
         const α = linstep(total_frames, 0, frames_left)^1.5
         for i < size(letter_array):
             const pos = lerp(start_array[i], target, α)
-            draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), color, ∅, 9)
+            draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), entry.color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
         
     sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
@@ -158,25 +153,6 @@ def player_emphasize_history_word(player, word, duration default 30):
         
     assert(false, "Could not find " + word + " which should already be in history")
 
-
-
-/* For the rotate button in `Play` mode and the delete button in `FreeMode` */
-def player_update_aux_button(player, board_pos, callback, sprite, button, button2 default button, square default false):
-    assert(sprite)
-    const button_pos = board_pos + xy(-4, -16) + xy(½, -½) get_board_pixel_size()
-
-    if square:
-        draw_rect(button_pos, xy(16, 16), ∅, #FFF)
-    else:
-        draw_disk(button_pos, 8, ∅, #FFF)
-        
-    draw_sprite(sprite, button_pos + xy(1, 1), ∅, 38%)
-    
-    if player.using_gamepad:
-        draw_text({font: button_prompt_font, text: player.gamepad.prompt["(" + button + ")"], x_align: "right", pos: button_pos + xy(-5, 7), color: #FFF, outline: #000, z: 10})
-
-    if (touch.pressed_a and overlaps({pos: button_pos, size: sprite.size}, touch.xy)) or joy["pressed_" + button2] or joy["pressed_" + button]:
-        callback()
 
 
 
@@ -289,7 +265,7 @@ def _player_update_cursor(player)
 
 
 /* Run UI for this player and draw their board */
-def player_update(player, angle default 0°, allow_selection default false):
+def player_update(player, board_pos, angle default 0°, allow_selection default false):
     
     maybe_connect_to_network()
     
@@ -315,18 +291,10 @@ def player_update(player, angle default 0°, allow_selection default false):
         
         board_deselect_all(player.board, player)    
 
-    const board_pos = get_board_pos()
-
     player_update_board(player, board_pos, angle, allow_selection)
 
     const time_left = draw_timer(board_pos)
-
     player_draw_score(player, board_pos, time_left)
-    
-    if allow_selection:
-        def callback():
-            push_mode(Rotate) because "Rotate button"
-        player_update_aux_button(player, board_pos, callback, shapes.curved_arrow.rotated_270, "d", "f")
     
     history_update(player.history, get_history_rect())
     
@@ -396,7 +364,7 @@ def player_update_board(player, pos, angle, allow_selection)
             
             const index = xy(i, j)
             const pos = _index_to_pos(index)
-            const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j
+            const is_cursor_tile = player.using_gamepad and player.cursor_tile_index.x == i and player.cursor_tile_index.y == j and get_mode() ≠ Title
             
             tile.pos = transform_ws_to_ss(pos)
             // This is only for touch purposes, not rendering

@@ -31,13 +31,14 @@
       // Replace this with your game's URL. This expression is hard-coded to compute the URL into the quadplay repo from
       // the quadplay repo or from itch.io
       const game_url = "https://morgan3d.github.io/quadplay/console/quadplay.html?game=quad://" +
-        (location.host.endsWith(".itch.io") || location.host.endsWith(".itch.zone") ? 
+            (location.host.endsWith(".itch.io") || location.host.endsWith(".itch.zone") || location.host.endsWith("tracewords.com") || location.host.endsWith("casual-effects.com") ? 
           'games/find_word' : 
           location.href.match(/([^/]+\/){1,2}(?=[^/]*$)/)[0]);
     </script>
     <title>FIND WORD ALLL NITE</title>
     <!-- Do not modify below here -->
 
+    <link rel="icon" type="image/png" sizes="32x32" href="label32.png">
     <link rel="icon" type="image/png" sizes="64x64" href="label64.png">
     <link rel="icon" type="image/png" sizes="128x128" href="label128.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">

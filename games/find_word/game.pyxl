@@ -194,6 +194,7 @@ def draw_round_selection(pos, radius):
 
 
 
+/* If `activate_callback` is ∅, the button is drawn disabled */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
     
     const radius = 14
@@ -201,44 +202,48 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         pos: xy(radius + 4 + 48 index, SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
+        
+    const enabled = activate_callback
     
     // First call this frame for any button; deselect all on hover
     if touch.hover and game_frames > handle_ability_button.last_frame:
         handle_ability_button.selected_button = ∅
     handle_ability_button.last_frame = game_frames
-
-    if touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
+    
+    if enabled and touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
         handle_ability_button.selected_button = name
-        
+    
     if handle_ability_button.selected_button ≠ name:
-        draw_disk(region.pos, radius, #EEE)
+        // NOT selected
+        draw_disk(region.pos, radius, if enabled then #EEE else DISABLED_ABILITY_COLOR)
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
         font: leaderboard_font,
-        color: if handle_ability_button.selected_button == name then #FFF else #EEE,
+        color: if handle_ability_button.selected_button == name then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
         outline: if handle_ability_button.selected_button == name then rgba(CURSOR_COLOR, 50%) else ∅,
         text: caption})
     
-    draw_sprite(sprite, region.pos)
+    draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
-    if player.using_gamepad:
-        draw_text({
-            pos: region.pos + xy(80% radius, 70% radius), 
-            color: #fff,
-            outline: #000,
-            font: score_font,
-            x_align: "left",
-            z: 20,
-            text: joy.prompt[gamepad_button]})
-        
-    if handle_ability_button.selected_button == name:
-        draw_round_selection(region.pos, radius)
-        
-    if (mode_frames > 10 and 
-        ((touch.pressed_a and overlaps(touch.xy, region))
-        or joy.pressed_q)):
-        activate_callback()
+    if enabled:
+        if player.using_gamepad:
+            draw_text({
+                pos: region.pos + xy(80% radius, 70% radius), 
+                color: #fff,
+                outline: #000,
+                font: score_font,
+                x_align: "left",
+                z: 20,
+                text: joy.prompt[gamepad_button]})
+            
+        if handle_ability_button.selected_button == name:
+            draw_round_selection(region.pos, radius)
+            
+        if (mode_frames > 10 and 
+            ((touch.pressed_a and overlaps(touch.xy, region))
+            or joy.pressed_q)):
+            activate_callback()
 
 handle_ability_button.last_frame = 0
 
@@ -246,6 +251,77 @@ handle_ability_button.last_frame = 0
 /* Abstracted to make an argument-less callback */
 def play_big_points_sound():
     play_sound(big_points_sound)
+
+
+
+/* Renders and handles user input for the aux button next to the score and the
+   ability buttons on the bottom of the screen.
+   
+   If `aux_allow_b` then the (b) button as well as the (f) button can activate
+   the aux (used in Free Mode for keyboard backspace).
+   
+   Set a callback to ∅ for any button to render it disabled. */
+def handle_buttons(
+    free_sprite, free_caption, free_callback,
+    auto_sprite, auto_caption, auto_callback,
+    aux_sprite,  aux_callback, aux_allow_b default false):
+
+    if player.has_ability["Free Mode"]:
+        handle_ability_button(0, "Free", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
+
+    if player.has_ability["Auto 2x2"]:
+        handle_ability_button(1, "Auto", auto_caption, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
+
+    if player.has_ability["Rotate"] and aux_sprite:
+        const button_pos = get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size()
+        draw_sprite({
+            sprite: aux_sprite,
+            pos: button_pos,
+            opacity: if aux_callback then 100% else DISABLED_ABILITY_COLOR.a})
+
+        if aux_callback:
+
+            if aux_sprite == aux_icon.rotate and not player.has_achievement["Rotate Board"]:
+                draw_tutorial(button_pos, "Rotate\nthe\nBoard", 90°, "right")
+
+            if player.using_gamepad:
+                draw_text({font: button_prompt_font, text: player.gamepad.prompt["(f)"], x_align: "right", pos: button_pos + xy(-5, 7), color: #FFF, outline: #000, z: 10})
+
+            if (touch.pressed_a and overlaps({pos: button_pos, size: aux_sprite.size}, touch.xy)) or (aux_allow_b and joy.pressed_b) or joy.pressed_f:
+                aux_callback()
+
+
+
+/* Draw a tutorial arrow. `pos` is the position of the target to highlight */
+def draw_tutorial(pos, text, angle default 270°, text_x_align default "center"):
+    const bounce = ⌊mode_frames / 30⌋ mod 2
+    const dir = sin(angle)
+
+    const args = {
+        sprite: if angle == 270° then tutorial_arrow[0][0].rotated_270 else tutorial_arrow[0][0].rotated_90,
+        pos: pos + xy(0, dir * (22 + bounce)),
+        z: TUTORIAL_Z}
+        
+    // Drop shadow
+    draw_sprite({
+        …args,
+        pos: args.pos + xy(0, 1),
+        override_color: #000,
+        opacity: 50%})
+        
+    draw_sprite(args)
+        
+    draw_text({
+        text: text,
+        color: #FFF,
+        outline: #000,
+        shadow: #0008,
+        x_align: text_x_align,
+        y_align: if angle == 270° then "bottom" else "top",
+        font: score_font,
+        pos: pos + dir * xy(0, 30 + bounce),
+        z: TUTORIAL_Z})
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

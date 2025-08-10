@@ -215,8 +215,8 @@ def encode_xp(xp):
         
 /* Used for lightly protecting the saved value from casual abuse via a checksum */
 def decode_xp(str):
-    if DEBUG.REGRANT_ALL_ABILITIES:
-        return 20000
+    if DEBUG.GRANT_ALL_ABILITIES:
+        return 60000
     
     if type(str) ≠ "string":
         // Was not properly encoded
@@ -326,6 +326,9 @@ def draw_stats_button(pos, selected, radius):
         shadow: #000, 
         pos: pos + xy(0, 27),
         z: 100})
+
+    if not player.has_achievement["Check Stats"]:
+        draw_tutorial(pos - xy(0, radius), "Check\nStats")
 
     return {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
   

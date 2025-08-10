@@ -8,6 +8,9 @@ def enter_auto_mode():
     board_deselect_all(player.board, player)
     push_mode(AutoMode) because "Button"
 
+def enter_rotate_mode():
+    push_mode(Rotate) because "button"
+    
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -51,14 +54,13 @@ const time_left = end_time - frame_utc_now
 // Disallow rotation if the mode is about to end
 const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
 
-player_update(player, ∅, allow_rotate)
+player_update(player, get_board_pos(), ∅, allow_rotate)
 
-if player.has_ability["Free Mode"]:        
-    handle_ability_button(0, "Free", "Free", ability_icon.free_mode, "(q)", enter_free_mode)
+handle_buttons(
+    ability_icon.free_mode, "Free", enter_free_mode,
+    ability_icon.auto_mode, "Auto", enter_auto_mode,
+    aux_icon.rotate, enter_rotate_mode)
 
-if player.has_ability["Auto 2x2"]:
-    handle_ability_button(1, "Auto", "Auto", ability_icon.auto_mode, "(d)", enter_auto_mode)
-    
 
 if time_left ≤ 20/60:
     // Make a few frames black at the end so that a player can

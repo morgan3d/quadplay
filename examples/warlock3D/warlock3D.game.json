@@ -65,13 +65,22 @@
             },
             "format": "",
             "quantum": 0
+        },
+        "DEBUG_EYE_RAY_GENERATION": {
+            "type": "boolean",
+            "value": false
+        },
+        "DEBUG_NO_WALL_TEXTURE": {
+            "type": "boolean",
+            "value": false
         }
     },
     "y_up": true,
     "screen_size": {
-        "x": 192,
-        "y": 112
+        "x": 320,
+        "y": 180
     },
     "dual_dpad": true,
-    "screenshot_tag": "Warlock 3D"
+    "screenshot_tag": "Warlock 3D",
+    "online_menu": true
 }

@@ -349,6 +349,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         if (gameJSON.online_menu === undefined) {
             gameJSON.online_menu = true;
         }
+        if (gameJSON.show_arcade_keyboard_options === undefined) {
+            gameJSON.show_arcade_keyboard_options = true;
+        }
 
         {
             const prevVersion = localStorage.getItem('game_version_' + gameURL);

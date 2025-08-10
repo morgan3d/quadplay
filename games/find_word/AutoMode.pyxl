@@ -1,23 +1,24 @@
 AutoMode
 ════════════════════════════════════════════════════════════════════════
-// Put local state for the mode here.  Declare variables with let,
-// constants with const, and functions with def.
 
+def cancel():
+    play_sound({sound: blip_alt_sound, volume: 80%})
+    pop_mode() because "Button"
 
 enter
 ────────────────────────────────────────────────────────────────────────
-// This event runs when the mode is entered via set_mode() or
-//  push_mode().
-
+todo("Ensure board_pos gives min space for buttons and labels in portrait")
+todo("Make auto mode achievements")
+play_sound({sound: blip_alt_sound, pitch: 75%, volume: 80%})
 
 frame
 ────────────────────────────────────────────────────────────────────────
-// This event runs 60 times per second. Game logic, simulation,
-// user input, and drawing all go here.
-todo("Implement!")
+player_update(player, get_board_pos(), 0°, false)
 
-leave
-────────────────────────────────────────────────────────────────────────
-// This event runs just before leaving for another mode by
-// set_mode() or pop_mode().
+handle_buttons(
+    ability_icon.free_mode, "Free", ∅,
+    ability_icon.cancel, "Cancel", cancel,
+    aux_icon.rotate, ∅)
 
+
+todo("**Implement selection")

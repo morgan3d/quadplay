@@ -55,6 +55,7 @@
     "competitive": true,
     "achievements": false,
     "high_scores": false,
+    "show_arcade_keyboard_options": true,
     "description": "Drop tiles and shift columns, 5 in a row to win. Plays best with an 8x8 MIDI device!",
     "constants": {
         "AI_COLOR": {

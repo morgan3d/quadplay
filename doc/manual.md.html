@@ -163,7 +163,8 @@ quadplay --serve ~/my_quadplay/space
 # ... Windows
 quadplay --serve C:\Users\MYNAME\my_quadplay\space
 
-# Launch quadplay as a standalone game kiosk
+# Launch quadplay as a standalone game kiosk. This is good for
+# locking down public installations at a home, school, or conference
 quadplay --kiosk
 
 # Load a game from the web (their server must support CORS)
@@ -1028,6 +1029,12 @@ pop_mode(confirmed) from ConfirmDialog
 if confirmed: set_mode(Title) because "Confirmed abandon"
 
 
+pop_mode
+───────────────────────────────────────────────────────────
+// This is a general pop_mode handler for any mode
+// that does not have a specific handler defined as 
+// in the above example
+
 leave
 ───────────────────────────────────────────────────────────
 play_sound(menuClose)
@@ -1818,6 +1825,11 @@ options. Project files should have the double extension `.game.json`.
   "competitive":  false,
   "achievements": false,
   "high_scores":   false,
+
+  // If true, exported games show options for Normal, MAME, etc. in the
+  // quadplay console/gear menu on top of the emulator
+  "show_arcade_keyboard_options": true,
+  
   "description":  "Description of your game in about 22 words.",
   
   // False by default. If true, P1's right analog stick can override P2's
@@ -4703,6 +4715,44 @@ and compiler knows what type it is loading.
 Take note of the 4-bit sprite
 [quantizing tool](../tools/quantize.html). I find it better than the
 quality produced by Photoshop for color reduction.
+
+
+Safety and Security
+====================================================================================
+
+A <quadplay/> game cannot do anything that would let you access external content as 
+a safety and security measure. 
+
+For example, you are guaranteed that quadplay launched
+in kiosk mode from the command line or via a kiosk link on the web cannot load anything
+except quadplay games from the same web domain (which is usually your local computer).
+This means you can put a quadplay installation in a school or conference public area,
+or leave kids with it in your house, and know that they're only seeing the content
+you chose. It also means that you can be confident running any quadplay game from anyone
+that it cannot compromise your computer's security or trick you into doing something
+like signing into a bank account.
+
+The built-in games for <quadplay/> today are roughly equivalent to "E for everyone"
+ESRB rated games. It is possible this may change in the future to include more 
+"teen" rated games, but the distribution will never contain anything that would be
+considered "mature" content with explicit language, graphic sexual content, or
+realistic depictions of violence. (You can make and distribute your own <quadplay/> games with 
+whatever content you choose, of course--I just won't include ones that aren't 
+appropriate for all audiences in the core distribution.)
+
+It is possible through some contortions to make a game that communicates arbitrary
+text with other players on the internet. Since <quadplay/> intentionally has no video,
+audio, or text chat capability this is not possible with the base distribution of
+<quadplay/> games. However, someone could make and host their own game on their own server
+to do this. So, players must use judgement when playing <quadplay/> games that are
+outside of the distribution.
+
+For games that include text, game developers should use the two provided dictionaries
+of offensive and sensitive words to mask out content that should not be widely shared.
+These are keyword based and therefore subject to attacks via misspellings and
+spelling variants. The dictionaries are available at `quad://data/english_offensive.json`
+and `quad://data/english_sensitive.json`. There is currently no support for languages
+beyond English but games can provide their own dictionaries.
 
 
 Vision

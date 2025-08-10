@@ -109,13 +109,13 @@ function onProjectSelect(target, type, object) {
     }
 
     if (type === 'game') {
+        // The game metadata
         if (target) { target.classList.add('selectedProjectElement'); }
         visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
         gameEditor.style.visibility = 'visible';
         codePlusFrame.style.visibility = 'visible';
         setCodeEditorDividerFromLocalStorage();
         setCodeEditorSession(gameSource.jsonURL);
-        // setCodeEditorSession will update visibility
         return;
     }
 
@@ -299,6 +299,11 @@ margin-top: 0; padding-top: 0
 }
 
 
+function previewExportedGame() {
+    const url = location.href.replace(/(?:&)(name|IDE|update|quadserver)=[^&]+/g, '');
+    window.open(url, '_blank');
+}
+
 
 function visualizeConstant(value, indent) {
     let s = '';
@@ -436,17 +441,18 @@ function visualizeGame(gameEditor, url, game) {
                 break;
             }
         }
-        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input id="projectscreensizetextbox" type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
+        s += `<tr valign="top"><td>Screen</td><td colspan=3><input id="projectscreensizetextbox" type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
     }
     s += `<tr valign="top"><td></td><td colspan=3><label><input id="projectyupcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
     s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>I/O</td><td><label><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td>`;
-    s +=   `<td><label><input id="projectmidicheckbox" type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)" tooltip="Does this game send MIDI sysex messages?" style="margin-left:0px">MIDI Sysex Output</label></td></tr>\n`;
-    s += `<tr valign="top"><td></td><td><label><input id="project_show_controls_button" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.show_controls_button !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()" title="Show the toolbar icons for active controllers and button for jumping to the control configuation">Show Controls Button</label></td>`;
-    s +=   `<td><label><input id="project_mobile_touch_gamepad" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.mobile_touch_gamepad !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()" title="Enable a virtual gamepad on touch screens">Mobile Touch Gamepad</label></td></tr>\n`;
+    s += `<tr valign="top"><td>I/O</td><td><label title="Map the right stick of a physical game controller to P2 D-pad controls for dual-stick shooter style controls without needing device_control()"><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td>`;
+    s +=   `<td><label title="Enable MIDI Sysex message permission (regular MIDI always enabled). Causes a popup for the player."><input id="projectmidicheckbox" type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)"  style="margin-left:0px">MIDI Sysex Output</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td><label title="In the player's quadplay toolbar, show the icons for active physical controllers and link them to the Pause menu Controls option"><input id="project_show_controls_button" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.show_controls_button !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Show Controls Button</label></td>`;
+    s +=   `<td><label title="Enable a virtual gamepad on touch screens"><input id="project_mobile_touch_gamepad" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.mobile_touch_gamepad !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Mobile Touch Gamepad</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td colspan=2><label title="Show arcade keyboard mapping options (Normal, MAME, etc.) in the Console/⚙ menu for arcade machine installations"><input id="projectArcadeKeyboardOptionsCheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.show_arcade_keyboard_options !== false ? 'checked' : ''} onchange="onProjectArcadeKeyboardOptionsChange(this)">Show Arcade Keyboard Options</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>Network</td><td><label><input id="projectonlinemencheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.online_menu !== false ? 'checked' : ''} onchange="onProjectOnlineMenuChange(this)" title="Show online option in system menu">Online option in System Menu</label></td></tr>\n`;
+    s += `<tr valign="top"><td>Network</td><td><label title="Show the Online option in the game's Pause menu for automatic network multiplayer support. Disable for single-player games or games using the advanced conduit network API"><input id="projectOnlineMenuCheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.online_menu !== false ? 'checked' : ''} onchange="onProjectOnlineMenuChange(this)">Online option in System Menu</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged()" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;

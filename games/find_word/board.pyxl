@@ -297,6 +297,7 @@ def _index_to_pos(index):
            - ½ xy(COLS - 1, ROWS - 1) * (TILE_EXTENT + TILE_GUTTER))
 
 
+
 /* Add the `xy()` value `index` to the current selection, playing sounds
    as appropriate.  */
 def board_select(board, index, player):
@@ -308,6 +309,7 @@ def board_select(board, index, player):
     // Pan sound with position
     if not player_selection_change_callback(player):
         _board_play_sound(select_tile_sound, 85%, 100%, index)
+
 
 
 def board_deselect_last(board, player):

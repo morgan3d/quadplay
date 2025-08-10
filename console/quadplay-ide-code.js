@@ -1895,6 +1895,9 @@ function findInFiles(query, options, scope) {
         setUIMode('IDE');
     }
     
+    // Activate the output tab to show results
+    document.getElementById('outputTab').checked = true;
+    
     const results = [];
     let totalMatches = 0;
     

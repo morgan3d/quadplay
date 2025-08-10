@@ -157,7 +157,7 @@
         "particle_density": {
             "type": "number",
             "value": "2",
-            "description": "Multiplier on how many particles appear",
+            "description": "A puzzle-platformer about switching between two worlds.",
             "min": {
                 "type": "number",
                 "value": "1"

@@ -69,6 +69,8 @@
     "achievements": false,
     "high_scores": false,
     "description": "You are a stone skipping across a lake. One-button endless skipper.",
+    "dual_dpad": false,
+    "show_arcade_keyboard_options": false,
     "constants": {
         "DEBUG_ALWAYS_BOUNCE": {
             "type": "boolean",

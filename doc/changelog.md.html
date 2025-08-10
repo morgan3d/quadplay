@@ -10,21 +10,29 @@ of [<quadplay/>](manual.md.html).
 ===================================
 
 - New game: "Find Word Alll Nite" by Shmuel
-- IDE now supports find in files (grep)
-- IDE code editor now has a custom context menu with Find, Find in Files, and Go to Definition
-- `evaluate_constant_expression()`
-- `penultimate_value()`
-- `local_time()` and `utc_time()` are now constant throughout a frame
-- `remove_values()` now accepts an optional comparator
-- Added import/export of save games to a local file to the console menu. Automatically appears
-  for all quadplay games that use `save_local` or `load_local`
-- Improved UI of the HTML menu bar above the emulator for exported games
-- Removed long-deprecated `is_NaN()`
-- Fix: constant colors specified using #RGB/#RGBA in the game.json no longer crash the gui editors. Instead they are automatically converted to objects when edited.
-- Fix: `todo()` statements at top level are now displayed correctly in the TODO debugger tab
-- Fix: Tooltips now appear on the code editor buttons
-- Fix: Undo and Redo buttons now work again in the code editor
-
+- IDE improvements:
+  - New Find in files (grep) feature
+  - Code editor now has a custom context (right click) menu
+  - Added Go to Definition
+  - Added Preview Export action in the Tools menu
+- API and language changes:
+  - `evaluate_constant_expression()`
+  - `penultimate_value()`
+  - `local_time()` and `utc_time()` are now constant throughout a frame
+  - `remove_values()` now accepts an optional comparator
+  - Removed long-deprecated `is_NaN()`
+  - PyxlScript now supports general-purpose `pop_mode` handlers with no `from` clause
+- Exported games
+  - Added import/export of save games to a local file to the console menu. Automatically appears
+    for all quadplay games that use `save_local` or `load_local`
+  - Option to disable the arcade keyboard menu items for games run from a separate browser (vs. the launcher)
+  - Improved UI of the quadplay HTML menu bar above the emulator
+- Bug fixes:
+  - Constant colors specified using #RGB/#RGBA in the game.json no longer crash the gui editors. Instead they are automatically converted to objects when edited.
+  - `todo()` statements at top level are now displayed correctly in the TODO debugger tab
+  - Tooltips now appear on the code editor buttons
+  - Undo and Redo buttons now work again in the code editor
+  - Corrected 1/2 texel offset for sprites in Warlock demo that led to gaps in walls
 
 2025 August 3
 ===================================

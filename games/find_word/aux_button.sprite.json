@@ -1,0 +1,9 @@
+{
+    "url": "aux_button.png",
+    "license": "By SMUEL 2025, Released into the Public Domain/CC0",
+    "sprite_size": {"x": 16, "y": 16},
+    "names": {
+        "backspace": {"x": 0, "y": 0},
+        "rotate": {"x": 1, "y": 0}
+    }
+}
