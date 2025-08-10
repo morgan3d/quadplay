@@ -81,9 +81,10 @@
         "notify_icon": "notify_icon.sprite.json",
         "aux_icon": "aux_button.sprite.json",
         "tutorial_arrow": "tutorial_arrow.sprite.json",
-        "auto_find_sound": "quad://sounds/explode-12.sound.json"
+        "auto_find_sound": "quad://sounds/explode-12.sound.json",
+        "auto_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.340",
+    "version": "0.341",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

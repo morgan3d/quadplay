@@ -151,7 +151,9 @@ def player_selection_change_callback(player)
             const previously_available = size(player.auto_list)
             player.auto_list = find_short_words_from_selection()
             if player.auto_uses_left and size(player.auto_list) and not previously_available:
-                play_sound({sound: blip_alt_sound, playback_rate: 50%, volume: 80%})
+                def sound():
+                    play_sound({sound: auto_available_sound, volume: 170%})
+                delay(sound, 5)
 
 
         return true
