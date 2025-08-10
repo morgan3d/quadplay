@@ -2,6 +2,7 @@ FreeMode
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
+todo("WALLEYE and YEASTY were not recognized")
 
 /* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
    See also `player_selection_change_callback()` for the `Play` mode. */

@@ -514,8 +514,10 @@ function find(a, x, start, comparator) {
     // Type of what we are looking for
     const t = typeof x;
 
-    if (typeof comparator === 'string' || typeof comparator === 'number') {
-        comparator = function (A, B) { return A[comparator] === B[comparator]; }
+    if ((typeof comparator === 'string') || (typeof comparator === 'number')) {
+        // Use comparator as a key
+        const key = comparator;
+        comparator = function (A, B) { return A[key] === B[key]; }
     }
     
     // Run the regular find if using equivalent() on trivial values or

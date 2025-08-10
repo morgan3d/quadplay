@@ -15,8 +15,6 @@ def make_player():
         for word in list:
             vocabulary[word] = 1
     
-    // debug_print(vocabulary)
-    
     return {
         board: make_board(),
         

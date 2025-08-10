@@ -97,7 +97,7 @@ def update_notifications()
         
                 draw_text({
                     text: "{font:" + NOTIFY.TITLE_FONT + " {color:" + unparse(NOTIFY.HIGHLIGHT_COLOR) + " " + notification.title + "}{br}}" + notification.description,
-                    pos: xy(-½ rect.size.x + NOTIFY.SPRITE_WIDTH + 2 NOTIFY.PADDING, 0),
+                    pos: xy(-½ rect.size.x + NOTIFY.SPRITE_WIDTH + 2 NOTIFY.PADDING, -10),
                     font: NOTIFY.DESCRIPTION_FONT,
                     color: #000,
                     markup: true,
