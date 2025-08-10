@@ -3751,8 +3751,6 @@ function evaluate_constant_expression(expr) {
 
     // Constant or asset. Parse the expression
     const {base, modifier_array} = parseIdentifierExpression(expr);
-    
-    console.log(base, modifier_array);
 
     let value;
     if (QRuntime.ASSETS.hasOwnProperty(base)) {
