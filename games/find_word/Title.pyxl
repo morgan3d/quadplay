@@ -147,9 +147,6 @@ set_hooks()
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 
-
-stats_save(player.stats)
-
 def sound():
     play_sound(times_up_sound)
     
