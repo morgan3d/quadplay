@@ -75,7 +75,7 @@ function updateDebugWatchDisplay() {
 
 // Injected as debug_print in QRuntime
 // Escapes HTML
-function debug_print(location, expression, ...args) {
+function debug_print(loc, expression, ...args) {
     const prettyPrint = document.getElementById('prettyPrintEnabled').checked;
     let s = '';
     for (let i = 0; i < args.length; ++i) {
@@ -101,7 +101,7 @@ function debug_print(location, expression, ...args) {
         }
     }
     
-    $outputAppend(s + '\n', location);
+    $outputAppend(s + '\n', loc);
 
     if (firstPrintOrWatch) {
         firstPrintOrWatch = false;

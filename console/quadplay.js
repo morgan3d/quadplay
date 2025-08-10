@@ -1737,27 +1737,24 @@ for (const name in controlSchemeTable) {
 }
 
 
-
-
-/* Optional location = { line_number, url, fcn } used for creating hyperlinks and displaying output */
-function setErrorStatus(e, location) {
+/* Optional loc = { line_number, url, fcn } used for creating hyperlinks and displaying output */
+function setErrorStatus(e, loc) {
     e = escapeHTMLEntities(e);
 
-    if (location) {
-        if (location.line_number !== undefined) {
-            e = `${location.fcn ? location.fcn + ' at ' : ''}<a style="font-family: Arial; cursor:pointer">${shortURL(location.url)}:${location.line_number}</a>: ${e}`;
-        } else if (location.url) {
-            e = `${location.fcn ? location.fcn + ' at ' : ''}${shortURL(location.url)}: ${e}`;
-        } else if (location.fcn) {
-            e = location.fcn + ': ' + e;
+    if (loc) {
+        if (loc.line_number !== undefined) {
+            e = `${loc.fcn ? loc.fcn + ' at ' : ''}<a style="font-family: Arial; cursor:pointer">${shortURL(loc.url)}:${loc.line_number}</a>: ${e}`;
+        } else if (loc.url) {
+            e = `${loc.fcn ? loc.fcn + ' at ' : ''}${shortURL(loc.url)}: ${e}`;
+        } else if (loc.fcn) {
+            e = loc.fcn + ': ' + e;
         }
     }
-    
 
     if (useIDE) {
         error.innerHTML = e;
         if (e !== '') {
-            $outputAppend(`\n<span style="color:#f55">${e}<span>\n`, location, location !== undefined);
+            $outputAppend(`\n<span style="color:#f55">${e}<span>\n`, loc, loc !== undefined);
             document.getElementById('outputTab').checked = true;
         }
     } else if (e !== '') {
@@ -3758,12 +3755,12 @@ function evaluate_constant_expression(expr) {
     } else if (QRuntime.CONSTANTS.hasOwnProperty(base)) {
         value = QRuntime.CONSTANTS[base];
     } else {
-        throw "Illegal expresion";
+        throw `Illegal expression in evaluate_constant_expression(): "${expr}"`;
     }
 
     for (const modifier of modifier_array) {
         if (value === undefined) {
-            throw "Cannot evaluate proprties of a nil asset or constant";
+            throw "Cannot evaluate proprties of a nil asset or constant in evaluate_constant_expression()";
         } else {
             value = value[modifier.expr];
         }
