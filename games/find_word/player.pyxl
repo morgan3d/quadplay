@@ -156,7 +156,6 @@ def player_selection_change_callback(player)
                     play_sound({sound: auto_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
                 delay(sound, 5)
 
-
         return true
 
 

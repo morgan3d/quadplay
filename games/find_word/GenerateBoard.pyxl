@@ -30,7 +30,7 @@ draw_text({
 
 if mode_frames > 3:
     /*, if DEBUG.INTERMISSION then "LPNB RHEI OSRO TLAI" else ∅ */
-    const board_string = ∅//"WALL AEYE STYS EDQO";
+    const board_string = if not player.has_achievement["Play Solo Match"] then FIRST_TIME_BOARD else ∅//"WALL AEYE STYS EDQO";
     player_reset_match(player, game_type, board_string)
     
     if DEBUG.HISTORY or DEBUG.INTERMISSION:

@@ -95,26 +95,28 @@ def history_draw(history, pos, max_height):
         max_width = max(max_width, text_width(history_font, text))
         pos.y += history_font.line_height + 1
 
-    if not player.has_achievement["Make Second Word"]:
-        const text = (
-            if player.has_achievement["Make First Word"] 
-            then "Great! Keep going until the timer expires." 
-            else (
-                if player.using_gamepad
-                then replace("Select a chain of letters with (a) to spell a word", joy.prompt)
-                else "Swipe through a chain of letters to spell a word"))
-            
-        draw_text({
-            // Bounce if emphasized
-            pos: pos + xy(0, 10),
-            font: score_font,
-            x_align: "left",
-            y_align: "top",
-            color: #FFF,
-            outline: #000,
-            z: 100,
-            wrap_width: 150,
-            text: text})
+    // Draw tutorial/help
+    if not player.has_achievement["Play Solo Match"]:
+        for word at i in FIRST_TIME_WORD_LIST:
+            if not player.has_achievement["Spell " + word]:
+                draw_text({
+                    pos: pos + xy(0, max_height),
+                    font: score_font,
+                    x_align: "left",
+                    y_align: "bottom",
+                    color: #FFF,
+                    outline: #000,
+                    z: 100,
+                    wrap_width: 150,
+                    text: 
+                        if i then 
+                            (if word == "..." then "Keep going while there's time…" else "Great! Now find " + word)
+                        else (if player.using_gamepad
+                             then replace("Select letters with (a) to spell " + word, joy.prompt)
+                            else "Swipe through letters to spell " + word)})
+                // Prevent printing anything else
+                break
+
 
     if get_mode() ≠ GlobalIntermission:
         // Regular list first
@@ -147,10 +149,16 @@ def history_add(history, list_name, word, points):
     assert(word)
     assert(type(word) == "string")
     
-    player_achieve(player, "Make First Word")
-    if size(history.list) == 2:
-        player_achieve(player, "Make Second Word")
-    
+    if not player.has_achievement["Play Solo Match"]:
+        for target at i in FIRST_TIME_WORD_LIST:
+            if not player.has_achievement["Spell " + target]:
+                if target == word:
+                    player_achieve(player, "Spell " + target)
+                else:
+                    // Do not accept any other word for an achievement
+                    // until the required word has been spelled
+                    break
+                    
     let color = color_for_points(points)
     
     let text_color = color

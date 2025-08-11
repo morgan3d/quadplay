@@ -144,6 +144,13 @@ enter
 set_background(#000)
 set_hooks()
 
+if player.stats.lifetime.xp > 0 and not player.has_achievement["Play Solo Match"]:
+    // Upgrade previous save files; nobody should have XP without having 
+    // completed the initial tutorial
+    todo("Remove at the end of August")
+    player_achieve(player, "Play Solo Match")
+    
+
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 
@@ -193,13 +200,15 @@ draw_rect(pos, get_board_pixel_size() + 22, player.board.selection_color, ∅, �
 // How far to slide the buttons, 0 if the intro has been skipped
 const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - INTRO.SLIDE_FRAMES), 0)) else 0
 
-if player.has_achievement["Play Global Match"]:
-    update_button(pos + xy(slide, -30), "Solo", 0)
-    
 if player.has_achievement["Change Avatar"]:
-    if not intro and not player.has_achievement["Play Global Match"]:
-        draw_tutorial(pos + xy(0, 25), "Join a match")
+    update_button(pos + xy(slide, -30), "Solo", 0)
+    if not intro and not player.has_achievement["Play Solo Match"]:
+        draw_tutorial(pos - xy(0, 35), "Play a match")
+    
+if player.has_achievement["Play Solo Match"]:
     update_button(pos - xy(slide, -30), "Global", 1)
+    if not intro and not player.has_achievement["Play Global Match"]:
+        draw_tutorial(pos + xy(0, 35), "Join a global match", 90°)
 
 
 // Logo

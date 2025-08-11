@@ -282,18 +282,20 @@ def handle_buttons(
     auto_sprite, auto_callback,
     aux_sprite,  aux_callback, aux_allow_b default false):
 
-    if player.has_ability["Free Mode"]:
-        const region = handle_ability_button(0, "Free", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
-        if not player.has_achievement["Free Mode Word"]:
-            if get_mode() ≠ FreeMode:
-                draw_tutorial(region.pos - xy(0, 20), "Enter\nFree Mode", ∅, "left")
-        else if not player.has_achievement["Exit Free Mode"] and get_mode() == FreeMode:
-            draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
-            
-
-    if player.has_ability["Auto"]:
-        todo("Bug: Auto button disappears when used until mouse moves")
-        handle_ability_button(1, "Auto", "Auto x" + player.auto_uses_left, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
+    // No abilities except rotate when in the waiting room
+    if not in_waiting_room:
+        if player.has_ability["Free Mode"]:
+            const region = handle_ability_button(0, "Free", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
+            if not player.has_achievement["Free Mode Word"]:
+                if get_mode() ≠ FreeMode:
+                    draw_tutorial(region.pos - xy(0, 20), "Enter\nFree Mode", ∅, "left")
+            else if not player.has_achievement["Exit Free Mode"] and get_mode() == FreeMode:
+                draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
+                
+    
+        if player.has_ability["Auto"]:
+            todo("Bug: Auto button disappears when used until mouse moves")
+            handle_ability_button(1, "Auto", "Auto x" + player.auto_uses_left, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {

@@ -84,7 +84,7 @@
         "auto_find_sound": "quad://sounds/explode-12.sound.json",
         "auto_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.343",
+    "version": "0.344",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -152,6 +152,10 @@
                     "value": {
                         "x": 33,
                         "y": 22
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": -1
                     }
                 },
                 {
@@ -160,6 +164,10 @@
                     "value": {
                         "x": 34,
                         "y": 22
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": -1
                     }
                 },
                 {
@@ -168,6 +176,10 @@
                     "value": {
                         "x": 47,
                         "y": 6
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": -1
                     }
                 },
                 {
@@ -176,6 +188,10 @@
                     "value": {
                         "x": 0,
                         "y": 8
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": -1
                     }
                 },
                 {
@@ -184,6 +200,10 @@
                     "value": {
                         "x": 1,
                         "y": 8
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": -1
                     }
                 }
             ]
@@ -533,7 +553,7 @@
                 "MIN_WORDS": {
                     "description": "including long words",
                     "type": "number",
-                    "value": "90",
+                    "value": "120",
                     "min": 0,
                     "max": 200,
                     "format": "0",
@@ -541,7 +561,7 @@
                 },
                 "RETRIES": {
                     "type": "number",
-                    "value": "19",
+                    "value": "23",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -568,7 +588,7 @@
                 "SHUFFLE_RETRIES": {
                     "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
                     "type": "number",
-                    "value": "16",
+                    "value": "17",
                     "min": 0,
                     "max": 50,
                     "format": "0",
@@ -1434,6 +1454,36 @@
             "type": "string",
             "value": "!!!0!!!",
             "description": "Indicates a compressed word list, used for backwards compatibility"
+        },
+        "FIRST_TIME_BOARD": {
+            "type": "string",
+            "value": "EATA YSIL ADOX ENER",
+            "description": "The board used for the player's first game ever. Designed to be easy. Do not change without modifying the achievements needed to complete the first match."
+        },
+        "FIRST_TIME_WORD_LIST": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "string",
+                    "value": "EAT"
+                },
+                {
+                    "type": "string",
+                    "value": "SEAT"
+                },
+                {
+                    "type": "string",
+                    "value": "TIDE"
+                },
+                {
+                    "type": "string",
+                    "value": "EXIST"
+                },
+                {
+                    "type": "string",
+                    "value": "..."
+                }
+            ]
         }
     },
     "screenshot_tag": "find_word",
