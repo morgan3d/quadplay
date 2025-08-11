@@ -149,8 +149,9 @@ def player_selection_change_callback(player)
         // so that the full word isn't found again
         if player.has_ability["Auto"]:
             const previously_available = size(player.auto_list)
-            player.auto_list = find_short_words_from_selection()
-            if player.auto_uses_left and size(player.auto_list) and not previously_available:
+            player.auto_list = find_short_words_from_selection()            
+            todo("Only play sound when the number has gone from low to high, ignoring the drop to zero in the middle")
+            if player.auto_uses_left and size(player.auto_list) > 5 and not previously_available:
                 def sound():
                     play_sound({sound: auto_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
                 delay(sound, 5)
