@@ -10020,7 +10020,7 @@ function play_sound(sound, volume, pan, pitch, time, rate, loop, stopped) {
         pan = $clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1);
     }
 
-    return $play_sound(sound, loop, volume, pan, pitch, time, rate, stopped);
+    return $play_sound(sound, volume, pan, pitch, time, rate, loop, stopped);
 }
 
 

@@ -185,7 +185,7 @@ function get_audio_status(handle) {
 
 
 // Exported to QRuntime
-function play_sound(sound, loop, volume, pan, pitch, time, rate, stopped) {
+function play_sound(sound, volume, pan, pitch, time, rate, loop, stopped) {
     if (! sound || ! sound.$source) {
         console.log(sound);
         throw new Error('play_sound() requires a sound asset');
