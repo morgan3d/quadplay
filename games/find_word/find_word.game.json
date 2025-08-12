@@ -84,7 +84,7 @@
         "auto_find_sound": "quad://sounds/explode-12.sound.json",
         "auto_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.349",
+    "version": "0.350",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1271,10 +1271,10 @@
                     "value": {
                         "WIDTH": {
                             "type": "number",
-                            "value": "140",
+                            "value": "224",
                             "description": "In pixels. Forces the award width",
                             "min": 64,
-                            "max": 256,
+                            "max": 250,
                             "format": "0",
                             "quantum": 1
                         },
@@ -1284,25 +1284,33 @@
                         },
                         "NAME_X": {
                             "type": "number",
-                            "value": "39",
+                            "value": "46",
                             "min": 0,
-                            "max": 150,
+                            "max": 250,
                             "format": "0",
                             "quantum": 1
                         },
                         "BADGE_X": {
                             "type": "number",
-                            "value": "83",
+                            "value": "71",
                             "min": 0,
-                            "max": 150,
+                            "max": 250,
                             "format": "0",
                             "quantum": 1
                         },
                         "SCORE_X": {
                             "type": "number",
-                            "value": "80",
+                            "value": "121",
                             "min": 0,
-                            "max": 150,
+                            "max": 250,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "COUNT_X": {
+                            "type": "number",
+                            "value": "149",
+                            "min": 0,
+                            "max": 250,
                             "format": "0",
                             "quantum": 1
                         },
@@ -1310,7 +1318,7 @@
                             "type": "number",
                             "value": "16",
                             "min": 0,
-                            "max": 150,
+                            "max": 250,
                             "format": "0",
                             "quantum": 1
                         }
@@ -1318,7 +1326,7 @@
                 },
                 "AWARD_HEIGHT": {
                     "type": "number",
-                    "value": "72",
+                    "value": "65",
                     "description": "In pixels. Forces the leaderboard height",
                     "min": 32,
                     "max": 256,

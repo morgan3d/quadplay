@@ -44,7 +44,7 @@ draw_drop_shadow_text({font: large_font,
 
 // Sound
 if mode_frames == ⌊20% HEAL_FRAMES⌋:
-   play_sound(unchallenged_audio_clip, nil, 150%)
+   play_sound({sound:unchallenged_audio_clip, volume:150%})
 
 // Apply bonus at max opacity
 if mode_frames == ⌊½ HEAL_FRAMES⌋:

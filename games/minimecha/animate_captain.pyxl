@@ -1,5 +1,5 @@
 def begin_flame_attack(data):
-    data.attack_audio = play_sound(flame_sound, true, 100%, data.piece.board_pos * SPACE_SIZE)
+    data.attack_audio = play_sound({sound:flame_sound, loop:true, volume:100%, pan:data.piece.board_pos * SPACE_SIZE})
     
     
     

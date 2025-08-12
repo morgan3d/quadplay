@@ -56,13 +56,13 @@ let next_thunder = nil
 let thunder_handle = nil
 
 def play_thunder():
-    thunder_handle = play_sound(thunder_snd, false, 100%)
+    thunder_handle = play_sound({sound:thunder_snd, loop:false, volume:100%})
     next_thunder = mode_frames + random_value([770, 1000, 1300])
 
 def play_audio_intro():
-    play_sound(cardoor_open_and_close_snd, false, 400%)
-    play_sound(ambience_loop_snd, true, 55%)
-    play_sound(rain_loop_snd, true, 40%)
+    play_sound({sound:cardoor_open_and_close_snd, loop:false, volume:400%})
+    play_sound({sound:ambience_loop_snd, loop:true, volume:55%})
+    play_sound({sound:rain_loop_snd, loop:true, volume:40%})
     play_thunder()
 
 

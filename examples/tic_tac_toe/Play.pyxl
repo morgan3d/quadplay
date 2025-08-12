@@ -56,7 +56,7 @@ with commit_sound, cursor, color, gamepad in player:
     if gamepad.xx or gamepad.yy:
         const old_cursor = cursor
         cursor = clamp(cursor + xy(gamepad.xx, gamepad.yy), xy(0, 0), xy(2, 2))
-        play_sound(if equivalent(old_cursor, cursor) then bad_sound else move_sound, false, 80%)
+        play_sound({sound: if equivalent(old_cursor, cursor) then bad_sound else move_sound, loop: false, volume: 80%})
 
     let commit = gamepad.pressed_a or gamepad.pressed_b or gamepad.pressed_c or gamepad.pressed_d
     

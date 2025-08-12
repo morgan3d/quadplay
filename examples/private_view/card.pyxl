@@ -66,7 +66,7 @@ def flip_card_callback(framesleft, total_frames, card):
 def animate_flip_card(card):
     const FLIP_FRAMES = 24
     card.scale.x = 100%
-    play_sound(flip_sound, false, random(10%, 30%), card.pos, 150%, ∅, random(50%, 90%))
+    play_sound({sound:flip_sound, loop:false, volume:random(10%, 30%), pan:card.pos, pitch:150%, playback_rate:random(50%, 90%)})
     card.frame_hook = add_frame_hook(flip_card_callback, ∅, FLIP_FRAMES, ∅, card)
 
 

@@ -201,7 +201,7 @@ def history_update(history, history_rect)
         set_transform(history_rect.corner - history.scroll.offset)
         max_width = history_draw(history, pos, history_rect.size.y)
 
-    if (player.has_ability["Know Word Count"] or in_waiting_room):
+    if (player.has_ability["Scry Word Count"] or in_waiting_room):
         draw_text({
             pos: history_rect.corner + history_rect.size - xy(2, 1),
             font: history_font,

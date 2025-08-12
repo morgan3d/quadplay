@@ -41,7 +41,7 @@ state = ["out", "out", "out", "out"]
 
 if not backgroundSound or backgroundSound.audioClip ≠ titleMusic:
    if backgroundSound: stop_audio(backgroundSound)
-   backgroundSound = play_sound(titleMusic, true)
+   backgroundSound = play_sound({sound:titleMusic, loop:true})
 
    
 frame

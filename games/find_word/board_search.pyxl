@@ -2,8 +2,6 @@
    words of `MIN_WORD_LEN` on this board. The words are q-encoded 
    and are uppercase. */
 def board_find_all_words(board):
-    const before = now()
-
     // Words discovered during n-gram search
     const word_set = {}
     
@@ -42,9 +40,6 @@ def board_find_all_words(board):
         short_count, "words with 3-5 letters\n",
         size(word_set) - short_count, "actual words with 6+ letters\n")
     */
-
-    if DEBUG.BOARD_SEARCH:
-        debug_print(round((now() - before) * 1000), "ms to find all", size(word_set), "words")
     
     const word_array = keys(word_set)
     sort(word_array)
@@ -149,14 +144,11 @@ def _player_find_good_board(player, game_type):
             for word in word_array:
                 if size(word) ≤ 4:
                     ++short_word_count
-                if size(word) ≥ 5 and size(word) < 7:
+                else if size(word) < 7:
                     ++long_word_count
-                if size(word) ≥ 7:
+                else:
                     ++very_long_word_count
-                    
-                if size(word) ≥ 5:
-                    ++long_word_count
-                    
+                                        
                 for letter in valuable_letters:
                     if contains(word, letter):
                         ++valuable_letter_table[letter]

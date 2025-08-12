@@ -135,7 +135,7 @@ def simulate_view(view, gamepad, gamepad2):
         const move = ‖xy(old_pos - view.pos)‖
         if move > 0.5:
             if not view.walk_audio:
-                view.walk_audio = play_sound(loop_footsteps_sound, true, 200%)
+                view.walk_audio = play_sound({sound:loop_footsteps_sound, loop:true, volume:200%})
             set_playback_rate(view.walk_audio, max(2.8 move / MAX_SPEED, 100%))
         else:
             stop_audio(view.walk_audio)

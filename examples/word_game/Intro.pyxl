@@ -2,7 +2,7 @@ init
 ────────────────────────────────────────────────────────────────────────
 // loop the bgm
 if BGM_LOOP_HANDLE == nil:
-    BGM_LOOP_HANDLE = play_sound(bgm_loop, true)
+    BGM_LOOP_HANDLE = play_sound({sound:bgm_loop, loop:true})
 
 def draw_screen_border(scale, draw_credits default true, wiggle):
     preserving_transform:

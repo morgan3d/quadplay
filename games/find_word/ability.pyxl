@@ -26,7 +26,7 @@ def grant_new_abilities():
         if not contains(name, "TODO") and (not player.has_ability[name] and player.avatar.level ≥ ability.level):
             any = true
             def grant_ability():
-                play_sound(award_sound, false, ∅, ∅, 150%)
+                play_sound({sound: award_sound, pitch: 150%})
                 player.has_ability[name] = true
                 // Save new abilities
                 if not DEBUG.INTERMISSION:

@@ -161,7 +161,7 @@ shadowColor = 85% location.background
 levelDescription = concat(locationName, weatherType, waveType)
 
 if backgroundSound: stop_audio(backgroundSound)
-backgroundSound = play_sound(location.music, true)
+backgroundSound = play_sound({sound:location.music, loop:true})
 
 
 

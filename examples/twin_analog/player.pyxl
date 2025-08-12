@@ -81,7 +81,7 @@ def simulate_player():
          cooldown = GUN_MAX_COOLDOWN
          side = -side
          const dir = angle_to_direction(angle)
-         play_sound(player_fire_audio_clip, ∅, ∅, 10% side)
+         play_sound({sound:player_fire_audio_clip, pan:10% side})
          push(player_bullet_array, make_entity({
             name: "bulet", 
             pos: player.pos + 3 perp(dir) * side,

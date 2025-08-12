@@ -15,11 +15,11 @@ def cursor_color():
 
 /** Used by both in-game and menu UI, hence the defaults */
 def play_blip_sound(index, pos default 0%):
-    play_sound(ASSETS["player_" + index + "_blip_sound"], false, 15%, pos)
+    play_sound({sound: ASSETS["player_" + index + "_blip_sound"], volume:15%, pan:pos})
     
     
 def play_accept_sound(index, pos default 0%):
-    play_sound(ASSETS["player_" + index + "_accept_sound"], false, 25%, pos)
+    play_sound({sound: ASSETS["player_" + index + "_accept_sound"], volume:25%, pan:pos})
     
 
 /** Colors the spawn hex for each player */
@@ -557,7 +557,7 @@ def player_emergency_teleport(player):
     // the robot appearing. Follow up with ending the
     // animation
     player.animation_sprite = teleport_sprite[0][0]
-    play_sound(teleport_sound, ∅, ∅, player.pos, 80%)
+    play_sound({sound: teleport_sound, pan: player.pos, pitch:80%})
     sequence({frames: 40}, appear, {frames: 40}, stop_animation)
     
 

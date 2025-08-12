@@ -37,7 +37,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1), 0, 1)
 stop_audio(background_audio)
-background_audio = play_sound(theme_sound, true, 200%)
+background_audio = play_sound({sound:theme_sound, loop:true, volume:200%})
 reset_post_effects()
 
 

@@ -1558,7 +1558,7 @@ of seconds that it will play before ending or looping.
     demands. Graphics are time scaled, so the visual frames may be independent
     of both the audio clock and the frame events.
 
-`play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)`
+`play_sound(sound, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, loop default false, stopped default false)`
 : Play `sound`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
   Returns an audio object that can be used with `stop_audio()`.

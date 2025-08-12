@@ -9,7 +9,7 @@ reset_transform()
 reset_post_effects()
 
 if backgroundSound: stop_audio(backgroundSound)
-backgroundSound = play_sound(titleMusic, true)
+backgroundSound = play_sound({sound:titleMusic, loop:true})
 
 sort(snakeArray, "score", true)
 

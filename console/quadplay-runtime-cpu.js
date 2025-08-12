@@ -10001,15 +10001,15 @@ function save_local(key, value) {
 }
 
 
-function play_sound(sound, loop, volume, pan, pitch, time, rate, stopped) {
+function play_sound(sound, volume, pan, pitch, time, rate, loop, stopped) {
     if (sound.sound && (arguments.length === 1)) {
         // Object version
-        loop    = sound.loop;
         volume  = sound.volume;
         pan     = sound.pan;
         pitch   = sound.pitch;
         time    = sound.time;
         rate    = sound.playback_rate;
+        loop    = sound.loop;
         stopped = sound.stopped;
         sound   = sound.sound;
     }

@@ -87,7 +87,12 @@ conduitNetwork.init = function init(node_netid) {
 
     // In the case of a forced disconnection from a close, allow coming back with the original node_netid
     // if the program wants to rebuild the conduits. 
-    if (! node_netid && ! conduitNetwork.node_netid) {
+    if (conduitNetwork.node_netid) {
+        node_netid = conduitNetwork.node_netid;
+    }
+
+    if (! node_netid) {
+        // Generate a random node_netid if none was provided or sticky from a forced disconnection
         node_netid = 'node_netid ' + crypto.randomUUID();
     }
 

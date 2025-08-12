@@ -66,7 +66,7 @@ sprite = large_spritesheet[random_integer(0, 2)][0]
 num_humans = max(load_local("num_humans") default num_humans, 1)
 num_AIs = min(load_local("num_AIs") default num_AIs, 4 - num_humans)
 
-title_music_sound = play_sound(title_music, true, 40%)
+title_music_sound = play_sound({sound:title_music, loop:true, volume:40%})
 
 
 frame

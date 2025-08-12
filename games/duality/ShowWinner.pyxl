@@ -9,8 +9,8 @@ set_background(background)
 text_args_array = in_text_args_array
 particle_array.time_rate = 100%
 set_playback_rate(music_audio, 100%)
-play_sound(end_game_sound, false, 50%)
-play_sound(wipe_sound, false, 50%)
+play_sound({sound: end_game_sound, volume: 50%})
+play_sound({sound: wipe_sound, volume: 50%})
 
 
 frame

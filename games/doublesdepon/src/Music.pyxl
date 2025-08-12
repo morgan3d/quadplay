@@ -65,13 +65,13 @@ def MusicBegin():
     if Songs[CurrentSongIdx].intro:
         introAudio = play_sound(Songs[CurrentSongIdx].intro)
     else:
-        mainAudio = play_sound(Songs[CurrentSongIdx].main, true)
+        mainAudio = play_sound({sound: Songs[CurrentSongIdx].main, loop: true})
 
 def MusicStep():
     if introAudio:
         if get_audio_status(introAudio).state == "ENDED":
             introAudio = nil
-            mainAudio = play_sound(plunkyMain_sound, true)
+            mainAudio = play_sound({sound: plunkyMain_sound, loop: true})
 
 def MusicSetPanic(state):
     if state:
@@ -82,7 +82,7 @@ def MusicSetPanic(state):
         if mainAudio:
             stop_audio(mainAudio)
 
-        panicAudio = play_sound(Songs[CurrentSongIdx].panic, true)
+        panicAudio = play_sound({sound: Songs[CurrentSongIdx].panic, loop: true})
 
     else:
         if panicAudio:
@@ -96,5 +96,5 @@ def MusicSetPanic(state):
         if mainAudio:
             resume_audio(mainAudio)
         else:
-            mainAudio = play_sound(Songs[CurrentSongIdx].main, true)
+            mainAudio = play_sound({sound: Songs[CurrentSongIdx].main, loop: true})
 

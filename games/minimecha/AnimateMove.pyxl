@@ -12,7 +12,7 @@ def end_attack(data):
 let move_audio
 
 def begin_move(): 
-    move_audio = play_sound(engine_sound, true, 200%)
+    move_audio = play_sound({sound:engine_sound, loop:true, volume:200%})
 
 
 def animate_move(frames_left, total_frames, data):

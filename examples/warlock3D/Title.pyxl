@@ -8,7 +8,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 if not DEBUG:
-    play_sound(loop_castle_sound, true, 30%)
+    play_sound({sound:loop_castle_sound, loop:true, volume:30%})
 
 
 frame

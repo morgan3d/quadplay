@@ -95,7 +95,8 @@ preserving_transform:
         
         // Don't play during the very beginning of the title music
         if mode_frames > 30:
-            play_sound(sparks_00_sound, false, random(15%, 45%), pos, random(75%, 180%))
+            play_sound({sound: sparks_00_sound, volume: random(15%, 45%), pan: pos, pitch: random(75%, 180%)})
+
             
         for i < 20:
             particles_spawn(particle_array, pos, xy(0, random(0.05, 0.60)) + 0.20 random_on_circle(), lerp(#FFF, #FE0, ξ²) * random(50%, 100%), -1, random(25, 150))

@@ -329,7 +329,7 @@ def board_deselect_all(board, player):
 
 /* Adjusts the pan for the index */
 def _board_play_sound(sound, volume, pitch, index):
-    play_sound(sound, false, volume, if index then (index.x + 1) / (COLS + 1) else ∅, pitch)
+    play_sound({sound:sound, volume:volume, pan:if index then (index.x + 1) / (COLS + 1) else ∅, pitch:pitch})
     
 
 
@@ -377,7 +377,7 @@ def board_selected_word(board):
    See also `player_update_board()` */
 def board_draw_mini(board, pos)
 & preserving_transform:
-    set_transform(pos)
+    compose_transform(pos)
             
     for y < ROWS:
         for x < COLS:

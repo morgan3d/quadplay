@@ -109,7 +109,7 @@ def execute_instruction(entity, instruction):
         const handicap = max(100%, 250% - 50% entity.difficulty)        
         entity.progress += handicap * ENDZONE_PROGRESS_PER_MOVE
         entity.animation_sprite = star_sprite[0][0]
-        def sound(): play_sound(score_sound, false, 50%, entity.pos)
+        def sound(): play_sound({sound:score_sound, volume:50%, pan:entity.pos.x / SCREEN_SIZE.x})
         
         sound()
         for i < 4 (handicap - 100%): delay(sound, 15)
@@ -124,7 +124,7 @@ def execute_instruction(entity, instruction):
         process_spray_instruction(instruction, entity)        
     
     if instruction.op == "ROT" or instruction.op == "MOV":
-        entity.motor_audio = play_sound(motor_sound, false, 100%, entity.pos, 75% + 25% entity.gamepad.index)
+        entity.motor_audio = play_sound({sound:motor_sound, volume:100%, pan:entity.pos, pitch:75% + 25% entity.gamepad.index})
 
     if instruction.op == "ROT":
         // Rotate
@@ -164,7 +164,7 @@ def execute_instruction(entity, instruction):
                 {callback: translate_forward,  frames: ¼ INSTRUCTION_FRAMES},
                 {callback: translate_backward, frames: ¼ INSTRUCTION_FRAMES},
                 snap)
-            def hit(): play_sound(hit_sound, false, 100%, entity.pos)
+            def hit(): play_sound({sound:hit_sound, pan:entity.pos})
             delay(hit, ¼ INSTRUCTION_FRAMES - 3)
         else:
             entity.end_turn_hex_pos = target_coord
@@ -207,12 +207,12 @@ def process_spray_instruction(instruction, entity):
     // the blocker being hit
     const visual_range = 32 clamp(range + ¼, ½, SPRAY_RANGE)
     if instruction.type == action_sprite.burn:
-        const audio = play_sound(spray_burn_sound, ∅, ∅, entity.pos)
+        const audio = play_sound({sound:spray_burn_sound, pan:entity.pos})
         def stop(): stop_audio(audio)
         delay(stop, 60)
         spawn_vapor_jet(vfx_sprite.burn, entity.pos, entity.angle, visual_range, 3, true)
     else:
-        play_sound(spray_freeze_sound, ∅, ∅, entity.pos)
+        play_sound({sound:spray_freeze_sound, pan:entity.pos})
         spawn_vapor_jet(vfx_sprite.freeze, entity.pos, entity.angle, visual_range, 3, false)
 
 
@@ -329,7 +329,7 @@ def entity_fall_down_pit(entity):
         frames: 60
     }]
     
-    play_sound(falling_sound, false, 100%, entity.pos)
+    play_sound({sound:falling_sound, volume:100%, pan:entity.pos})
     
     if entity.gamepad:         
         // This is a player, so respawn,
@@ -354,8 +354,7 @@ def process_environment_damage(entity, current_map_sprite, end_map_sprite, type,
     if current_map_sprite["is_" + type] and entity[type] < 20%:
         // Trigger the splash/flame sound early, before actually
         // entering the water or fire, so that it lines up
-        def start_sound(): play_sound(ASSETS[type + "_sound"], false, 130%, entity.pos)            
-        delay(start_sound, 10)    
+        delay(start_sound, 10, {sound: ASSETS[type + "_sound"], volume: 130%, pan: entity.pos})    
 
     if current_map_sprite["is_" + type]:
         // Get damaged. It will immediately decrease to 100%.
@@ -469,7 +468,7 @@ def can_interfere(A, B):
  
 def entity_make_spark(player):
     const pos = player.pos + 12 random_on_circle()    
-    play_sound(sparks_00_sound, false, random(15%, 45%), pos, random(75%, 180%))
+    play_sound({sound:sparks_00_sound, volume: random(15%, 45%), pan: pos, pitch:random(75%, 180%)})
         
     for i < 50:
         particles_spawn(particle_array, pos, random(0.1, 0.75) * random_on_circle(), lerp(#FFF, #FE0, ξ²) * random(50%, 100%), VAPOR_Z, random(25, 75))

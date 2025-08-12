@@ -2,6 +2,7 @@
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count, max_bots):
+    
     const avatar_set = [
 {
 name: "THX",
@@ -9,7 +10,16 @@ sprite: avatar_sprite[13][4],
 base_ability: 22%,
 short_word_preference: 16%,
 first_hour: 11,
-last_hour: 19
+last_hour: 12,
+},
+{
+    // Later THX
+name: "THX",
+sprite: avatar_sprite[13][4],
+base_ability: 22%,
+short_word_preference: 16%,
+first_hour: 14,
+last_hour: 20,
 },
 {
 name: "o_o",
@@ -33,7 +43,15 @@ sprite: avatar_sprite[37][14],
 base_ability: 0.3,
 short_word_preference: 32%,
 first_hour: 22,
-last_hour: 6
+last_hour: 3
+},
+{
+name: "H3L",
+sprite: avatar_sprite[25][20],
+base_ability: 0.3,
+short_word_preference: 32%,
+first_hour: 4,
+last_hour: 10
 },
 {
 name: "I♥U",

@@ -6,7 +6,7 @@ let chase_loop_handle = nil
 
 def start_idle():
     if car.state == "on":
-        engine_idle_sound_handle = play_sound(idle_loop_snd, true, 300%)
+        engine_idle_sound_handle = play_sound({sound:idle_loop_snd, loop:true, volume:300%})
 
 def reset_audio():
     if chase_loop_handle:
@@ -32,7 +32,7 @@ def update_audio():
     if car.has_been_started:
         if chase_started:
             if not chase_loop_handle:
-                chase_loop_handle = play_sound(chase_loop_snd, true, 30%)
+                chase_loop_handle = play_sound({sound:chase_loop_snd, loop:true, volume:30%})
             let chase_vol = clamp(1 - chase_distance / 1000, 0, 1)
             set_volume(chase_loop_handle, chase_vol)
 
@@ -43,7 +43,7 @@ def update_audio():
 
     if car.state == "on":
         if engine_start_sound_handle == nil and engine_idle_sound_handle == nil:
-            engine_start_sound_handle = play_sound(car_start_snd, false, 500%)
+            engine_start_sound_handle = play_sound({sound:car_start_snd, volume:500%})
             delay(start_idle, 7*60)
 
     if car.state == "off":
@@ -54,8 +54,7 @@ def update_audio():
         if car.key_turned_frames > 0:
             if key_sound_handle == nil:
                 debug_print("starting")
-                // key_sound_handle = play_sound(key_turning_snd, 800%, true)
-                key_sound_handle = play_sound(key_turning_snd, true, 300%)
+                key_sound_handle = play_sound({sound:key_turning_snd, loop:true, volume:800%})
 
     if (
             key_sound_handle 
@@ -69,7 +68,7 @@ def update_audio():
 
     if car.steer_state == "slide":
         if car_slide_sound_handle == nil:
-            car_slide_sound_handle = play_sound(skid_snd, false, 50%)
+            car_slide_sound_handle = play_sound({sound:skid_snd, loop:false, volume:50%})
     else:
         if car_slide_sound_handle != nil:
             stop_audio(car_slide_sound_handle)

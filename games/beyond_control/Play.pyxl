@@ -15,7 +15,7 @@ enter(player_info, in_game_type)
 // Assume the global map was set before Play was entered
 set_pause_menu({text: "Leave map", confirm: true, callback: quit_map})
 stop_audio(background_audio)
-background_audio = play_sound(ASSETS[map_source.sound default "loop_beat_sound"], true, 35%)
+background_audio = play_sound({sound: ASSETS[map_source.sound default "loop_beat_sound"], loop:true, volume:35%})
 
 
 set_background(#000)

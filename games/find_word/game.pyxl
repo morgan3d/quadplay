@@ -96,7 +96,7 @@ def play_points_sound(points, index default ∅):
 
     // Repeatly ding for 35 or more points
     for i ≤ (points - 35) / 10:
-        delay(play_big_points_sound, 12 i)
+        delay(play_sound, 12 i, {sound: big_points_sound})
 
 
 
@@ -235,7 +235,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
     // Special case for the auto button, where the sprite itself shows a number
-    if name == "Auto" and size(player.auto_list):
+    if name == "Remix" and size(player.auto_list):
         // Save this position for later score animation
         player.auto_pos = region.pos
         draw_text({
@@ -269,11 +269,6 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
 handle_ability_button.last_frame = 0
 
 
-/* Abstracted to make an argument-less callback */
-def play_big_points_sound():
-    play_sound(big_points_sound)
-
-
 
 /* Renders and handles user input for the aux button next to the score and the
    ability buttons on the bottom of the screen.
@@ -298,15 +293,15 @@ def handle_buttons(
                 draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
                 
         // The "Similar" display becomes the "Auto" button when active
-        if player.has_ability["Similar"]:
+        if player.has_ability["Scry Remixes"]:
             todo("Bug: Auto button disappears when used until mouse moves")
             handle_ability_button(
                 1,
-                "Auto",
-                if not player.has_ability["Auto"] then "Similar" else "Auto×" + player.auto_uses_left,
-                if player.has_ability["Auto"] then auto_sprite else ∅,
-                if player.has_ability["Auto"] and auto_callback then "(d)" else ∅,
-                if player.has_ability["Auto"] then auto_callback else ∅)
+                "Remix",
+                if player.has_ability["Remix × 2"] then "Remix × 2" + player.auto_uses_left else "Remix",
+                if player.has_ability["Remix"] then auto_sprite else ∅,
+                if player.has_ability["Remix"] and auto_callback then "(d)" else ∅,
+                if player.has_ability["Remix"] then auto_callback else ∅)
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {

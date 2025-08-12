@@ -8,7 +8,7 @@ def animate_chopper_retreat(frames_left, total_frames, data):
     
 def begin_drop(data):
     if not data.sprite.float:
-        data.chopper_audio = play_sound(helicopter_sound, true, 0%)
+        data.chopper_audio = play_sound({sound:helicopter_sound, loop:true, volume:0%})
 
 
 

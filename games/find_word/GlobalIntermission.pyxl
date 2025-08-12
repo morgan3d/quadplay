@@ -1,8 +1,8 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("** Change layout to make awards more central **")
+todo("Remove compose_transform calls and fix coordinates")
+
 todo("Separate leveling from postgame")
-todo("Scroll leaderboard")
 
 
 todo("Award for best free word")
@@ -28,11 +28,15 @@ let selection_index = 0
 const STATS_BUTTON_INDEX = 1
 
             
+const PORTRAIT_HISTORY_HEIGHT = 122
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
 & preserving_transform:
-    set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH + 35, 34))
+    set_transform(
+        if landscape() then xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0)
+        else xy(0, PORTRAIT_HISTORY_HEIGHT + 2))
+    
     if stage ≠ prev_stage and mode_frames > 10:
         play_sound({sound: word_sound, pan: xy(0, 0)})
 
@@ -56,16 +60,17 @@ def draw_awards()
 /* Called from `draw_awards()` when `stage` == `STAGE.SUMMARY` */
 def draw_award_summary()
 & preserving_transform:
-    
+    draw_corner_rect(xy(0, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, GLOBAL_LAYOUT.AWARD_HEIGHT), player.avatar.color)
+        
     const highlight_color = HIGHLIGHT_COLOR    
 
     const frames = mode_frames - first_frame_this_stage
     const flash = (⌊frames / 15⌋ mod 2) and (player.score > 0)
     const XP_ANIMATION_DELAY_FRAMES = 150
     if frames == XP_ANIMATION_DELAY_FRAMES + 10 and player.score > 0:
-        play_sound(xp_sound, false, ∅, 90%, ∅, 0, 70%)
+        play_sound({sound: xp_sound, pan: 90%, pitch: 70%})
         
-    if frames < XP_ANIMATION_DELAY_FRAMES + 10 and frames mod 30 == 0:
+    if frames < XP_ANIMATION_DELAY_FRAMES + 10 and (frames mod 30 == 0):
         play_sound({sound: word_sound, pan: 100%, pitch: 150%})
     
     const XP_ANIMATION_RATE = 1 / 120
@@ -86,9 +91,9 @@ def draw_award_summary()
         
         // Give the XP after the leveling up
         delay(grant_badge_xp, 60)
-
     
-    draw_corner_rect(xy(-35, -36), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 63), player.avatar.color)
+    compose_transform(xy(35, 36))
+    
     draw_award_summary.last_level_displayed = level
     
     const shadow = 70% player.avatar.color
@@ -141,6 +146,8 @@ def draw_award_summary()
     draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
     
+    board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 132, 14))
+    
 
 
 /* Special sounds for player, Moo, and caf */
@@ -158,7 +165,11 @@ def maybe_play_award_sound(winner):
 
 
 /* Used for best_word, longest, The title is used to compute the field */
-def draw_word_award(title, winner):
+def draw_word_award(title, winner)
+& preserving_transform:
+    
+    compose_transform(xy(35, 36))
+    
     maybe_play_award_sound(winner)
         
     const field = replace(lowercase(title), {" ": "_"})
@@ -174,7 +185,7 @@ def draw_word_award(title, winner):
     
     if winner == player_competitor or not offensive[lowercase(text)]:
         board_select_word(player.board, text)
-        board_draw_mini(player.board, xy(SCREEN_SIZE.x - 32, 36))
+        board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 68, 2))
 
 
 
@@ -194,7 +205,11 @@ def draw_award_background(rect, field, color)
 
 
 
-def draw_most_words_award(winner):
+def draw_most_words_award(winner)
+& preserving_transform:
+    
+    compose_transform(xy(35, 36))
+    
     maybe_play_award_sound(winner)
     ++draw_most_words_award.frames
     player.board.selection_color = HIGHLIGHT_COLOR
@@ -213,19 +228,30 @@ def draw_most_words_award(winner):
             
     if winner == player_competitor or not offensive[lowercase(q_decode(word))]:
         board_select_word(player.board, word)
-        board_draw_mini(player.board, xy(SCREEN_SIZE.x - 32, 36))
+        board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 68, 2))
 
 
 
 /* Draw the ranked competitors and perform UI logic */
 def draw_leaderboard()
 & preserving_transform:
-    todo("Manual vertical scroll")
+    todo("*Manual vertical scroll*")
     
-    set_clip(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, SCREEN_SIZE.y - 22))
-    set_transform(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 72))
+    const leaderboard_corner = (
+        if landscape() then xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, GLOBAL_LAYOUT.AWARD_HEIGHT)
+        else xy(0, PORTRAIT_HISTORY_HEIGHT + GLOBAL_LAYOUT.AWARD_HEIGHT + 2))
     
-    draw_text({text: "Global Leaderboard", pos: xy(½ GLOBAL_LAYOUT.LEADERBOARD.WIDTH, -4), x_align: "center", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
+    // Line at top of leaderboard against the awards
+    draw_corner_rect(leaderboard_corner, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 2), #000, ∅, 20)
+
+    set_clip(leaderboard_corner, SCREEN_SIZE - leaderboard_corner - xy(0, 22))
+    set_transform(leaderboard_corner)
+    
+    draw_text({text: "Player", pos: xy(GLOBAL_LAYOUT.LEADERBOARD.AVATAR_X + 4, 7), x_align: "left", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
+    draw_text({text: "Award", pos: xy(GLOBAL_LAYOUT.LEADERBOARD.BADGE_X - 6, 7), x_align: "left", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
+    draw_text({text: "Score", pos: xy(GLOBAL_LAYOUT.LEADERBOARD.SCORE_X, 7), x_align: "right", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
+    draw_text({text: "#", pos: xy(GLOBAL_LAYOUT.LEADERBOARD.COUNT_X, 7), x_align: "right", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
+    draw_text({text: "Best Word", pos: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 7), x_align: "right", font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000})
     
     // Alternating animation frames for avatar idle animations
     const alt = ⌊mode_frames / 30⌋ mod 2
@@ -233,7 +259,7 @@ def draw_leaderboard()
     
     for competitor at i in competitor_array:
         // Center of avatar
-        const pos = xy(0, i * GLOBAL_LAYOUT.LEADERBOARD.ROW_SPACING + 11)
+        const pos = xy(0, i * GLOBAL_LAYOUT.LEADERBOARD.ROW_SPACING + 22)
                 
         const me = (competitor == player_competitor)
         
@@ -286,6 +312,8 @@ def draw_leaderboard()
                 pos: pos + xy(GLOBAL_LAYOUT.LEADERBOARD.BADGE_X, 0 alt - 1)})
             
         draw_text({…text_args, text: format_number(competitor.score, "commas"), pos: pos + xy(GLOBAL_LAYOUT.LEADERBOARD.SCORE_X, 0), x_align: "right"})
+
+        draw_text({…text_args, text: size(competitor.word_list), pos: pos + xy(GLOBAL_LAYOUT.LEADERBOARD.COUNT_X, 0), x_align: "right"})
 
         let text = if free_word then q_decode(competitor.free_list[0]) else competitor.text
 
@@ -412,36 +440,26 @@ if not notifications_pending():
 
 
 // Separator bars
-draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
-draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 61), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, 2), #000, ∅, 20)
-draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
+if landscape():
+    // Vertical separator
+    draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
 
-const history_rect = {corner: xy(1, 1), size: xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, SCREEN_SIZE.y - 22)}
+
+const history_rect = (
+    if landscape() then {corner: xy(0, 0), size: xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, SCREEN_SIZE.y - 22)}
+    else {corner: xy(0, 0), size: xy(SCREEN_SIZE.x, PORTRAIT_HISTORY_HEIGHT)})
 history_update(player.history, history_rect)
+draw_corner_rect(history_rect.corner + xy(0, history_rect.size.y), xy(history_rect.size.x, 2), #000, ∅, -1)
 
-// Show the board so that it can appear in screenshots
-const α = max(0%, 100% - max(mode_frames - 360, 0) / 90)
-if stage == STAGE.SUMMARY and α > 0%
-& preserving_transform:
-    set_transform(history_rect.corner + history_rect.size - xy(42, 48))
-    const history_tile_color = rgba(0.8, 0.8, 0.8, α)
-    const history_board_color = rgba(0, 0, 0, α)
-    for x < COLS:
-        for y < ROWS:
-            const tile = player.board.tile[x][y]
-            const letter = if tile.letter == "Q" then "Qu" else tile.letter
-            const pos = 11 xy(x, y)
-            draw_disk(pos, 5, history_tile_color)
-            draw_text({
-                font: history_font, 
-                pos: pos,
-                text: letter,
-                color: history_board_color})
-    
+
 draw_awards()
 
 draw_leaderboard()
 
+// Bottom bar
+draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
+
+// Stats button
 if player.has_ability["Stats Tracker"]:
     const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 * xy(2, 2), shape: "disk"}
     if touch.hover:

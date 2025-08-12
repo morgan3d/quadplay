@@ -7,7 +7,7 @@ device_set_border()
 set_random_seed()
 
 stop_audio(music)
-music = play_sound(title_music, true, 55%)
+music = play_sound({sound: title_music, loop: true, volume: 55%})
 
 
 frame

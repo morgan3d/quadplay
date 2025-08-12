@@ -15,11 +15,10 @@ def execute_auto():
     for word at w in player.auto_list:
         const points = score_word(word)
         player_add_to_history(player, word, points)
-        player_spawn_score_animation(player, "Auto")
+        player_spawn_score_animation(player, "Remix")
         
         // Per-word sound
-        def sound(): play_points_sound(points)    
-        if w < 7: delay(sound, 7 w)
+        if w < 7: delay(play_points_sound, 7 w, points)
     
     --player.auto_uses_left
     player.auto_list = ∅

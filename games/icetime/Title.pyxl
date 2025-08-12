@@ -17,7 +17,7 @@ enter
 reset_transform()
 reset_clip()
 set_background(labelSprite)
-titleSound = play_sound(chantAudioClip, true, 150%)
+titleSound = play_sound({sound:chantAudioClip, loop:true, volume:150%})
 
 set_post_effects({motion_blur: 50%})
 

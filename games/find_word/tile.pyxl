@@ -85,7 +85,7 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
 
    The words are returned q-encoded.
    
-   Used to implement Auto.
+   Used to implement Remix.
 */
 def find_short_words_from_selection(max_word_length default 4):
     // Precompute adjacency. Parallel array to tile_array 

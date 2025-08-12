@@ -1,4 +1,4 @@
-let music = play_sound(titleSound, true)
+let music = play_sound({sound:titleSound, loop:true})
 
 // Latest camera offset. Used for respawning
 let camera = {pos: xy(0, 0)}

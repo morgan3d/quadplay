@@ -1,6 +1,6 @@
 def begin_explosion(data):
     // Explode pawns more quietly
-    play_sound(explode_sound, ∅, if data.target_piece.type == "p" then 85% else 120%)    
+    play_sound({sound:explode_sound, volume:if data.target_piece.type == "p" then 85% else 120%, pan:data.target_piece.board_pos * SPACE_SIZE})    
     
     
     

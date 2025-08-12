@@ -55,7 +55,7 @@ set_background(#888)
 set_random_seed()
 stop_hosting()
 
-audio = play_sound(title_music, true)
+audio = play_sound({sound:title_music, loop:true})
 fadeout = 0
 
 // Shortcut for debugging

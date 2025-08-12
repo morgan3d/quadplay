@@ -131,8 +131,8 @@ def remove_tile_at_index(index):
 
     // Remove from the player.free_row
     remove_values(player.free_row, tile)
-    
-    play_sound(select_tile_sound, false, 150%, ∅, 40%)
+   
+    play_sound({sound:select_tile_sound, volume:150%, pitch:40%})
 
     // Update selection
     selection_color = player_free_selection_change_callback(player, player.free_row)

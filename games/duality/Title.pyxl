@@ -41,11 +41,11 @@ set_background(color_array[1])
 // Full game load
 if game_frames == 0:
     add_frame_hook(particles_update_and_draw, ∅, ∅, "all", particle_array)
-    music_audio = play_sound(music_sound, true, 130%)
+    music_audio = play_sound({sound: music_sound, loop: true, volume: 130%})
     set_random_seed()
     alarm_audio_array = [
-        play_sound(alarm_sound, true, 0%, +100%, ∅, ∅, 60%, true),
-        play_sound(alarm_sound, true, 0%, -100%, ∅, ∅, 100%, true)]
+        play_sound({sound: alarm_sound, loop: true, volume: 0%, pan: +100%, stopped: true}),
+        play_sound({sound: alarm_sound, loop: true, volume: 0%, pan: -100%, stopped: true})]
     
 set_post_effects({bloom: if bloom then 45% else 0%, motion_blur: 42%})
 

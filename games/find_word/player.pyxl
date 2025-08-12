@@ -27,7 +27,7 @@ def make_player():
         // found
         vocabulary: vocabulary,
         
-        // The words that the Auto ability will find if activated.
+        // The words that the Remix ability will find if activated.
         // Updated when the player completes a word. When ∅ the 
         // auto button is not available.        
         auto_list: ∅,
@@ -79,7 +79,7 @@ def player_free_row_contains(player, word):
 
 
 /* Creates animation going from the selection (if source == "board") or 
-   auto button (if source == "Auto") to the last word in the history */
+   auto button (if source == "Remix") to the last word in the history */
 def player_spawn_score_animation(player, source default "board"):
     let target
     
@@ -90,7 +90,7 @@ def player_spawn_score_animation(player, source default "board"):
     let letter_array = []
     let start_array = []
     
-    if source == "Auto":
+    if source == "Remix":
         for letter in entry.word:
             push(letter_array, q_decode(letter))
     else:
@@ -108,7 +108,7 @@ def player_spawn_score_animation(player, source default "board"):
         
         const α = linstep(total_frames, 0, frames_left)^1.5
         for i < size(letter_array):
-            const pos = lerp(if source == "Auto" then player.auto_pos else start_array[i], target, α)
+            const pos = lerp(if source == "Remix" then player.auto_pos else start_array[i], target, α)
             draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), entry.color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
         
@@ -147,13 +147,11 @@ def player_selection_change_callback(player)
         
         // Update the auto button's list. Do this after player_add_to_history
         // so that the full word isn't found again
-        if player.has_ability["Similar"]:
+        if player.has_ability["Scry Remixes"]:
             const previously_available = size(player.auto_list)
             player.auto_list = find_short_words_from_selection()            
             if player.auto_uses_left and size(player.auto_list) > 5 and not previously_available:
-                def sound():
-                    play_sound({sound: auto_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
-                delay(sound, 5)
+                delay(play_sound, 5, {sound: auto_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
 
         return true
 
@@ -188,7 +186,7 @@ def player_emphasize_history_word(player, word, duration default 30):
         for entry in list:
             if entry.word == word:
                 entry.emphasize_frame = game_frames + duration
-                play_sound(select_tile_sound, false, 150%, ∅, 40%)
+                play_sound({sound:select_tile_sound, volume:150%, pitch:40%})
                 return
         
     assert(false, "Could not find " + word + " which should already be in history")
@@ -457,10 +455,10 @@ def player_reset_match(player, game_type, board_string default ∅):
     player.history.scroll_history_size = 0
     player.auto_list = ∅
     player.auto_uses_left = (
-        if player.has_ability["Auto × 4"] then 4
-        else (if player.has_ability["Auto × 3"] then 3
-        else (if player.has_ability["Auto × 2"] then 2
-        else (if player.has_ability["Auto"] then 1 else 0))))
+        if player.has_ability["Remix × 4"] then 4
+        else (if player.has_ability["Remix × 3"] then 3
+        else (if player.has_ability["Remix × 2"] then 2
+        else (if player.has_ability["Remix"] then 1 else 0))))
     
     if board_string:
         

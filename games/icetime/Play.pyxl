@@ -84,7 +84,7 @@ enter
 ───────────────────────────────────────────────────────────────────────────────
 
 lastPuckMoveTime = lastBump = lastChop = 0
-skateLoopSound = play_sound(skateAudioClip, true, 120%)
+skateLoopSound = play_sound({sound:skateAudioClip, loop:true, volume:120%})
 
 
 

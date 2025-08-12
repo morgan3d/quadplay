@@ -33,7 +33,7 @@ let background_audio
 def play_background_sound(sound, volume default 100%):
     if not background_audio or background_audio.sound ≠ sound:
         stop_audio(background_audio)
-        background_audio = play_sound(sound, true, volume)
+        background_audio = play_sound({sound: sound, loop: true, volume: volume})
 
 
 def draw_rainbow_screen_border() preserving_transform:
