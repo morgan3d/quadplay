@@ -41,7 +41,7 @@ let score_color
 // change music between title, pause, and play modes
 // then we'd have to save the handle this returns
 // to be able to stop the looping sound.
-play_sound(music, true)
+play_sound({sound: music, loop: true})
 
       
 // Increase the score and animate it shaking

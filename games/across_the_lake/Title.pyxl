@@ -4,7 +4,7 @@ Title
 
 init
 ────────────────────────────────────────────────────────────────────────
-play_sound(BGM, true)
+play_sound({sound: BGM, loop: true})
 
 //continuously_set_screen_size_to_window("x", 384, 224)
 

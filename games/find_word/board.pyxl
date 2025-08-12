@@ -329,7 +329,11 @@ def board_deselect_all(board, player):
 
 /* Adjusts the pan for the index */
 def _board_play_sound(sound, volume, pitch, index):
-    play_sound({sound:sound, volume:volume, pan:if index then (index.x + 1) / (COLS + 1) else ∅, pitch:pitch})
+    play_sound({
+        sound: sound,
+        volume: volume,
+        pan: if index then (index.x + 1) / (COLS + 1) else ∅,
+        pitch: pitch})
     
 
 

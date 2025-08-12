@@ -84,7 +84,7 @@
         "auto_find_sound": "quad://sounds/explode-12.sound.json",
         "auto_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.350",
+    "version": "0.352",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
