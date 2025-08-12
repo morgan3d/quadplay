@@ -3,6 +3,8 @@ Title
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
 todo("Warn user to back up save game file")
+todo("Can't access pause menu via P")
+todo("Entering kiosk mode breaks everything")
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
@@ -212,8 +214,13 @@ if player.has_achievement["Play Solo Match"]:
 
 
 // Logo
-draw_sprite({sprite: logo_sprite, pos: xy(SCREEN_SIZE.x - 32 + slide, 20), z: -0.6})
-
+local:
+    const pos = xy(SCREEN_SIZE.x - 32 + slide, 20)
+    draw_sprite({sprite: logo_sprite, pos: pos, z: -0.6})
+    if touch.pressed_a and overlaps(touch.xy, {pos: pos, size: logo_sprite.sprite_size}):
+        pause_menu("Credits")
+        
+    
 // Avatar
 local:
     const region = {pos: xy(SCREEN_SIZE.x - 32 + slide, SCREEN_SIZE.y - 36), size: xy(32, 32)}

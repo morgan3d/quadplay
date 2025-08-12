@@ -117,8 +117,8 @@ def draw_content():
     if player.has_ability["Total Matches Stat"]:
         y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
     
-    if player.has_ability["Unique Words Stat"]:
-        y += draw_row(y, "Unique Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
+    if player.has_ability["Discovered Words Stat"]:
+        y += draw_row(y, "Discovered Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
     
     y += 5
     if player.has_ability["Words/Match Stat"]:
@@ -146,8 +146,8 @@ def draw_content():
                 x_align: "left"}).height + 2
                 
     
-    if player.has_ability["Unique Words Stat"]:
-        y += draw_section_title(y, "Unique Words")
+    if player.has_ability["Discovered Words Stat"]:
+        y += draw_section_title(y, "Discovered Words")
         
         for text in vocabulary_text_array:
             y += draw_text({

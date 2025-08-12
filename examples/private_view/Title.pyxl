@@ -13,9 +13,12 @@ def create_game():
 
 let choice_index = 0
 
+def join_game():
+    pause_menu("Online -> Guest")
+
 const choice_array = [
     {text: "Create Game", callback: create_game},
-    {text: "Join Game", callback: push_guest_menu_mode},
+    {text: "Join Game", callback: join_game},
     {text: "Quit", callback: quit_game}
 ]
 

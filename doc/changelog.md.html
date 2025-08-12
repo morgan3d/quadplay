@@ -13,19 +13,22 @@ of [<quadplay/>](manual.md.html).
 - IDE improvements:
   - New Find in files (grep) feature
   - Code editor now has a custom context (right click) menu
-  - Added Go to Definition
+  - Added Go to Definition to the context menu
   - Added Preview Export action in the Tools menu
 - API and language changes:
   - `evaluate_constant_expression()`
   - `penultimate_value()`
+  - `pause_menu()`
+  - `string_compress()` 
+  - `string_decompress()`
+  - `device_control("get_mouse_state")` now includes mouse `wheel` dxy values
   - `local_time()` and `utc_time()` are now constant throughout a frame
   - `remove_values()` now accepts an optional comparator
   - `contains()` and `find()` now accept a string or integer as a comparator key
-  - Removed long-deprecated `is_NaN()`
   - PyxlScript now supports general-purpose `pop_mode` handlers with no `from` clause
-  - `string_compress()` and `string_decompress()`
-  - `device_control("get_mouse_state")` now includes mouse `wheel` dxy values
   - Increased `save_local()` size per key to 32,768 characters from 16,384
+  - Removed long-deprecated `is_NaN()`
+  - Removed `push_guest_menu_mode()`
 - Libraries:
   - `cursor_lib.pyxl` now includes scroll box support
 - Assets:

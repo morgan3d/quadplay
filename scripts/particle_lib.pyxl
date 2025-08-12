@@ -12,7 +12,7 @@ def make_particles(time_rate default 100%):
 
     
 def particles_spawn(particle_array, pos, vel, color, z, frames):
-    assert(is_number(z) and not is_NaN(z))
+    assert(is_number(z) and not is_nan(z))
     // Create a single moving particle and add it to the global array
     const p = push(particle_array, {pos: xy(pos), vel: xy(vel), color: rgba(color), z: z, frames: frames})
 

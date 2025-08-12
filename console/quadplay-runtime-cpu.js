@@ -54,6 +54,7 @@ var $Math = Math;
 var $performance = performance;
 
 // Used by games without the IDE to trigger the system menu as if P was pressed
+// from the P button
 var $goToSystemMenu = false;
 
 // If non-nil and matches the current mode, then the Copy Host
@@ -10358,11 +10359,24 @@ function reset_game() {
     throw {reset_game:1};
 }
 
-/* Called by games from the runtime to force the local player into the 
-   system menu for online */
-function push_guest_menu_mode() {
-    push_mode(push_guest_menu_mode.$OnlineMenu, undefined, true);
+
+function pause_menu(submenu) {
+    const push = {
+        undefined:      {mode: pause_menu.$SystemMenu, args: []},
+        "Credits":      {mode: pause_menu.$GameCredits, args: []},
+        "Controllers":  {mode: pause_menu.$ControlsMenu, args: []},
+        "Online":       {mode: pause_menu.$OnlineMenu, args: [undefined, false]},
+        "Online -> Guest": {mode: pause_menu.$OnlineMenu, args: [undefined, true]},
+    }[submenu];
+
+    if (! push) { 
+        $error('Illegal submenu "' + submenu + '"');
+    }
+
+    push_mode(push.mode, ...push.args);
 }
+
+
 
 function pop_mode(...args) {
     if ($modeStack.length === 0) { $error('Cannot pop_mode() from a mode entered by set_mode()'); }

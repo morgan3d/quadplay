@@ -1473,11 +1473,6 @@ Modes
   compared against mode names, but not to `set_mode`, which requires an
   explicit mode name. during mode initialization, `get_mode()` returns `nil`.
 
-`launch_game(url)`
-: Load a different game. This is primarily used by the built-in
-  <quadplay/> launcher, but is available to all programs. This may be
-  removed in version 1.0.
-
 `pop_mode()`
 : Go back to the previous mode that invoked `push_mode`, restoring the
   draw calls and `mode_frames` as of that point. It is a runtime error
@@ -1491,6 +1486,18 @@ Modes
   inventory screens, and dialogue. Does not invoke the `leave` section of
   the current mode. Does invoke the `enter` section of the mode being entered.
   Any arguments after the `Mode` are passed to the `enter` section.
+
+`pause_menu(choice default nil)`
+: Immediately enter the pause menu mode, as if the player had pressed P. If `choice` is
+  not nil, then that mode is selected directly from the pause menu. Accepted values
+  for `choice` are:
+
+  - `"Online"`
+  - `"Online -> Guest"`
+  - `"Credits"`
+  - `"Controllers"`
+
+  When control returns to the mode, it is through the `pop_mode` event.
 
 `quit_game()`
 : Quit the game and exit to the IDE or the launcher, or close the tab depending on
@@ -4678,9 +4685,14 @@ state synchronization or messages. Those are still handled automatically for you
 : Stop hosting as soon as possible.
   Check `gamepad_array[0].status != "host"` to see when hosting has ended.
 
-`push_guest_menu_mode()`
+`pause_menu("Online")`
+: Show the system's pause menu option for online play, as if the player
+  had pressed P and then selected Online.
+
+`pause_menu("Online -> Guest")`
 :  Show the menu for connecting to hosts and changing your own name
-   if the `--offline` flag was not set.
+   if the `--offline` flag was not set, as if the player had pressed P
+   and then selected Online and then selected Visit a New Host.
    If the player connects to a host, then the local game remains paused. 
    See also `start_hosting()`
   

@@ -1589,7 +1589,10 @@ return $Object.freeze({$type:'mode', $enter:$enter, $frame:$frame, $pop_modeFrom
     // Set the initial mode
     const start_mode = (gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode) || gameSource.json.start_mode
     // Expose to the runtime
-    compiledProgram += 'push_guest_menu_mode.$OnlineMenu = $OnlineMenu; ';
+    compiledProgram += 'pause_menu.$OnlineMenu = $OnlineMenu; ';
+    compiledProgram += 'pause_menu.$GameCredits = $GameCredits; ';
+    compiledProgram += 'pause_menu.$SystemMenu = $SystemMenu; ';
+    compiledProgram += 'pause_menu.$ControlsMenu = $ControlsMenu; ';
     compiledProgram += `
 function $start_program() {
     $play_start_animation.active = false;

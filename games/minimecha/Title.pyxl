@@ -15,6 +15,10 @@ def start_online():
     start_hosting()
     start_2P()
     
+
+def join_game():
+    pause_menu("Online -> Guest")
+
     
 const menu_tree = make_menu("root", [
     make_menu(
@@ -24,7 +28,7 @@ const menu_tree = make_menu("root", [
     make_menu(
         "Online",
             [make_menu("Host", start_online),
-             make_menu("Join", push_guest_menu_mode),
+             make_menu("Join", join_game),
             "Back"]),
     make_menu(
         "Quit", quit_game)])
