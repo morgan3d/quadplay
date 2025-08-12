@@ -226,7 +226,6 @@ for view in VIEW_ARRAY:
     set_transform(view.corner)
     draw(view)
 
-
 // Input processing
 if current_index < 4:
     for gamepad in gamepad_array:

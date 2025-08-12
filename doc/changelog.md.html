@@ -6,10 +6,9 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
-2025 August TBD
+2025 August 13
 ===================================
 
-- New game: "Find Word Alll Nite" by Shmuel
 - IDE improvements:
   - New Find in files (grep) feature
   - Code editor now has a custom context (right click) menu
@@ -19,7 +18,7 @@ of [<quadplay/>](manual.md.html).
   - `evaluate_constant_expression()`
   - `penultimate_value()`
   - `pause_menu()`
-  - `string_compress()` 
+  - `string_compress()`
   - `string_decompress()`
   - `device_control("get_mouse_state")` now includes mouse `wheel` dxy values
   - `local_time()` and `utc_time()` are now constant throughout a frame
@@ -27,8 +26,9 @@ of [<quadplay/>](manual.md.html).
   - `contains()` and `find()` now accept a string or integer as a comparator key
   - PyxlScript now supports general-purpose `pop_mode` handlers with no `from` clause
   - Increased `save_local()` size per key to 32,768 characters from 16,384
-  - Removed long-deprecated `is_NaN()`
-  - Removed `push_guest_menu_mode()`
+  - Removed `push_guest_menu_mode()` [use `pause_menu("Online -> Guest")`]
+  - Removed long-deprecated `is_NaN()` [use `is_nan()`]
+  - Removed long-in-beta `launch_game()`
 - Libraries:
   - `cursor_lib.pyxl` now includes scroll box support
 - Assets:
