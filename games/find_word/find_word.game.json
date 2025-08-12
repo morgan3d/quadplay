@@ -1414,10 +1414,10 @@
                     "type": "boolean",
                     "value": false
                 },
-                "GRANT_ALL_ABILITIES": {
-                    "type": "boolean",
-                    "value": false,
-                    "description": "Erases and then levels up to allow seeing all notifications."
+                "FORCE_LEVEL": {
+                    "type": "number",
+                    "value": "0",
+                    "description": "If non-zero, forces the player to this level"
                 }
             }
         },

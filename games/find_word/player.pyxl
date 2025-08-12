@@ -147,7 +147,7 @@ def player_selection_change_callback(player)
         
         // Update the auto button's list. Do this after player_add_to_history
         // so that the full word isn't found again
-        if player.has_ability["Auto"]:
+        if player.has_ability["Similar"]:
             const previously_available = size(player.auto_list)
             player.auto_list = find_short_words_from_selection()            
             if player.auto_uses_left and size(player.auto_list) > 5 and not previously_available:
@@ -457,9 +457,10 @@ def player_reset_match(player, game_type, board_string default ∅):
     player.history.scroll_history_size = 0
     player.auto_list = ∅
     player.auto_uses_left = (
-        if player.has_ability["Auto × 3"] then 3
+        if player.has_ability["Auto × 4"] then 4
+        else (if player.has_ability["Auto × 3"] then 3
         else (if player.has_ability["Auto × 2"] then 2
-        else (if player.has_ability["Auto"] then 1 else 0)))
+        else (if player.has_ability["Auto"] then 1 else 0))))
     
     if board_string:
         

@@ -3,7 +3,6 @@ Title
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
 todo("Warn user to back up save game file")
-todo("Can't access pause menu via P on touch screen")
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅

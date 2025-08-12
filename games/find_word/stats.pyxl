@@ -210,8 +210,8 @@ def encode_xp(xp):
         
 /* Used for lightly protecting the saved value from casual abuse via a checksum */
 def decode_xp(str):
-    if DEBUG.GRANT_ALL_ABILITIES:
-        return 60000
+    if DEBUG.FORCE_LEVEL:
+        return level_to_xp(DEBUG.FORCE_LEVEL)
     
     if type(str) ≠ "string":
         // Was not properly encoded

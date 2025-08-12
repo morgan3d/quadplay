@@ -175,7 +175,7 @@ sort(vocab)
 
 // Decode and accumulate by first letter
 const text_array = []
-let letter = vocab[0][0]
+let letter = if size(vocab) then vocab[0][0] else ∅
 let array = []
 for word in vocab:
     if word[0] ≠ letter:

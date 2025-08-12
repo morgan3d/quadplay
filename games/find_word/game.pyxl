@@ -195,9 +195,12 @@ def draw_round_selection(pos, radius):
 
 
 
-/* If `activate_callback` is ∅, the button is drawn disabled.
+/* If `activate_callback` is ∅, then the button is drawn disabled.
 
    `name` is a unique identifier
+   
+   If `sprite` is ∅, do not draw the button
+   
    Returns the button region. */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
     
@@ -219,7 +222,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
     
     if handle_ability_button.selected_button ≠ name:
         // NOT selected
-        draw_disk(region.pos, radius, if enabled then #EEE else DISABLED_ABILITY_COLOR)
+        draw_disk(region.pos, radius, if sprite then (if enabled then #EEE else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
@@ -227,8 +230,9 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         color: if handle_ability_button.selected_button == name then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
         outline: if handle_ability_button.selected_button == name then rgba(CURSOR_COLOR, 50%) else ∅,
         text: caption})
-            
-    draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
+    
+    if sprite:     
+        draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
     // Special case for the auto button, where the sprite itself shows a number
     if name == "Auto" and size(player.auto_list):
@@ -293,10 +297,16 @@ def handle_buttons(
             else if not player.has_achievement["Exit Free Mode"] and get_mode() == FreeMode:
                 draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
                 
-    
-        if player.has_ability["Auto"]:
+        // The "Similar" display becomes the "Auto" button when active
+        if player.has_ability["Similar"]:
             todo("Bug: Auto button disappears when used until mouse moves")
-            handle_ability_button(1, "Auto", "Auto×" + player.auto_uses_left, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
+            handle_ability_button(
+                1,
+                "Auto",
+                if not player.has_ability["Auto"] then "Similar" else "Auto×" + player.auto_uses_left,
+                if player.has_ability["Auto"] then auto_sprite else ∅,
+                if player.has_ability["Auto"] and auto_callback then "(d)" else ∅,
+                if player.has_ability["Auto"] then auto_callback else ∅)
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {

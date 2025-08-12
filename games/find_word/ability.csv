@@ -1,7 +1,7 @@
 name,level,description,sprite_name
 Stats Tracker,2,You now have a Stats tracker for your XP!,stats_sprite[0][0]
 See Moo,2,SILENT,
-Rotate,2,New ability: Rotate the board for a new perspective,aux_icon.rotate
+Rotate,2,New power: Rotate the board for a new perspective,aux_icon.rotate
 Most Words Stat,3,Most Words per match is now available in Stats!,stats_sprite[0][0]
 Friend of Moo,3,"`Hi I'm Moo, Let's Be Friends!'",avatar_sprite[34][22].x_flipped
 High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprite[0][0]
@@ -19,12 +19,14 @@ Words/Match Stat,13,Average Words per Match is now available in Stats!,stats_spr
 Points/Match Stat,14,Average Points per Match is now available in Stats!,stats_sprite[0][0]
 Avatar (TODO) 5,14,New avatars (TODO),avatar_sprite[47][12].x_flipped
 Total Words Stat,15,Total Words count is now available in Stats!,stats_sprite[0][0]
-Free Mode,16,New ability: Use Free Mode to make one unordered sequence per match,ability_icon.free_mode
+Free Mode,16,New abpowerility: Use Free Mode to make one unordered sequence per match,ability_icon.free_mode
 Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprite[0][0]
+Similar,18,"Count previously-discovered short words to find within your last word",ability_icon.auto_find,
 Avatar (TODO) 6,18,New avatars (TODO),avatar_sprite[43][6].x_flipped
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Avatar (TODO) 7,20,New avatars (TODO),avatar_sprite[39][14].x_flipped
 Know Word Count,21,You can now see the total number of possible words while playing!,<default>
-Auto,22,"New ability: 1x per match, auto-find short words within your previous word (if found before)",ability_icon.auto_find,
-Auto × 2,24,"New ability: Use Auto 2x per match",ability_icon.auto_find,
-Auto × 3,26,"New ability: Use Auto 3x per match",ability_icon.auto_find
+Auto,22,"New power: 1x per match, auto-find Similar words",ability_icon.auto_find
+Auto × 2,24,"New power: Use Auto 2× per match",ability_icon.auto_find
+Auto × 3,26,"New power: Use Auto 3× per match",ability_icon.auto_find
+Auto × 4,32,"New power: Use Auto 4× per match",ability_icon.auto_find
