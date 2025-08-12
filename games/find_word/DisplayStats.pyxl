@@ -54,6 +54,19 @@ def draw_trend_row(y, caption, format, lifetime, today, color, highlight_color):
 
 
 
+def draw_section_title(y, title):
+    return draw_text({
+        pos: xy(½ SCREEN_SIZE.x, y + 10),
+        color: HIGHLIGHT_COLOR,
+        outline: #000,
+        font: leaderboard_font,
+        text: title,
+        wrap_width: WIDTH - 20,
+        y_align: "top",
+        x_align: "center"}).height + 20
+        
+        
+        
 def draw_content():
     const lifetime = player.stats.lifetime
     const today    = player.stats[today_date_string()] default make_empty_stats_entry()
@@ -96,7 +109,7 @@ def draw_content():
         y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
     
     y += 5
-    y += draw_row(y, "XP",           format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
+    y += draw_row(y, "XP", format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
     
     if player.has_ability["Total Words Stat"]:
         y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"), TABLE_ALT_ROW_COLOR)
@@ -114,19 +127,27 @@ def draw_content():
     if player.has_ability["Points/Match Stat"]:
         y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
     
-    todo("** Show level ability unlocks here **")
+    y += draw_section_title(y, "Abilities Earned")
+
+
+    let count = 0
+    for entry at name in ABILITY_TABLE:
+        if player.has_ability[name] and entry.description ≠ "SILENT":
+            ++count
+            y += draw_text({
+                pos: xy(½ SCREEN_SIZE.x - 36, y),
+                color: if count mod 2 then TABLE_ALT_ROW_COLOR else #FFF,
+                outline: #000,
+                font: leaderboard_font,
+                text: name,
+                wrap_width: WIDTH - 20,
+                markup: true,
+                y_align: "top",
+                x_align: "left"}).height + 2
+                
     
     if player.has_ability["Unique Words Stat"]:
-        y += 10
-        y += draw_text({
-            pos: xy(½ SCREEN_SIZE.x, y),
-            color: HIGHLIGHT_COLOR,
-            outline: #000,
-            font: leaderboard_font,
-            text: "Unique Words",
-            wrap_width: WIDTH - 20,
-            y_align: "top",
-            x_align: "center"}).height + 10
+        y += draw_section_title(y, "Unique Words")
         
         for text in vocabulary_text_array:
             y += draw_text({
