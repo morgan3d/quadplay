@@ -21,12 +21,12 @@ Avatar (TODO) 5,14,New avatars (TODO),avatar_sprite[47][12].x_flipped
 Total Words Stat,15,Total Words count is now available in Stats!,stats_sprite[0][0]
 Free Mode,16,New abpowerility: Use Free Mode to make one unordered sequence per match,ability_icon.free_mode
 Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprite[0][0]
-Scry Remixes,18,"See the number of previously-discovered short words using the tiles of your last word",ability_icon.auto_find
+Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.auto_find
 Avatar (TODO) 6,18,New avatars (TODO),avatar_sprite[43][6].x_flipped
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Avatar (TODO) 7,20,New avatars (TODO),avatar_sprite[39][14].x_flipped
 Scry Word Count,21,You can now see the total number of possible words while playing!,<default>
-Remix,22,"New power: 1x per match, auto-find all previously-discovered remixes of your last word",ability_icon.auto_find
+Remix,22,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.auto_find
 Remix × 2,24,"New power: Use Remix 2× per match",ability_icon.auto_find
 Remix × 3,26,"New power: Use Remix 3× per match",ability_icon.auto_find
 Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.auto_find
