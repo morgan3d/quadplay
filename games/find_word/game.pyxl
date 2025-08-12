@@ -296,7 +296,7 @@ def handle_buttons(
     
         if player.has_ability["Auto"]:
             todo("Bug: Auto button disappears when used until mouse moves")
-            handle_ability_button(1, "Auto", "Auto x" + player.auto_uses_left, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
+            handle_ability_button(1, "Auto", "Auto×" + player.auto_uses_left, auto_sprite, if auto_callback then "(d)" else ∅, auto_callback)
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {
