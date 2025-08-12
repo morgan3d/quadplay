@@ -298,7 +298,7 @@ def handle_buttons(
             handle_ability_button(
                 1,
                 "Remix",
-                if player.has_ability["Remix × 2"] then "Remix × 2" + player.auto_uses_left else "Remix",
+                if player.has_ability["Remix × 2"] then "Remix × " + player.auto_uses_left else "Remix",
                 if player.has_ability["Remix"] then auto_sprite else ∅,
                 if player.has_ability["Remix"] and auto_callback then "(d)" else ∅,
                 if player.has_ability["Remix"] then auto_callback else ∅)
