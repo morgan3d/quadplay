@@ -39,7 +39,7 @@ def make_anim_entity(
     frame_func = frame_func default on_duration
 
     lifetime = lifetime default animation.frames
-    assert(not is_NaN(lifetime))
+    assert(not is_nan(lifetime))
 
     def frame_advance(framesLeft, lifetime):
         new_ent.sprite = array_value(animation, new_ent.anim_current_frame)

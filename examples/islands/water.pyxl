@@ -96,7 +96,7 @@ def make_water(size):
 
 /* Create a vertical displacement by δ of the water in a disk of the given radius. */
 def water_disturb(water, pos, δ, radius default 0, num_particles default 0.3, particle_color default #CFF):
-    assert(is_number(pos.x) and not is_NaN(pos.x))
+    assert(is_number(pos.x) and not is_nan(pos.x))
     const x = round(pos.x)
     const y = round(pos.y)
     

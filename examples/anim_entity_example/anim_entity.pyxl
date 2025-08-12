@@ -80,7 +80,7 @@ def anim_entity_make(
     mode_to_play_in = mode_to_play_in default "all"
 
     // assert that the animation has a valid duration
-    assert(not is_NaN(lifetime))
+    assert(not is_nan(lifetime))
 
     def frame_advance(framesLeft, lifetime):
         new_ent.sprite = array_value(

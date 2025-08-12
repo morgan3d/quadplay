@@ -788,7 +788,7 @@ def _dice_preroll_simulate(dice):
             const tumble_axis = direction(xyz(-die.vel.y, die.vel.x, 30% die.vel.x))
             const R = mat3x3_from_axis_angle(tumble_axis, 150 deg ‖die.vel‖ / |die.size.x * die.scale.x|)
             die.rotation = mat3x3_mul(R, die.rotation, true)
-            assert(not is_NaN(die.pos.x) and not is_NaN(die.rotation[0][0]))
+            assert(not is_nan(die.pos.x) and not is_nan(die.rotation[0][0]))
 
             const [axis, angle] = mat3x3_to_axis_angle(die.rotation)
             const state = {pos:xy(die.pos), axis: axis, angle: angle}

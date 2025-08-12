@@ -14,9 +14,9 @@ let sectionFont
 let bodyFont
 
 def max_not_nan(a, b):
-    if is_NaN(a):
+    if is_nan(a):
         return b
-    else if is_NaN(b):
+    else if is_nan(b):
         return a
     else:
         return max(a, b)
