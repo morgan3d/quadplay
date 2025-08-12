@@ -97,7 +97,7 @@ let allow_bloom = true;
 
 function enterKioskMode() {
     inPageReload = true;
-    location = location.origin + location.pathname + '?kiosk=1';
+    location = location.origin + location.pathname + '?kiosk=1&game=' + getQueryString('game');
 }
 
 
@@ -1238,7 +1238,7 @@ function onPlayButton(slow, skipStartAnimation, args, callback) {
             if (savesPending === 0) {
                 // Force a reload of the game
                 console.log('Reloading in case of external changes.')
-                loadGame(window.gameURL, doPlay, false);
+                loadGameAndConfigureUI(window.gameURL, doPlay, false);
             } else {
                 onStopButton();
                 if (pendingSaveCallbacks.length > 0 || ! alreadyInPlayButtonAttempt) {
@@ -2655,7 +2655,7 @@ function onOpenGameOpen() {
             history.replaceState({}, 'quadplay', url.replace('app.html', 'quadplay.html'));
         }
             
-        loadGame(game_url, function () {
+        loadGameAndConfigureUI(game_url, function () {
             hideOpenGameDialog();
             onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
 
@@ -2693,7 +2693,7 @@ let emwaFrameTime = 0;
 /* Load the quadplay "OS" */
 function goToLauncher() {
     onStopButton(false, true);
-    loadGame(launcherURL, function () {
+    loadGameAndConfigureUI(launcherURL, function () {
         onResize();
         // Prevent the boot animation
         onPlayButton(false, true);
@@ -2834,7 +2834,7 @@ function mainLoopStep() {
             }
         } else if (e.launch_game !== undefined) {
             console.log('Loading because launch_game() was called.');
-            loadGame(e.launch_game, function () {
+            loadGameAndConfigureUI(e.launch_game, function () {
                 onResize();
                 onPlayButton(false, true, e.args);
             });
@@ -4085,7 +4085,7 @@ function importSaveGame(event) {
     If noUpdateCode is true, do not update code editors. This is used to
     prevent cursor jump when that file is itself being further updated
     by typing in the editor. */
-function loadGame(url, callback, loadFast, noUpdateCode) {
+function loadGameAndConfigureUI(url, callback, loadFast, noUpdateCode) {
     const oldVersionControl = gameSource && gameSource.versionControl;
     
     // Hide these menu items until we know if they are needed
@@ -4156,7 +4156,7 @@ function loadGame(url, callback, loadFast, noUpdateCode) {
         const startTime = performance.now();
         onLoadFileStart(url);
 
-        afterLoadGame(url, function () {
+        loadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
             page.document.title = gameSource.extendedJSON.title;
@@ -4478,7 +4478,7 @@ window.addEventListener('focus', function() {
             // Regained focus while stopped and in the IDE. Reload in case
             // anything changed on disk
             console.log('Reloading because the browser regained focus in the IDE.');
-            loadGame(window.gameURL, null, true);
+            loadGameAndConfigureUI(window.gameURL, null, true);
         }
     }
 }, false);
@@ -4818,7 +4818,7 @@ reloadRuntime(function () {
     }
 
     console.log('Loading because of initial page load.');
-    loadGame(url, function () {
+    loadGameAndConfigureUI(url, function () {
         
         // Set screen mode after checking for mobile_touch_gamepad in the game
         if (getQueryString('kiosk') !== '1') {

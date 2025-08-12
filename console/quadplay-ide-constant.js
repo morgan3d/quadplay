@@ -764,7 +764,7 @@ function showNewDistributionKeyDialog(parentKey) {
 
             // Reload
             serverSaveGameJSON(function () {
-                loadGame(window.gameURL, function () {
+                loadGameAndConfigureUI(window.gameURL, function () {
                     // Select the same parent
                     onProjectSelect(document.getElementById('projectConstant_' + parentKey), 'constant', parentKey);
                 }, true);
@@ -960,7 +960,7 @@ function onNewConstantCreate(parentKey) {
 
     // Reload
     serverSaveGameJSON(function () {
-        loadGame(window.gameURL, function () {
+        loadGameAndConfigureUI(window.gameURL, function () {
             const k = parentKey ? parentKey.replace(/\..+/, '') : key;
                 
             // Select the new constant
@@ -974,7 +974,7 @@ function onRemoveConstant(key) {
     if (confirm('Remove constant \'' + key + '\' from this project?')) {
         delete gameSource.json.constants[key];
         serverSaveGameJSON(function () {
-            loadGame(window.gameURL, null, true);
+            loadGameAndConfigureUI(window.gameURL, null, true);
         });
     }
 }
@@ -984,7 +984,7 @@ function onEditConstantMetadata(key) {
     /*
     // Reload
     serverSaveGameJSON(function () {
-        loadGame(window.gameURL, function () {
+        loadGameAndConfigureUI(window.gameURL, function () {
             // Select
             onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
         });
@@ -1008,7 +1008,7 @@ function onEditConstantDescription(constantName) {
         gameSource.json.constants[constantName] = json;
         
         serverSaveGameJSON(function () {
-            loadGame(window.gameURL, function () {
+            loadGameAndConfigureUI(window.gameURL, function () {
                 // Select
                 onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
             }, true);
@@ -1038,7 +1038,7 @@ function onRenameConstant(constantName) {
             delete gameSource.json.constants[constantName];
             
             serverSaveGameJSON(function () {
-                loadGame(window.gameURL, function () {
+                loadGameAndConfigureUI(window.gameURL, function () {
                     // Select the renamed asset
                     onProjectSelect(document.getElementById('projectConstant_' + newName), 'constant', newName);
                 }, true);

@@ -183,7 +183,7 @@ function onImportAssetImport() {
         // Save the new JSON file, and then reload the game
         serverWriteFile(jsonAbsoluteURL, 'utf8', WorkJSON.stringify(json, undefined, 4), function () {
             serverSaveGameJSON(function () {
-                loadGame(window.gameURL, function () {
+                loadGameAndConfigureUI(window.gameURL, function () {
                     // Show the new object
                     onProjectSelect(document.getElementById('projectAsset_' + name), 'asset', gameSource.assets[name]);
                 }, true);
@@ -196,7 +196,7 @@ function onImportAssetImport() {
         gameSource.json.assets[name] = url;
     
         // Save and reload the game
-        serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
+        serverSaveGameJSON(function () { loadGameAndConfigureUI(window.gameURL, null, true); });
     }
 
     hideImportAssetDialog();
@@ -556,7 +556,7 @@ function createNewAssetFromTemplate(assetName, gamePath, fileName, type, dataTyp
                     // Save the game
                     serverSaveGameJSON(function () {
                         // Reload the game
-                        loadGame(window.gameURL, function () {
+                        loadGameAndConfigureUI(window.gameURL, function () {
                             // Select the new asset
                             onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName]);
                         }, true);
@@ -655,7 +655,7 @@ function onCloneAssetCreate() {
                     
                     // Save and reload game JSON
                     serverSaveGameJSON(function () {
-                        loadGame(window.gameURL, function () {
+                        loadGameAndConfigureUI(window.gameURL, function () {
                             // Select the renamed asset
                             onProjectSelect(document.getElementById('projectAsset_' + dstAssetName), 'asset', gameSource.assets[dstAssetName]);
                         }, true);
@@ -734,7 +734,7 @@ function onRenameAsset(assetName) {
             delete gameSource.json.assets[assetName];
             
             serverSaveGameJSON(function () {
-                loadGame(window.gameURL, function () {
+                loadGameAndConfigureUI(window.gameURL, function () {
                     // Select the renamed asset
                     onProjectSelect(document.getElementById('projectAsset_' + newName), 'asset', gameSource.assets[newName]);
                 }, true);
@@ -750,7 +750,7 @@ function onRemoveAsset(key) {
     if (confirm('Remove asset \'' + key + '\' from this project?')) {
         delete gameSource.json.assets[key];
         serverSaveGameJSON(function () {
-            loadGame(window.gameURL, null, true);
+            loadGameAndConfigureUI(window.gameURL, null, true);
         });
     }
 }

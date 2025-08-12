@@ -589,7 +589,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
                             } else if (url.endsWith('.sprite.json')) {
                                 // Reload the game to pick up the new sprite, and then
                                 // reselect
-                                loadGame(window.gameURL, function () {
+                                loadGameAndConfigureUI(window.gameURL, function () {
                                     // (for a spritesheet in a map, it has a dot in it)
                                     const assetName = session.aux.assetName;
 
@@ -617,7 +617,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
                                 const NO_UPDATE_EDITORS = true;
                                 
                                 // Reload the game
-                                loadGame(window.gameURL, function () {
+                                loadGameAndConfigureUI(window.gameURL, function () {
                                     // Update the IDE view
                                     visualizeGame(document.getElementById('gameEditor'), url, gameSource.json)
                                 }, RELOAD_FAST, NO_UPDATE_EDITORS);
@@ -893,7 +893,7 @@ leave
     serverWriteFiles([{filename: modeFilename, contents: modeContents, encoding: 'utf8'},
                       {filename: gameFilename, contents: gameContents, encoding: 'utf8'}],
                      function () {
-        loadGame(window.gameURL, function () {
+        loadGameAndConfigureUI(window.gameURL, function () {
             // Find the mode in the new project and select it
             let mode;
             for (let i = 0; i < gameSource.modes.length; ++i) {
@@ -988,7 +988,7 @@ function onImportModeImport() {
     gameSource.json.modes.push(url);
     serverSaveGameJSON(function () {
         hideImportModeDialog();
-        loadGame(window.gameURL, undefined, true);
+        loadGameAndConfigureUI(window.gameURL, undefined, true);
     });
 }
 
@@ -1067,7 +1067,7 @@ function onImportScriptImport() {
     gameSource.json.scripts.push(url);
     hideImportScriptDialog();
     serverSaveGameJSON(function () {
-        loadGame(window.gameURL, undefined, true);
+        loadGameAndConfigureUI(window.gameURL, undefined, true);
     });
 }
 
@@ -1137,7 +1137,7 @@ function onNewScriptCreate() {
     serverWriteFiles([{filename: scriptFilename, contents: '// Scripts, variables, and constants here are visible to all modes\n', encoding: 'utf8'},
                       {filename: gameFilename, contents: gameContents, encoding: 'utf8'}],
                      function () {
-        loadGame(window.gameURL, function () {
+        loadGameAndConfigureUI(window.gameURL, function () {
             // Find the script in the new project and select it
             const url = gameSource.jsonURL.replace(/\/[^/]+\.game\.json$/, '\/') + name;
             const id = 'ScriptItem_' + url;
@@ -1205,7 +1205,7 @@ function onNewDocCreate() {
         serverWriteFiles([{filename: docFilename, contents: templateBody, encoding: 'utf8'},
                           {filename: gameFilename, contents: WorkJSON.stringify(gameJSON, undefined, 4), encoding: 'utf8'}],
                          function () {
-                             loadGame(window.gameURL, function () {
+                             loadGameAndConfigureUI(window.gameURL, function () {
                                  // Find the doc in the new project and select it
                                  for (let i = 0; i < gameSource.docs.length; ++i) {
                                      if (gameSource.docs[i].name === name) {
@@ -1297,7 +1297,7 @@ function onImportDocImport() {
     gameSource.json.docs.push(url);
     hideImportDocDialog();
     serverSaveGameJSON(function () {
-        loadGame(window.gameURL, undefined, true);
+        loadGameAndConfigureUI(window.gameURL, undefined, true);
     });
 }
 
@@ -1630,7 +1630,7 @@ function onRemoveMode(modeName) {
         }
     }
     
-    serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
+    serverSaveGameJSON(function () { loadGameAndConfigureUI(window.gameURL, null, true); });
 }
 
 
@@ -1674,7 +1674,7 @@ function onRenameMode(modeName) {
         console.assert(gameSource.jsonURL);
         console.assert(window.gameURL);
         serverSaveGameJSON(function () {
-            loadGame(window.gameURL, deleteOldFile, true);
+            loadGameAndConfigureUI(window.gameURL, deleteOldFile, true);
         });
     }
 
@@ -1692,7 +1692,7 @@ function onMoveScript(scriptURL, deltaIndex) {
     const old = gameSource.json.scripts[index];
     gameSource.json.scripts[index] = gameSource.json.scripts[index + deltaIndex];
     gameSource.json.scripts[index + deltaIndex] = old;
-    serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
+    serverSaveGameJSON(function () { loadGameAndConfigureUI(window.gameURL, null, true); });
 }
 
 
@@ -1700,7 +1700,7 @@ function onRemoveScript(scriptURL) {
     const index = gameSource.scripts.indexOf(scriptURL);
     console.assert(index !== -1);
     gameSource.json.scripts.splice(index, 1);
-    serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
+    serverSaveGameJSON(function () { loadGameAndConfigureUI(window.gameURL, null, true); });
 }
 
 
@@ -1776,7 +1776,7 @@ function onRenameScript(scriptURL) {
     function saveAndReloadProject() {
         console.assert(gameSource.jsonURL);
         serverSaveGameJSON(function () {
-            loadGame(window.gameURL, deleteOldFile, true);
+            loadGameAndConfigureUI(window.gameURL, deleteOldFile, true);
         });
     }
     
@@ -1831,7 +1831,7 @@ function onRemoveDoc(docURL) {
     const index = gameSource.docs.indexOf(docURL);
     console.assert(index !== -1);
     gameSource.json.docs.splice(index, 1);
-    serverSaveGameJSON(function () { loadGame(window.gameURL, null, true); });
+    serverSaveGameJSON(function () { loadGameAndConfigureUI(window.gameURL, null, true); });
 }
 
 

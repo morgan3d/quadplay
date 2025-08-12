@@ -4,7 +4,7 @@
    Routines for handling asynchronous loading of the game from URLs.
    The main routine is:
 
-   - `afterLoadGame`
+   - `loadGame`
 
    which schedules loading of the entire game into memory and then
    invokes a callback once all resources have been loaded.
@@ -30,7 +30,7 @@ const allowedScreenSizes = Object.freeze([
     {x: 128, y: 128},
     {x:  64, y:  64}]);
 
-// Allocated by afterLoadGame
+// Allocated by loadGame
 let loadManager = null;
 
 let lastSpriteID = 0;
@@ -230,9 +230,10 @@ function maybeRecordURLDependency(url) {
 
 
 /* Loads the game and then runs the callback() or errorCallback() */
-function afterLoadGame(gameURL, callback, errorCallback) {
+function loadGame(gameURL, callback, errorCallback) {
+    console.log('Loading ' + gameURL);
     const isLauncher = gameURL.endsWith('/console/launcher/launcher.game.json') || gameURL.endsWith('/console/launcher/') || gameURL.endsWith('/console/launcher');
-    console.assert(! inGameLoad, 'Reentrant call to afterLoadGame()!');
+    console.assert(! inGameLoad, 'Reentrant call to loadGame()!');
     //console.log('Starting game load');
     inGameLoad = true;
 
@@ -380,11 +381,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             gameJSON.screenshot_tag = gameJSON.title;
         }
        
-        // Clone for the extended version actually loaded
-        gameJSON = deep_clone(gameJSON);
-        gameSource.extendedJSON = gameJSON;
-
-        // Inject launcherGameArray constant and assets if this is the launcher
+        // Inject launcherGameArray constant and assets if this is the launcher.
+        // Do this before the JSON is cloned
         if (isLauncher) {
             gameJSON.constants.game_array = {type: 'raw', value: launcherGameArray};
             
@@ -398,6 +396,11 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 gameJSON.assets[asset_prefix + '_label'] = g.url + 'label64.png';
             }
         } // if isLauncher
+
+        // Clone for the extended version actually loaded
+        gameJSON = deep_clone(gameJSON);
+        gameSource.extendedJSON = gameJSON;
+        
 
         if (! gameJSON.scripts) { gameJSON.scripts = []; }
         if (! gameJSON.modes) { gameJSON.modess = []; }

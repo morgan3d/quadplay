@@ -73,7 +73,7 @@
 
     function writeCloseOption() {
         // Firefox can't close a window by itself
-        if (! isFirefox) {
+        if (! isFirefox && (window.opener !== null || window.history.length === 1)) {
             document.write(`<hr><div><a onclick="closeClient()">${isApple ? 'Quit' : 'Exit'}</a></div>`);
         }
     }
@@ -101,13 +101,13 @@
 
        1. appLoadingOverlay: Blocks interaction during initial load for exported games until the 
           rest of the app is loaded.  Shows a loading spinner and prevents user input via 
-          event.stopPropagation(). Removed by a loadGame() callback.
+          event.stopPropagation(). Removed by a loadGameAndConfigureUI() callback.
        2. bootScreen: Shows file loading progress during game boot. Uses monospace font with pre-formatted 
           text display. Controlled by showBootScreen(), hideBootScreen(), and appendToBootScreen() 
           functions. Styled with a dark background and light text. 
        3. appWelcomeOverlay: Forces user interaction before game start to enable audio context and 
           fullscreen on mobile. Handled by onAppWelcomeTouch() which unlocks audio and sets up initial 
-          game state. Made visible by a loadGame() callback.
+          game state. Made visible by a loadGameAndConfigureUI() callback.
        4. introControlsScreen: Shows instructions for reaching pause and controls during emulator boot 
           for exported games. Appears as an image overlay with fade in/out animation controlled by _Message.pyxl.
        5. sleepOverlay: Blocks interaction when quadplay is sleeping due to inactivity or out of focus. 
@@ -191,7 +191,7 @@
       <br/><label><input name="keyboardType" id="MiniPACKeyboardRadio" type="radio" title="Use the Ultimarc Mini PAC mapping for an arcade installation that sends keyboard commands. Only P1 has a Pause button." onclick="event.stopPropagation() || setKeyboardMappingMode('MiniPAC')" autocomplete="off">Ultimarc Mini PAC</label>
       <br/><label><input name="keyboardType" id="MAMEKeyboardRadio" type="radio" title="Use the MAME mapping for controllers that send keyboard commands. P3 and P4 only have partial support in MAME." onclick="event.stopPropagation() || setKeyboardMappingMode('MAME')" autocomplete="off">MAME Default</label>
       </div>
-      <hr>
+      <hr class="IDEOnly">
       <table style="margin: 0; padding: 0; border-collapse:collapse" class="IDEOnly">
         <tr valign="top">
           <td>
@@ -219,16 +219,9 @@
            document.write('<div class="noIDE"><a onclick="setIDEEnable(1)">Show Dev Tools (IDE)</a></div>');
         }
       </script>
-      <div><a onclick="enterKioskMode()">Enter Kiosk</a></div>
       <!--
-      <script>
-        if (! isQuadserver) {
-            document.write('<div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>');
-        }
-            </script>
-      -->
-      <!-- <div><a href="" target="_blank" title="The online quadplay✜ discord">Discord</a></div>-->
-
+      <div><a onclick="enterKioskMode()">Enter Kiosk Mode</a></div>
+    -->
       <script>if (! useIDE) { writeCloseOption(); }</script>
 
     </div>
@@ -249,7 +242,6 @@
       <br/><label title="Automatically convert text to math symbols in the code editor"><input id="automathEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Auto-math in editor</label>
       <br/><label title="Show a low-overhead profiler on the emulator screen"><input id="onScreenHUDEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">On-screen HUD</label>
       <br/><label title="When using an external editor, restart the game when the browser gains focus if not hosting (games always *reload* on focus, if stopped)"><input id="restartOnFocusEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Restart on focus</label>
-      <hr>
       <script>writeCloseOption();</script>
     </div>
 
