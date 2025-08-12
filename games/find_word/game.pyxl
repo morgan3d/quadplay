@@ -125,7 +125,7 @@ def set_hooks():
             set_screen_size(xy(384, 224))
         else if DEBUG.PORTRAIT:
             device_control("enable_feature", "custom_screen_size")
-            set_screen_size(xy(224, 484))
+            set_screen_size(xy(224, 412))
         else:
             resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
 
