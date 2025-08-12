@@ -1,5 +1,6 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
+todo("on iphone XR dimensions (super narrow) the award layout is bad")
 todo("Remove compose_transform calls and fix coordinates")
 
 todo("Separate leveling from postgame")
@@ -60,6 +61,7 @@ def draw_awards()
 /* Called from `draw_awards()` when `stage` == `STAGE.SUMMARY` */
 def draw_award_summary()
 & preserving_transform:
+    board_deselect_all(player.board, player)    
     draw_corner_rect(xy(0, 0), xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH, GLOBAL_LAYOUT.AWARD_HEIGHT), player.avatar.color)
         
     const highlight_color = HIGHLIGHT_COLOR    
