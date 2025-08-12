@@ -176,7 +176,7 @@ def draw_timer(board_pos):
             // Play on the second turnover exactly (so it aligns with the global clock instead of local frames)
             // but ensure that we play only once per timeout, converting from time to frames
             last_countdown_sound_time = now()
-            play_sound(timer_countdown_sound, false, 150%)
+            play_sound(timer_countdown_sound, 150%)
             // Pulse in case sound is off
             player.background_color = #FFF
         else:
