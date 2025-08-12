@@ -1,6 +1,4 @@
 
-todo("Switch to using the scroll library")
-
 /* List of words found by a `player`. */
 def make_history():
     return {
@@ -20,7 +18,7 @@ def make_history():
         
         // Auto computed and overriden on new word spawn or resize,
         // but can be manually affected by the player
-        scroll: 0,
+        scroll: make_scroll_tracker(),
 
         // Scroll computation resets when screen size changes.
         // This was the size it was computed for.
@@ -28,22 +26,11 @@ def make_history():
         
         // Scroll computation resets when the list size changes.
         // This was the size it was computed for.
-        scroll_history_size: 0,
+        scroll_history_size: 0}
         
-        // Due to finger on history
-        drag_start: {
-            // Position at which the current drag started,
-            // ∅ if not in a drag
-            pos: ∅,
-            
-            // history.scroll when the drag started
-            scroll: ∅
-        }
-    }
 
 
-
-/* Mutates `pos`, returns `max_width`. Called from `history_update()`. */
+/* Mutates `pos`, returns `max_width of the entire contents`. Called from `history_update()`. */
 def history_draw(history, pos, max_height):
     todo("Visualize history scroll state on Play view")
     todo("Vertical scroll history")
@@ -142,7 +129,7 @@ def history_draw(history, pos, max_height):
         for entry in history.list:
             history_draw_entry(entry)
     
-    return max_width
+    return pos.x + max_width
    
     
 
@@ -198,20 +185,20 @@ def history_add(history, list_name, word, points):
 
 /* Draw the word history and manage touch dragging */
 def history_update(history, history_rect)
-& with drag_start, scroll_screen_size, scroll_history_size in history
+& with scroll_screen_size, scroll_history_size in history
 & preserving_transform:
 
     set_clip(history_rect)
     
     if not equivalent(SCREEN_SIZE, scroll_screen_size):
         // Reset on window change
-        history.scroll = 0
+        history.scroll.offset = xy(0, 0)
 
     const pos = xy(3, 2)
     let max_width
     
     preserving_transform:
-        set_transform(history_rect.corner - xy(history.scroll, 0))
+        set_transform(history_rect.corner - history.scroll.offset)
         max_width = history_draw(history, pos, history_rect.size.y)
 
     if (player.has_ability["Know Word Count"] or in_waiting_room):
@@ -224,31 +211,17 @@ def history_update(history, history_rect)
             x_align: "right",
             y_align: "bottom"})
 
-    const overflow = pos.x + max_width - history_rect.size.x + 1
-
-    if not drag_start.pos:
-        // Start drag
-        if touch.pressed_a and overlaps(touch.xy, history_rect):
-            drag_start.pos = xy(touch.xy)
-            drag_start.scroll = history.scroll
-    else if touch.a:
-        // Continue drag
-        history.scroll = clamp(drag_start.scroll + drag_start.pos.x - touch.x, 0, overflow)
-    else:
-        // End drag
-        drag_start.pos = ∅
-    
     const history_size = size(history.list) + size(history.free)
     
-    if not drag_start.pos and (not equivalent(SCREEN_SIZE, scroll_screen_size) or scroll_history_size ≠ history_size):
+    if not equivalent(SCREEN_SIZE, scroll_screen_size) or (scroll_history_size ≠ history_size):
         scroll_screen_size = xy(SCREEN_SIZE)
         scroll_history_size = history_size
         // Set the scroll to whatever it needs to be to keep the 
         // most recent words on screen
-        history.scroll = max(history.scroll, overflow)
+        history.scroll.offset.x = max(history.scroll.offset.x, max_width - history_rect.size.x + 1)
     
-    if overflow < 0:
-        history.scroll = 0
+    scroll_tracker_update(history.scroll, xy(max_width, history_rect.size.y), history_rect, xy(0, 0))
+
         
 
 

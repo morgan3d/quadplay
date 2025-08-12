@@ -118,7 +118,7 @@ for points in entry in player.history.free:
 
 // Reset the scroll position because layout differs
 // from the main game during intermission
-player.history.scroll = 0
+player.history.scroll.offset = xy(0, 0)
 
 // Sort words by final score
 sort(player.history.list, "points", true)

@@ -34,7 +34,7 @@ if mode_frames > 3:
     player_reset_match(player, game_type, board_string)
     
     if DEBUG.HISTORY or DEBUG.INTERMISSION:
-        for i < 35:
+        for i < 70:
             const word = random_value(player.board.word_list)
             if not player.already_found[word]:
                 player_add_to_history(player, word, score_word(word))

@@ -114,19 +114,31 @@ def draw_content():
     if player.has_ability["Points/Match Stat"]:
         y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
     
-    todo("Show level ability unlocks")
+    todo("** Show level ability unlocks here **")
     
-    for text in vocabulary_text_array:
+    if player.has_ability["Unique Words Stat"]:
+        y += 10
         y += draw_text({
-            pos: xy(½ (SCREEN_SIZE.x - WIDTH) + 10, y),
-            color: TABLE_ALT_ROW_COLOR,
+            pos: xy(½ SCREEN_SIZE.x, y),
+            color: HIGHLIGHT_COLOR,
             outline: #000,
-            font: history_font,
-            text: text,
+            font: leaderboard_font,
+            text: "Unique Words",
             wrap_width: WIDTH - 20,
-            markup: true,
             y_align: "top",
-            x_align: "left"}).height + 20
+            x_align: "center"}).height + 10
+        
+        for text in vocabulary_text_array:
+            y += draw_text({
+                pos: xy(½ (SCREEN_SIZE.x - WIDTH) + 10, y),
+                color: TABLE_ALT_ROW_COLOR,
+                outline: #000,
+                font: history_font,
+                text: text,
+                wrap_width: WIDTH - 20,
+                markup: true,
+                y_align: "top",
+                x_align: "left"}).height + 20
 
     return y
     

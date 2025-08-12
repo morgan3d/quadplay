@@ -270,8 +270,10 @@ def cursor_make_hook(cursor):
     def hook(): cursor_update(cursor)
     return hook
     
-    
 
+///////////////////////////////////////////////////////////////////////////
+
+todo("touch momentum")
 
 /* On the returned `scroll` object, subtract the `scroll.offset` from your
    content's position to handle scrolling. Note that scrolling is 2D, 

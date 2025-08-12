@@ -1,11 +1,14 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("** Send emotes?! **")
-todo("* Explore other player results? *")
-
-todo("* Award for best free word *")
 todo("Change layout to make awards more central")
+todo("Separate leveling from postgame")
+todo("Scroll leaderboard")
+
+
+todo("Award for best free word")
 todo("Favoriting UI + save")
+todo("Explore other player results?")
+todo("Send emotes?!")
 
 
 let prev_xp

@@ -150,7 +150,6 @@ def player_selection_change_callback(player)
         if player.has_ability["Auto"]:
             const previously_available = size(player.auto_list)
             player.auto_list = find_short_words_from_selection()            
-            todo("Only play sound when the number has gone from low to high, ignoring the drop to zero in the middle")
             if player.auto_uses_left and size(player.auto_list) > 5 and not previously_available:
                 def sound():
                     play_sound({sound: auto_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
@@ -454,7 +453,7 @@ def player_reset_match(player, game_type, board_string default ∅):
     remove_all(player.already_found)
     remove_all(player.history.list)
     remove_all(player.history.free)
-    player.history.scroll = 0
+    player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
     player.auto_list = ∅
     player.auto_uses_left = (
