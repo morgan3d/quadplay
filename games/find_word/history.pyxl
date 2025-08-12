@@ -1,4 +1,6 @@
 
+todo("Switch to using the scroll library")
+
 /* List of words found by a `player`. */
 def make_history():
     return {

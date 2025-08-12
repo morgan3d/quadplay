@@ -2706,6 +2706,7 @@ function resetTouchInput() {
     if (mouse.movement_x !== undefined) {
         mouse.movement_x = mouse.movement_y = 0;
     }
+    mouse.wheel_dx = mouse.wheel_dy = 0;
     QRuntime.touch.pressed_a = QRuntime.touch.released_a = 0;
 }
 

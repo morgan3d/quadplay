@@ -47,7 +47,7 @@ def draw_background_words():
             font: tile_font,
             color: #333,
             text: s,
-            pos: xy(sign((y mod 2) - 0.5) * 0.2 oscillate(game_frames, -2000, 2000) - 700, 22 y),
+            pos: round(xy(sign((y mod 2) - 0.5) * 0.2 oscillate(game_frames, -2000, 2000) - 700, 22 y)),
             x_align: "left",
             z: -2})
     
@@ -104,6 +104,7 @@ def play_points_sound(points, index default ∅):
 def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
+    
     
 def set_hooks():
     if not notification_hook:

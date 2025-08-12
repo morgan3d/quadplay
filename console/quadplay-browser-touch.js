@@ -221,34 +221,49 @@ function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
             y: clamp(Math.floor(emulatorScreen.height * (event.clientY - rect.top  * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) - 0.5};
 }
 
-const mouse = {screen_x: 0, screen_y: 0, screen_x_prev: 0, screen_y_prev: 0, buttons: 0, movement_movement: false};
+const mouse = {
+    screen_x: 0,
+    screen_y: 0,
+    screen_x_prev: 0,
+    screen_y_prev: 0,
+    buttons: 0,
+    wheel_dx: 0,
+    wheel_dy: 0,
+    movement_x: 0,
+    movement_y: 0,
+    movement: false};
 
 function updateMouseDevice(event) {
     if (event.target === emulatorScreen || event.target === overlayScreen) {
-        const coord = emulatorScreenEventCoordToQuadplayScreenCoord(event);
-        mouse.screen_x = coord.x;
-        mouse.screen_y = coord.y;
+        if (event instanceof WheelEvent) {
+            mouse.wheel_dx = event.deltaX;
+            mouse.wheel_dy = event.deltaY;
+        }else {
+            const coord = emulatorScreenEventCoordToQuadplayScreenCoord(event);
+            mouse.screen_x = coord.x;
+            mouse.screen_y = coord.y;
 
-        if (event.movementX !== undefined) {
-            const rect = emulatorScreen.getBoundingClientRect();
+            if (event.movementX !== undefined) {
+                const rect = emulatorScreen.getBoundingClientRect();
 
-            let zoom = 1;
-            if (isSafari) {
-                zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
+                let zoom = 1;
+                if (isSafari) {
+                    zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
+                }
+
+                if (mouse.movement_x === undefined) {
+                    mouse.movement_x = mouse.movement_y = 0;
+                }
+
+                // Movement events are available on this browser. They are higher precision and
+                // survive pointer lock, so report them instead. These must be ACCUMULATED because
+                // they arrive at the monitor's refresh rate, not the game's refresh rate. On
+                // high framerate monitors we need to know the total of all mouse events. These
+                // are zeroed again in the main game loop.            
+                mouse.movement_x += emulatorScreen.width  * event.movementX / (rect.width  * zoom);
+                mouse.movement_y += emulatorScreen.height * event.movementY / (rect.height * zoom);
+                mouse.movement = true;
             }
-
-            if (mouse.movement_x === undefined) {
-                mouse.movement_x = mouse.movement_y = 0;
-            }
-
-            // Movement events are available on this browser. They are higher precision and
-            // survive pointer lock, so report them instead. These must be ACCUMULATED because
-            // they arrive at the monitor's refresh rate, not the game's refresh rate. On
-            // high framerate monitors we need to know the total of all mouse events. These
-            // are zeroed again in the main game loop.            
-            mouse.movement_x += emulatorScreen.width  * event.movementX / (rect.width  * zoom);
-            mouse.movement_y += emulatorScreen.height * event.movementY / (rect.height * zoom);
-            mouse.movement = true;
         }
     }
     mouse.buttons = event.buttons;
@@ -286,6 +301,11 @@ function onMouseUpOrMove(event) {
     return onTouchEndOrCancel(fakeMouseEvent);
 }
 
+function onMouseWheel(event) {
+    updateMouseDevice(event);
+    updateLastInteractionTime();
+    return false;
+}
 
 /* quadplay-host is loaded before quadplay.js, so we put this initialization in a callback. */
 function initializeBrowserEmulator() {
@@ -294,6 +314,7 @@ function initializeBrowserEmulator() {
     const options = {passive: false, capture: true};
     document.addEventListener('mousedown',   onMouseDownOrMove, options);
     document.addEventListener('mousemove',   onMouseDownOrMove, options);
+    document.addEventListener('wheel',       onMouseWheel, options);
     document.addEventListener('mouseup',     onMouseUpOrMove, options);
     document.addEventListener('touchstart',  onTouchStartOrMove, options);
     document.addEventListener('touchmove',   onTouchStartOrMove, options);

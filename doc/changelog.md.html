@@ -24,7 +24,10 @@ of [<quadplay/>](manual.md.html).
   - Removed long-deprecated `is_NaN()`
   - PyxlScript now supports general-purpose `pop_mode` handlers with no `from` clause
   - `string_compress()` and `string_decompress()`
+  - `device_control("get_mouse_state")` now includes mouse `wheel` dxy values
   - Increased `save_local()` size per key to 32,768 characters from 16,384
+- Libraries:
+  - `cursor_lib.pyxl` now includes scroll box support
 - Assets:
   - Added `good-03.sound.json`
 - Exported games
@@ -38,7 +41,7 @@ of [<quadplay/>](manual.md.html).
   - Tooltips now appear on the code editor buttons
   - Undo and Redo buttons now work again in the code editor
   - Corrected 1/2 texel offset for sprites in Warlock demo that led to gaps in walls
-  - `draw_text` was returning oversized vertical bounds for multi-line text and aligning to "bottom" poorly as a result.
+  - `draw_text` was returning incorrect vertical bounds for multi-line text and aligning to "bottom" poorly as a result.
 
 2025 August 3
 ===================================

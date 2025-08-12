@@ -25,7 +25,6 @@ def execute_auto():
     player.auto_list = ∅
     
     
-
 def enter_rotate_mode():
     push_mode(Rotate) because "button"
     

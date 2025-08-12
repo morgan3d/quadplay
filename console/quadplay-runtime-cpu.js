@@ -5361,10 +5361,12 @@ function $parseMarkup(str, stateChanges) {
 
 /** Helper for draw_text() that operates after markup formatting has been processed. 
     offsetIndex is the amount to add to the indices in formatArray to account for
-    the str having been shortened already. 
-
+    the str having been shortened by substring() already. 
 */
 function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, referenceFont) {
+    // 1 pixel on top and 2 on the bottom
+    const shadow_and_outline_padding = referenceFont.$borderSize * 2 + referenceFont.$shadowSize;
+
     $console.assert(typeof str === 'string');
     $console.assert(Array.isArray(formatArray));
     $console.assert(formatIndex < formatArray.length);
@@ -5374,7 +5376,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     if ((offsetIndex < formatArray[formatIndex].startIndex) ||
         (offsetIndex > formatArray[formatIndex].endIndex)) {
         // Empty, just return newline
-        return {size: {x:0, y:referenceFont.$charHeight}}; // TODO: pos
+        return {size: {x: 0, y: referenceFont.$charHeight}}; 
     }
     
     // Identify the starting format. This snippet is repeated throughout the function.
@@ -5393,6 +5395,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
         if (str[c] === '\n') {
             // Newline, process by breaking and recursively continuing
             const cur = str.substring(0, c).trimEnd();
+
             const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, referenceFont);
 
             ++offsetIndex;
@@ -5410,15 +5413,29 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
             $console.assert(formatIndex < formatArray.length);
 
             const restBounds = $draw_text(
-                offsetIndex, formatIndex, str.substring(c + 1),
-                formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
-                z_pos, x_align, y_align, z_order, wrap_width, text_size - c - 1, referenceFont);
-            // TODO: pos
-            firstLineBounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
-            if (restBounds.size.y > 0) {
-                firstLineBounds.size.y += restBounds.size.y - 3;
-            }
-            return firstLineBounds;
+                offsetIndex, 
+                formatIndex, 
+                str.substring(c + 1),
+                formatArray, 
+                {x: pos.x, y: pos.y + referenceFont.line_height / $scaleY},
+                z_pos,
+                x_align,
+                y_align,
+                z_order,
+                wrap_width,
+                text_size - c - 1,
+                referenceFont);
+            
+            // Reuse this object to reduce allocation
+            const bounds = firstLineBounds;
+
+            // Horizontal bounds are the larger due to line-by-line processing
+            bounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
+
+            // Vertical bounds are the sum
+            bounds.size.y = referenceFont.line_height / $scaleY + $Math.max(restBounds.size.y, 0);
+            
+            return bounds;
         }
         
         const chr = $fontMap[str[c]] || ' ';
@@ -5446,7 +5463,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
                 breakIndex = c;
             }
 
-            const cur = str.substring(0, breakIndex);          
+            const cur = str.substring(0, breakIndex);
             const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, z_pos, x_align, y_align, z_order, undefined, text_size, referenceFont);
             
             // Now draw the rest
@@ -5463,15 +5480,30 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
             format = undefined;
 
             $console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = $draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY}, z_pos,
-                                          x_align, y_align, z_order, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
+            const restBounds = $draw_text(
+                offsetIndex,
+                formatIndex,
+                nnext,
+                formatArray,
+                {x: pos.x, y: pos.y + referenceFont.line_height / $scaleY},
+                z_pos,
+                x_align,
+                y_align,
+                z_order,
+                wrap_width,
+                text_size - cur.length - (next.length - nnext.length),
+                referenceFont);
 
-            // TODO: pos
-            firstLineBounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
-            if (restBounds.size.y > 0) {
-                firstLineBounds.size.y += restBounds.size.y - 3;
-            }
-            return firstLineBounds;
+            // Reuse this object to reduce allocation
+            const bounds = firstLineBounds;
+
+            // Horizontal bounds are the larger due to line-by-line processing
+            bounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
+
+            // Vertical bounds are the sum
+            bounds.size.y = referenceFont.line_height / $scaleY + $Math.max(restBounds.size.y, 0);
+
+            return bounds;
         }
         
         if (offsetIndex === formatArray[formatIndex].endIndex) {
@@ -5486,7 +5518,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
         }
     }
 
-    // Don't add space after the very last letter
+    // Remove the kerning space that the previous loop added after the final letter
     width -= format.font.spacing.x;
     format.width -= format.font.spacing.x;
 
@@ -5495,10 +5527,11 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     z_pos = z_pos * $scaleZ + $offsetZ;
     z_order = z_order * $scaleZ + $offsetZ;
 
+    // The height includes shadow and outline padding
     const height = referenceFont.$charHeight;
 
     // Force alignment to retain relative integer pixel alignment.
-    // The - 0.4999 is to align with rectangle and disk centering rules.
+    // TODO: use -0.4999 instead to match rectangle and disk centering rules?
     x = $Math.round(x - width * (1 + x_align) * 0.5);
 
     // Move back to account for the border and shadow padding
@@ -5510,16 +5543,14 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     case  0:
         // Middle. Center on a '2', which tends to have a typical height 
         const bounds = referenceFont.$bounds['2'];
-        const tileY = $Math.floor(bounds.y1 / referenceFont.$charHeight) * referenceFont.$charHeight;
+        const tileY = $Math.floor(bounds.y1 / height) * height;
         y -= $Math.round((bounds.y1 + bounds.y2) / 2) - tileY;
         break;
     case  1: y -= referenceFont.$baseline; break; // baseline
-    case  2: y -= (referenceFont.$charHeight - referenceFont.$borderSize * 2 - referenceFont.$shadowSize); break; // bottom of bounds
+    case  2: y -= height - shadow_and_outline_padding; break; // bottom of bounds
     }
 
-
-    // Center and round. Have to call round() because values may
-    // be negative
+    // Move to integer coordinates. Note for rounding purposes that values may be negative.
     x = $Math.round(x) | 0;
     y = $Math.round(y) | 0;
 
@@ -5527,7 +5558,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
         (z_pos > $clipZ2 + 0.5) || (z_pos < $clipZ1 - 0.5) ||
         (y_align !== 2 && (y > $clipY2) || (y + height < $clipY1))) {
         // Cull when off-screen. Culling is disabled for "bottom" aligned
-        // text because the implementation generatse a draw call and then
+        // text because the implementation generates a draw call and then
         // adjust the vertical position, so culling cannot happen during draw call
         // generation.
     } else {
@@ -5565,8 +5596,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
                 outline: format.outline,
                 shadow:  format.shadow,
                 height:  height,
-                width:   format.width,
-            });
+                width:   format.width});
 
             x += format.width;
 
@@ -5583,16 +5613,14 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
         }
     }
 
-    // The height in memory is inflated by 3 for the outline on top
-    // and shadow and outline on the bottom. Return the tight
-    // bound on the characters themselves.
-    return {size: {x: width, y: height - 3}};
+    // Return the tight bound on the characters themselves, not the shadow and outline padding
+    return {size: {x: width, y: height - shadow_and_outline_padding}};
 }
 
 
 /** Processes formatting and invokes $draw_text() */
 function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
-    // Cannot skip in off frames because it has a return value
+    // Cannot skip this call in skipped graphics frames because this function has a return value.
     
     if (font && (font.text !== undefined || font.font !== undefined || font.pos !== undefined)) {
         // Keyword version
@@ -5695,33 +5723,43 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     }
     */
 
-    // Track draw calls generated by $draw_text
+    // Track draw calls generated by $draw_text. This index tells us how far to go back. We generate the calls 
+    // into the GPU buffer and then mutate them below to enforce the desired alignment. This is easier than
+    // proactively computing bounds and alignment for cases such as markup and text wrapping.
     const first_graphics_command_index = $graphicsCommandList.length;
+
+    // Generate the draw calls
     const bounds = $draw_text(0, 0, str, stateChanges, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, font);
 
     if (first_graphics_command_index === $graphicsCommandList.length) {
         // Drew nothing!
-        return {pos:{x:pos.x, y:pos.y}, size:{x:0, y:0}, height:bounds.size.y, z:z_order};
+        return {pos: {x: pos.x, y: pos.y}, size: {x: 0, y: 0}, height: bounds.size.y, z: z_order};
     }
 
-    // Compute bounds in screen space
+    // Compute bounds on the draw calls in screen space
     {
         let i = first_graphics_command_index;
-        bounds.pos = {x: $graphicsCommandList[i].x, y: $graphicsCommandList[i].y};
+        
+        // The underlying TXT command opcodes are pinned to their min (usually top-left) corner
+        let min_x = $graphicsCommandList[i].x;
+        let min_y = $graphicsCommandList[i].y;
+
         ++i;
         while (i < $graphicsCommandList.length) {
-            bounds.pos.x = $Math.min(bounds.pos.x, $graphicsCommandList[i].x);
-            bounds.pos.y = $Math.min(bounds.pos.y, $graphicsCommandList[i].y);
+            min_x = $Math.min(min_x, $graphicsCommandList[i].x);
+            min_y = $Math.min(min_y, $graphicsCommandList[i].y);
             ++i;
         }
         
-        // Move to the center
-        bounds.pos.x += 0.5 * bounds.size.x + 0.5;
-        bounds.pos.y += 0.5 * bounds.size.y + 0.5;
+        // bounds.pos is the center, so offset by the bounds extent and half a pixel
+        bounds.pos = {x: min_x + 0.5 * bounds.size.x + 0.5, y: min_y + 0.5 * bounds.size.y + 0.5};
     }
     bounds.z = z_order;
 
-    if ((bounds.size.y > font.line_height) && (y_align === 0 || y_align === 2)) {
+    if ((bounds.size.y > font.line_height) && ((y_align === 0) || (y_align === 2))) {
+        // This was multiline text needing vertical adjustment for alignment.
+        // Go back to the issued draw calls and mutate them to shift vertically.
+
         let y_shift = 0;
         if (y_align === 0) {
             // Center
@@ -5732,8 +5770,6 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         }
         bounds.pos.y += y_shift;
         
-        // Multiline needing vertical adjustment. Go back to the issued
-        // draw calls and shift them vertically as required.
         for (let i = first_graphics_command_index; i < $graphicsCommandList.length; ++i) {
             $graphicsCommandList[i].y += y_shift;
         }
@@ -5742,18 +5778,19 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     // Preserve the height for layout
     bounds.height = bounds.size.y;
     
-    // Enforce the clipping region on the bounds
+    // Intersect the bounds to be returned with the active clipping region
     {
-        let minX = $Math.max(bounds.pos.x - 0.5 * bounds.size.x, $clipX1);
-        let maxX = $Math.min(bounds.pos.x + 0.5 * bounds.size.x, $clipX2);
-        let minY = $Math.max(bounds.pos.y - 0.5 * bounds.size.y, $clipY1);
-        let maxY = $Math.min(bounds.pos.y + 0.5 * bounds.size.y, $clipY2);
+        const minX = $Math.max(bounds.pos.x - 0.5 * bounds.size.x, $clipX1);
+        const maxX = $Math.min(bounds.pos.x + 0.5 * bounds.size.x, $clipX2);
+        const minY = $Math.max(bounds.pos.y - 0.5 * bounds.size.y, $clipY1);
+        const maxY = $Math.min(bounds.pos.y + 0.5 * bounds.size.y, $clipY2);
 
         bounds.pos.x = 0.5 * (maxX + minX);
         bounds.size.x = maxX - minX;
         bounds.pos.y = 0.5 * (maxY + minY);
         bounds.size.y = maxY - minY;
-        if (bounds.size.x <= 0 || bounds.size.y <= 0) {
+        if ((bounds.size.x <= 0) || (bounds.size.y <= 0)) {
+            // Completely clipped
             bounds.size.x = bounds.size.y = bounds.pos.x = bounds.pos.y = NaN;
         }
     }

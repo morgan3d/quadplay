@@ -223,6 +223,10 @@ function device_control(cmd) {
                 x: ((mouse.movement_x === undefined) ? (mouse.screen_x - mouse.screen_x_prev) : mouse.movement_x) * QRuntime.$scaleX,
                 y: ((mouse.movement_y === undefined) ? (mouse.screen_y - mouse.screen_y_prev) : mouse.movement_y) * QRuntime.$scaleY});
 
+            const wheel = Object.freeze({
+                x: mouse.wheel_dx * QRuntime.$scaleX,
+                y: mouse.wheel_dy * QRuntime.$scaleY});
+
             return Object.freeze({
                 x: xy.x,
                 y: xy.y,
@@ -230,6 +234,7 @@ function device_control(cmd) {
                 dy: dxy.y,
                 xy: xy,
                 dxy: dxy,
+                wheel: wheel,
                 lock: usePointerLock,
                 cursor: overlayScreen.style.cursor,
                 button_array: Object.freeze([

@@ -1,6 +1,10 @@
 WaitingRoom
 ════════════════════════════════════════════════════════════════════════
 
+def enter_rotate_mode():
+    push_mode(Rotate) because "button"
+
+
 enter
 ────────────────────────────────────────────────────────────────────────
 assert(game_type == GLOBAL)
@@ -21,10 +25,12 @@ frame
 
 player_update(player, get_board_pos(), ∅, true)
 
+handle_buttons(
+    ability_icon.free_mode, "Free", ∅,
+    ability_icon.auto_find, ∅,
+    aux_icon.rotate, enter_rotate_mode)
+
 if frame_utc_now ≥ end_time or DEBUG.INTERMISSION:
     in_waiting_room = false
     reset_post_effects()
     set_mode(GenerateBoard) because "GLOBAL start"
-
-// Hint for compiler:
-// push_mode(Rotate) because "Rotate button"

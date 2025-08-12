@@ -5031,9 +5031,9 @@ Raw Device Access
       `player_index default 0`              </td><td> Return an array of two values representing the state of the analog trigger buttons for `gamepad_array[player_index]`.</td></tr>
     <tr><td> `"rumble",` 
       `player_index default 0`, `duration_frames default 10`, `strength default 100%`                </td><td> Activate the haptic vibration on `gamepad_array[player_index]` for `duration_frames`. This requires a browser that supports haptics as well as a controller that supports them on that OS and browser. Windows with an Xbox controller on a Chromium browser (Edge, Chrome, Brave) is your best shot at compatibility.</td></tr>   
-   <tr><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `button_array:[...],` `cursor:string, lock:boolean}` for the current mouse position and buttons. Each element of
+   <tr><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `wheel:xy(...), ` `button_array:[...],` `cursor:string, lock:boolean}` for the current mouse position and buttons. Each element of
                                                       `button_array` is 0 or 1. There are at least two buttons, but may be more. The `dx`, `dy`, and `dxy` values may have higher precision than the absolute numbers because they
-                                                      are tracked at subpixel resolution on browsers that support this.</td></tr>
+                                                      are tracked at subpixel resolution on browsers that support this. The `wheel` values follow the transform at the time of the `device_control()` call and on macOS follow the scroll direction from the OS ("natural" vs. normal).</td></tr>
     <tr><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 
                                                       from the center of the screen, so that it returns only `dxy` values and absolute `xy` values will be fixed. 
                                                       This is useful for first-person mouselook.</td></tr>

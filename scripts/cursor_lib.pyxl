@@ -2,7 +2,7 @@
 quad://scripts/cursor_lib.pyxl
 
 Immediate mode GUI gamepad/mouse/touch cursor management routines
-for selection and buttons.
+for selection, buttons, and scroll boxes.
 
 Supports multiple cursors for multiplayer games or different modes.
 However, if the mouse or touch moves it will move all cursors to that
@@ -14,6 +14,8 @@ Copyright 2025, SHMUEL
 <br>Open source under the MIT license
 <br>https://opensource.org/licenses/MIT
 
+
+Cursor management:
 
 ```````````````````````````````````````````````` PyxlScript
 const cursor = make_cursor()
@@ -43,6 +45,23 @@ cursor_update(cursor)
 
 ````````````````````````````````````````````````
 
+
+Scrollbox management:
+
+```````````````````````````````````````````````` PyxlScript
+// Per frame:
+preserving_transform:
+    // Whatever you want it to be
+    const scroll_rect = {corner: xy(0, 30), size: xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 58)}
+
+    set_clip(scroll_rect)
+    set_transform(scroll_rect.corner - scroll.offset)
+
+    // Whatever your code is for rendering the contents of the pane
+    const content_size = draw_content()
+    
+    scroll_tracker_update(scroll, content_size, scroll_rect, if selected then ∅ else xy(0, 0))
+````````````````````````````````````````````````
 */
 
 
@@ -250,4 +269,61 @@ def make_cursor(
 def cursor_make_hook(cursor):
     def hook(): cursor_update(cursor)
     return hook
+    
+    
+
+
+/* On the returned `scroll` object, subtract the `scroll.offset` from your
+   content's position to handle scrolling. Note that scrolling is 2D, 
+   so you may want to select for just the `x` or `y` field. */
+def make_scroll_tracker():
+    return {
+        offset: xy(0, 0),
+        
+        _drag_start: {
+            // Position at which the current drag started,
+            // ∅ if not in a drag
+            pos: ∅,
+            
+            // offset when the drag started
+            scroll: ∅}}
+
+
+/* 
+`screen_scroll_rect`
+: Must be in screen space (like the argument to `set_clip()`)
+
+`other_change`
+: Use for auto-scrolling or gamepad scrolling (the default), or set to `xy(0, 0)` 
+  to disable gamepad scrolling.
+*/
+def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change default 3 joy.xy)
+& preserving_transform:
+    // Make sure we're reading the touch and mouse properties in screen space to
+    // align with the screen_scroll_rect
+    reset_transform()
+    const MOUSE_SCROLL_RATE = 0.1
+    
+    const max_scroll = max(content_size - screen_scroll_rect.size, xy(0, 0))
+
+    if not scroll._drag_start.pos:
+        if touch.pressed_a and overlaps(touch.xy, screen_scroll_rect):
+            // Start drag
+            scroll._drag_start.pos = xy(touch.xy)
+            scroll._drag_start.scroll = xy(scroll.offset)
+    else if touch.a:
+        // Continue drag
+        scroll.offset = scroll._drag_start.scroll + scroll._drag_start.pos - touch.xy
+    else:
+        // End drag
+        scroll._drag_start.pos = ∅
+            
+    const mouse = device_control("get_mouse_state")
+    if (mouse.wheel.x ≠ 0 or mouse.wheel.y ≠ 0) and overlaps(screen_scroll_rect, mouse.xy):
+        scroll.offset += device_control("get_mouse_state").wheel * MOUSE_SCROLL_RATE
+    
+    // Gamepad
+    scroll.offset += other_change
+    scroll.offset = clamp(scroll.offset, xy(0, 0), max_scroll)
+
 

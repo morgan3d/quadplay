@@ -3,7 +3,13 @@ DisplayStats
 // Stable size independent of aspect ratio
 const WIDTH = min(SCREEN_SIZE.x, SCREEN_SIZE.y)
 
-let scroll = 0
+/* Array of strings computed at `DisplayStats.enter`. This is
+   broken up for layout purposes, but also to avoid overloading
+   the renderer with a massive, mostly-offscreen draw call.*/
+let vocabulary_text_array
+
+const scroll = make_scroll_tracker()
+
 
 /*
  - `caption`  Left column value
@@ -27,9 +33,9 @@ def draw_row(y, caption, lifetime, today, color default #fff, today_color defaul
             text: today_suffix,
             color: today_color})
     
-    if caption and ends_with(caption, "Word"): args.font = history_font
+    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free")): args.font = history_font
     args.x_align = "right"
-    draw_text({…args, text: lifetime, pos: xy(x_center,  y)})
+    draw_text({…args, text: lifetime, pos: xy(x_center, y)})
     if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x_right, y), color: today_color})
 
     return 13
@@ -45,16 +51,124 @@ def draw_trend_row(y, caption, format, lifetime, today, color, highlight_color):
         color, 
         if today > lifetime then highlight_color else ∅,
         if today > lifetime then "↑" else ∅)
+
+
+
+def draw_content():
+    const lifetime = player.stats.lifetime
+    const today    = player.stats[today_date_string()] default make_empty_stats_entry()
     
+    let y = 5
+    
+    y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT_COLOR)
+    
+    if player.has_ability["Longest Word Stat"]:
+        const better = size(today.longest_text) ≥ size(lifetime.longest_text) and (today.longest_text ≠ "")
+        y += draw_row(y, "Longest Word", 
+            lifetime.longest_text,
+            today.longest_text or "-",
+            ∅,
+            if better then HIGHLIGHT_COLOR else ∅,
+            if better then "↑" else ∅)
+    
+    if player.has_ability["Best Word Stat"]:
+        const better = today.best_word_text and (today.best_word_points ≥ lifetime.best_word_points)
+        y += draw_row(y, "Best Word",
+            if (lifetime.best_word_text ≠ "") then lifetime.best_word_text + " " + lifetime.best_word_points else "", 
+            (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
+            TABLE_ALT_ROW_COLOR,
+            if better then HIGHLIGHT_COLOR else ∅,
+            if better then "↑" else ∅)
+    
+    if player.has_ability["Free Mode"]:
+        const better = today.best_free_word_text and (today.best_free_word_points ≥ lifetime.best_free_word_points)
+        y += draw_row(y, "Best Free",
+            if (lifetime.best_free_word_text ≠ "") then lifetime.best_free_word_text + " " + lifetime.best_free_word_points else "-",
+            if (today.best_free_word_text ≠ "") then (today.best_free_word_text + " " + today.best_free_word_points) else "-",
+            TABLE_ALT_ROW_COLOR,
+            if better then HIGHLIGHT_COLOR else ∅,
+            if better then "↑" else ∅)
+    
+    if player.has_ability["Most Words Stat"]:
+        y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT_COLOR)
+        
+    if player.has_ability["High Score Stat"]:
+        y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
+    
+    y += 5
+    y += draw_row(y, "XP",           format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
+    
+    if player.has_ability["Total Words Stat"]:
+        y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"), TABLE_ALT_ROW_COLOR)
+    
+    if player.has_ability["Total Matches Stat"]:
+        y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
+    
+    if player.has_ability["Unique Words Stat"]:
+        y += draw_row(y, "Unique Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
+    
+    y += 5
+    if player.has_ability["Words/Match Stat"]:
+        y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
+    
+    if player.has_ability["Points/Match Stat"]:
+        y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
+    
+    todo("Show level ability unlocks")
+    
+    for text in vocabulary_text_array:
+        y += draw_text({
+            pos: xy(½ (SCREEN_SIZE.x - WIDTH) + 10, y),
+            color: TABLE_ALT_ROW_COLOR,
+            outline: #000,
+            font: history_font,
+            text: text,
+            wrap_width: WIDTH - 20,
+            markup: true,
+            y_align: "top",
+            x_align: "left"}).height + 20
+
+    return y
     
 
 enter
 ────────────────────────────────────────────────────────────────────────
 player_achieve(player, "Check Stats")
 
+scroll.scroll = 0
+
+const vocab = keys(player.vocabulary)
+sort(vocab)
+
+// Decode and accumulate by first letter
+const text_array = []
+let letter = vocab[0][0]
+let array = []
+for word in vocab:
+    if word[0] ≠ letter:
+        push(text_array, array)
+        array = []
+        letter = word[0]
+        
+    let text = q_decode(word)
+    if size(text) > 6:
+        text = "{color:#FFF " + text + "}"
+    push(array, text)
+
+// Last one
+if size(array): push(text_array, array)
+
+// Break into max 26 strings to avoid overloading the renderer
+vocabulary_text_array = []
+for array in text_array:
+    push(vocabulary_text_array, join(array, ", "))
+
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
+
+
 draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(WIDTH, SCREEN_SIZE.y), #0009)
 
@@ -65,68 +179,14 @@ local:
     draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, x_align: "left", pos: xy(x, 9), color: #FFF})
     draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, x_align: "left", pos: xy(x, 22), color: #FFF})
 
-
-const lifetime = player.stats.lifetime
-const today    = player.stats[today_date_string()] default make_empty_stats_entry()
-
-let y = 36 + ½ (SCREEN_SIZE.y - 224)
-
-y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT_COLOR)
-
-if player.has_ability["Longest Word Stat"]:
-    const better = size(today.longest_text) ≥ size(lifetime.longest_text) and (today.longest_text ≠ "")
-    y += draw_row(y, "Longest Word", 
-        lifetime.longest_text,
-        today.longest_text or "-",
-        ∅,
-        if better then HIGHLIGHT_COLOR else ∅,
-        if better then "↑" else ∅)
-
-if player.has_ability["Best Word Stat"]:
-    const better = today.best_word_text and (today.best_word_points ≥ lifetime.best_word_points)
-    y += draw_row(y, "Best Word",
-        if (lifetime.best_word_text ≠ "") then lifetime.best_word_text + " " + lifetime.best_word_points else "", 
-        (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
-        TABLE_ALT_ROW_COLOR,
-        if better then HIGHLIGHT_COLOR else ∅,
-        if better then "↑" else ∅)
-
-if player.has_ability["Free Mode"]:
-    const better = today.best_free_word_text and (today.best_free_word_points ≥ lifetime.best_free_word_points)
-    y += draw_row(y, "Best Free",
-        if (lifetime.best_free_word_text ≠ "") then lifetime.best_free_word_text + " " + lifetime.best_free_word_points else "-",
-        if (today.best_free_word_text ≠ "") then (today.best_free_word_text + " " + today.best_free_word_points) else "-",
-        TABLE_ALT_ROW_COLOR,
-        if better then HIGHLIGHT_COLOR else ∅,
-        if better then "↑" else ∅)
-
-if player.has_ability["Most Words Stat"]:
-    y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT_COLOR)
-    
-if player.has_ability["High Score Stat"]:
-    y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
-
-y += 5
-y += draw_row(y, "XP",           format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
-
-if player.has_ability["Total Words Stat"]:
-    y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"), TABLE_ALT_ROW_COLOR)
-
-if player.has_ability["Total Matches Stat"]:
-    y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
-
-if player.has_ability["Unique Words Stat"]:
-    y += draw_row(y, "Unique Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
-
-y += 5
-if player.has_ability["Words/Match Stat"]:
-    y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
-
-if player.has_ability["Points/Match Stat"]:
-    y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
+preserving_transform:
+    const scroll_rect = {corner: xy(0, 30), size: xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 58)}
+    set_clip(scroll_rect)
+    set_transform(scroll_rect.corner - scroll.offset)
+    const content_size = xy(0, draw_content())    
+    scroll_tracker_update(scroll, content_size, scroll_rect)
 
 
-todo("Show unique words")
 
 // Large done button, which is always selected
 local:
@@ -143,9 +203,8 @@ local:
         outline: #000,
         color: #FFF})
         
-
-if (gamepad_array[0].pressed_a or gamepad_array[0].pressed_b or touch.pressed_a) and mode_frames > 2:
-    pop_mode()
+    if (gamepad_array[0].pressed_a or gamepad_array[0].pressed_b or (touch.pressed_a and overlaps(touch.xy, rect))) and mode_frames > 2:
+        pop_mode()
 
 
 
