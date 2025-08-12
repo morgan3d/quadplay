@@ -273,7 +273,6 @@ def cursor_make_hook(cursor):
 
 ///////////////////////////////////////////////////////////////////////////
 
-todo("touch momentum")
 
 /* On the returned `scroll` object, subtract the `scroll.offset` from your
    content's position to handle scrolling. Note that scrolling is 2D, 
@@ -282,13 +281,17 @@ def make_scroll_tracker():
     return {
         offset: xy(0, 0),
         
+        // Change in `scroll.offset`, used for explicit `touch` inertia. Mouse wheels
+        // apply their own inertia at the OS level.
+        _vel: ∅,
+            
         _drag_start: {
-            // Position at which the current drag started,
+            // `touch` position at which the current drag started,
             // ∅ if not in a drag
             pos: ∅,
             
-            // offset when the drag started
-            scroll: ∅}}
+            // `scroll.offset` when the drag started
+            offset: ∅}}
 
 
 /* 
@@ -304,7 +307,13 @@ def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change
     // Make sure we're reading the touch and mouse properties in screen space to
     // align with the screen_scroll_rect
     reset_transform()
-    const MOUSE_SCROLL_RATE = 0.1
+    
+    const PIXELS_PER_WHEEL = 0.1
+    
+    // Motion conservation per frame after touch drag ends.
+    // 0% = none, 100% = infinite
+    const DRAG_INERTIA = 90%
+    const VEL_THRESHOLD = 0.1
     
     const max_scroll = max(content_size - screen_scroll_rect.size, xy(0, 0))
 
@@ -312,17 +321,28 @@ def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change
         if touch.pressed_a and overlaps(touch.xy, screen_scroll_rect):
             // Start drag
             scroll._drag_start.pos = xy(touch.xy)
-            scroll._drag_start.scroll = xy(scroll.offset)
+            scroll._drag_start.offset = xy(scroll.offset)
+            scroll._vel = xy(0, 0)
+        else if scroll._vel:
+            // Inertia
+            scroll.offset += scroll._vel
+            scroll._vel *= DRAG_INERTIA
+            if ‖scroll._vel‖ < VEL_THRESHOLD:
+                // Stop inertia
+                scroll._vel = ∅
     else if touch.a:
         // Continue drag
-        scroll.offset = scroll._drag_start.scroll + scroll._drag_start.pos - touch.xy
+        const prev = scroll.offset
+        scroll.offset = scroll._drag_start.offset + scroll._drag_start.pos - touch.xy
+        // Smooth the noisy velocity signal
+        scroll._vel = lerp(scroll._vel, scroll.offset - prev, 50%)
     else:
         // End drag
         scroll._drag_start.pos = ∅
             
     const mouse = device_control("get_mouse_state")
     if (mouse.wheel.x ≠ 0 or mouse.wheel.y ≠ 0) and overlaps(screen_scroll_rect, mouse.xy):
-        scroll.offset += device_control("get_mouse_state").wheel * MOUSE_SCROLL_RATE
+        scroll.offset += device_control("get_mouse_state").wheel * PIXELS_PER_WHEEL
     
     // Gamepad
     scroll.offset += other_change
