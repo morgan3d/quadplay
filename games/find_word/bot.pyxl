@@ -2,7 +2,7 @@
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count, max_bots):
-todo("Bot hours are clearly broken")    
+    todo("Bot hours are clearly broken")    
     const avatar_set = [
 {
 name: "THX",
