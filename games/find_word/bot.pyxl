@@ -2,17 +2,18 @@
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count, max_bots):
-    todo("Bot hours are clearly broken")    
+    
+    todo("Move out to constants")    
     const avatar_set = [
 {
 name: "THX",
 sprite: avatar_sprite[13][4],
 base_ability: 22%,
 short_word_preference: 16%,
-first_hour: 11,
+first_hour: 10,
 last_hour: 12,
 },
-/*{
+{
 // Later THX
 name: "THX",
 sprite: avatar_sprite[13][4],
@@ -20,7 +21,7 @@ base_ability: 22%,
 short_word_preference: 16%,
 first_hour: 14,
 last_hour: 20,
-},*/
+},
 {
 name: "o_o",
 sprite: avatar_sprite[20][14],
@@ -169,6 +170,7 @@ last_hour: 1
     // Make results for the board stable so that all human players see the
     // bots doing the same things
     const match_rng = make_random(player.board.seed)
+    target_count = min(target_count, size(competitor_array) + max_bots)
     
     // Used for finding legal substrings
     const word_table = {}
@@ -177,13 +179,15 @@ last_hour: 1
             word_table[word] = 1
     
     // Used for determining which players are active
-    const hour = utc_time().hours
+    const hour = utc_time().hour
     const minute = utc_time().minute
     
     // Shift everybody's ability by this amount
     const match_shift = match_rng(-10%, 0%)
     
-    def make_bot_competitor(avatar, id):
+    def maybe_add_bot_competitor(avatar, id):
+        assert(avatar and avatar.sprite)
+        
         const competitor = {
             avatar: avatar,
             score: 0,
@@ -203,12 +207,13 @@ last_hour: 1
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = competitor.avatar.short_word_preference
         
-        // Is this particular competitor available right now?         
+        // Is this particular competitor available right now?
         if competitor.avatar.last_hour > competitor.avatar.first_hour:
-            if hour < competitor.avatar.first_hour or hour > competitor.avatar.last_hour: return
-        else:
-            // Play hours wrapped around the clock
-            if hour > competitor.avatar.last_hour and hour < competitor.avatar.first_hour: return
+            if hour < competitor.avatar.first_hour or hour > competitor.avatar.last_hour: 
+                return
+        else if hour > competitor.avatar.last_hour and hour < competitor.avatar.first_hour:
+            // Wraparound hours case
+            return
         
         // Make a word list for this competitor and score it.
         // Higher chance of discovering shorter words via rejection sampling.
@@ -263,42 +268,38 @@ last_hour: 1
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
 
-        return competitor
-    
-    
-    let c = 0
-    while size(competitor_array) < target_count and avatar_set[c] and c < max_bots:       
-        const competitor = make_bot_competitor(avatar_set[c], "BOT_" + c)
-        ++c
         push(competitor_array, competitor)
-
+        
     // Moo is a special case
     // ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if
     // it is an odd 10 minute interval right now. Process Moo after other bots
     // so that players who don't see Moo don't have their other results affected
     if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2):
-        push(competitor_array,
-            make_bot_competitor({
-                    name: "Moo",
-                    sprite: avatar_sprite[34][22],
-                    base_ability: 0.1,
-                    short_word_preference: 0.80,
-                    first_hour: 0,
-                    last_hour: 22},
-                MOO_ID))
+        maybe_add_bot_competitor({
+                name: "Moo",
+                sprite: avatar_sprite[34][22],
+                base_ability: 0.1,
+                short_word_preference: 0.80,
+                first_hour: 0,
+                last_hour: 22},
+            MOO_ID)
     
-    // Process caf after Moo. Everyone who can see caf can also see Moo, so
+    // Process caf *after* Moo. Everyone who can see caf can also see Moo, so
     // this keeps it deterministic
-    if DEBUG.CAF or (player.has_ability["See caf"] and match_rng() < 50%):// and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
-        push(competitor_array,
-            make_bot_competitor({
-                    name: "caf",
-                    sprite: avatar_sprite[33][22],
-                    base_ability: 0.0,
-                    short_word_preference: 0.80,
-                    first_hour: 0,
-                    last_hour: 23},
-                CAF_ID))
+    if DEBUG.CAF or (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
+        maybe_add_bot_competitor({
+                name: "caf",
+                sprite: avatar_sprite[33][22],
+                base_ability: 0.0,
+                short_word_preference: 0.80,
+                first_hour: 0,
+                last_hour: 23},
+            CAF_ID)
+    
+    let c = 0
+    while size(competitor_array) < target_count and avatar_set[c]:
+        maybe_add_bot_competitor(avatar_set[c], "BOT_" + c)
+        ++c
 
 
 
