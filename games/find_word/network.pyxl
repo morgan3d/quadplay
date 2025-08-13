@@ -8,8 +8,8 @@
 
 */
 
-/* The group conduit for exchanging scores. */
-let conduit
+/* The group conduit for exchanging scores. Only used in `game_type` = `GLOBAL` */
+let conduit = ∅
 
 
 /* Called from `update_player()` and `FreeMode.frame` */

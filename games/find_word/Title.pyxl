@@ -137,9 +137,6 @@ def skip_intro():
 
 
 
-// Initialize the fake board
-player_reset_match(player, SOLO, "FIND WORD ALLL NITE")
-
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -153,6 +150,10 @@ if player.stats.lifetime.xp > 0 and not player.has_achievement["Play Solo Match"
     player_achieve(player, "Play Solo Match")
     
 
+todo("FIND COWS ALLL NITE easter egg for high levels, with mooing")
+
+// Initialize the fake board
+player_reset_match(player, SOLO, "FIND WORD ALLL NITE")
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 

@@ -93,7 +93,7 @@ conduitNetwork.init = function init(node_netid) {
 
     if (! node_netid) {
         // Generate a random node_netid if none was provided or sticky from a forced disconnection
-        node_netid = 'node_netid ' + crypto.randomUUID();
+        node_netid = 'node_netid ' + ((window.crypto && window.crypto.randomUUID()) ? window.crypto.randomUUID() : 'x' + Math.random().toString(36).substring(3));
     }
 
     if (! node_netid.startsWith('node_netid ')) {

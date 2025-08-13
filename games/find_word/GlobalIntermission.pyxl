@@ -1,6 +1,5 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("Remove compose_transform calls and fix coordinates")
 
 todo("Separate leveling from postgame")
 
@@ -93,7 +92,6 @@ def draw_award_summary()
         // Give the XP after the leveling up
         delay(grant_badge_xp, 60)
     
-    
     draw_award_summary.last_level_displayed = level
     
     const shadow = 70% player.avatar.color
@@ -165,25 +163,22 @@ def maybe_play_award_sound(winner):
 /* Used for best_word, longest, The title is used to compute the field */
 def draw_word_award(title, winner)
 & preserving_transform:
-    
-    compose_transform(xy(35, 36))
-    
     maybe_play_award_sound(winner)
         
     const field = replace(lowercase(title), {" ": "_"})
     const text = winner[field + "_text"]
     if not text: return
         
-    draw_award_background({corner: xy(-35, -24), size: xy(69, 37)}, field, winner.avatar.color)
+    draw_award_background({corner: xy(0, 12), size: xy(69, 37)}, field, winner.avatar.color)
 
-    draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(0, -29), z: 2})
-    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(40, -29), z: 2})
+    draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(35, 7), z: 2})
+    draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(75, 7), z: 2})
     
-    avatar_draw_large(winner.avatar, xy(0, -5), false, ∅, ∅, true)
+    avatar_draw_large(winner.avatar, xy(35, 31), false, ∅, ∅, true)
     
     if winner == player_competitor or not offensive[lowercase(text)]:
         board_select_word(player.board, text)
-        board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 68, 2))
+        board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 33, 38))
 
 
 
@@ -205,7 +200,7 @@ def draw_award_background(rect, field, color)
 
 def draw_most_words_award(winner)
 & preserving_transform:
-    
+    todo("Remove compose_transform calls and fix coordinates")
     compose_transform(xy(35, 36))
     
     maybe_play_award_sound(winner)

@@ -40,7 +40,7 @@ start_time = frame_utc_now
 
 // Compute end_time
 if game_type == SOLO:
-    end_time = frame_utc_now + SOLO_GAME_TIME
+    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then SOLO_GAME_TIME else TUTORIAL_GAME_TIME_SECONDS)
 else:
     assert(game_type == GLOBAL)
     
