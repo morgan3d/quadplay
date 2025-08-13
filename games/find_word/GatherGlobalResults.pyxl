@@ -89,5 +89,4 @@ if frame_utc_now ≥ end_time:
     
 leave
 ────────────────────────────────────────────────────────────────────────
-disconnect_from_network()
 competitor_analyze(competitor_array)

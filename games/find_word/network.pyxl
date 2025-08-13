@@ -1,3 +1,13 @@
+/* 
+
+ - Players connect to the group conduit about 10s before the game ends.
+ - At game end they all broadcast their scores, at the start of GatherGlobalResults.
+ - Wait for about 3s for all of the results to come in.
+ - Show the intermission (staying connected)
+ - Disconnect at the end of the intermission
+
+*/
+
 /* The group conduit for exchanging scores. */
 let conduit
 
@@ -8,12 +18,13 @@ def maybe_connect_to_network():
         return
     
     // Create a stable offset based on the player's name and their first word
-    const τ = hash(player.avatar.name + (last_value(player.history.list) default {text:"x"}).text)
+    const τ = hash(player.avatar.name + (player.history.list[0] default {text:"x"}).text)
     
-    // Delay the connection time for each so that there is not contention
-    const my_connect_time = end_time - NETWORK_CONNECT_TIME_SECONDS + τ * NETWORK_CONNECT_MAX_DELAY_SECONDS
+    // Delay the connection time for each player so that there is not contention at
+    // the signalling server or the broadcast server
+    const my_connect_time = end_time - NETWORK.CONNECT_TIME_SECONDS + τ * NETWORK.CONNECT_MAX_DELAY_SECONDS
 
-    // Create the conduit when it is time   
+    // Create the conduit when it is time for this player to connect 
     if not conduit and frame_utc_now > my_connect_time:
         conduit = make_conduit()
 
@@ -28,7 +39,8 @@ def share_results_with_network(player_competitor):
             // We may be offline, or the netid may be
             // having an issue with the signalling server.
             // Reset everything, since this game doesn't need
-            // a stable connection.
+            // a stable connection. This increases the chance
+            // that we can reconnect next match
             reset_conduits()
             conduit = ∅
     

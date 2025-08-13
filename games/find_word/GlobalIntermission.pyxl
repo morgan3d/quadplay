@@ -1,6 +1,5 @@
 GlobalIntermission
 ════════════════════════════════════════════════════════════════════════
-todo("on iphone XR dimensions (super narrow) the award layout is bad")
 todo("Remove compose_transform calls and fix coordinates")
 
 todo("Separate leveling from postgame")
@@ -94,7 +93,6 @@ def draw_award_summary()
         // Give the XP after the leveling up
         delay(grant_badge_xp, 60)
     
-    compose_transform(xy(35, 36))
     
     draw_award_summary.last_level_displayed = level
     
@@ -107,10 +105,10 @@ def draw_award_summary()
         outline: if level ≠ prev_level and flash then #FFF else ∅,
         font:    history_font,
         text:    "Level " + level,
-        pos:     xy(-14, -27)})
+        pos:     xy(21, 9)})
         
-    avatar_draw_large(player.avatar, xy(-14, -6), false, #FFF, shadow)
-  
+    avatar_draw_large(player.avatar, xy(21, 30), false, #FFF, shadow)
+
     const args = {
         font: history_font,
         x_align: "left",
@@ -119,23 +117,21 @@ def draw_award_summary()
         color: #FFF}
 
     // Score
-    compose_transform(xy(70, -24))
-    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 2), x_align: "right", markup: true})
+    draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 2) + xy(105, 12), x_align: "right", markup: true})
 
-    const x = -56
-    draw_text({…args, text: "Rare Words", pos: xy(x, 14)})
-    draw_text({…args, text: player_competitor.num_rare, pos: xy(30, 14), x_align: "right"})
+    draw_text({…args, text: "Rare Words", pos: xy(49, 26)})
+    draw_text({…args, text: player_competitor.num_rare, pos: xy(135, 26), x_align: "right"})
 
     // draw_text({…args, text: "Longest", pos: xy(x, 24)})
     // draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
 
     const xp_color   = if frames < XP_ANIMATION_DELAY_FRAMES and flash then highlight_color else #FFF
     const xp_outline = if frames < XP_ANIMATION_DELAY_FRAMES and flash then #FFF else ∅
-    draw_text({…args, text: "XP Earned",              pos: xy(x,  34), color: xp_color, outline: xp_outline})
-    draw_text({…args, text: "+" + (new_xp - prev_xp), pos: xy(30, 34), color: xp_color, outline: xp_outline, x_align: "right"})
+    draw_text({…args, text: "XP Earned",              pos: xy(49,  46), color: xp_color, outline: xp_outline})
+    draw_text({…args, text: "+" + (new_xp - prev_xp), pos: xy(135, 46), color: xp_color, outline: xp_outline, x_align: "right"})
 
     // XP bar outline
-    const xp_rect = {corner: xy(x, 39), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - x - 108, 10)}
+    const xp_rect = {corner: xy(49, 52), size: xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH + 56 - 108, 10)}
     draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size, ∅, shadow)
 
     // Progress bar
@@ -148,7 +144,7 @@ def draw_award_summary()
     draw_text({…args, shadow: #0008, font: history_font, text: format_number(xp, "commas") + " XP", x_align: "right", pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
     
-    board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 132, 14))
+    board_draw_mini(player.board, xy(GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 27, 26))
     
 
 
@@ -453,7 +449,6 @@ const history_rect = (
 history_update(player.history, history_rect)
 draw_corner_rect(history_rect.corner + xy(0, history_rect.size.y), xy(history_rect.size.x, 2), #000, ∅, -1)
 
-
 draw_awards()
 
 draw_leaderboard()
@@ -482,6 +477,8 @@ update_countdown()
 
 leave
 ────────────────────────────────────────────────────────────────────────
+disconnect_from_network()
+
 // Save again in case of XP awards
 stats_save(player.stats)
 
