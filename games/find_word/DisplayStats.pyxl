@@ -147,8 +147,7 @@ def draw_content():
                 
     
     if player.has_ability["Discovered Words Stat"]:
-        y += draw_section_title(y, "Discovered Words")
-        
+        y += draw_section_title(y + 7, "Discovered Words") - 12
         for text in vocabulary_text_array:
             y += draw_text({
                 pos: xy(½ (SCREEN_SIZE.x - WIDTH) + 10, y),

@@ -29,6 +29,8 @@ end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
 
 if DEBUG.INTERMISSION:
     end_time = frame_utc_now
+    
+debug_print(player.score)
 
 
 frame

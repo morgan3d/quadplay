@@ -85,7 +85,7 @@
         "auto_available_sound": "quad://sounds/good-03.sound.json",
         "vil_00_sound": "vil-00.sound.json"
     },
-    "version": "0.362",
+    "version": "0.364",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -748,11 +748,11 @@
         "GLOBAL_GAME_TIME_SECONDS": {
             "type": "number",
             "value": "130",
-            "min": 10,
+            "min": 45,
             "max": 480,
             "format": "0",
             "quantum": 1,
-            "description": "Game time *including* BigFinish time"
+            "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
         },
         "GLOBAL_INTERMISSION_TIME_SECONDS": {
             "type": "number",
@@ -1431,7 +1431,7 @@
                 },
                 "VIL": {
                     "type": "boolean",
-                    "value": true
+                    "value": false
                 },
                 "FORCE_LEVEL": {
                     "type": "number",

@@ -347,6 +347,9 @@ handle_buttons(
     ability_icon.auto_find, ∅,
     aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true)
 
+// In case the player parks in Free Mode for too long
+// we check the network timer here to see if we should log on
+update_network()
 
 if time_left ≤ 20/60:
     // Grace frames drawn in black

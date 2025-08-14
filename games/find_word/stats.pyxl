@@ -1,4 +1,4 @@
-todo("Debug how a save game could lose today stats and all words!")
+todo("Debug how a save game could lose today stats and all words! Make safeguard")
 
 /* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */
 def make_empty_stats_entry():
@@ -39,7 +39,7 @@ def stats_total_xp(stats):
        - $ = + S
    */
 def compress_word_list(array):
-    def length(a, b):
+    def length_comparator(a, b):
         return size(a) - size(b)
     
     const PRESENT = 2
@@ -47,7 +47,7 @@ def compress_word_list(array):
     
     // Start with words sorted from longest to shortest
     // (so we see prefixes first), and then mark all present
-    array = sorted(array, length, true)
+    array = sorted(array, length_comparator, true)
 
     // Maps each word to PRESENT or ALREADY_SAVED
     let set = {}
@@ -194,7 +194,7 @@ def stats_merge_previous_days(stats):
         lifetime.xp += day.xp
         push(lifetime.word_list, …day.word_list)
         
-        // Remove this rolled up day
+        // Remove this day now that it is rolled up
         remove_key(stats, date)
 
         return stats
@@ -249,7 +249,8 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     assert(stats)
     
     const entry = stats[today_date_string()]
-    
+    sort(entry.word_list)
+
     if size(competitor.longest_text) > size(entry.longest_text):
         entry.longest_text = competitor.longest_text
 
@@ -293,12 +294,12 @@ def stats_update(stats, competitor, num_competitors, joined_late):
                 push(entry.word_list, word)
                 push(unique, word)
     
-    sort(entry.word_list)
     
     const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP_VALUE.unique_word else 0
     entry.xp += word_xp
 
-    return {unique_word_list: unique, badge_xp, word_xp}
+    
+    return {unique_word_list: unique, badge_xp: badge_xp, word_xp: word_xp}
     
     
 

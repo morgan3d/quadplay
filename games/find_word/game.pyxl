@@ -210,11 +210,6 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         
     const enabled = activate_callback
     
-    // First call this frame for any button; deselect all on hover
-    if touch.hover and game_frames > handle_ability_button.last_frame:
-        handle_ability_button.selected_button = ∅
-    handle_ability_button.last_frame = game_frames
-    
     if enabled and touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
         handle_ability_button.selected_button = name
     
@@ -280,6 +275,11 @@ def handle_buttons(
     auto_sprite, auto_callback,
     aux_sprite,  aux_callback, aux_allow_b default false):
 
+    // Deselect all on hover
+    if touch.hover and game_frames > handle_ability_button.last_frame:
+        handle_ability_button.selected_button = ∅
+    handle_ability_button.last_frame = game_frames
+
     // No abilities except rotate when in the waiting room
     if not in_waiting_room:
         if player.has_ability["Free Mode"]:
@@ -302,7 +302,6 @@ def handle_buttons(
                 if player.has_ability["Remix"] then auto_callback else ∅)
 
     if player.has_ability["Rotate"] and aux_sprite:
-        todo("**Draws green after hover ends**")
         const region = {
             pos: get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size(), 
             size: 140% aux_sprite.size}

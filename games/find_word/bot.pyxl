@@ -2,12 +2,13 @@
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count, max_bots):
+    assert(max_bots > 0)
     
     todo("Move out to constants")    
     const avatar_set = [
 {
 name: "THX",
-sprite: avatar_sprite[13][4],
+sprite: avatar_sprite[25][6],
 base_ability: 24%,
 short_word_preference: 16%,
 first_hour: 10,
@@ -16,7 +17,7 @@ last_hour: 12,
 {
 // Later THX
 name: "THX",
-sprite: avatar_sprite[13][4],
+sprite: avatar_sprite[25][6],
 base_ability: 24%,
 short_word_preference: 16%,
 first_hour: 14,
@@ -80,8 +81,8 @@ last_hour: 2
 },
 {
 name: "CJ",
-sprite: avatar_sprite[39][24],
-base_ability: 2%,
+sprite: avatar_sprite[12][13],
+base_ability: 3%,
 short_word_preference: 92%,
 first_hour: 15,
 last_hour: 0
@@ -190,7 +191,7 @@ last_hour: 1
         // Bots face left
         competitor.avatar.sprite = competitor.avatar.sprite.x_flipped
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
-        competitor.avatar.level = clamp(⌈140 competitor.avatar.base_ability^(1.3)⌉, 1, 40)
+        competitor.avatar.level = avatar.level default clamp(⌈140 competitor.avatar.base_ability^(1.3)⌉, 1, 40)
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
@@ -260,7 +261,7 @@ last_hour: 1
         for word at i in competitor.word_list:
             competitor.score += score_word(word)
 
-        push(competitor_array, competitor)
+        return push(competitor_array, competitor)
     
     // Moo is a special case
     // ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if
@@ -285,25 +286,50 @@ last_hour: 1
                 base_ability: 0.0,
                 short_word_preference: 0.80,
                 first_hour: 0,
-                last_hour: 23},
+                last_hour: 23, 
+                level: 1},
             CAF_ID)
-        
-    if DEBUG.VIL or (player.has_ability["See VIL"] and ⌊2 (hour + minute / 30)⌋ mod (if player.has_ability["See VIL Frequently"] then 2 else 4) == 0):
-        // Can only see VIL after higher levels and on occasional half hours
+
+    if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
+        // VIL also cheats and always gets extra points. This allows them
+        // to be on top of the leaderboard and annoy the player without also winning
+        // every award (and thus being TOO annoying)
         maybe_add_bot_competitor({
                 name: "VIL",
                 sprite: avatar_sprite[25][20],
-                base_ability: 42%,
-                short_word_preference: 20%,
+                base_ability: 40%,
+                short_word_preference: 5%,
                 first_hour: 0,
-                last_hour: 23},
-            VIL_ID)
+                last_hour: 23,
+                level: 41},
+            VIL_ID).score += 125
 
     let c = 0
     while size(competitor_array) < target_count and avatar_set[c]:
         maybe_add_bot_competitor(avatar_set[c], "BOT_" + c)
         ++c
 
+
+def _VIL_is_online(day, hour, minute):
+    // Can only see VIL at higher levels and on occasional half hours.
+    return (((day + hour) mod 2 == 0) and
+            (⌊(day + hour + minute) / 10⌋ mod 
+                (if player.has_ability["See VIL Frequently"] then 3 else 6) == 0))
+        
+if DEBUG.VIL:
+    debug_print("\nVIL's Schedule:")
+    let online = 0
+    let total = 0
+    for hour < 23:
+        for m < 12:
+            const minute = 5 m
+            ++total
+            let text = ""
+            if _VIL_is_online(0, hour, minute):
+                ++online
+                text = "  ON"
+            debug_print(format_number((60 hour + minute) * 60, "clock24"), text)
+    debug_print("VIL is online " + format_number(online / total, "%") + "\n")
 
 
 /* Special case AI for the caf bot. `word_list` is the input,

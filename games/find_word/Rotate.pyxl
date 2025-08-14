@@ -24,6 +24,7 @@ handle_buttons(
     ability_icon.auto_find, ∅,
     aux_icon.rotate, ∅)
 
+update_network()
 
 if angle - ROTATION_SPEED < -90°:
     // Finish the rotation by swapping elements

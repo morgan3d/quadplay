@@ -43,8 +43,7 @@ def update_notifications()
         Z: 110,
         
         SPRITE_WIDTH: 32,
-        PADDING: 7
-    }
+        PADDING: 7}
 
     // Draw way on top of everything in Z
     set_transform(xy(½ SCREEN_SIZE.x, 44), ∅, NOTIFY.Z)

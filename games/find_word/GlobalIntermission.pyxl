@@ -14,6 +14,9 @@ let prev_xp
 let prev_level
 let new_xp
 
+/* Used to prevent multiple VIL effects per intermission */
+let played_vil_sound = false
+
 /* Cycle through the award stages. See `STAGE` */
 let stage
 
@@ -159,7 +162,8 @@ def maybe_play_award_sound(winner):
         play_sound(moo_00_sound)
     else if winner.avatar.id == CAF_ID:
         play_sound({sound: moo_01_sound, playback_rate: 200%})
-    else if winner.avatar.id == VIL_ID:
+    else if winner.avatar.id == VIL_ID and not played_vil_sound:
+        played_vil_sound = true
         play_sound({sound: vil_00_sound, time: random(0, 1), pitch: random(80%, 120%)})
 
 
@@ -203,7 +207,6 @@ def draw_award_background(rect, field, color)
 
 
 def draw_most_words_award(winner):
-    
     maybe_play_award_sound(winner)
     ++draw_most_words_award.frames
     player.board.selection_color = HIGHLIGHT_COLOR
@@ -387,14 +390,14 @@ def notify_word_bonus()
         push(decoded, q_decode(word))
     
     let text
-    if size(bonus.unique_word_list) ≤ 6:
+    if size(bonus.unique_word_list) ≤ 7:
         text = join(decoded, ", ", ", and ", " and ")
     else:
-        text = "" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 5), ", ", ", and ")
+        text = "" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 6), ", ", ", and ")
 
     notify_xp_bonus(
         bonus.word_xp,
-        "finding " + text + " for the first time!")        
+        "discovering " + text + "!")        
 
 
 
@@ -414,7 +417,7 @@ leaderboard_scroll = make_scroll_tracker()
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 
-
+played_vil_sound = false
 bonus = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
 
 

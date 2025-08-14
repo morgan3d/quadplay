@@ -101,6 +101,7 @@ leave
 play_sound(times_up_sound)
 if game_type == GLOBAL:
     player_achieve(player, "Play Global Match")
+    
 else if (game_type == SOLO and
     player.has_achievement["Spell EAT"] and 
     player.has_achievement["Spell SEAT"] and 
@@ -114,6 +115,7 @@ else if (game_type == SOLO and
 // now that they're locked in
 for points in entry in player.history.free:       
     player.score += points
+    
 
 // Reset the scroll position because layout differs
 // from the main game during intermission

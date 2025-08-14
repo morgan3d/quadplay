@@ -3,7 +3,6 @@ Title
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
 todo("Try to make iOS scroll away more at the page level")
-todo("Warn user to back up save game file")
 todo("Rename abilities by type: Passive, Feat, etc.")
 
 
@@ -134,19 +133,21 @@ def skip_intro():
     intro = ∅
 
 
-
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
 set_hooks()
 
+// Upgrade previous save files; nobody should have XP without having 
+// completed the initial tutorial
 if player.stats.lifetime.xp > 0 and not player.has_achievement["Play Solo Match"]:
-    // Upgrade previous save files; nobody should have XP without having 
-    // completed the initial tutorial
     todo("Remove at the end of August")
     player_achieve(player, "Play Solo Match")
     
-easter_egg = if player.avatar.level > 20 and ξ < 10% then 2 else (if player.avatar.level > 15 and ξ < 10% then 1 else 0)
+easter_egg = if player.avatar.level > 20 and ξ < 12% then 2 else (if player.avatar.level > 15 and ξ < 12% then 1 else 0)
+
+if not easter_egg and player.stats.lifetime.xp > 1000 and ξ < 2%:
+    notify(shapes.lightning, "Please Backup", "FWAN is in beta and could crash!\n\nUse the gear button to export a save game as a backup.")
 
 
 // Initialize the fake board
