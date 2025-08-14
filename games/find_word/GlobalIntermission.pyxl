@@ -149,16 +149,18 @@ def draw_award_summary()
     
 
 
-/* Special sounds for player, Moo, and caf */
+/* Special sounds for player, Moo, VIL, and caf */
 def maybe_play_award_sound(winner):
     if stage == prev_stage: return
 
-    if player_competitor == winner:
+    if winner.avatar.id == player_competitor.avatar.id:
         play_sound(award_sound)
     else if winner.avatar.id == MOO_ID:
         play_sound(moo_00_sound)
     else if winner.avatar.id == CAF_ID:
         play_sound({sound: moo_01_sound, playback_rate: 200%})
+    else if winner.avatar.id == VIL_ID:
+        play_sound({sound: vil_00_sound, time: random(0, 1), pitch: random(80%, 120%)})
 
 
 

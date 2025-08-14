@@ -17,11 +17,13 @@ Avatar (TODO) 4,12,New avatars (TODO),avatar_sprite[38][10].x_flipped
 Friend of caf,12,`moo is my mommy! be my friend too??',avatar_sprite[33][22].x_flipped
 Words/Match Stat,13,Average Words per Match is now available in Stats!,stats_sprite[0][0]
 Points/Match Stat,14,Average Points per Match is now available in Stats!,stats_sprite[0][0]
+See VIL,14,SILENT,
 Avatar (TODO) 5,14,New avatars (TODO),avatar_sprite[47][12].x_flipped
 Total Words Stat,15,Total Words count is now available in Stats!,stats_sprite[0][0]
 Free Mode,16,New abpowerility: Use Free Mode to make one unordered sequence per match,ability_icon.free_mode
 Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprite[0][0]
 Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.auto_find
+See VIL Frequently,18,SILENT,
 Avatar (TODO) 6,18,New avatars (TODO),avatar_sprite[43][6].x_flipped
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Avatar (TODO) 7,20,New avatars (TODO),avatar_sprite[39][14].x_flipped

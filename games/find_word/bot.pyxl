@@ -47,14 +47,6 @@ first_hour: 22,
 last_hour: 3
 },
 {
-name: "VIL",
-sprite: avatar_sprite[25][20],
-base_ability: 40%,
-short_word_preference: 20%,
-first_hour: 4,
-last_hour: 10
-},
-{
 name: "I♥U",
 sprite: avatar_sprite[3][20],
 base_ability: 2%,
@@ -269,7 +261,7 @@ last_hour: 1
             competitor.score += score_word(word)
 
         push(competitor_array, competitor)
-        
+    
     // Moo is a special case
     // ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if
     // it is an odd 10 minute interval right now. Process Moo after other bots
@@ -295,7 +287,18 @@ last_hour: 1
                 first_hour: 0,
                 last_hour: 23},
             CAF_ID)
-    
+        
+    if DEBUG.VIL or (player.has_ability["See VIL"] and ⌊2 (hour + minute / 30)⌋ mod (if player.has_ability["See VIL Frequently"] then 2 else 4) == 0):
+        // Can only see VIL after higher levels and on occasional half hours
+        maybe_add_bot_competitor({
+                name: "VIL",
+                sprite: avatar_sprite[25][20],
+                base_ability: 42%,
+                short_word_preference: 20%,
+                first_hour: 0,
+                last_hour: 23},
+            VIL_ID)
+
     let c = 0
     while size(competitor_array) < target_count and avatar_set[c]:
         maybe_add_bot_competitor(avatar_set[c], "BOT_" + c)
