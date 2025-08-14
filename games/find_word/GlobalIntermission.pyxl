@@ -29,6 +29,9 @@ const STATS_BUTTON_INDEX = 1
 
 let leaderboard_scroll
 
+// For notifications
+let bonus
+
 
 /* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
 def draw_awards()
@@ -88,10 +91,9 @@ def draw_award_summary()
         play_sound(level_up_sound)
         
         // Give the abilities after the sound has finished
-        delay(grant_new_abilities, 30)
-        
-        // Give the XP after the leveling up
-        delay(grant_badge_xp, 60)
+        delay(grant_new_abilities, 30)        
+        delay(notify_badge_bonus, 30)
+        delay(notify_word_bonus, 30) 
     
     draw_award_summary.last_level_displayed = level
     
@@ -355,6 +357,44 @@ def update_countdown():
         set_mode(GenerateBoard) because "Timer"
     
     
+    
+def notify_badge_bonus()
+& if bonus.badge_xp > 0:
+    
+    const title_array = []
+    for badge in player_competitor.badges:
+        // Convert the badge back into a title
+        let title = replace(find(BADGE_TABLE, badge), "_", " ")
+        if not contains(title, "word"):
+            title += " word"
+        
+        push(title_array, uppercase(title))
+
+    notify_xp_bonus(
+        bonus.badge_xp,
+        "winning " + join(title_array, ", ", ", and ", " and ") + " in a " + size(competitor_array) + "-player match!")
+
+
+
+def notify_word_bonus()
+& if bonus.word_xp > 0:
+    assert(bonus.unique_word_list ≠ ∅)
+    
+    let decoded = []
+    for word in bonus.unique_word_list:
+        push(decoded, q_decode(word))
+    
+    let text
+    if size(bonus.unique_word_list) ≤ 6:
+        text = join(decoded, ", ", ", and ", " and ")
+    else:
+        text = "" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 5), ", ", ", and ")
+
+    notify_xp_bonus(
+        bonus.word_xp,
+        "finding " + text + " for the first time!")        
+
+
 
 pop_mode from DisplayStats
 ────────────────────────────────────────────────────────────────────────
@@ -373,34 +413,37 @@ prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 
 
-if not DEBUG.INTERMISSION:
-    const unique_word_list = stats_update(player.stats, player_competitor, joined_late)
-    grant_unique_word_xp(unique_word_list)
-    
-    // Update the vocabulary
-    for word in unique_word_list:
-        player.vocabulary[word] = 1
-    
-    new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
-    // Update level
-    player.avatar.level = xp_to_level(new_xp)   
-    stats_save(player.stats)
-    save_local("has_ability", player.has_ability)
-else:
-    // Debugging, force a level up
-    new_xp = level_to_xp(player.avatar.level + 1) + 100
-    player.avatar.level = xp_to_level(new_xp)
+bonus = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
 
-if prev_level == player.avatar.level:
-    // See if caf has any commentary
+
+// Avoid recomputing every frame during the XP animation
+new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+
+// Update the net vocabulary. Vocabulary was originally computed on load of stats
+// so is not updated by stats_update
+for word in bonus.unique_word_list:
+    player.vocabulary[word] = 1
+
+// Update level based on the new total XP, as this is part of the 
+// avatar computed at load and not part of the stats
+player.avatar.level = xp_to_level(new_xp)
+
+// Save the updated stats (we'll save again at the end of the intermission).
+// Unlocked abilities are stored as part of the ability notification process.
+if not DEBUG.INTERMISSION:
+    stats_save(player.stats)
+    
+
+if  prev_level == player.avatar.level:
+    // See if caf has any commentary. Don't bother players who are leveling up
+    // with this.
     for competitor in competitor_array:
         if competitor.avatar.id == CAF_ID and competitor.score == 0:
-            def bleat():
-                play_sound({sound: moo_03_sound, pitch: 150%})          
-            notify(competitor.avatar.sprite, "caf", "`too hard!!!!!'", bleat)
-    
-    // Not leveling up, give badge XP now
-    grant_badge_xp()
+            notify(competitor.avatar.sprite, "caf", "`too hard!!!!!'", play_sound, {sound: moo_03_sound, pitch: 150%})
+
+    // Note: If the level changed, these notifications move to after leveling up
+    notify_badge_bonus()
+    notify_word_bonus()
 
 // Used to animate which word is being shown
 draw_most_words_award.frames = 0
@@ -426,8 +469,8 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 if not notifications_pending():
-    // Cycle through awards, giving equal time to each. Don't do this and distract
-    // the player during the level up cycle
+    // Cycle through awards, giving equal time to each. Don't advance
+    // while notifications are appearing
     prev_stage = stage
     stage = min(⌊size(STAGE) * mode_frames / (60 GLOBAL_INTERMISSION_TIME)⌋, size(STAGE) - 1)
 
@@ -447,7 +490,6 @@ if not notifications_pending():
 if landscape():
     // Vertical separator
     draw_corner_rect(xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
-
 
 const history_rect = (
     if landscape() then {corner: xy(0, 0), size: xy(SCREEN_SIZE.x - GLOBAL_LAYOUT.LEADERBOARD.WIDTH - 2, SCREEN_SIZE.y - 22)}
@@ -485,6 +527,4 @@ leave
 ────────────────────────────────────────────────────────────────────────
 disconnect_from_network()
 
-// Save again in case of XP awards
-stats_save(player.stats)
 

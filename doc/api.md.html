@@ -4725,7 +4725,7 @@ guest, you cannot currently leave a game without restarting <quadplay/>.
 ### Conduit
 
 !!! Warning Experimental API
-    The Conduit API is currently experimental and likely to change throughout summer and fall 2025
+    The Conduit API is currently experimental and likely to change throughout fall 2025
 
 The Conduit network API is an alternative to built-in Host-Guest shared-screen
 multiplayer. Both APIs can be used together, although the Conduit API is intended to
@@ -5009,6 +5009,33 @@ If using the Conduit API, you likely also want to disable the built-in Host-Code
 network API by unchecking the corresponding option on your game's main
 page in the IDE or changing it directly in the game.json file.
 
+
+### HTTP
+
+!!! Warning Experimental API
+    The HTTP API is in beta and may change or be removed in the future.
+
+This lets a program fetch data and access HTTP APIs from its own server, or from a
+remote server that supports CORS. 
+
+For security and safety, the HTTP API is disabled when a game is run from the
+launcher or in kiosk mode. You can make the API calls in this case, but they will always fail.
+
+`make_http(url, options default {method: "GET"}, data default nil)`
+: Create a HTTP request to the given URL. The `options` object 
+  has the form of a JavaScript [`RequestInit`](https://developer.mozilla.org/en-US/docs/Web/API/RequestInit)
+  object.
+
+
+`http_iterate(http_or_http_array, success_handler, failure_handler)`
+: Iterate through all pending HTTP requests in the array, or the single value if it is not an array.
+  For each that is complete, invokes one of the two handlers. Each has the form
+  `handler(response, http, data)` where `response` has the form of a JavaScript
+  [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+  object and `data` is the corresponding value passed to `make_http()`.
+  
+  If the request fails because of quadplay security restrictions, then the failure status code
+  will be 418.
 
 Raw Device Access
 -----------------------------------------------------------

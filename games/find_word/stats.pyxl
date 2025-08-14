@@ -1,3 +1,4 @@
+todo("Debug how a save game could lose today stats and all words!")
 
 /* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */
 def make_empty_stats_entry():
@@ -237,9 +238,9 @@ def today_date_string(update default false):
     Update the player's stats and level given the results in 
     competitor from a global match. Does not save.
     
-    Returns a list of new unique words
+    Returns a list of new unique words and the XP for badges and words.
 */
-def stats_update(stats, competitor, joined_late):
+def stats_update(stats, competitor, num_competitors, joined_late):
 
     // We may have passed midnight, so roll up any previous days
     // if needed before updating today's entry
@@ -262,7 +263,6 @@ def stats_update(stats, competitor, joined_late):
     
     entry.best_score = max(competitor.score, entry.best_score)
     
-    
     const N = size(competitor.word_list) + size(competitor.free_list)
     if N > entry.most_words:
         entry.most_words = N
@@ -272,7 +272,12 @@ def stats_update(stats, competitor, joined_late):
         entry.points += competitor.score
         ++entry.matches
     
+    // XP for score
     entry.xp += ⌈competitor.score * XP_VALUE.point⌉
+    
+    // XP for badges
+    const badge_xp = if player.has_ability["Badge XP"] then (XP_VALUE.badge_per_competitor * min(num_competitors - 1, 10) * size(competitor.badges)) else 0
+    entry.xp += badge_xp
 
     // Accumulate the words previously found by this player
     const word_set = {}
@@ -290,7 +295,10 @@ def stats_update(stats, competitor, joined_late):
     
     sort(entry.word_list)
     
-    return unique
+    const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP_VALUE.unique_word else 0
+    entry.xp += word_xp
+
+    return {unique_word_list: unique, badge_xp, word_xp}
     
     
 

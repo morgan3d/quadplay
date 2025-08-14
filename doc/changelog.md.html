@@ -9,12 +9,16 @@ of [<quadplay/>](manual.md.html).
 2025 August TBD
 ===================================
 
+- API and language changes:
+  - Released the docs for the (unimplemented) experimental HTTP API.
+    Note that this API is blocked for safety reasons in the quadplay
+    launcher and kiosk mode, but exported games may use it.
 - Incompatible API changes:
   - `play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)` ->
     `play_sound(sound, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, loop default false, stopped default false)`
 - Bug fixes:
   - Workaround for `crypto.randomUUID()` requiring HTTPS
-  
+
     
 2025 August 13
 ===================================

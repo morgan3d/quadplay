@@ -2,7 +2,7 @@ Title
 ════════════════════════════════════════════════════════════════════════
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
-todo("Try to make iOS scroll away more")
+todo("Try to make iOS scroll away more at the page level")
 todo("Warn user to back up save game file")
 todo("Rename abilities by type: Passive, Feat, etc.")
 
@@ -165,9 +165,6 @@ intro = sequence(
     {begin_callback: play_sound, data: {sound: times_up_sound}, frames: 100},
     intro_cleanup)
 
-if DEBUG.INTERMISSION:
-    start_match(GLOBAL)
-
     
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -175,6 +172,10 @@ if game_frames == 30:
     // Check for any upgrades since the previous version of the game on
     // start
     grant_new_abilities()
+    
+    if DEBUG.INTERMISSION:
+        start_match(GLOBAL)
+
     
 draw_text({
         pos: xy(0, 0),

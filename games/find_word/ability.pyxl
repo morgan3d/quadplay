@@ -1,6 +1,7 @@
 /* Manage player abilities. See also `ABILITY_TABLE` */
 
 def ability_load():
+    // Erase all abilities on force level. They will be immediately granted by grant_new_abilities
     const has_ability = if DEBUG.FORCE_LEVEL then {} else (load_local("has_ability") default {})
 
     // Remove obsolete abilities from the save game
@@ -18,16 +19,15 @@ def ability_load():
 
 
 
-/* Returns true if any new abilities were granted */
+/* Notify of all new abilities, which are each saved when the notification appears. */
 def grant_new_abilities():
     // Look for any abilities that should be unlocked
-    let any = false
     for ability at name in ABILITY_TABLE:
         if not contains(name, "TODO") and (not player.has_ability[name] and player.avatar.level ≥ ability.level):
-            any = true
             def grant_ability():
                 play_sound({sound: award_sound, pitch: 150%})
                 player.has_ability[name] = true
+
                 // Save new abilities
                 if not DEBUG.INTERMISSION:
                     save_local("has_ability", player.has_ability)
@@ -38,8 +38,8 @@ def grant_new_abilities():
                 
                 if ability.sprite_name ≠ "<default>":
                     sprite = evaluate_constant_expression(ability.sprite_name)
-                    
-                notify(sprite, name, ability.description, grant_ability, if DEBUG.FORCE_LEVEL then 2 else 8)
+                
+                notify(sprite, name, ability.description, grant_ability, ∅, if DEBUG.FORCE_LEVEL then 2 else 8)
             else:
                 // Grant the ability immediately because there is no notification
                 grant_ability()

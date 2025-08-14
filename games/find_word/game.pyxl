@@ -302,6 +302,7 @@ def handle_buttons(
                 if player.has_ability["Remix"] then auto_callback else ∅)
 
     if player.has_ability["Rotate"] and aux_sprite:
+        todo("**Draws green after hover ends**")
         const region = {
             pos: get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size(), 
             size: 140% aux_sprite.size}

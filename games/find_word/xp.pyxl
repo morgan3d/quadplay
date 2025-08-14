@@ -24,60 +24,15 @@ def level_to_xp(level):
 
 
 
-def notify_xp_bonus(xp_value, text, ):
-    def grant():
-        play_sound({sound: award_sound, playback_rate: 150%})
-        player.stats[today_date].xp += xp_value
-
+def notify_xp_bonus(xp_value, text):
     notify(
         notify_icon.xp,
         "XP Bonus",
         "+" + format_number(xp_value, "commas") + " XP for " + text,
-        grant)
+        play_sound,
+        {sound: award_sound, playback_rate: 150%})
 
-
-
-/* Called at mode enter before integrating stats */
-def grant_unique_word_xp(unique_word_list):
-    assert(unique_word_list ≠ ∅)
-    if not player.has_ability["Discovery XP"] or (size(unique_word_list) == 0): return
     
-    let decoded = []
-    for word in unique_word_list:
-        push(decoded, q_decode(word))
-    
-    let text
-    if size(unique_word_list) ≤ 4:
-        text = join(decoded, ", ", ", and ", " and ")
-    else:
-        text = "" + size(unique_word_list) + " words including " + join(slice(decoded, 0, 4), ", ", ", and ")
-    
-    notify_xp_bonus(
-        size(unique_word_list) * XP_VALUE.unique_word,
-        "finding " + text + " for the first time!")        
-
-
-
-/* If leveling up, called after leveling up. Otherwise called at mode enter. */
-def grant_badge_xp():
-    if not player.has_ability["Badge XP"]: return
-
-    let title_array = []
-    let bonus = 0
-    for badge in player_competitor.badges:
-        // Convert the badge back into a title
-        let title = replace(find(BADGE_TABLE, badge), "_", " ")
-        if not contains(title, "word"):
-            title += " word"
-        
-        push(title_array, uppercase(title))
-        bonus += XP_VALUE.badge_per_competitor * min(size(competitor_array) - 1, 10)
-    
-    if bonus > 0:
-        notify_xp_bonus(
-            bonus,
-            "winning " + join(title_array, ", ", ", and ", " and ") + " in a " + size(competitor_array) + "-player match!")
-
 
 // Testing levels
 /*
