@@ -2,12 +2,16 @@ Title
 ════════════════════════════════════════════════════════════════════════
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
+todo("Try to make iOS scroll away more")
 todo("Warn user to back up save game file")
 todo("Rename abilities by type: Passive, Feat, etc.")
 
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
+
+/* If non-zero, show a different title screen */
+let easter_egg = 0
 
 const cursor = make_cursor(∅, ∅, false, select_tile_sound)
 
@@ -55,7 +59,7 @@ def start_match(index):
     
     if ((index == GLOBAL and
         (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
-        not next_game_imminent) or DEBUG.WAITING_ROOM):
+        not next_game_imminent)):
         // There is no game currently running because the global game is in 
         // the GameOver state, or about to be so. Send this player to the waiting room
         // so that they aren't bored. 
@@ -108,14 +112,8 @@ def bounce_row(y, sound default select_tile_sound, color default TILE_CENTER_SEL
 
 
 
-def bounce_row_n(n):
-    def fcn(): bounce_row(n)
-    return fcn
-
-
-
 def highlight_random_row():
-    bounce_row(random_integer(0, ROWS - 1), word_sound, HIGHLIGHT_COLOR)
+    bounce_row(random_integer(0, ROWS - 1), if easter_egg then moo_00_sound else word_sound, HIGHLIGHT_COLOR)
 
 
     
@@ -137,7 +135,6 @@ def skip_intro():
 
 
 
-
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
@@ -149,27 +146,23 @@ if player.stats.lifetime.xp > 0 and not player.has_achievement["Play Solo Match"
     todo("Remove at the end of August")
     player_achieve(player, "Play Solo Match")
     
+easter_egg = if player.avatar.level > 20 and ξ < 10% then 2 else (if player.avatar.level > 15 and ξ < 10% then 1 else 0)
 
-todo("FIND COWS ALLL NITE easter egg for high levels, with mooing")
 
 // Initialize the fake board
-player_reset_match(player, SOLO, "FIND WORD ALLL NITE")
+player_reset_match(player, SOLO, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg])
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 
-def sound():
-    play_sound(times_up_sound)
-    
 intro = sequence(
     INTRO.PRE_FRAMES, 
-    bounce_row_n(0), INTRO.BEAT_FRAMES,
-    bounce_row_n(1), INTRO.BEAT_FRAMES,
-    bounce_row_n(2), INTRO.BEAT_FRAMES,
-    bounce_row_n(3), INTRO.BEAT_FRAMES,
+    {begin_callback: bounce_row, data: 0, frames: INTRO.BEAT_FRAMES},
+    {begin_callback: bounce_row, data: 1, frames: INTRO.BEAT_FRAMES},
+    {begin_callback: bounce_row, data: 2, frames: INTRO.BEAT_FRAMES},
+    {begin_callback: bounce_row, data: 3, frames: INTRO.BEAT_FRAMES},
     highlight_random_row,
     INTRO.SLIDE_FRAMES + 40,
-    sound,
-    100,
+    {begin_callback: play_sound, data: {sound: times_up_sound}, frames: 100},
     intro_cleanup)
 
 if DEBUG.INTERMISSION:

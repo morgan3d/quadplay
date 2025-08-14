@@ -321,7 +321,7 @@ def draw_stats_button(pos, selected, radius):
         z: 100})
 
     if not player.has_achievement["Check Stats"]:
-        draw_tutorial(pos - xy(0, radius), "Check\nStats")
+        draw_tutorial(pos - xy(0, radius), "Check\nStats", 270°, "left")
 
     return {pos: pos, shape: "disk", size: radius * xy(2, 2)}        
   

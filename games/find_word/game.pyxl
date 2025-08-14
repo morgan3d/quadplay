@@ -121,9 +121,7 @@ def set_hooks():
         // for a good mobile experience. See also `DEBUG.PORTRAIT`
         device_control("set_mouse_cursor", "pointer")
         
-        if DEBUG.LANDSCAPE:
-            set_screen_size(xy(384, 224))
-        else if DEBUG.PORTRAIT:
+        if DEBUG.PORTRAIT:
             device_control("enable_feature", "custom_screen_size")
             set_screen_size(xy(224, 412))
         else:

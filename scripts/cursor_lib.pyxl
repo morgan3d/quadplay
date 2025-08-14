@@ -304,6 +304,12 @@ def make_scroll_tracker():
 */
 def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change default 3 joy.xy)
 & preserving_transform:
+    assert(not is_nan(content_size.x))
+    assert(screen_scroll_rect.corner)
+    assert(not is_nan(screen_scroll_rect.corner.x))
+    assert(not is_nan(screen_scroll_rect.size.x))
+    assert(not is_nan(scroll.offset.x))
+    
     // Make sure we're reading the touch and mouse properties in screen space to
     // align with the screen_scroll_rect
     reset_transform()
@@ -337,7 +343,7 @@ def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change
         // Smooth the noisy velocity signal
         scroll._vel = lerp(scroll._vel, scroll.offset - prev, 50%)
     else:
-        // End drag
+        // End drag (only get here if in a drag that just ended)
         scroll._drag_start.pos = ∅
             
     const mouse = device_control("get_mouse_state")

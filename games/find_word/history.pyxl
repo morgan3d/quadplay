@@ -85,7 +85,7 @@ def history_draw(history, pos, max_height):
         pos.y += history_font.line_height + 1
 
     // Draw tutorial/help
-    if not player.has_achievement["Play Solo Match"]:
+    if not player.has_achievement["Play Solo Match"] and game_type == SOLO:
         for word at i in FIRST_TIME_WORD_LIST:
             if not player.has_achievement["Spell " + word]:
                 draw_text({

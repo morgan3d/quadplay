@@ -8,7 +8,7 @@ def insert_bots(competitor_array, target_count, max_bots):
 {
 name: "THX",
 sprite: avatar_sprite[13][4],
-base_ability: 22%,
+base_ability: 24%,
 short_word_preference: 16%,
 first_hour: 10,
 last_hour: 12,
@@ -17,7 +17,7 @@ last_hour: 12,
 // Later THX
 name: "THX",
 sprite: avatar_sprite[13][4],
-base_ability: 22%,
+base_ability: 24%,
 short_word_preference: 16%,
 first_hour: 14,
 last_hour: 20,
@@ -41,7 +41,7 @@ last_hour: 12
 {
 name: "AMS",
 sprite: avatar_sprite[37][14],
-base_ability: 0.3,
+base_ability: 37%,
 short_word_preference: 32%,
 first_hour: 22,
 last_hour: 3
@@ -49,8 +49,8 @@ last_hour: 3
 {
 name: "H3L",
 sprite: avatar_sprite[25][20],
-base_ability: 0.3,
-short_word_preference: 32%,
+base_ability: 40%,
+short_word_preference: 20%,
 first_hour: 4,
 last_hour: 10
 },

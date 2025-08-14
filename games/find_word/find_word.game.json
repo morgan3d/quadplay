@@ -84,7 +84,7 @@
         "auto_find_sound": "quad://sounds/explode-12.sound.json",
         "auto_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.358",
+    "version": "0.360",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1329,6 +1329,11 @@
                         }
                     }
                 },
+                "HISTORY_PORTRAIT_HEIGHT": {
+                    "type": "number",
+                    "value": 100,
+                    "description": "Height of the history in portrait mode"
+                },
                 "AWARD_HEIGHT": {
                     "type": "number",
                     "value": "65",
@@ -1393,10 +1398,6 @@
                     "type": "boolean",
                     "value": false
                 },
-                "LANDSCAPE": {
-                    "type": "boolean",
-                    "value": false
-                },
                 "BOARD_SEARCH": {
                     "type": "boolean",
                     "value": false
@@ -1407,10 +1408,6 @@
                     "description": "Debug override this to true to force a mobile-device-like aspect ratio in the IDE"
                 },
                 "HISTORY": {
-                    "type": "boolean",
-                    "value": false
-                },
-                "WAITING_ROOM": {
                     "type": "boolean",
                     "value": false
                 },
