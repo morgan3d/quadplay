@@ -224,7 +224,7 @@ def history_update(history, history_rect)
         
 
 
-/* Gets the history rect in `Play` and `FreeMode` modes. */
+/* Gets the history rect in `Play` and `Freestyle` modes. */
 def get_history_rect():
     const board_pos = get_board_pos()
     const board_size = get_board_pixel_size()
@@ -234,7 +234,7 @@ def get_history_rect():
             corner: xy(1, 1), 
             size: xy(
                 board_pos.x - ½ board_size.x - ¼ TILE_EXTENT + 1, 
-                SCREEN_SIZE.y - (if player.has_ability["Free Mode"] and not in_waiting_room then 42 else 8))}
+                SCREEN_SIZE.y - (if player.has_ability["Freestyle"] and not in_waiting_room then 42 else 8))}
     else:
         // Portrait
         return {

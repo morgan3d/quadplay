@@ -1,4 +1,4 @@
-FreeMode
+Freestyle
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
@@ -33,7 +33,7 @@ def player_free_selection_change_callback(player):
     if max_points > 0:
         player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
-        player_achieve(player, "Free Mode Word")
+        player_achieve(player, "Freestyle Word")
     
     // Choose the color based on the best selection
     max_points = 0
@@ -236,7 +236,7 @@ def draw_free_row(board_pos)
 
 
 /* Returns `[grid_size, tile_size, gutter]` for the
-   Free Mode board, which is shrunk in landscape mode. */    
+   Freestyle board, which is shrunk in landscape mode. */    
 def get_free_round_board_dims():
     let tile_size = xy(TILE_EXTENT, TILE_EXTENT)
     
@@ -268,7 +268,7 @@ def draw_free_round_board(pos)
     for 0 ≤ i ≤ 2:
         draw_rect(xy(0, 0), board_size + 2 i, if i then ∅ else player.background_color, player.board.selection_color)
 
-    if not player.has_achievement["Free Mode Word"]:
+    if not player.has_achievement["Freestyle Word"]:
         draw_tutorial(
             if landscape() then xy(-½ board_size.x, 0) else xy(0, -½ board_size.y),
             "Choose letters in\nany order to spell\none long word",
@@ -305,7 +305,7 @@ def draw_free_round_board(pos)
 
 def done():
     play_sound({sound: blip_alt_sound, volume: 80%})
-    player_achieve(player, "Exit Free Mode")
+    player_achieve(player, "Exit Freestyle")
     pop_mode() because "Button"
 
 
@@ -344,10 +344,10 @@ history_update(player.history, history_rect)
 
 handle_buttons(
     ability_icon.ok, "Done", done,
-    ability_icon.auto_find, ∅,
+    ability_icon.remix, ∅,
     aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true)
 
-// In case the player parks in Free Mode for too long
+// In case the player parks in Freestyle for too long
 // we check the network timer here to see if we should log on
 update_network()
 

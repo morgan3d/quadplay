@@ -32,7 +32,7 @@
         "GenerateBoard",
         "Play",
         "Rotate",
-        "FreeMode",
+        "Freestyle",
         "SoloIntermission",
         "GatherGlobalResults",
         "GlobalIntermission"
@@ -81,11 +81,11 @@
         "notify_icon": "notify_icon.sprite.json",
         "aux_icon": "aux_button.sprite.json",
         "tutorial_arrow": "tutorial_arrow.sprite.json",
-        "auto_find_sound": "quad://sounds/explode-12.sound.json",
-        "auto_available_sound": "quad://sounds/good-03.sound.json",
-        "vil_00_sound": "vil-00.sound.json"
+        "vil_00_sound": "vil-00.sound.json",
+        "remix_sound": "quad://sounds/explode-12.sound.json",
+        "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.364",
+    "version": "0.365",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

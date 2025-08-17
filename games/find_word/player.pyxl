@@ -31,7 +31,7 @@ def make_player():
         // Updated when the player completes a word. When ∅ the 
         // auto button is not available.        
         auto_list: ∅,
-        auto_uses_left: 0,
+        remix_uses_left: 0,
         // Button position, computed during rendering and then used
         // for score animation
         auto_pos: xy(0,0),
@@ -79,7 +79,7 @@ def player_free_row_contains(player, word):
 
 
 /* Creates animation going from the selection (if source == "board") or 
-   auto button (if source == "Remix") to the last word in the history */
+   remix button (if source == "Remix") to the last word in the history */
 def player_spawn_score_animation(player, source default "board"):
     let target
     
@@ -150,8 +150,8 @@ def player_selection_change_callback(player)
         if player.has_ability["Scry Remixes"]:
             const previously_available = size(player.auto_list)
             player.auto_list = find_short_words_from_selection()            
-            if player.auto_uses_left and size(player.auto_list) > 5 and not previously_available:
-                delay(play_sound, 5, {sound: auto_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
+            if player.remix_uses_left and size(player.auto_list) > 5 and not previously_available:
+                delay(play_sound, 5, {sound: remix_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
 
         return true
 
@@ -218,7 +218,7 @@ def player_draw_score(player, board_pos, time_left)
         // Extend the score with the free points, color
         // coded to make it more obvious this is coming
         // from the free points
-        if player.has_ability["Free Mode"]:
+        if player.has_ability["Freestyle"]:
             let free_score = 0
             for points in entry in player.history.free:
                 free_score += points
@@ -243,9 +243,9 @@ def player_draw_score(player, board_pos, time_left)
             y_align: "center",
             x_align: "right"}).size.x 
     
-    // Button prompts (no space during Free Mode for this)
+    // Button prompts (no space during Freestyle mode for this)
     if player.using_gamepad:
-        if get_mode() ≠ FreeMode:
+        if get_mode() ≠ Freestyle:
             draw_text({
                 pos: score_pos + xy(-136, -7),
                 font: button_prompt_font,
@@ -454,7 +454,7 @@ def player_reset_match(player, game_type, board_string default ∅):
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
     player.auto_list = ∅
-    player.auto_uses_left = (
+    player.remix_uses_left = (
         if player.has_ability["Remix × 4"] then 4
         else (if player.has_ability["Remix × 3"] then 3
         else (if player.has_ability["Remix × 2"] then 2

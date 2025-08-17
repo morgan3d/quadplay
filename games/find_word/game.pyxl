@@ -195,23 +195,31 @@ def draw_round_selection(pos, radius):
 
 /* If `activate_callback` is ∅, then the button is drawn disabled.
 
-   `name` is a unique identifier
+   `index` specifies the horizontal position.
    
-   If `sprite` is ∅, do not draw the button
+   `name` is a unique identifier used for managing selection. This is potentially
+   redundant with `index` except that selection can be shared with buttons that
+   do not use this function.
+   
+   If `sprite` is ∅, do not draw the button.
    
    Returns the button region. */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
-    
     const radius = 14
     const region = {
-        pos: xy(radius + 4 + 48 index, SCREEN_SIZE.y - radius - 1),
+        pos: xy(radius + 7 + 48 index, SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
         
     const enabled = activate_callback
     
-    if enabled and touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
-        handle_ability_button.selected_button = name
+    if enabled:
+        if touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
+            handle_ability_button.selected_button = name
+    else if handle_ability_button.selected_button == name:
+        // Deselect if not enabled and the currently selected button
+        handle_ability_button.selected_button = ∅
+        
     
     if handle_ability_button.selected_button ≠ name:
         // NOT selected
@@ -219,7 +227,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
-        font: leaderboard_font,
+        font: history_font,
         color: if handle_ability_button.selected_button == name then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
         outline: if handle_ability_button.selected_button == name then rgba(CURSOR_COLOR, 50%) else ∅,
         text: caption})
@@ -272,7 +280,7 @@ handle_ability_button.last_frame = 0
    Set a callback to ∅ for any button to render it disabled. */
 def handle_buttons(
     free_sprite, free_caption, free_callback,
-    auto_sprite, auto_callback,
+    remix_sprite, remix_callback,
     aux_sprite,  aux_callback, aux_allow_b default false):
 
     // Deselect all on hover
@@ -282,24 +290,23 @@ def handle_buttons(
 
     // No abilities except rotate when in the waiting room
     if not in_waiting_room:
-        if player.has_ability["Free Mode"]:
-            const region = handle_ability_button(0, "Free", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
-            if not player.has_achievement["Free Mode Word"]:
-                if get_mode() ≠ FreeMode:
-                    draw_tutorial(region.pos - xy(0, 20), "Enter\nFree Mode", ∅, "left")
-            else if not player.has_achievement["Exit Free Mode"] and get_mode() == FreeMode:
-                draw_tutorial(region.pos - xy(0, 20), "Leave\nFree Mode", ∅, "left")
+        if player.has_ability["Freestyle"]:
+            const region = handle_ability_button(0, "Freestyle", free_caption, free_sprite, if free_callback then "(q)" else ∅, free_callback)
+            if not player.has_achievement["Freestyle Word"]:
+                if get_mode() ≠ Freestyle:
+                    draw_tutorial(region.pos - xy(0, 20), "Enter\nFreestyle", ∅, "left")
+            else if not player.has_achievement["Exit Freestyle"] and get_mode() == Freestyle:
+                draw_tutorial(region.pos - xy(0, 20), "Leave\nFreestyle", ∅, "left")
                 
-        // The "Similar" display becomes the "Auto" button when active
+        // The "Scry Remixes" display becomes the "Remix x" button when active
         if player.has_ability["Scry Remixes"]:
-            todo("Bug: Auto button disappears when used until mouse moves")
             handle_ability_button(
                 1,
                 "Remix",
-                if player.has_ability["Remix × 2"] then "Remix × " + player.auto_uses_left else "Remix",
-                if player.has_ability["Remix"] then auto_sprite else ∅,
-                if player.has_ability["Remix"] and auto_callback then "(d)" else ∅,
-                if player.has_ability["Remix"] then auto_callback else ∅)
+                if player.has_ability["Remix × 2"] then "Remix ×" + player.remix_uses_left else "Remix",
+                if player.has_ability["Remix"] then remix_sprite else ∅,
+                if player.has_ability["Remix"] and  remix_callback then "(d)" else ∅,
+                if player.has_ability["Remix"] then remix_callback else ∅)
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {

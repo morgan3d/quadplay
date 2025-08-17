@@ -4,8 +4,7 @@
    on which avatars can be used. */
 const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 9
 
-todo("** Blank tile **")
-todo("*** Lock avatars by level")
+todo("** Blank tile")
 
     
 def avatar_save(avatar):

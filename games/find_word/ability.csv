@@ -3,32 +3,25 @@ Stats Tracker,2,You now have a Stats tracker for your XP!,stats_sprite[0][0]
 See Moo,2,SILENT,
 Rotate,2,New power: Rotate the board for a new perspective,aux_icon.rotate
 Most Words Stat,3,Most Words per match is now available in Stats!,stats_sprite[0][0]
-Friend of Moo,3,"`Hi I'm Moo, Let's Be Friends!'",avatar_sprite[34][22].x_flipped
+Friend of Moo,4,"`Hi I'm Moo, Let's Be Friends!'",avatar_sprite[34][22].x_flipped
 High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprite[0][0]
-Avatar (TODO) 1,6,New avatars (TODO),avatar_sprite[6][8].x_flipped
-Longest Word Stat,7,Your Longest Word is now available in Stats!,shapes.triangle.rotated_270
-Avatar (TODO) 2,8,New avatars (TODO),avatar_sprite[9][20].x_flipped
-Best Word Stat,9,Best Word is now available in Stats!,shapes.diamond
-Discovered Words Stat,10,Discovered Words count is now available in Stats!,stats_sprite[0][0]
-Avatar (TODO) 3,10,New avatars (TODO),avatar_sprite[11][22].x_flipped
+Longest Word Stat,6,Your Longest Word is now available in Stats!,shapes.triangle.rotated_270
+Best Word Stat,7,Best Word is now available in Stats!,shapes.diamond
+Discovered Words Stat,8,Discovered Words count is now available in Stats!,stats_sprite[0][0]
 Discovery XP,11,Get an XP bonus for every time you discover a new word!,<default>
 See caf,12,SILENT,
-Avatar (TODO) 4,12,New avatars (TODO),avatar_sprite[38][10].x_flipped
 Friend of caf,12,`moo is my mommy! be my friend too??',avatar_sprite[33][22].x_flipped
 Words/Match Stat,13,Average Words per Match is now available in Stats!,stats_sprite[0][0]
 Points/Match Stat,14,Average Points per Match is now available in Stats!,stats_sprite[0][0]
 See VIL,14,SILENT,
-Avatar (TODO) 5,14,New avatars (TODO),avatar_sprite[47][12].x_flipped
 Total Words Stat,15,Total Words count is now available in Stats!,stats_sprite[0][0]
-Free Mode,16,New abpowerility: Use Free Mode to make one unordered sequence per match,ability_icon.free_mode
+Freestyle,16,New ability: Use Freestyle to make one unordered sequence per match,ability_icon.freestyle
 Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprite[0][0]
-Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.auto_find
+Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.remix
 See VIL Frequently,18,SILENT,
-Avatar (TODO) 6,18,New avatars (TODO),avatar_sprite[43][6].x_flipped
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
-Avatar (TODO) 7,20,New avatars (TODO),avatar_sprite[39][14].x_flipped
-Scry Word Count,21,You can now see the total number of possible words while playing!,<default>
-Remix,22,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.auto_find
-Remix × 2,24,"New power: Use Remix 2× per match",ability_icon.auto_find
-Remix × 3,26,"New power: Use Remix 3× per match",ability_icon.auto_find
-Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.auto_find
+Scry Word Count,20,You can now see the total number of possible words while playing!,<default>
+Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.remix
+Remix × 2,24,"New power: Use Remix 2× per match",ability_icon.remix
+Remix × 3,26,"New power: Use Remix 3× per match",ability_icon.remix
+Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.remix

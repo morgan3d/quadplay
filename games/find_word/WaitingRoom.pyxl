@@ -26,8 +26,8 @@ frame
 player_update(player, get_board_pos(), ∅, true)
 
 handle_buttons(
-    ability_icon.free_mode, "Free", ∅,
-    ability_icon.auto_find, ∅,
+    ability_icon.freestyle, "Freestyle", ∅,
+    ability_icon.remix, ∅,
     aux_icon.rotate, enter_rotate_mode)
 
 if frame_utc_now ≥ end_time or DEBUG.INTERMISSION:

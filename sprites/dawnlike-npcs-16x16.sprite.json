@@ -2,5 +2,28 @@
     "url":          "dawnlike-npcs-16x16.png",
     "sprite_size":   {"x": 16, "y": 16},
     "gutter":       0,
-    "license" :     "by Dragon De Platino & DawnBringer, 2014. Used under the CC-BY 4.0 license https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181"
+    "license" :     "by Dragon De Platino & DawnBringer, 2014. Used under the CC-BY 4.0 license https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181",
+    "names": {
+        "dragon_grn":       {"x": 0,    "y": 0},
+        "mermaid_grn":      {"x": 1,    "y": 0},
+        "vulture_grn":      {"x": 2,    "y": 0},
+        "gorilla_brn":      {"x": 3,    "y": 0},
+        "slug_brn":         {"x": 4,    "y": 0},
+        
+        "wingdemon_red_sm": {"x": 9,    "y": 0},
+        "wingdemon_red_lg": {"x": 10,   "y": 0},
+
+        "fairy_grn_sm":     {"x": 10,   "y": 2},
+        "fairy_grn_md":     {"x": 11,   "y": 2},
+        "fairy_grn_lg":     {"x": 12,   "y": 2},
+        
+        "fairy_blu_sm":     {"x": 13,   "y": 2},
+        "fairy_blu_md":     {"x": 14,   "y": 2},
+        "fairy_blu_lg":     {"x": 15,   "y": 2},
+
+        "mouse_red_sm":     {"x": 7,    "y": 6},
+        "mouse_red_md":     {"x": 8,    "y": 6},
+        "mouse_red_lg":     {"x": 9,    "y": 6},
+        "mouse_gry_lg":     {"x": 10,   "y": 6},
+    }
 }

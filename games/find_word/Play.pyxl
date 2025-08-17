@@ -1,8 +1,8 @@
 Play
 ════════════════════════════════════════════════════════════════════════
-def enter_free_mode():
+def enter_freestyle():
     board_deselect_all(player.board, player)
-    push_mode(FreeMode) because "Button"
+    push_mode(Freestyle) because "Button"
 
 
 
@@ -10,7 +10,7 @@ def execute_auto():
     todo("auto: tutorial")
     todo("auto: achievement")
     
-    play_sound({sound: auto_find_sound, volume: 50%, playback_rate: 200%})
+    play_sound({sound: remix_sound, volume: 50%, playback_rate: 200%})
     sort(player.auto_list, size_comparator)
     for word at w in player.auto_list:
         const points = score_word(word)
@@ -75,8 +75,8 @@ const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
 player_update(player, get_board_pos(), ∅, allow_rotate)
 
 handle_buttons(
-    ability_icon.free_mode, "Free", enter_free_mode,
-    ability_icon.auto_find, if player.auto_uses_left and size(player.auto_list) then execute_auto else ∅,
+    ability_icon.freestyle, "Freestyle", enter_freestyle,
+    ability_icon.remix, if player.remix_uses_left and size(player.auto_list) then execute_auto else ∅,
     aux_icon.rotate, enter_rotate_mode)
 
 if time_left ≤ 20/60:

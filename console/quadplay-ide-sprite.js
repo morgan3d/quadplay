@@ -131,7 +131,7 @@ function onSpriteEditorCanvasMouseMove(e) {
     const scaledSpriteWidth = spriteEditorAsset.sprite_size.x * scale;
     const scaledSpriteHeight = spriteEditorAsset.sprite_size.y * scale;
 
-    const scaledSpriteStrideWidth = (spriteEditorAsset.sprite_size.x + spriteEditorAsset.$gutter) * scale;
+    const scaledSpriteStrideWidth  = (spriteEditorAsset.sprite_size.x + spriteEditorAsset.$gutter) * scale;
     const scaledSpriteStrideHeight = (spriteEditorAsset.sprite_size.y + spriteEditorAsset.$gutter) * scale;
 
     spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
@@ -164,7 +164,7 @@ function onSpriteEditorCanvasMouseMove(e) {
         const pivot = sprite.pivot || {x: 0, y: 0};
         spriteEditorPivot.style.visibility = 'visible';
         spriteEditorPivot.style.left = Math.floor(scale * (sprite.pivot.x + sprite.size.x / 2) - spriteEditorPivot.offsetWidth / 2) + 'px';
-        spriteEditorPivot.style.top = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
+        spriteEditorPivot.style.top  = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
 
         document.getElementById('spriteEditorInfoName').innerHTML = `${spriteEditorAssetName}[${U}][${V}]`;
 
@@ -174,6 +174,8 @@ function onSpriteEditorCanvasMouseMove(e) {
                 const animation = spriteEditorAsset[sprite.$animationName];
                 document.getElementById('spriteEditorInfoAnimationName').innerHTML += `[${sprite.$animationIndex}], extrapolate: "${animation.extrapolate || 'clamp'}"`;
             }
+        } else {
+            document.getElementById('spriteEditorInfoAnimationName').innerHTML = '';
         }
 
         document.getElementById('spriteEditorInfoFrames').innerHTML = `frames: ${sprite.frames}`;
