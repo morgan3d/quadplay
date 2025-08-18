@@ -8,7 +8,7 @@ def enter_rotate_mode():
 enter
 ────────────────────────────────────────────────────────────────────────
 assert(game_type == GLOBAL)
-in_waiting_room = true
+assert(in_waiting_room == true)
 
 // End right when the next game starts so that this player can join
 end_time = prev_global_game_utc_start_time() + GLOBAL_PERIOD

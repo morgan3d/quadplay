@@ -43,7 +43,7 @@ def competitor_is_friend(competitor):
     return ((competitor.avatar.id == MOO_ID and player.has_ability["Friend of Moo"]) or
             (competitor.avatar.id == CAF_ID and player.has_ability["Friend of caf"]) or    
             ((competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or
-             not competitor.avatar.base_ability)))
+             not competitor.avatar.bot)))
         
 
 
@@ -102,12 +102,11 @@ def competitor_analyze(competitor_array):
             if points > competitor.best_word_points:
                 competitor.best_word_points = points
                 competitor.best_word_text = text
-                competitor.text = text
         
             if size(text) > competitor.longest_size:
                 competitor.longest_size = size(text)
                 competitor.longest_text = text
-    
+
     // Count at which a word is rare
     const rare_threshold = max(1, floor(size(competitor_array) / 6))
 

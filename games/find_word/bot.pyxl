@@ -3,163 +3,7 @@
    produce their scores and word lists for the current `player.board`. */
 def insert_bots(competitor_array, target_count, max_bots):
     assert(max_bots > 0)
-    
-    todo("Move out to constants")    
-    const avatar_set = [
-{
-name: "THX",
-sprite: avatar_sprite[25][6],
-base_ability: 24%,
-short_word_preference: 16%,
-first_hour: 10,
-last_hour: 12,
-},
-{
-// Later THX
-name: "THX",
-sprite: avatar_sprite[25][6],
-base_ability: 24%,
-short_word_preference: 16%,
-first_hour: 14,
-last_hour: 20,
-},
-{
-name: "o_o",
-sprite: avatar_sprite[20][14],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 17,
-last_hour: 7
-},
-{
-name: "NT",
-sprite: avatar_sprite[17][6],
-base_ability: 8%,
-short_word_preference: 67%,
-first_hour: 8,
-last_hour: 12
-},
-{
-name: "AMS",
-sprite: avatar_sprite[37][14],
-base_ability: 37%,
-short_word_preference: 32%,
-first_hour: 22,
-last_hour: 3
-},
-{
-name: "I♥U",
-sprite: avatar_sprite[3][20],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 19,
-last_hour: 6
-},
-{
-name: "jen",
-sprite: avatar_sprite[39][8],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 7,
-last_hour: 11
-},
-{
-name: "411",
-sprite: avatar_sprite[24][18],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 21,
-last_hour: 10
-},
-{
-name: "RLL",
-sprite: avatar_sprite[33][24],
-base_ability: 21%,
-short_word_preference: 21%,
-first_hour: 15,
-last_hour: 2
-},
-{
-name: "CJ",
-sprite: avatar_sprite[12][13],
-base_ability: 3%,
-short_word_preference: 92%,
-first_hour: 15,
-last_hour: 0
-},
-{
-name: "Bob",
-sprite: avatar_sprite[28][26],
-base_ability: 10%,
-short_word_preference: 62%,
-first_hour: 0,
-last_hour: 7
-},
-{
-name: "TTT",
-sprite: avatar_sprite[39][16],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 2,
-last_hour: 9
-},
-{
-name: "HCD",
-sprite: avatar_sprite[39][6],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 12,
-last_hour: 20
-},
-{
-name: "GEW",
-sprite: avatar_sprite[39][2],
-base_ability: 30%,
-short_word_preference: 45%,
-first_hour: 11,
-last_hour: 15
-},
-{
-name: "jr",
-sprite: avatar_sprite[9][18],
-base_ability: 3%,
-short_word_preference: 89%,
-first_hour: 18,
-last_hour: 6
-},
-{
-name: "FLA",
-sprite: avatar_sprite[9][16],
-base_ability: 2%,
-short_word_preference: 92%,
-first_hour: 1,
-last_hour: 7
-},
-{
-name: "Lou",
-sprite: avatar_sprite[8][18],
-base_ability: 7%,
-short_word_preference: 71%,
-first_hour: 6,
-last_hour: 12
-},
-{
-name: "RON",
-sprite: avatar_sprite[8][16],
-base_ability: 3%,
-short_word_preference: 86%,
-first_hour: 4,
-last_hour: 18
-},
-{
-name: "CPU",
-sprite: avatar_sprite[21][2],
-base_ability: 8%,
-short_word_preference: 92%,
-first_hour: 12,
-last_hour: 1
-}]
-
+   
     // Make results for the board stable so that all human players see the
     // bots doing the same things
     const match_rng = make_random(player.board.seed)
@@ -178,33 +22,34 @@ last_hour: 1
     // Shift everybody's ability by this amount
     const match_shift = match_rng(-10%, 0%)
     
-    def maybe_add_bot_competitor(avatar, id):
-        assert(avatar and avatar.sprite)
+    def maybe_add_bot_competitor(descriptor, id):
+        assert(descriptor and descriptor.sprite and descriptor.name)
         
         const competitor = {
-            avatar: avatar,
+            avatar: {
+                // Bots face left
+                sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
+                name: descriptor.name,
+                bot: true,
+                id: id},
             score: 0,
             free_list: []}
     
-        competitor.avatar.id = id
-    
-        // Bots face left
-        competitor.avatar.sprite = competitor.avatar.sprite.x_flipped
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
-        competitor.avatar.level = avatar.level default clamp(⌈140 competitor.avatar.base_ability^(1.3)⌉, 1, 40)
+        competitor.avatar.level = descriptor.level default clamp(⌈140 descriptor.base_ability^(1.3)⌉, 1, 40)
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const base_ability = competitor.avatar.base_ability
+        const base_ability = descriptor.base_ability
         const find_percentage = min(28%, match_rng(3%^⅓, 30%^⅓)³ + base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
-        const short_word_preference = competitor.avatar.short_word_preference
+        const short_word_preference = descriptor.short_word_preference
         
         // Is this particular competitor available right now?
-        if competitor.avatar.last_hour > competitor.avatar.first_hour:
-            if hour < competitor.avatar.first_hour or hour > competitor.avatar.last_hour: 
+        if descriptor.last_hour > descriptor.first_hour:
+            if hour < descriptor.first_hour or hour > descriptor.last_hour: 
                 return
-        else if hour > competitor.avatar.last_hour and hour < competitor.avatar.first_hour:
+        else if hour > descriptor.last_hour and hour < descriptor.first_hour:
             // Wraparound hours case
             return
         
@@ -227,7 +72,7 @@ last_hour: 1
                         word_set[w] = 1
         
         // Special case for Moo, who always finds *all* cow-related words
-        if competitor.avatar.id == MOO_ID:
+        if id == MOO_ID:
             for word in MOOCABULARY:
                 if not word_set[word] and contains(player.board.word_list, word):
                     word_set[word] = 1
@@ -235,11 +80,11 @@ last_hour: 1
         let tries = 0        
         // Special case for caf, who sometimes finds a great word, finds all
         // three-letter cow words, and with a low probability finds a terrible word
-        if competitor.avatar.id == CAF_ID:
+        if id == CAF_ID:
             caf_ai(word_set, player.board.word_list, match_rng)
         else:
             // Pick up a bunch of cheap words first
-            const short_word_length = if competitor.avatar.id == MOO_ID then 3 else 4
+            const short_word_length = if id == MOO_ID then 3 else 4
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
                 ++tries
                 const word = random_value(player.board.word_list, match_rng)
@@ -247,7 +92,7 @@ last_hour: 1
                     maybe_add_word(word)
     
         // Moo cannot find non-cow words greater than 4 letters    
-        if competitor.avatar.id ≠ MOO_ID and competitor.avatar.id ≠ CAF_ID:
+        if id ≠ MOO_ID and id ≠ CAF_ID:
             tries = 0
             while size(word_set) < words_found and tries < 2 words_found:
                 ++tries
@@ -270,7 +115,7 @@ last_hour: 1
     if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2):
         maybe_add_bot_competitor({
                 name: "Moo",
-                sprite: avatar_sprite[34][22],
+                sprite: "avatar_sprite[34][22]",
                 base_ability: 0.1,
                 short_word_preference: 0.80,
                 first_hour: 0,
@@ -279,10 +124,10 @@ last_hour: 1
     
     // Process caf *after* Moo. Everyone who can see caf can also see Moo, so
     // this keeps it deterministic
-    if DEBUG.CAF or (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
+    if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
         maybe_add_bot_competitor({
                 name: "caf",
-                sprite: avatar_sprite[33][22],
+                sprite: "avatar_sprite[33][22]",
                 base_ability: 0.0,
                 short_word_preference: 0.80,
                 first_hour: 0,
@@ -296,7 +141,7 @@ last_hour: 1
         // every award (and thus being TOO annoying)
         maybe_add_bot_competitor({
                 name: "VIL",
-                sprite: avatar_sprite[25][20],
+                sprite: "avatar_sprite[25][20]",
                 base_ability: 40%,
                 short_word_preference: 5%,
                 first_hour: 0,
@@ -305,8 +150,8 @@ last_hour: 1
             VIL_ID).score += 125
 
     let c = 0
-    while size(competitor_array) < target_count and avatar_set[c]:
-        maybe_add_bot_competitor(avatar_set[c], "BOT_" + c)
+    while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:
+        maybe_add_bot_competitor(BOT_DESCRIPTOR_ARRAY[c], "BOT_" + c)
         ++c
 
 

@@ -2035,7 +2035,7 @@ a separate CSV file for the data has additional properties:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
 {
   "type": "table",              // "table" = struct-of-structs; "array" = flat array
-  "transpose": "false",         // Optional, default false
+  "transpose": false,           // Optional, default false
   "column_type": "object",      // Optional, default "object"
   "ignore_first_column": false, // Optional, default to false. Removes the source 1st column if true
   "row_type": "array",          // Optional, default "object"
@@ -2044,6 +2044,10 @@ a separate CSV file for the data has additional properties:
   "trim": true,                 // If true, trim extra whitespace. Default is true
   "set_table": false            // Only for "type":"table". If true, flatten the table as if an array, and then use the values in the array as keys of a new table that map to true
 }
+
+
+// Example: An array of objects, where each row is an object and the first row is the names of the properties
+{"type": "table", "transpose": true, "column_type": "array"}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If `type` is `"array"` then the table after being read is flattened in column-major order
@@ -2074,11 +2078,13 @@ files with these additional rules for data types:
 CSV Value                |  Quadplay Type
 -------------------------|-----------------
 number                   |  number
-number ending in `%`     |  number
+number ending in `%`     |  number (applies percentage)
 date                     |  string
 `TRUE` or `FALSE`        |  boolean
 `$`, `¥`, `€`, `£`, or `§` + number       |  number (ignores currency unit)
-double-quoted text       |  string (without quotes)
+double-quoted number     | number
+double-quoted string equation  | string, even if number (example: `"=""00000"""`)
+double-quoted text not starting with a digit  |  string (without quotes)
 other text               |  string
 empty                    |  (empty) string
 `""` in text             |  `"`

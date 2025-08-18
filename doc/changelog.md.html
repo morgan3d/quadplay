@@ -13,11 +13,17 @@ of [<quadplay/>](manual.md.html).
   - Released the docs for the (unimplemented) experimental HTTP API.
     Note that this API is blocked for safety reasons in the quadplay
     launcher and kiosk mode, but exported games may use it.
+  - Added support for numbers as strings in CSV file parsing (example: `"=""12345"""`)
+  - Documented CSV parsing options for array-of-structs
+- IDE changes:
+  - "Go to API" dropdown list for code files for jumping to constants, variables, functions, and events
+  - Blocks surrounded by `if DEBUG:` no longer count against the statement limit (case insensitive, and any identifier beginning with the prefix `DEBUG` matches)
 - Incompatible API changes:
   - `play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)` ->
     `play_sound(sound, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, loop default false, stopped default false)`
 - Bug fixes:
-  - Workaround for `crypto.randomUUID()` requiring HTTPS
+  - Blank lines at the start of the program no longer count against the statements limit
+  - Workaround for `crypto.randomUUID() is not a function` but
 
     
 2025 August 13

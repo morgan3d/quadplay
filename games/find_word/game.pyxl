@@ -14,7 +14,7 @@ const cursor = make_cursor()
 
 /* If true, then the player is just warming
    up for a `GLOBAL` game that will start soon. */
-let in_waiting_room = false
+let in_waiting_room
 
 let player = make_player()
 
@@ -75,7 +75,7 @@ def _update_frame_utc_now():
     const prev_time = frame_utc_now
     frame_utc_now = utc_now()
     
-    if frame_utc_now - prev_time > 60 * REBOOT_TIME_MINUTES:
+    if frame_utc_now - prev_time > 60 REBOOT_TIME_MINUTES:
         reset_game()
 
 
@@ -175,6 +175,7 @@ def draw_timer(board_pos):
             // but ensure that we play only once per timeout, converting from time to frames
             last_countdown_sound_time = now()
             play_sound(timer_countdown_sound, 150%)
+            
             // Pulse in case sound is off
             player.background_color = #FFF
         else:
@@ -236,11 +237,11 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
     // Special case for the auto button, where the sprite itself shows a number
-    if name == "Remix" and size(player.auto_list):
+    if name == "Remix" and size(player.remix_list):
         // Save this position for later score animation
-        player.auto_pos = region.pos
+        player.remix_pos = region.pos
         draw_text({
-            text: size(player.auto_list),
+            text: size(player.remix_list),
             pos: region.pos + 1,
             font: tile_font,
             color: if enabled then HIGHLIGHT_COLOR else rgba(HIGHLIGHT_COLOR, 40%),
@@ -279,9 +280,9 @@ handle_ability_button.last_frame = 0
    
    Set a callback to ∅ for any button to render it disabled. */
 def handle_buttons(
-    free_sprite, free_caption, free_callback,
+    free_sprite,  free_caption,  free_callback,
     remix_sprite, remix_callback,
-    aux_sprite,  aux_callback, aux_allow_b default false):
+    aux_sprite,   aux_callback,  aux_allow_b default false):
 
     // Deselect all on hover
     if touch.hover and game_frames > handle_ability_button.last_frame:
@@ -341,16 +342,15 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
 
     if angle == 0°:
         text_x_align = text_x_align default "right"        
-        text_y_align = text_y_align default "center"
     else if angle == 90°:
-        text_x_align = text_x_align default "center"
         text_y_align = text_y_align default "top"
     else if angle == 180°:
         text_x_align = text_x_align default "left"
-        text_y_align = text_y_align default "center"
     else if angle == 270°:
-        text_x_align = text_x_align default "center"
         text_y_align = text_y_align default "bottom"
+
+    text_x_align = text_x_align default "center"
+    text_y_align = text_y_align default "center"
 
     const args = {
         sprite: tutorial_arrow[0][0],
@@ -384,8 +384,7 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
 
 // Initialize the background words
 for y < 20:
-    let s = random_safe_word()
-    while size(s) < 250:
-        s += " " + random_safe_word()
-    background_word_array[y] = s
+    background_word_array[y] = random_safe_word()
+    while size(background_word_array[y]) < 250:
+        background_word_array[y] += " " + random_safe_word()
 

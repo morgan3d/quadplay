@@ -182,6 +182,11 @@ function setCodeEditorSession(url, assetName) {
     aceEditor.setSession(session);
     aceEditor.setReadOnly(session.aux.readOnly || ! editableProject);
 
+    // Update API list after session is set
+    if (session.aux.fileType === 'pyxl') {
+        updateCodeEditorAPIList();
+    }
+
     document.getElementById('codeEditorUndoContainer').enabled =
         document.getElementById('codeEditorRedoContainer').enabled =
           ! aceEditor.getReadOnly();
@@ -443,6 +448,117 @@ function autocorrectSession(session) {
 
 
 /* One session per edited file is created */
+function updateCodeEditorAPIList() {
+    const dropdown = document.getElementById('codeEditorAPIList');
+    if (!dropdown || !aceEditor) return;
+    
+    const session = aceEditor.getSession();
+    if (!session || !session.aux || !session.aux.url) return;
+    
+    // Show/hide dropdown based on file type
+    if (session.aux.fileType === 'pyxl') {
+        dropdown.style.display = 'block';
+    } else {
+        dropdown.style.display = 'none';
+        return;
+    }
+    
+    const content = session.getValue();
+    const lines = content.split('\n');
+    
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Go to API...</option>';
+    
+    const functions = [];
+    const variables = [];
+    const events = [];
+    
+    // Regex patterns
+    const defPattern = /^def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/;
+    const letConstPattern = /^(?:let|const)\s+([a-zA-Z_][a-zA-Z0-9_]*)/;
+    const eventPattern = /^[ ]*(init|enter|frame|leave|pop_mode|[\$_A-Z][a-zA-Z_0-9]*)[ ]*(\([^\n\)]*\))?[ ]*(\bfrom[ ]+[\$_A-Za-z][\$A-Za-z_0-9]*)?\s*$/;
+    const separatorPattern = /^((?:-|─|—|━|⎯){5,})[ ]*$/;
+    
+    for (let i = 0; i < lines.length; ++i) {
+        const line = lines[i];
+        
+        // Check for functions
+        const defMatch = line.match(defPattern);
+        if (defMatch) {
+            functions.push({name: defMatch[1] + '()', line: i + 1});
+        }
+        
+        // Check for variables/constants
+        const varMatch = line.match(letConstPattern);
+        if (varMatch) {
+            variables.push({name: varMatch[1], line: i + 1});
+        }
+        
+        // Check for events (look for name followed by separator on next line)
+        const eventMatch = line.match(eventPattern);
+        if (eventMatch && i + 1 < lines.length) {
+            const nextLine = lines[i + 1];
+            if (separatorPattern.test(nextLine)) {
+                events.push({name: eventMatch[1], line: i + 1});
+            }
+        }
+    }
+    
+    // Sort each section alphabetically
+    const nameComparator = (a, b) => a.name.localeCompare(b.name);
+    functions.sort(nameComparator);
+    variables.sort(nameComparator);
+    events.sort(nameComparator);
+    
+    // Add sections with separators
+    if (variables.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = 'Variables';
+        variables.forEach(variable => {
+            const option = document.createElement('option');
+            option.value = variable.line;
+            option.textContent = variable.name;
+            group.appendChild(option);
+        });
+        dropdown.appendChild(group);
+    }
+    
+    if (functions.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = 'Functions';
+        functions.forEach(func => {
+            const option = document.createElement('option');
+            option.value = func.line;
+            option.textContent = func.name;
+            group.appendChild(option);
+        });
+        dropdown.appendChild(group);
+    }
+    
+    if (events.length > 0) {
+        const group = document.createElement('optgroup');
+        group.label = 'Events';
+        events.forEach(event => {
+            const option = document.createElement('option');
+            option.value = event.line;
+            option.textContent = event.name;
+            group.appendChild(option);
+        });
+        dropdown.appendChild(group);
+    }
+}
+
+function onCodeEditorAPIListChange(dropdown) {
+    if (!dropdown.value || !aceEditor) return;
+    
+    const lineNumber = parseInt(dropdown.value);
+    aceEditor.gotoLine(lineNumber, 0, true);
+    aceEditor.focus();
+    
+    // Reset dropdown to show "Go to API..."
+    dropdown.selectedIndex = 0;
+}
+
 function createCodeEditorSession(url, bodyText, assetName) {
     console.assert(url);
     console.assert(! codeEditorSessionMap.has(url));
@@ -528,6 +644,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
                 }
 
                 maybeShowDocumentationForSession(session);
+                
             }
             
             // Cancel the previous pending timeout if there is one
@@ -628,6 +745,11 @@ function createCodeEditorSession(url, bodyText, assetName) {
                         if (myEpoch === session.aux.epoch) {
                             // Only change mode if nothing has changed
                             setCodeEditorSessionMode(session, 'All changes saved.');
+                            
+                            // Update API list when file is saved
+                            if (session.aux.fileType === 'pyxl') {
+                                updateCodeEditorAPIList();
+                            }
                         }
                     }, function () {
                         // Error case
@@ -1962,7 +2084,7 @@ function searchInFile(url, content, query, options) {
     
     const regex = new RegExp(searchQuery, flags);
     
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; ++i) {
         const line = lines[i];
         if (regex.test(line)) {
             matches.push({lineNumber: i + 1, lineContent: line});
@@ -2349,7 +2471,7 @@ function searchForDefinitionInFile(identifier, content, fileUrl, currentUrl, cur
     }
     
     // Search for function definitions: def identifier(...)
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; ++i) {
         const line = lines[i];
         const defMatch = line.match(new RegExp(`^\\s*def\\s+(${escapeRegExp(identifier)})\\s*\\(`));
         if (defMatch) {

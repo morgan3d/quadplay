@@ -30,11 +30,11 @@ def make_player():
         // The words that the Remix ability will find if activated.
         // Updated when the player completes a word. When ∅ the 
         // auto button is not available.        
-        auto_list: ∅,
+        remix_list: ∅,
         remix_uses_left: 0,
         // Button position, computed during rendering and then used
         // for score animation
-        auto_pos: xy(0,0),
+        remix_pos: xy(0,0),
         
         avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
         
@@ -108,7 +108,7 @@ def player_spawn_score_animation(player, source default "board"):
         
         const α = linstep(total_frames, 0, frames_left)^1.5
         for i < size(letter_array):
-            const pos = lerp(if source == "Remix" then player.auto_pos else start_array[i], target, α)
+            const pos = lerp(if source == "Remix" then player.remix_pos else start_array[i], target, α)
             draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), entry.color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
         
@@ -148,10 +148,10 @@ def player_selection_change_callback(player)
         // Update the auto button's list. Do this after player_add_to_history
         // so that the full word isn't found again
         if player.has_ability["Scry Remixes"]:
-            const previously_available = size(player.auto_list)
-            player.auto_list = find_short_words_from_selection()            
-            if player.remix_uses_left and size(player.auto_list) > 5 and not previously_available:
-                delay(play_sound, 5, {sound: remix_available_sound, volume: min(70% + 10% size(player.auto_list), 170%)})
+            const previously_available = size(player.remix_list)
+            player.remix_list = find_short_words_from_selection()            
+            if player.remix_uses_left and size(player.remix_list) > 5 and not previously_available:
+                delay(play_sound, 5, {sound: remix_available_sound, volume: min(70% + 10% size(player.remix_list), 170%)})
 
         return true
 
@@ -453,7 +453,7 @@ def player_reset_match(player, game_type, board_string default ∅):
     remove_all(player.history.free)
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
-    player.auto_list = ∅
+    player.remix_list = ∅
     player.remix_uses_left = (
         if player.has_ability["Remix × 4"] then 4
         else (if player.has_ability["Remix × 3"] then 3

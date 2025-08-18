@@ -17,7 +17,6 @@ def make_empty_stats_entry():
         xp: 0}
         
 
-
 def stats_total_xp(stats):
     let xp = 0
     for entry in stats:
@@ -31,23 +30,24 @@ def stats_total_xp(stats):
    efficiently.
    
    quadplay limits the length of serialized save_local values, so
-   compress by
+   compress by:
    
    - Using a single string, eliminating an extra comma and quote from each word
    - Using suffix encoding for variants with trivial plurals:
        - § = + ES
        - $ = + S
+       
+   followed by string_compress()
    */
 def compress_word_list(array):
-    def length_comparator(a, b):
-        return size(a) - size(b)
+    if size(array) == 0: return ""
     
     const PRESENT = 2
     const ALREADY_SAVED = 1
     
     // Start with words sorted from longest to shortest
     // (so we see prefixes first), and then mark all present
-    array = sorted(array, length_comparator, true)
+    array = sorted(array, size_comparator, true)
 
     // Maps each word to PRESENT or ALREADY_SAVED
     let set = {}
@@ -56,7 +56,7 @@ def compress_word_list(array):
         
     // Encode the words of array. Process in order from longest
     // to shortest so that suffix encodings work
-    const dest = []    
+    let dest = []
     
     for i < size(array):
         const text = array[i]
@@ -80,14 +80,27 @@ def compress_word_list(array):
             else:
                 push(dest, text)
     
-    // Allow array and set to be garbage collected before we compute a giant
+    // Allow the set to be garbage collected before we compute a giant
     // string.
     set = ∅
-    array = ∅    
+    array = ∅
+
+    dest = join(dest, ",")
+    
+    const lz = string_compress(dest)
+    if size(lz) < size(dest) and size(lz) > 0:
+        // Because the array was not empty, the output
+        // must have at least 3 characters
+        assert(size(lz) ≥ 3)
         
-    // Perform a single join at the end instead of string concatenation as we go
-    // so that native code can do this more efficiently
-    return COMPRESSED_HEADER + string_compress(join(dest, ","))
+        assert(string_decompress(lz) == dest)
+        
+        // Compression was either not worth it or
+        // failed due to a bug in the library
+        return COMPRESSED_HEADER + lz
+    else:
+        // Fall back to the non-LZ compressed string
+        return dest
     
     
 
@@ -98,8 +111,8 @@ def decompress_word_list(string):
     if string == "": return []
     
     if starts_with(string, COMPRESSED_HEADER):
-        // Compressed with LZ as well. All current save games have this
-        // but legacy files do not
+        // Compressed with LZ as well as plural-specific compression. All current save games have this
+        // but legacy files or bug-avoiding ones do not.
         string = string_decompress(slice(string, size(COMPRESSED_HEADER)))
     
     const result = []
@@ -123,7 +136,7 @@ def decompress_word_list(string):
 
 def stats_save(stats):
     const s = deep_clone(stats)
-    for day at date in s:
+    for day in s:
         day.xp = encode_xp(day.xp)
         day.word_list = compress_word_list(day.word_list)
     save_local("stats", s)
@@ -132,42 +145,43 @@ def stats_save(stats):
 
 /* Returns a new stats object loaded from storage. */
 def stats_load():
-    const stats = load_local("stats") default {lifetime: make_empty_stats_entry()}
-    if not size(stats.lifetime.word_list): stats.lifetime.word_list = ""
-
-    // Clean up and decode all entries
-    for day at date in stats:
-        day.xp = decode_xp(day.xp)
-        day.word_list = decompress_word_list(day.word_list default "")
-                
-        if day.best_free_word_points == ∅:
-            day.best_free_word_points = 0
-            day.best_free_word_text = ""
-
-        // Upgrade legacy formats
-        if day.longest ≠ ∅:
-            remove_key(day, "longest")
-        
-        if day.longest_text == ∅:
-            day.longest_text = ""
-                
-    // Everything is decoded now. Iterate again to merge any
-    // days before today
-    stats_merge_previous_days(stats)
+    let stats = load_local("stats") 
     
+    if stats:
+        // Decode all entries
+        for day at date in stats:
+            day.xp = decode_xp(day.xp)
+            day.word_list = decompress_word_list(day.word_list default "")
+                    
+        // Everything is decoded now. Merge any
+        // days before today into lifetime
+        stats_merge_previous_days(stats)
+    else:
+        stats = {lifetime: make_empty_stats_entry()}
+
+    // Ensure an entry for today
+    stats[today_date_string()] = stats[today_date_string()] default make_empty_stats_entry()
+        
+    if DEBUG.VOCABULARY:
+        stats.lifetime.word_list = []
+        stats[today_date_string()].word_list = []
+        const words = keys(dictionary)
+        for i < 3000:
+            push(stats.lifetime.word_list, random_value(words))
+            push(stats[today_date_string()].word_list, random_value(words))
+
     return stats
 
 
 
 /* Roll up every day other than today into the lifetime stats, and
-   then delete those days.
-*/
+   then delete those days. */
 def stats_merge_previous_days(stats):
     const today_date = today_date_string(true)
     const lifetime = stats.lifetime
     
-    if not stats[today_date]:
-        stats[today_date] = make_empty_stats_entry()
+    // Ensure there is a stats entry for today
+    stats[today_date] = stats[today_date] default make_empty_stats_entry()
                 
     for date in keys(stats):
         // Skip the elements we are not modifying
@@ -196,16 +210,12 @@ def stats_merge_previous_days(stats):
         
         // Remove this day now that it is rolled up
         remove_key(stats, date)
-
-        return stats
     
     
     
 /* Used for lightly protecting the saved value from casual abuse via a checksum */
 def encode_xp(xp):
-    let h = "" + hash(xp)
-    h = slice(h, 2)
-    return h + "." + xp
+    return slice("" + hash(xp), 2) + "." + xp
         
         
         
@@ -222,15 +232,15 @@ def decode_xp(str):
     const xp = parse(split(str, ".")[1])
     return if (encode_xp(xp) == str) then xp else 0
     
+    
 
 /* Don't let the value change except when stats are updated in
    `stats_merge_previous_days()`, otherwise we'll access uncollected data. */
-let today_date = ∅
 def today_date_string(update default false):
     if update:
         const date = local_time()
-        today_date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
-    return today_date
+        today_date_string.today_date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
+    return today_date_string.today_date
 
 
 
@@ -305,16 +315,11 @@ def stats_update(stats, competitor, num_competitors, joined_late):
 
 /* Returns the region */
 def draw_stats_button(pos, selected, radius):
-    const scale = radius / 20
-    const sprite_args = {sprite: stats_sprite[0][0], pos: pos, z: 10, scale: scale}
+    const sprite_args = {sprite: stats_sprite[0][0], pos: pos, z: 10, scale: radius / 20}
     
     if selected:
         draw_round_selection(pos, radius)
-        // Outline
-        for i < 2:
-            draw_sprite({…sprite_args, pos: pos + xy(2i - 1, 0), override_color: #090})    
-            draw_sprite({…sprite_args, pos: pos + xy(0, 2i - 1), override_color: #090})    
-        draw_sprite({…sprite_args, override_color: #EEE})    
+        draw_outlined_sprite({…sprite_args, override_color: #EEE}, #090)
     else:
         // Background
         draw_disk(pos, radius, #FFFC, #DDD, 9)

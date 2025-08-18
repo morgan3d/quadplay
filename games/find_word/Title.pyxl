@@ -3,7 +3,6 @@ Title
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
 todo("Try to make iOS scroll away more at the page level")
-todo("Rename abilities by type: Passive, Feat, etc.")
 
 
 /* Hook for the intro sequence. If ∅ the intro is over */
@@ -56,13 +55,12 @@ def start_match(index):
         "\nnext_game_imminent =", next_game_imminent,
         "\ncurr_game_remaining_time =", curr_game_remaining_time) */
     
-    if ((index == GLOBAL and
+    // There is no game currently running because the global game is in 
+    // the GameOver state, or about to be so. Send this player to the waiting room
+    // so that they aren't bored. 
+    in_waiting_room = ((index == GLOBAL and
         (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
-        not next_game_imminent)):
-        // There is no game currently running because the global game is in 
-        // the GameOver state, or about to be so. Send this player to the waiting room
-        // so that they aren't bored. 
-        in_waiting_room = true
+        not next_game_imminent))
     
     play_sound(blip_sound)
     set_mode(GenerateBoard) because "Chose game type"
@@ -137,12 +135,6 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
 set_hooks()
-
-// Upgrade previous save files; nobody should have XP without having 
-// completed the initial tutorial
-if player.stats.lifetime.xp > 0 and not player.has_achievement["Play Solo Match"]:
-    todo("Remove at the end of August")
-    player_achieve(player, "Play Solo Match")
     
 easter_egg = if player.avatar.level > 20 and ξ < 12% then 2 else (if player.avatar.level > 15 and ξ < 12% then 1 else 0)
 

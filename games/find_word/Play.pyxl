@@ -6,13 +6,11 @@ def enter_freestyle():
 
 
 
-def execute_auto():
-    todo("auto: tutorial")
-    todo("auto: achievement")
-    
+def execute_remix():
     play_sound({sound: remix_sound, volume: 50%, playback_rate: 200%})
-    sort(player.auto_list, size_comparator)
-    for word at w in player.auto_list:
+    sort(player.remix_list, size_comparator)
+    
+    for word at w in player.remix_list:
         const points = score_word(word)
         player_add_to_history(player, word, points)
         player_spawn_score_animation(player, "Remix")
@@ -20,8 +18,8 @@ def execute_auto():
         // Per-word sound
         if w < 7: delay(play_points_sound, 7 w, points)
     
-    --player.auto_uses_left
-    player.auto_list = ∅
+    --player.remix_uses_left
+    player.remix_list = ∅
     
     
 def enter_rotate_mode():
@@ -76,7 +74,7 @@ player_update(player, get_board_pos(), ∅, allow_rotate)
 
 handle_buttons(
     ability_icon.freestyle, "Freestyle", enter_freestyle,
-    ability_icon.remix, if player.remix_uses_left and size(player.auto_list) then execute_auto else ∅,
+    ability_icon.remix, if player.remix_uses_left and size(player.remix_list) then execute_remix else ∅,
     aux_icon.rotate, enter_rotate_mode)
 
 if time_left ≤ 20/60:

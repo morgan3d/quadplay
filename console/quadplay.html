@@ -426,6 +426,9 @@
             makeButton('<img src="icons/ui-find-in-files.png" width="26" style="position:relative; top:-2px;">', 'findInFiles', `Find in Files (${cmd}Shift+F)`, 'showFindInFilesDialog()');
           </script>
           <div style="position: absolute; left: 270px; top: 4px; font-weight: bold" class="unselectable" id="editorTitle"></div>
+          <select id="codeEditorAPIList" style="position: absolute; left: 400px; top: 4px; font-size: 11px; width: 180px; display: none" onchange="onCodeEditorAPIListChange(this)">
+            <option value="">Go to API...</option>
+          </select>
           <div style="position: absolute; right:5px; top:4px; color:#888" class="unselectable" id="codeEditorSessionModeDisplay">All changes saved.</div>
         </div>
 

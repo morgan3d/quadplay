@@ -38,3 +38,25 @@ def draw_arc(pos, radius, start, stop, color):
         const curr = pos + radius * angle_to_xy(θ)
         draw_line(prev, curr, color)
         prev = curr
+        
+
+
+def draw_outlined_sprite(args, outline_color default #000):    
+    for i < 2:
+        draw_sprite({…args, override_color: outline_color, pos: args.pos + xy(2i - 1, 0)})
+        draw_sprite({…args, override_color: outline_color, pos: args.pos + xy(0, 2i - 1)})
+    
+    draw_sprite(args)
+    
+    
+
+/* Convert base 10 number to base 16 string. We use this to assign a unique
+   character to each tile when searching for words, so that a string
+   is a path through the board.*/
+const DEC_TO_HEX = "0123456789ABCDEF";
+
+
+/* Convert single digit base 36 string to base 10 number. See also `DECIMAL_TO_BASE36`. */
+const HEX_TO_DEC = {0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, A:10, B:11, C:12, D:13, E:14, F:15};
+    
+

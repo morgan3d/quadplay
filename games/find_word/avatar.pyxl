@@ -16,18 +16,13 @@ def avatar_save(avatar):
 
 
 
-def new_guid():
-    return "U" + round(utc_now() * 1000)
-    
-
-
 def avatar_load():
     let avatar_data = load_local("avatar")
     
     if not avatar_data:
         avatar_data = {
             sprite_index: random_integer(0, AVATAR_SPRITE_COUNT - 1),
-            id: new_guid(),
+            id: "U" + round(1000 utc_now()),
             name: "?  "}
         
         // Persist the random avatar        
@@ -37,8 +32,7 @@ def avatar_load():
     
     return {
         sprite: sprite,
-        id: avatar_data.id default new_guid(),
-        // Will be computed from player stats
+        // level will be computed from player stats when they are loaded
         level: ∅,
         color: avatar_compute_color(sprite),
         name: avatar_data.name}
@@ -53,8 +47,13 @@ def avatar_compute_color(sprite):
         
 def avatar_draw_large(avatar, pos, background default true, color, shadow default #000, spin default false):
     
-    color = color default (if background then avatar.color else player.board.selection_color)
-    draw_text({font: score_font, text: trim_spaces(avatar.name), color: color, shadow: shadow, pos: pos + xy(0, 27), z: 5})
+    draw_text({
+        font: score_font,
+        text: trim_spaces(avatar.name),
+        color: color default (if background then avatar.color else player.board.selection_color),
+        shadow: shadow,
+        pos: pos + xy(0, 27),
+        z: 5})
 
     let sprite = avatar.sprite
     
@@ -63,21 +62,11 @@ def avatar_draw_large(avatar, pos, background default true, color, shadow defaul
         sprite = sprite_transfer_orientation(avatar.sprite, sprite)
         if spin: sprite = sprite.x_flipped
 
-    const args = {
+    draw_outlined_sprite({
         sprite: sprite.x_flipped, 
         scale: 200%, 
-        override_color: #000,
         pos: pos + xy(0, -1),
-        z: 5}
-        
-    // Outline
-    for -1 ≤ dx ≤ +1:
-        if dx ≠ 0:
-            draw_sprite({…args, pos: args.pos + xy(dx, 0)})
-            draw_sprite({…args, pos: args.pos + xy(0, dx)})
-    
-    draw_sprite({…args, override_color: ∅})
-    
+        z: 5})
 
 
 
@@ -105,8 +94,7 @@ def avatar_sprite_from_linear_index(index):
 
 def avatar_next_sprite(sprite, dir default +1):
     // Advance one
-    const i = loop(avatar_sprite_to_linear_index(sprite) + dir, AVATAR_SPRITE_COUNT)
-    sprite = avatar_sprite_from_linear_index(i)
+    sprite = avatar_sprite_from_linear_index(loop(avatar_sprite_to_linear_index(sprite) + dir, AVATAR_SPRITE_COUNT))
     
     if contains(AVATAR_RESTRICTED_INDEXES, sprite.tile_index, equivalent):
         return avatar_next_sprite(sprite, dir)
@@ -123,7 +111,7 @@ def avatar_next_name_letter(letter, dir default +1):
 
 def idle_animate_avatar(sprite, alt):
     return (
-        if alt 
+        if alt
         then sprite_transfer_orientation(sprite, sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1])
         else sprite)
 

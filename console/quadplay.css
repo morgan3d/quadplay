@@ -991,6 +991,12 @@ code, .code {
     z-index: 1;
 }
 
+
+#codeEditorSessionModeDisplay {
+    background:#302b2b;
+    padding-bottom: 2px;
+}
+
 #ace {
     grid-area: codeEditor;
     width: 100%;

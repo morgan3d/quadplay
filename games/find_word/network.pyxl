@@ -41,8 +41,7 @@ def share_results_with_network(player_competitor):
             // Reset everything, since this game doesn't need
             // a stable connection. This increases the chance
             // that we can reconnect next match
-            reset_conduits()
-            conduit = ∅
+            conduit = reset_conduits()
     
     
 
@@ -63,7 +62,4 @@ def update_network():
 /* Called from `GatherGlobalResults.leave` */
 def disconnect_from_network():
     if conduit:
-        conduit_close(conduit)
-        conduit = ∅
-
-
+        conduit = conduit_close(conduit)

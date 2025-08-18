@@ -85,7 +85,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.365",
+    "version": "0.367",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -105,6 +105,12 @@
             "type": "number",
             "value": 500,
             "description": "See `xp_to_level()`"
+        },
+        "BOT_DESCRIPTOR_ARRAY": {
+            "type": "table",
+            "transpose": true,
+            "column_type": "array",
+            "url": "bot.csv"
         },
         "TABLE_ALT_ROW_COLOR": {
             "type": "rgb",
@@ -1400,6 +1406,10 @@
                     "value": false
                 },
                 "INTERMISSION": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "VOCABULARY": {
                     "type": "boolean",
                     "value": false
                 },

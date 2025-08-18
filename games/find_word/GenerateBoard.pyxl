@@ -4,15 +4,6 @@ GenerateBoard
 // the game has locked up when board generation runs slowly
 
 
-enter
-────────────────────────────────────────────────────────────────────────
-
-// Repeat Title global setup in case we're debugging
-// and started in this mode
-
-set_hooks()
-set_random_seed()
-
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -29,7 +20,7 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 if mode_frames > 3:
-    const board_string = if not player.has_achievement["Play Solo Match"] then FIRST_TIME_BOARD else ∅//"WALL AEYE STYS EDQO";
+    const board_string = if not player.has_achievement["Play Solo Match"] then FIRST_TIME_BOARD else ∅
     player_reset_match(player, game_type, board_string)
     
     if DEBUG.INTERMISSION:

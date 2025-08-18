@@ -6,7 +6,21 @@
 // The notification at the front of the queue is currently displayed
 const _notification_queue = []
 
+let NOTIFY = {
+    BACKGROUND_COLOR: #EEE,
+    TITLE_FONT:       score_font,
+    DESCRIPTION_FONT: leaderboard_font,
+    HIGHLIGHT_COLOR:  HIGHLIGHT_COLOR,
 
+    // These count against duration_seconds
+    ENTER_DURATION_SECONDS:   0.17,
+    EXIT_DURATION_SECONDS:    0.17,
+
+    Z: 110,
+    
+    SPRITE_WIDTH: 32,
+    PADDING: 7}
+    
 def notify(sprite, title, description, begin_callback default ∅, callback_data default ∅, duration_seconds default 7):
     assert(begin_callback == ∅ or type(begin_callback) == "function")
     
@@ -30,20 +44,6 @@ def notifications_pending():
 /* Hook to process notification animation every frame */
 def update_notifications()
 & preserving_transform:
-    const NOTIFY = {
-        BACKGROUND_COLOR: #EEE,
-        TITLE_FONT:       score_font,
-        DESCRIPTION_FONT: leaderboard_font,
-        HIGHLIGHT_COLOR:  HIGHLIGHT_COLOR,
-
-        // These count against duration_seconds
-        ENTER_DURATION_SECONDS:   0.17,
-        EXIT_DURATION_SECONDS:    0.17,
-
-        Z: 110,
-        
-        SPRITE_WIDTH: 32,
-        PADDING: 7}
 
     // Draw way on top of everything in Z
     set_transform(xy(½ SCREEN_SIZE.x, 44), ∅, NOTIFY.Z)

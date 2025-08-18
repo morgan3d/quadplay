@@ -2117,7 +2117,12 @@ function getImageData(image) {
 }
 
 
-/* Also tracks the usage of certain features, such as `save_local()` */
+/* 
+ Updates resourceStats.sourceStatements, resourceStats.sourceStatementsByURL, and
+ usage of certain API features, such as `save_local()`.
+
+ Does not count lines that are for debugging, comments, blanks, are part of a different statement,
+ or that could have been trivially rewritten to reduce length at the cost of code clarity. */
 function addCodeToSourceStats(code, scriptURL) {
     if ((scriptURL.replace(/^.*\//, '')[0] === '_') ||
         scriptURL.startsWith('quad://scripts/') ||
@@ -2150,23 +2155,27 @@ function addCodeToSourceStats(code, scriptURL) {
     code = code.replace(sectionRegex, '\n');
 
     // Remove function definition lines
-    code = code.replace(/\n *def [^\n]+: *\n/gm, '\n');
+    code = code.replace(/^\s*def\s[^\n]+:\s*$/gm, '\n');
 
-    // Remove variable declarations with no assignment
-    code = code.replace(/^ *let +[^ \n=]+ *$/gm, '');
+    // Remove variable declarations with no assignment, or assignment to nil
+    code = code.replace(/^\s*let\s+[^\s\n=]+\s*(=\s*(nil|∅)\s)?$/gm, '');
 
     // Remove LOCAL, WITH, and PRESERVING_TRANSFORM lines
     code = code.replace(/\n *&? *(local:?|preserving_transform:?|with .*) *\n/gm, '\n');
 
-    // Remove ELSE without following IF:
+    // Remove ELSE without following IF (because it is part of the original IF statement)
     code = code.replace(/\n *else: *\n/g, '\n');
 
     // Remove DEBUG_WATCH, DEBUG_PRINT, TODO, and ASSERT (assume that they are on their own lines to simplify parsing)
     code = code.replace(/(debug_watch|debug_print|todo|assert) *\(.*\n/g, '\n');
 
-    // Remove blank lines
-    code = code.replace(/\n\s*\n/g, '\n');
+    // Remove any block of the form IF DEBUG.*: ...
+    code = code.replace(/(\n\s*)if DEBUG([^\b\s]|[\.\[\]\(\)])*:(\1\s[^\n]*)*/gi, '');
 
+    // Remove blank lines
+    code = code.replace(/(^|\n)\s*(\n|$)/g, '\n');
+
+    // Track used APIs
     for (const api of ['save_local', 'load_local', 'midi_send_raw']) {
         if (code.match(new RegExp('\\b' +api + '\\('))) {
             if (! resourceStats.usesAPI[api]) {
@@ -2643,6 +2652,13 @@ function parseCSV(strData, trim) {
         
         for (let c = 0; c < array.length; ++c) {
             let val = array[c];
+            
+            // Handle Excel/Google Sheets string formatting: ="..." -> string content
+            if (val && (typeof val === 'string') && /^=".*"$/.test(val)) {
+                array[c] = val.slice(2, -1); // Remove =" and trailing "
+                continue;
+            }
+            
             const v = /^ *[-+]?[0-9]*\.?[0-9]*([eE][-+]?\d+)?(%|deg)? *$/.test(val) ? parseFloat(val) : NaN;
             if (! isNaN(v)) {
                 array[c] = v;

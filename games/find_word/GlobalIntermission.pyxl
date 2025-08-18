@@ -3,10 +3,7 @@ GlobalIntermission
 
 todo("Separate leveling from postgame")
 
-
-todo("Award for best free word")
 todo("Favoriting UI + save")
-todo("Explore other player results?")
 todo("Send emotes?!")
 
 
@@ -325,7 +322,7 @@ def draw_leaderboard()
 
         draw_text({…text_args, text: size(competitor.word_list), pos: pos + xy(GLOBAL_LAYOUT.LEADERBOARD.COUNT_X, 0), x_align: "right"})
 
-        let text = if free_word then q_decode(competitor.free_list[0]) else competitor.text
+        let text = if free_word then q_decode(competitor.free_list[0]) else competitor.word_list[0]
 
         if competitor ≠ player_competitor: 
             text = censor(text)
