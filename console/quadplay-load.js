@@ -2302,11 +2302,15 @@ function $parse(source, i) {
             break;
             
         case '"': // Quoted string
+        {
             ++i;
             const begin = i;
-            while (i < source.length && (source[i] !== '"' || source[i - 1] === '\\')) { ++i; }
-            return {result: source.substring(begin, i), next: i + 1};
-            
+            while ((i < source.length) && (source[i] !== '"' || source[i - 1] === '\\')) { ++i; }
+            let str = source.substring(begin, i);
+            // Undo escape sequences
+            str = str.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\f/g, '\f').replace(/\\\\/g, '\\').replace(/\\"/g, '"');
+            return {result: str, next: i + 1};
+        }   
         case '[': // Array
             ++i;
             // Consume the leading space

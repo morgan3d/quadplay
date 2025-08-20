@@ -1278,6 +1278,29 @@ function trim_spaces(s) {
     return s.trim();
 }
 
+
+//////////////////////////////////////////////////////////////////////
+
+
+function add_http_frame_hook(url, options = {method: "GET"}, data = undefined, success_handler = undefined, failure_handler = undefined) {
+    let http = make_http(url, options, data);
+    return add_frame_hook(function () {
+        http = http_poll(http, success_handler, failure_handler);
+        if (! http) {
+            remove_frame_hook(this);
+        }
+    }, undefined, undefined, "all");
+}
+
+
+function http_iterate(http_array, success_handler, failure_handler) {
+    iterate(http_array, function (http) {
+        if (! http_poll(http, success_handler, failure_handler)) {
+            return iterate.REMOVE;
+        }
+    });
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 
@@ -8864,6 +8887,8 @@ function $unparse(
         
     case 'string':
         if (html_out) { x = $escapeHTMLEntities(x); }
+        // Escape quotes and control sequences
+        x = x.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t').replace(/\f/g, '\\f');
         return '"' + x + '"';
 
     case 'function':
@@ -9934,6 +9959,7 @@ function load_local(key, default_value) {
     let table = $window.localStorage.getItem('GAME_STATE_' + $gameURL);
     if (! table) { return default_value; }
     
+    $console.log(table);
     table = JSON.parse(table);
 
     if (arguments.length === 0) {
@@ -9973,17 +9999,21 @@ function save_local(key, value) {
         return;
     }
     
+    // Get the string that encodes all storage for this game
     let table = $getLocalStorage('GAME_STATE_' + $gameURL);
     
+    // Parse the string into a table of key-value pairs
     if (table) {
         table = JSON.parse(table);
     } else {
         table = {};
     }
 
+    // Update the storage of this key-value pair
     if (value === undefined) {
         delete table[key];
     } else {
+        // Serialize the value to a string
         const v = unparse(value, 0);
         const limit = 32768;
         if (v.length > limit) {
@@ -9997,7 +10027,36 @@ function save_local(key, value) {
 
     table.$modified_date = unparse(new Date().toUTCString(), 0);
 
+    // Commit back
     $setLocalStorage('GAME_STATE_' + $gameURL, JSON.stringify(table));
+}
+
+
+function string_compress(src) {
+    if (! typeof src === 'string') {
+        $error('string_compress() requires a string. Received ' + (typeof src) + "=" + unparse(src));
+    }
+
+    const lz = string_compress.$header + $LZString.compress(src);
+
+    // TODO: 
+    if (false && lz.length > src.length) {
+        // Don't bother compressing, it got larger
+        return src;
+    } else {
+        return lz;
+    }
+}
+
+string_compress.$header = '!!!0!!!';
+
+function string_decompress(lz) {
+    if (lz.startsWith(string_compress.$header)) {
+        return $LZString.decompress(lz.slice(string_compress.$header.length));
+    } else {
+        // Was not compressed
+        return lz;
+    }
 }
 
 

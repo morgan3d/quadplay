@@ -1588,3 +1588,34 @@ function updateInput() {
     emulatorKeyJustPressed = {};
     emulatorKeyJustReleased = {};
 }
+
+
+/* For runtime API */
+function make_http(url, options = {method: "GET"}, data = undefined) {
+    const http = {$type: 'http', $data: data, $response: undefined};
+
+    if (getQueryString('kiosk') === '1' || quitAction === 'launcher') {
+        // Fail immediately as a security error
+        http.$response = {ok: false, status: 418};
+    } else {
+        fetch(url, options).then(function (response) {
+            http.$response = response;
+        });
+    }
+
+    return http;
+}
+
+
+/* For runtime API */
+function http_poll(http, success_handler = undefined, failure_handler = undefined) {
+    if (! http.$response) { return http; }
+
+    if (http.$response.ok) {
+        success_handler && success_handler(http.$response, http, http.$data);
+    } else {
+        failure_handler && failure_handler(http.$response, http, http.$data);
+    }
+    return undefined;
+}
+

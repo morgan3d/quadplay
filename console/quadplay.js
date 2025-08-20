@@ -2953,8 +2953,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$prompt             = prompt;
         QRuntime.evaluate_constant_expression = evaluate_constant_expression;
 
-        QRuntime.string_compress     = LZString.compress;
-        QRuntime.string_decompress   = LZString.decompress;
+        QRuntime.$LZString           = LZString;
 
         // Conduit API is entirely implemented outside of the runtime files
         QRuntime.make_conduit        = conduitNetwork.make_conduit;
@@ -2966,6 +2965,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.get_conduit_online_status = conduitNetwork.get_conduit_online_status;
         QRuntime.reset_conduits      = conduitNetwork.reset_conduits;
         QRuntime.conduit_listen      = conduitNetwork.conduit_listen;
+
+        QRuntime.make_http           = make_http;
+        QRuntime.http_poll           = http_poll;
 
         // When the game forces a framebuffer change, preserve the background to prevent flicker
         QRuntime.$setFramebufferSize = function (w, h, p) { return setFramebufferSize(w, h, p, true); };

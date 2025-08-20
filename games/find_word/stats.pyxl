@@ -88,19 +88,14 @@ def compress_word_list(array):
     dest = join(dest, ",")
     
     const lz = string_compress(dest)
-    if size(lz) < size(dest) and size(lz) > 0:
-        // Because the array was not empty, the output
-        // must have at least 3 characters
-        assert(size(lz) ≥ 3)
-        
-        assert(string_decompress(lz) == dest)
-        
-        // Compression was either not worth it or
-        // failed due to a bug in the library
-        return COMPRESSED_HEADER + lz
-    else:
-        // Fall back to the non-LZ compressed string
-        return dest
+    
+    // Because the array was not empty, the output
+    // must have at least 3 characters
+    assert(size(lz) ≥ 3)
+    
+    assert(string_decompress(lz) == dest)        
+    
+    return lz
     
     
 
@@ -110,10 +105,8 @@ def decompress_word_list(string):
     
     if string == "": return []
     
-    if starts_with(string, COMPRESSED_HEADER):
-        // Compressed with LZ as well as plural-specific compression. All current save games have this
-        // but legacy files or bug-avoiding ones do not.
-        string = string_decompress(slice(string, size(COMPRESSED_HEADER)))
+    // Compressed with LZ as well as plural-specific compression of the list.
+    string = string_decompress(string)
     
     const result = []
     const array = split(string, ",")
@@ -145,14 +138,29 @@ def stats_save(stats):
 
 /* Returns a new stats object loaded from storage. */
 def stats_load():
-    let stats = load_local("stats") 
-    
+    let stats = load_local("stats")
+
     if stats:
+        // Template
+        const empty = make_empty_stats_entry()
+        
         // Decode all entries
         for day at date in stats:
             day.xp = decode_xp(day.xp)
             day.word_list = decompress_word_list(day.word_list default "")
-                    
+            
+            // Apply defaults for upgrading any fields on old save files
+            for v at k in empty:
+                day[k] = day[k] default deep_clone(v)
+            
+            todo("This can be removed after August or when the format stabilizes")
+            // Remove unused fields on old save files
+            let valid = keys(empty)
+            for k in keys(day):
+                if not contains(valid, k):
+                    debug_print("Removing unused key", k)
+                    remove_key(day, k)
+                
         // Everything is decoded now. Merge any
         // days before today into lifetime
         stats_merge_previous_days(stats)

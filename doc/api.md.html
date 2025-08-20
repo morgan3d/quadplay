@@ -448,6 +448,7 @@ String
 `string_decompress(string)`
 : Returns a decompressed version of the string. The compression ratio varies with content.
   Expect between 2x and 10x reduction in length for typical text or word lists.
+  Recognizes strings that lack the compression header and returns them unchanged.
 
 `trim_spaces(string)`
 : Returns a new string that is the original with whitespace removed
@@ -5026,10 +5027,35 @@ launcher or in kiosk mode. You can make the API calls in this case, but they wil
   has the form of a JavaScript [`RequestInit`](https://developer.mozilla.org/en-US/docs/Web/API/RequestInit)
   object.
 
+`add_http_frame_hook(url, options default {method: "GET"}, data default nil, success_handler default nil, failure_handler default nil)`
+: Create a HTTP request to the given URL. The `options` object 
+  has the form of a JavaScript [`RequestInit`](https://developer.mozilla.org/en-US/docs/Web/API/RequestInit)
+  object. 
 
-`http_iterate(http_or_http_array, success_handler, failure_handler)`
-: Iterate through all pending HTTP requests in the array, or the single value if it is not an array.
-  For each that is complete, invokes one of the two handlers. Each has the form
+  Then registers a frame hook that invokes `http_poll(http, success_handler, failure_handler)` every frame
+  until the request is complete, which runs in every mode.
+
+  Returns the hook object so that it can be cancelled.
+
+
+`http_poll(http, success_handler default nil, failure_handler default nil)`
+: Poll the HTTP request.
+  If complete, it invokes one of the two handlers. Each has the form
+  `handler(response, http, data)` where `response` has the form of a JavaScript
+  [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+  object and `data` is the corresponding value passed to `make_http()`.
+  
+  If the request fails because of quadplay security restrictions, 
+  then the failure status code will be 418.
+
+  Returns `nil` if the request is complete and the `http` request otherwise
+  to support the idiom: `if http: http = http_poll(http, success_handler, failure_handler)`.
+
+
+`http_iterate(http_array, success_handler, failure_handler)`
+: Iterate through all pending HTTP requests in the array.
+  For each that is complete, invokes one of the two handlers and removes the http value from the array.
+  Each handler has the form
   `handler(response, http, data)` where `response` has the form of a JavaScript
   [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
   object and `data` is the corresponding value passed to `make_http()`.
