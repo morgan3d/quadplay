@@ -3,7 +3,8 @@ Title
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
 todo("Try to make iOS scroll away more at the page level")
-
+todo("Matches won stat")
+todo("New high score/longest word/etc. notification")
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
@@ -143,7 +144,7 @@ if not easter_egg and player.stats.lifetime.xp > 1000 and ξ < 2%:
 
 
 // Initialize the fake board
-player_reset_match(player, SOLO, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg])
+player_reset_match(player, SOLO, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg], true)
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 

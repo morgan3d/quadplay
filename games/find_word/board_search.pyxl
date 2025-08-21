@@ -1,13 +1,144 @@
+/* Functions that operate on 16-letter row-major board strings and the 
+   logic for finding a good board */
+
+
+
+/* Computes and returns all n-tile sequences that are possible on this board. 
+   Used by the solver.
+   
+   As a side effect, puts all members of that set and smaller
+   n-grams larger than MIN_WORD_LENGTH that are also in `dictionary`
+   into `word_set`.
+   */
+def board_string_ngram_set(board_string, n, word_set):
+    const ngram_set = {}
+    const before = now()
+    
+    // Applied to each subpath
+    def visit(kgram, index):
+        const k = size(kgram)
+        
+        if k ≥ MIN_WORD_LENGTH:
+            // We found a real word as a side effect of trigram processing
+            if dictionary[kgram]:
+                word_set[kgram] = 1
+        
+            // We have completed an n-gram, done with this path    
+            if k == n:
+                ngram_set[kgram] = 1
+                return true
+
+    board_string_visit_subpaths(board_string, visit)   
+    
+    // debug_print(round((now() - before) * 1000), "ms to find", size(ngram_set), "x " + n + "-grams and all shorter words")
+    return ngram_set
+    
+/*
+  Visit all possible subpaths and invoke `visit(word, index, base16_path)` on them,
+  where the tile index is `xy(index mod COLS, floor(index / COLS))`.
+  
+  If `visit()` returns true, stop searching children of that subpath.
+  
+  The word is all-caps and Q-encoded.
+*/
+def board_string_visit_subpaths(board_string, visit):
+    assert(ROWS * COLS ≤ 16, "Cannot express all tiles as single-digit base16")
+    
+    for index < ROWS * COLS:
+        _board_string_visit_subpaths_helper(board_string, index, 1 bitshl index, board_string[index], visit, DEC_TO_HEX[index])
+    
+
+
+/* `_neighbor_index_array_table[i]` = array of indices of all neighbors of tile (`i mod COLS`, `floor(i / cols)`),
+   where the indices have the same packing. Used by `_board_ngram_set_helper()`.
+
+   This simplifies the code for searches over the board and technically makes it them a more
+   generalizable graph algorithm. There's negligible performance impact from
+   using precomputed neighbors vs. computing dynamically
+ */ 
+const _neighbor_index_array_table = make_array(COLS * ROWS, [], clone)
+
+// Initialize `_neighbor_index_array_table`.
+// Iteration order doesn't matter for these loops, but this makes 
+// more obvious that we're using row-major indexing.
+for y < ROWS:
+    for x < COLS:
+        const tile = _neighbor_index_array_table[x + y * COLS]
+        for -1 ≤ dx ≤ +1:
+            if x + dx ≥ 0 and x + dx < COLS:
+                for -1 ≤ dy ≤ +1:
+                    // Is this neighbor in bounds?
+                    if y + dy ≥ 0 and y + dy < ROWS and (dx ≠ 0 or dy ≠ 0):
+                        push(tile, (x + dx) + (y + dy) * COLS)
+
+
+/* Recursive portion of `board_string_visit_subpaths` 
+
+   `board_string`
+   : The board as a row-major flattening
+
+   `word`
+   : Concatenation of the labels of the visited tiles,
+     pulled from `board_string`.
+   
+   `index`
+   : `x + y * COLS` of the current tile coordinates
+   
+   `base16_path`
+   : A string of the path to this point, encoded as the
+     index in hexadecimal.
+   
+   `visit(word, index)`
+   : Arbitrary callback for processing this subpath.
+     If `visit` returns `true` then the path terminates here,
+     otherwise it recurses as deep as possible.
+*/
+def _board_string_visit_subpaths_helper(board_string, index, used_mask, word, visit, base16_path):
+    // Run the callback and only continue if it returns false
+    if not visit(word, index, base16_path):
+    
+        // Check all neighbors of index
+        for neighbor in _neighbor_index_array_table[index]:
+            const mask = 1 bitshl neighbor
+            
+            // Did we already use the tile at neighbor?
+            if not (mask ∩ used_mask):
+                // Continue search, updating the mask, word, and path
+                _board_string_visit_subpaths_helper(board_string, neighbor, mask ∪ used_mask, word + board_string[neighbor], visit, base16_path + DEC_TO_HEX[neighbor])
+        
+
+
+/* Return true if `word` can be found in `board_string`. See also `board_find_unencoded_word()`*/
+def board_string_validate_word(board_string, word):
+    let found = false
+    
+    def visit(prefix):
+        if found or not starts_with(word, prefix):
+            // Stop all other recursion once we've found the word on some
+            // other path, or determined that this prefix cannot lead to
+            // this word
+            return true
+        else if word == prefix:
+            // We found the word
+            found = true
+            return true
+    
+    board_string_visit_subpaths(board_string, visit)
+    
+    return found
+        
+
+
 /* Returns an alphabetically-sorted array of all possible dictionary 
    words of `MIN_WORD_LEN` on this board. The words are q-encoded 
    and are uppercase. */
-def board_find_all_words(board):
+def board_string_find_all_words(board_string):
     // Words discovered during n-gram search
     const word_set = {}
     
     // This produces the 5-grams used for filtering and in the process
     // also finds all words of length 3, 4, 5.
-    const quintgram_set = _board_ngram_set(board, 5, word_set)
+    const quintgram_set = board_string_ngram_set(board_string, 5, word_set)
 
     // Used for performance profiling
     let long_count = 0
@@ -29,9 +160,9 @@ def board_find_all_words(board):
 
             // This long word is very likely to appear, but we
             // must validate it.
-            if _board_validate_word(board, word):
+            if board_string_validate_word(board_string, word):
                 word_set[word] = 1
-            ++long_count
+                ++long_count
 
     /*    
     debug_print("\nAfter n-gram filtering:\n", 
@@ -47,25 +178,64 @@ def board_find_all_words(board):
 
 
 
-/* Creates a random board, searching for good values as controlled by `BOARD_SEARCH` constants. */
-def _player_find_good_board(player, game_type):
+/* Detect if a row or column or main diagonal spells a sensitive word.
+   These words are acceptable in play but we don't want to explicitly
+   spell them out in the default or reverse orientation. */
+def board_string_has_obvious_sensitive_word(board_string, only_stop_offensive default false):
+    
+    let dict = if only_stop_offensive then offensive else sensitive
+    
+    def is_sensitive(word):
+        // The sensitive dictionary has not been encoded
+        word = lowercase(q_decode(word))
+        return dict[word] or dict[reversed(word)]
+        
+    let ok = true
+    let word = ""
+    
+    // Check columns
+    for i < COLS:
+        word = ""
+        for j < ROWS:
+            word += board_string[i + COLS * j]
+        
+        if is_sensitive(word): return true
+        
+    // Check rows
+    for j < ROWS:
+        word = ""
+        for i < COLS:
+            word += board_string[i + COLS * j]
+           
+        if is_sensitive(word): return true
+            
+
+    // Check diagonals. If not square, make a half-hearted attempt at this
+    // by using the shorter dimension
+    const len = min(COLS, ROWS)
+    word = ""
+    for i < len:
+        word += board_string[i + COLS * i]
+        
+    if is_sensitive(word): return true
+
+    word = ""
+    for i < len:
+        word += board_string[COLS - i - 1 + COLS * i]
+        
+    if is_sensitive(word): return true
+
+    return false
+    
+    
+    
+/* Creates a random board, searching for good values as
+   controlled by `BOARD_SEARCH` constants. */
+def make_good_board_string(board_rng):
+
     let done = false
     let seed_base
     let word_array
-    
-    // Construct the rng based on the time. This will
-    // cause players within the same window to be more likely
-    // to have the same board. Temporary prior to investing
-    // multiplayer servers.
-    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG.BOARD_SEARCH then 
-            (10 utc_now())
-        else
-            // Use the seed for the curent game period, but look a few
-            // seconds into the future in case this player is joining early
-            // to make it robust
-            ⌊1 + (utc_now() + 10) / GLOBAL_PERIOD⌋)
-    
-    const board_rng = make_random(rng_seed)
     
     let short_word_count = 0
     let long_word_count = 0
@@ -76,6 +246,10 @@ def _player_find_good_board(player, game_type):
     let mean_valuable_letter_long_uses = 0
     let min_valuable_letter_uses = ∞
     let min_valuable_letter_long_uses = ∞
+    
+    let seed
+    let board_string
+    let vowels
 
     let tries = -1  
     while tries < BOARD_SEARCH.RETRIES:
@@ -85,26 +259,33 @@ def _player_find_good_board(player, game_type):
         seed_base = random_integer(0x0, 0x7FFFFFFF, board_rng)
         
         // Loop for shuffling
-        for j < BOARD_SEARCH.SHUFFLE_RETRIES:
-            const vowels = board_reset(player.board, seed_base, j)
+        for permute_number < BOARD_SEARCH.SHUFFLE_RETRIES:
+            const gen = make_random_board_string(seed_base, permute_number)
+            board_string = gen.board_string
+            seed = seed_base + "." + permute_number
 
-            // Bwtween 4 and 7 vowels seems to be the sweet spot for 4x4 grid
-            if vowels ≤ ROWS or vowels ≥ 2 ROWS:
-                if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + vowels + " ***") 
-                continue
-
-            word_array = board_find_all_words(player.board)
-        
-            if tries == BOARD_SEARCH.RETRIES - 1 and j == BOARD_SEARCH.SHUFFLE_RETRIES - 1:
+            if (tries == BOARD_SEARCH.RETRIES - 1) and (permute_number == BOARD_SEARCH.SHUFFLE_RETRIES - 1):
                 // Last try, so just give up and accept the board
                 if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted " + seed_base)
                 done = true
                 break
+            
+            
+            // Between 4 and 7 vowels seems to be the sweet spot for a good 4x4 grid,
+            // so re-roll if we fail on this
+            if gen.vowels ≤ ROWS or gen.vowels ≥ 2 ROWS:
+                if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + gen.vowels + " ***")
+                // Break out of the shuffle loop
+                break
+
     
-            if board_has_obvious_sensitive_word(player.board, tries > ½ BOARD_SEARCH.RETRIES or j > 0):
+            if board_string_has_obvious_sensitive_word(board_string, tries > ½ BOARD_SEARCH.RETRIES or permute_number > 0):
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it had an obvious sensitive word")
                 continue
     
+            // Delay computation until trivial tests have passed
+            word_array = board_string_find_all_words(board_string)
+            
             if size(word_array) < BOARD_SEARCH.MIN_WORDS:
                 // Not enough words to even examine the board
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + size(word_array) + " words")        
@@ -119,19 +300,18 @@ def _player_find_good_board(player, game_type):
                 break
 
     
-            // Examine the actual words to see if there are enough good ones   
-    
+            // Examine the actual words to see if there are enough *good* ones   
+            //
             // If a valuable letter appears, ensure that it is used in 
             // at least two words. First find high point value letters.
                         
             // Number of times a valuable letter was used
             valuable_letter_table = {}
             let num_valuable_letter_instances = 0
-            for col in player.board.tile:
-                for tile in col:
-                    if LETTER_POINT_TABLE[tile.letter] ≥ 4:
-                        valuable_letter_table[tile.letter] = 0
-                        ++num_valuable_letter_instances
+            for letter in board_string:
+                if LETTER_POINT_TABLE[letter] ≥ 4:
+                    valuable_letter_table[letter] = 0
+                    ++num_valuable_letter_instances
             
             const valuable_letters = keys(valuable_letter_table)
             valuable_letter_long_count = clone(valuable_letter_table)
@@ -211,12 +391,10 @@ def _player_find_good_board(player, game_type):
             // Try again
             seed_base = ∅
     
-    player.board.word_list = word_array
-    player.board.word_count = size(word_array)
-    sort(player.board.word_list, size_comparator)
+    sort(word_array, size_comparator)
     
     if DEBUG.BOARD_SEARCH:
-        debug_print(join(player.board.word_list, ", "))
+        debug_print(join(word_array, ", "))
         debug_print("very_long_word_count =", very_long_word_count)
         debug_print("valuable_letter_table =", valuable_letter_table)
         debug_print("valuable_letter_long_count =", valuable_letter_long_count)
@@ -228,6 +406,8 @@ def _player_find_good_board(player, game_type):
         debug_print("min_valuable_letter_uses =", min_valuable_letter_uses)
         debug_print("min_valuable_letter_long_uses =", min_valuable_letter_long_uses)
         debug_print("Total tries:", tries + 1)
+        
+    return {board_string, word_array, seed}
 
 
 
@@ -236,9 +416,8 @@ def _player_find_good_board(player, game_type):
    This process is entirely deterministic based on
    the input. 
    
-   Returns the vowel count */
-def board_reset(board, seed_base, permute_number default 0):
-    board.seed = seed_base + "." + permute_number
+   Returns the vowel count. */
+def make_random_board_string(seed_base, permute_number default 0):
     const rnd = make_random(seed_base)
     
     assert(ROWS * COLS == size(LETTER_SET_ARRAY), "Distribution does not have enough tile sets")
@@ -250,39 +429,30 @@ def board_reset(board, seed_base, permute_number default 0):
     if DEBUG.BOARD_SEARCH:
         debug_print("Using " + (if dice then "DICE" else "TILE") + " generator")
     
+    // Intentionally exclude Y
     const VOWEL = {A:1, E:1, I:1, O:1, U:1}
-
         
     // Shuffle the sets themselves
     const distribution = shuffled(LETTER_SET_ARRAY, rnd)
     const letter_bag = split(LETTER_BAG)
     
     let vowels = 0
-    const flat_array = []
+    let board_string = ""
     for y < ROWS:
         for x < COLS:
-            const tile = board.tile[x][y]
+            let letter
             if dice:
-                tile.letter = random_value(pop(distribution), rnd)
+                letter = random_value(pop(distribution), rnd)
             else:
-                tile.letter = random_value(letter_bag, rnd)
-                fast_remove_value(letter_bag, tile.letter)
+                letter = random_value(letter_bag, rnd)
+                fast_remove_value(letter_bag, letter)
 
-            vowels += VOWEL[tile.letter] default 0
-            
-            tile.selected = 0
-            tile.used = false
-            
-            // Store for shuffling below
-            push(flat_array, tile)
-    
+            board_string += letter
+            vowels += VOWEL[letter] default 0
+                            
     
     if permute_number > 0:
-        shuffle(flat_array, make_random(permute_number))
-        for y < ROWS:
-            for x < COLS:
-                board.tile[x][y] = flat_array[x + y * COLS]
+        board_string = shuffled(board_string, make_random(permute_number))
         
-    if DEBUG.BOARD_SEARCH: debug_print(board_to_string(board))
-    return vowels
-
+    if DEBUG.BOARD_SEARCH: debug_print(board_string)
+    return {board_string: board_string, vowels: vowels}

@@ -443,8 +443,12 @@ def player_update_board(player, pos, angle, allow_selection)
 
 
 
-/* If board_string is specified it should be of the form "AAAA BBBB CCCC DDDD" */
-def player_reset_match(player, game_type, board_string default ∅):
+/* If `board_space_string` is specified it should be of the form "AAAA BBBB CCCC DDDD" 
+
+   `skip_word_search` = for the title screen, save time on startup and don't bother
+   searching for all possible words in the title.
+*/
+def player_reset_match(player, game_type, board_space_string default ∅, skip_word_search default false):
     player.score = 0
     player.background_color = BOARD_COLOR
     remove_all(player.free_row)
@@ -460,18 +464,20 @@ def player_reset_match(player, game_type, board_string default ∅):
         else (if player.has_ability["Remix × 2"] then 2
         else (if player.has_ability["Remix"] then 1 else 0))))
     
-    if board_string:
+    if board_space_string:
         
         for y < ROWS:
             for x < COLS:
-                player.board.tile[x][y].letter = board_string[x + y * (COLS + 1)]
-              
-        player.board.seed = board_string
-        player.board.word_list = board_find_all_words(player.board)
+                // COLS + 1 = there are spaces in the board_space_string
+                player.board.tile[x][y].letter = board_space_string[x + y * (COLS + 1)]
+        
+        // Collapse out the spaces
+        player.board.seed = replace(board_space_string, " ", "")
+        player.board.word_list = if skip_word_search then [] else board_string_find_all_words(player.board.seed)
         player.board.word_count = size(player.board.word_list)
     
     else:
-        _player_find_good_board(player, game_type)
+        board_find_good(player.board, game_type)
     
 
 

@@ -30,6 +30,11 @@ end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
 if DEBUG.INTERMISSION:
     end_time = frame_utc_now
     
+if player.score > player.stats[today_date_string()].high_score and player.stats[today_date_string()].high_score > 0:
+    if player.score > player.stats.lifetime.high_score:
+        notify(∅, "Personal Best", "You just made a new all-time personal best score of " + format_number(player.score, "commas") + " points!")
+    else:
+        notify(∅, "Daily Best", "You just made a new daily personal best score of " + format_number(player.score, "commas") + " points!")
 
 
 frame

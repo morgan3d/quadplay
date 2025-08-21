@@ -85,7 +85,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.368",
+    "version": "0.370",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1296,7 +1296,7 @@
                         },
                         "NAME_X": {
                             "type": "number",
-                            "value": "46",
+                            "value": "29",
                             "min": 0,
                             "max": 250,
                             "format": "0",
@@ -1321,6 +1321,14 @@
                         "COUNT_X": {
                             "type": "number",
                             "value": "149",
+                            "min": 0,
+                            "max": 250,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "LEVEL_X": {
+                            "type": "number",
+                            "value": "59",
                             "min": 0,
                             "max": 250,
                             "format": "0",
@@ -1406,10 +1414,6 @@
                     "value": false
                 },
                 "INTERMISSION": {
-                    "type": "boolean",
-                    "value": false
-                },
-                "VOCABULARY": {
                     "type": "boolean",
                     "value": false
                 },

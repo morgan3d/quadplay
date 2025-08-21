@@ -10037,15 +10037,7 @@ function string_compress(src) {
         $error('string_compress() requires a string. Received ' + (typeof src) + "=" + unparse(src));
     }
 
-    const lz = string_compress.$header + $LZString.compress(src);
-
-    // TODO: 
-    if (false && lz.length > src.length) {
-        // Don't bother compressing, it got larger
-        return src;
-    } else {
-        return lz;
-    }
+    return string_compress.$header + $LZString.compress(src);
 }
 
 string_compress.$header = '!!!0!!!';

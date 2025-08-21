@@ -129,13 +129,20 @@ def draw_content():
     
     y += draw_section_title(y, "Abilities Earned")
 
-
     let count = 0
     for entry at name in ABILITY_TABLE:
         if player.has_ability[name] and entry.description ≠ "SILENT":
             ++count
+            
+            const pos = xy(½ SCREEN_SIZE.x - 36, y)
+            
+            if entry.sprite_name ≠ "<default>":
+                const sprite = evaluate_constant_expression(entry.sprite_name)
+                draw_disk(pos + xy(-17, 5), 7, #999)
+                draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 10 / sprite.size.x})
+                
             y += draw_text({
-                pos: xy(½ SCREEN_SIZE.x - 36, y),
+                pos: pos,
                 color: if count mod 2 then TABLE_ALT_ROW_COLOR else #FFF,
                 outline: #000,
                 font: leaderboard_font,
@@ -143,7 +150,7 @@ def draw_content():
                 wrap_width: WIDTH - 20,
                 markup: true,
                 y_align: "top",
-                x_align: "left"}).height + 2
+                x_align: "left"}).height + 6
                 
     
     if player.has_ability["Discovered Words Stat"]:

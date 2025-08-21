@@ -160,7 +160,11 @@ def stats_load():
                 if not contains(valid, k):
                     debug_print("Removing unused key", k)
                     remove_key(day, k)
-                
+        
+        if DEBUG.FORCE_LEVEL:
+            stats.lifetime.xp = level_to_xp(DEBUG.FORCE_LEVEL)
+
+        
         // Everything is decoded now. Merge any
         // days before today into lifetime
         stats_merge_previous_days(stats)
@@ -170,14 +174,6 @@ def stats_load():
     // Ensure an entry for today
     stats[today_date_string()] = stats[today_date_string()] default make_empty_stats_entry()
         
-    if DEBUG.VOCABULARY:
-        stats.lifetime.word_list = []
-        stats[today_date_string()].word_list = []
-        const words = keys(dictionary)
-        for i < 3000:
-            push(stats.lifetime.word_list, random_value(words))
-            push(stats[today_date_string()].word_list, random_value(words))
-
     return stats
 
 
@@ -229,9 +225,6 @@ def encode_xp(xp):
         
 /* Used for lightly protecting the saved value from casual abuse via a checksum */
 def decode_xp(str):
-    if DEBUG.FORCE_LEVEL:
-        return level_to_xp(DEBUG.FORCE_LEVEL)
-    
     if type(str) ≠ "string":
         // Was not properly encoded
         return 0
