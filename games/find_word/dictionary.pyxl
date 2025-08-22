@@ -89,38 +89,54 @@ def q_decode(word):
 const sensitive = {…sensitive_source, …sensitive_extra}
 def q_encode(word):
     return replace(word, "QU", "Q")
+
+
+
+/* Given a q-encoded word `pattern` that contains zero or one `WILDCARD_CHARACTER`s,
+   return an array of all q-encoded words (which may be zero) that
+   match the pattern. */
+def dictionary_search(pattern):
+    const result = []
+    if contains(pattern, WILDCARD_CHARACTER):
+        const part = split(pattern, WILDCARD_CHARACTER)
+        for letter in ALPHABET:
+            const word = part[0] + letter + part[1]
+            if dictionary[word]:
+                push(result, word)
+    else if dictionary[pattern]:
+        push(result, pattern)
+            
+    return result
+    
     
 
 /* Computes the letter points and size multiplier. Assumes
    word is an all-uppercase string with only legal characters
-   and is Q-encoded (Q appears without U).*/
-def score_word(word):
+   and is Q-encoded (Q appears without U) that came
+   from pattern. */
+def score_word(word, pattern default word):
     if size(word) < MIN_WORD_LENGTH or not dictionary[word]:
         return 0
         
     let score = 0
-    for letter in word:
+    for letter in slice(pattern, 0, size(word)):
         score += LETTER_POINT_TABLE[letter] || 0
     
     // Length multiplier (# tiles, not letters)
     score *= min(5, size(word) - MIN_WORD_LENGTH + 1)
     
-    return score
+    return max(score, 0)
 
 
 
 def color_for_points(points):
-    
-    const HIGH_POINTS = 75
-    const LOW_POINTS = 5
-    
     if points ≤ LOW_POINTS:
         return HISTORY_COLOR[0]
     else if points ≥ HIGH_POINTS:
         return HISTORY_COLOR[3]
     else:
         // Scale up in discrete steps
-        const α = min(⌊(points - LOW_POINTS) / 5⌋ / 8, 100%)
+        const α = min(⌊⅕ (points - LOW_POINTS)⌋ / 8, 100%)
         const c = hsv(perceptual_lerp_color(HISTORY_COLOR[1], HISTORY_COLOR[2], α))
         c.s *= 120%
         return rgb(c)
@@ -136,7 +152,8 @@ def random_safe_word(rng default random, min_size default 5, max_size default 8)
 
 
 
-/* Replaces the text with ??? if it is in the sensitive dictionary */
+/* Replaces the `text` with (first letter) + ∙∙∙ if it is in the 
+   sensitive dictionary */
 def censor(text):
     return if text and sensitive[lowercase(text)] then (text[0] + slice("∙∙∙∙∙∙∙∙∙∙∙∙∙", 0, size(text) - 1)) else text
         

@@ -193,7 +193,6 @@ def draw_round_selection(pos, radius):
     draw_disk(pos - xy(0, 1), radius + 7.5, rgba(CURSOR_COLOR, 15%), ∅, -0.7)
 
 
-
 /* If `activate_callback` is ∅, then the button is drawn disabled.
 
    `index` specifies the horizontal position.
@@ -208,12 +207,13 @@ def draw_round_selection(pos, radius):
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
     const radius = 14
     const region = {
-        pos: xy(radius + 7 + 48 index, SCREEN_SIZE.y - radius - 1),
+        pos: xy(radius + (if landscape() then (index + 0.25) * ⅓ (SCREEN_SIZE.x - 210) else ⅓ (index + ⅓) * SCREEN_SIZE.x), SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
         
     const enabled = activate_callback
-    
+
+    todo("Remix tutorial")
     if enabled:
         if touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
             handle_ability_button.selected_button = name
@@ -222,19 +222,27 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         handle_ability_button.selected_button = ∅
         
     
-    if handle_ability_button.selected_button ≠ name:
+    const selected = handle_ability_button.selected_button == name
+    
+    if not selected:
         // NOT selected
-        draw_disk(region.pos, radius, if sprite then (if enabled then #EEE else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
+        draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then #EEE else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
+        
+    if name == "Wild":
+        // Make it look like a tile
+        draw_rect(region.pos, radius * xy(2, 2), if enabled then #888 else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
+
     
     draw_text({
         pos: region.pos - xy(0, ½ region.size.y + 7),
         font: history_font,
-        color: if handle_ability_button.selected_button == name then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
-        outline: if handle_ability_button.selected_button == name then rgba(CURSOR_COLOR, 50%) else ∅,
+        color: if selected then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
+        outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
         text: caption})
     
     if sprite:     
         draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
+    
     
     // Special case for the auto button, where the sprite itself shows a number
     if name == "Remix" and size(player.remix_list):
@@ -258,7 +266,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
                 z: 20,
                 text: joy.prompt[gamepad_button]})
             
-        if handle_ability_button.selected_button == name:
+        if selected:
             draw_round_selection(region.pos, radius)
             
         if (mode_frames > 10 and 
@@ -282,7 +290,8 @@ handle_ability_button.last_frame = 0
 def handle_buttons(
     free_sprite,  free_caption,  free_callback,
     remix_sprite, remix_callback,
-    aux_sprite,   aux_callback,  aux_allow_b default false):
+    aux_sprite,   aux_callback,  aux_allow_b default false,
+    wild_callback):
 
     // Deselect all on hover
     if touch.hover and game_frames > handle_ability_button.last_frame:
@@ -298,7 +307,7 @@ def handle_buttons(
                     draw_tutorial(region.pos - xy(0, 20), "Enter\nFreestyle", ∅, "left")
             else if not player.has_achievement["Exit Freestyle"] and get_mode() == Freestyle:
                 draw_tutorial(region.pos - xy(0, 20), "Leave\nFreestyle", ∅, "left")
-                
+        
         // The "Scry Remixes" display becomes the "Remix x" button when active
         if player.has_ability["Scry Remixes"]:
             handle_ability_button(
@@ -308,6 +317,16 @@ def handle_buttons(
                 if player.has_ability["Remix"] then remix_sprite else ∅,
                 if player.has_ability["Remix"] and  remix_callback then "(d)" else ∅,
                 if player.has_ability["Remix"] then remix_callback else ∅)
+
+        if player.has_ability["Wild"]:
+            handle_ability_button(
+                2,
+                "Wild",
+                "Wild",
+                ability_icon.wild,
+                if free_callback then "(c)" else ∅,
+                wild_callback)
+            
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {
@@ -378,6 +397,27 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
         y_align: text_y_align,
         z: TUTORIAL_Z})
 
+
+
+/* Returns true if `pattern` starts with `prefix`, where
+   at most one `WILDCARD_CHARACTER` in pattern can match any one
+   letter from `ALPHABET`. Assumes both are q-encoded
+   strings, so that "Qu" is the single character "Q".
+   
+   Note that you might expect a general purpose version of
+   this to operate the other way, with wildcards in `prefix`.
+   
+   Relatively slow. */
+def wildcard_starts_with(pattern, prefix):
+    if contains(pattern, WILDCARD_CHARACTER):
+        const part = split(pattern, WILDCARD_CHARACTER)
+        for letter in ALPHABET:
+            if starts_with(part[0] + letter + part[1], prefix):
+                return true
+        return false
+    else:
+        return starts_with(pattern, prefix)
+    
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

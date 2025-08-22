@@ -108,7 +108,13 @@ def draw_content():
     if player.has_ability["High Score Stat"]:
         y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
     
-    y += 5
+    y += 10
+    if player.has_ability["Badge Stat"]:
+        for title at i in ["Highest Score", "Best Word", "Best Rare", "Longest", "Most Words"]:
+            const field = lowercase(replace(title, " ", "_"))
+            y += draw_row(y, title + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"), if i mod 2 then TABLE_ALT_ROW_COLOR else ∅)
+    
+    y += 10
     y += draw_row(y, "XP", format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
     
     if player.has_ability["Total Words Stat"]:
@@ -119,8 +125,8 @@ def draw_content():
     
     if player.has_ability["Discovered Words Stat"]:
         y += draw_row(y, "Discovered Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
-    
-    y += 5
+
+    y += 10
     if player.has_ability["Words/Match Stat"]:
         y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
     

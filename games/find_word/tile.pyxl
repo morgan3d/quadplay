@@ -1,7 +1,8 @@
-def make_tile():
+def make_tile(letter default "?"):
     return {
-        // uppercase, Q means Qu
-        letter: "?",
+        // uppercase, Q means Qu, otherwise the letter to add 
+        // to the word when chosen
+        letter: letter,
         
         // Last position rendered to in screen space
         pos: ∅,

@@ -2,6 +2,18 @@ Freestyle
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE_CENTER_SELECTED_COLOR
 
+/* Return the word, maybe returning a wildcard character, represented
+   by the player's current `free_row` tiles */
+def free_row_pattern(player):
+    let pattern = ""
+    
+    for tile at t in player.free_row:
+        pattern += tile.letter
+        
+    return pattern
+
+
+
 /* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
    See also `player_selection_change_callback()` for the `Play` mode. */
 def player_free_selection_change_callback(player):    
@@ -9,28 +21,28 @@ def player_free_selection_change_callback(player):
     player_remove_destroyed_free_words(player)
 
     // Look for any additions, tracking the most points seen for sound triggers
-    let word = ""
     let max_points = 0
     let best_new_word = ∅
     let best_new_color = ∅
-    for tile at t in player.free_row:
-        word += tile.letter
-        
-    if dictionary[word]:
+    
+    // Find all words matching this sequence in the dictionary
+    const pattern = free_row_pattern(player)
+    for word in dictionary_search(pattern):
         if player.already_found[word] or player_free_row_contains(player, word):
-            // Show that we've already seen this just-completed word by 
-            // finding and emphasizing it
+            // Show that we've already seen these just-completed words by 
+            // finding and emphasizing them
             player_emphasize_history_word(player, word)
         else:
-            const points = score_word(word)
+            const points = score_word(word, pattern)
             const color = player_add_to_free(player, word, points)
             if points > max_points:
                 max_points = points
                 best_new_word = word
                 best_new_color = color
 
-    // At least one word was added
     if max_points > 0:
+        todo("** This animation isn't playing")
+        // At least one word was added
         player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
         player_achieve(player, "Freestyle Word")
@@ -87,24 +99,20 @@ def player_spawn_free_score_animation(player, word, color):
 
 /* Remove any previous entry of player.history.free that does not belong */
 def player_remove_destroyed_free_words(player):
-    let word = ""
-    for tile at t in player.free_row:
-        word += tile.letter
-        
+    const pattern = free_row_pattern(player)
+    
     def maybe_remove(entry):
-        if not starts_with(word, entry.word):
-            todo("Sound and animation for removal")
+        if not wildcard_starts_with(pattern, entry.word):
             return iterate.REMOVE
-        
+    
     iterate(player.history.free, maybe_remove)
     
     
     
 /* Add a tile to the free row */
-def add_tile_to_word(index):
-    const tile = player.board.tile[index.x][index.y]
+def add_tile_to_word(tile):
     assert(not tile.used)    
-    _board_play_sound(select_tile_sound, 85%, 100%, index)
+    _board_play_sound(select_tile_sound, 85%, 100%, xy(2, 2))
     
     tile.used = true
     push(player.free_row, {
@@ -285,12 +293,12 @@ def draw_free_round_board(pos)
             // Touch selection for adding tiles to word
             const tile_center = {pos: tile_pos, shape: "disk", size: center_size}
             if mode_frames > 5 and touch.a and overlaps(tile_center, touch.xy) and not tile.used:
-                add_tile_to_word(index)
+                add_tile_to_word(tile)
             
             // Gamepad selection
             if player.using_gamepad and is_cursor_tile:
                 if player.gamepad.pressed_a and not tile.used:
-                    add_tile_to_word(index)
+                    add_tile_to_word(tile)
                         
             if not tile.used:
                 tile_draw(tile, tile_pos, is_cursor_tile, 0°, #CCC, tile_size)
@@ -309,9 +317,16 @@ def done():
     pop_mode() because "Button"
 
 
+
+def wild_callback():
+    add_tile_to_word(player.wild_tile)
+
+
+
 enter
 ────────────────────────────────────────────────────────────────────────
 play_sound({sound: blip_alt_sound, pitch: 75%, volume: 80%})
+
 
 
 frame
@@ -345,7 +360,9 @@ history_update(player.history, history_rect)
 handle_buttons(
     ability_icon.ok, "Done", done,
     ability_icon.remix, ∅,
-    aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true)
+    aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true,
+    if player.wild_tile.used or size(player.free_row) == 0 then ∅ else wild_callback)
+    
 
 // In case the player parks in Freestyle for too long
 // we check the network timer here to see if we should log on

@@ -2,10 +2,6 @@ Title
 ════════════════════════════════════════════════════════════════════════
 const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
 
-todo("Try to make iOS scroll away more at the page level")
-todo("Matches won stat")
-todo("New high score/longest word/etc. notification")
-
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
 
@@ -159,7 +155,10 @@ intro = sequence(
     {begin_callback: play_sound, data: {sound: times_up_sound}, frames: 100},
     intro_cleanup)
 
-    
+if DEBUG.STATS:
+    go_to_stats()
+
+
 frame
 ────────────────────────────────────────────────────────────────────────
 if game_frames == 30:

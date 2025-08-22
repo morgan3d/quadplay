@@ -7,6 +7,7 @@ def enter_freestyle():
 
 
 def execute_remix():
+    player_achieve(player, "Use Remix")
     play_sound({sound: remix_sound, volume: 50%, playback_rate: 200%})
     sort(player.remix_list, size_comparator)
     

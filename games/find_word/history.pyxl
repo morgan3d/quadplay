@@ -132,7 +132,8 @@ def history_draw(history, pos, max_height):
    
     
 
-/* Adds to `history[list_name]`. Returns the color to use for the selection. */
+/* Adds to `history[list_name]`. Returns the color to use for the
+   selection. Does not change `score` or `free_score` */
 def history_add(history, list_name, word, points):
     assert(word)
     assert(type(word) == "string")
@@ -202,7 +203,7 @@ def history_update(history, history_rect)
 
     if (player.has_ability["Scry Word Count"] or in_waiting_room):
         draw_text({
-            pos: history_rect.corner + history_rect.size - xy(2, 1),
+            pos: history_rect.corner + history_rect.size - (if landscape() then xy(½ history_rect.size.x - 25, 1) else xy(2, 1)),
             font: history_font,
             text: "Found " + size(history.list) + "/" + player.board.word_count,
             color: #DDD,

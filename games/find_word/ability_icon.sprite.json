@@ -3,9 +3,10 @@
     "license": "By SHMUEL 2025, Released into the Public Domain/CC0",
     "sprite_size": {"x": 19, "y": 19}, 
     "names": {
-    "freestyle": {"x":0, "y":0},
-    "remix": {"x":1, "y":0},
-    "ok": {"x": 0, "y": 1},
-    "cancel": {"x": 1, "y": 1}
+        "freestyle": {"x":0, "y":0},
+        "remix": {"x":1, "y":0},
+        "ok": {"x": 0, "y": 1},
+        "cancel": {"x": 1, "y": 1},
+        "wild": {"x": 2, "y": 0}
     }
 }

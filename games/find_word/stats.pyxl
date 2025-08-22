@@ -1,9 +1,14 @@
-todo("Debug how a save game could lose today stats and all words! Make safeguard")
-
 /* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */
 def make_empty_stats_entry():
     return {
         longest_text: "",
+        badge_count: {
+            best_rare: 0,
+            longest: 0,
+            best_word: 0,
+            highest_score: 0,
+            most_words: 0,
+        },
         best_free_word_text: "", 
         best_free_word_points: 0,
         best_word_text: "", 
@@ -284,6 +289,22 @@ def stats_update(stats, competitor, num_competitors, joined_late):
         entry.points += competitor.score
         ++entry.matches
     
+    todo("Abstract the badge system to allow iteration")
+    if competitor == competitor_array[0]:
+        ++entry.badge_count.highest_score
+        
+    if competitor == best_word_winner:
+        ++entry.badge_count.best_word
+    
+    if competitor == best_rare_winner:
+        ++entry.badge_count.best_rare
+
+    if competitor == longest_winner:
+        ++entry.badge_count.longest
+        
+    if competitor == most_words_winner:
+        ++entry.badge_count.most_words
+ 
     // XP for score
     entry.xp += ⌈competitor.score * XP_VALUE.point⌉
     

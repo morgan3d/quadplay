@@ -85,7 +85,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.370",
+    "version": "0.371",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -111,6 +111,16 @@
             "transpose": true,
             "column_type": "array",
             "url": "bot.csv"
+        },
+        "HIGH_POINTS": {
+            "type": "number",
+            "value": 75,
+            "description": "Highest points per word that has a unique color in the history"
+        },
+        "LOW_POINTS": {
+            "type": "number",
+            "value": 5,
+            "description": "Lowest points per word that has a unique color in the history"
         },
         "TABLE_ALT_ROW_COLOR": {
             "type": "rgb",
@@ -439,7 +449,8 @@
                 "J": 8,
                 "X": 8,
                 "Q": 11,
-                "Z": 10
+                "Z": 10,
+                "*": -2
             }
         },
         "TILE_CENTER_SELECTED_COLOR": {
@@ -1520,6 +1531,10 @@
             "max": 360,
             "format": "0",
             "quantum": 1
+        },
+        "WILDCARD_CHARACTER": {
+            "type": "string",
+            "value": "*"
         }
     },
     "screenshot_tag": "find_word",

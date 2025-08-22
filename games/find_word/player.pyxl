@@ -64,6 +64,8 @@ def make_player():
         // Used for display.
         history: make_history(),
         
+        wild_tile: make_tile(WILDCARD_CHARACTER),
+        
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
         using_gamepad: false,

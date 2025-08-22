@@ -1267,9 +1267,14 @@ function slice(a, s, e) {
     if (Array.isArray(a)) {
         return a.slice(s, e);
     } else if (is_string(a)) {
-        return a.substring(s, e);
+        if (s === 0 && e === s.length) {
+            // Optimization of the special case of slice(a, 0, a.length)
+            return a;
+        } else {
+            return a.substring(s, e);
+        }
     } else {
-        $error('slice() requires an array or string argument.');
+        $error('slice() requires an array or string argument, received ' + (typeof a));
     }
 }
 

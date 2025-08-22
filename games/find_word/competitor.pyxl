@@ -140,7 +140,8 @@ def competitor_analyze(competitor_array):
 
     
 /* Helper for `competitor_analyze()`. Sets the `_winner` globals
-   and assigns the `competitor.badges` strings. */
+   and assigns the `competitor.badges` strings. Sorts the competitors
+   by score. */
 def competitor_assign_awards(competitor_array):
     // Rank all competitors by score
     sort(competitor_array, "score", true)
@@ -165,13 +166,12 @@ def competitor_assign_awards(competitor_array):
         if size(competitor.word_list) > size(most_words_winner.word_list):
             most_words_winner = competitor
 
-
     // Now loop again and give badges, including for ties:
     for competitor in competitor_array:
         // Put in the same order as the award stages
         if competitor.best_word_points == best_word_winner.best_word_points:
             competitor.badges += BADGE_TABLE.best_word
-            
+        
         if competitor.best_rare_points == best_rare_winner.best_rare_points:
             competitor.badges += BADGE_TABLE.best_rare
 

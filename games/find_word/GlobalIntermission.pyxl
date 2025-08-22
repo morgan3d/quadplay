@@ -433,7 +433,7 @@ player.avatar.level = xp_to_level(new_xp)
 
 // Save the updated stats (we'll save again at the end of the intermission).
 // Unlocked abilities are stored as part of the ability notification process.
-if not DEBUG.INTERMISSION:
+if true or not DEBUG.INTERMISSION:
     stats_save(player.stats)
     
 
