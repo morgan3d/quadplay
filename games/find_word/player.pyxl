@@ -5,6 +5,7 @@ def player_achieve(player, name, make_notification default false):
         save_local("has_achievement", player.has_achievement)
 
 
+
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */
 def make_player():

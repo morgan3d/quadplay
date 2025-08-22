@@ -20,10 +20,10 @@ Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprit
 Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.remix
 See VIL Frequently,18,SILENT,
 Badge XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
-Scry Word Count,20,You can now see the total number of possible words while playing!,<default>
+Scry Word Count,20,You can now see the total number of possible words while playing!,shapes.eye
 Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.remix
 Badge Stat,22,"Badges won is now availale in Stats!",stats_sprite[0][0]
 Remix × 2,24,"New power: Use Remix 2× per match",ability_icon.remix
-Remix × 3,27,"New power: Use Remix 3× per match",ability_icon.remix
-Remix × 4,30,"New power: Use Remix 4× per match",ability_icon.remix
-Wild,35,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
+Remix × 3,28,"New power: Use Remix 3× per match",ability_icon.remix
+Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.remix
+Wild,37,"New power: Wild (blank) tile in Freestyle",ability_icon.wild

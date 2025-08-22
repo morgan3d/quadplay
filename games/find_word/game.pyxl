@@ -18,6 +18,11 @@ let in_waiting_room
 
 let player = make_player()
 
+// When debugging, do not make a reset player at a reasonable level re-do basic achievements
+if DEBUG.FORCE_LEVEL > 3:
+    for achievement in ["Change Avatar", "Check Stats", "Use Remix", "Rotate Board", "Freestyle Word", "Exit Freestyle", "Play Solo Match", "Play Global Match"]:
+        player_achieve(player, achievement)
+
 let resolution_hook
 let time_hook
 let input_hook
@@ -201,7 +206,9 @@ def draw_round_selection(pos, radius):
    redundant with `index` except that selection can be shared with buttons that
    do not use this function.
    
-   If `sprite` is ∅, do not draw the button.
+   If `sprite` is not a sprite, draw a button placeholder circle but no actual button.
+   If `sprite` is a number, display the level number as well.
+   
    
    Returns the button region. */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
@@ -211,7 +218,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         pos: xy(radius + (if landscape() then (index + 0.25) * ⅓ (SCREEN_SIZE.x - 210) else ¼ (index + ¾) * SCREEN_SIZE.x), SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
-        
+            
     const enabled = activate_callback
 
     todo("Remix tutorial")
@@ -222,9 +229,20 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         // Deselect if not enabled and the currently selected button
         handle_ability_button.selected_button = ∅
         
-    
     const selected = handle_ability_button.selected_button == name
     
+    draw_text({
+        pos: region.pos - xy(0, ½ region.size.y + 7),
+        font: history_font,
+        color: if selected then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
+        outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
+        text: if type(sprite) == "number" then "Level " + sprite else caption})
+
+    if type(sprite) ≠ "object":
+        draw_disk(region.pos, radius, ∅, DISABLED_ABILITY_COLOR)
+        draw_sprite({sprite: shapes.lock, pos: region.pos, scale: 75%, opacity: DISABLED_ABILITY_COLOR.a})
+        return
+        
     if not selected:
         // NOT selected
         draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then TILE_CENTER_COLOR else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
@@ -232,18 +250,8 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
     if name == "Wild":
         // Make it look like a tile
         draw_rect(region.pos, radius * xy(2, 2), if enabled then TILE_COLOR else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
-
     
-    draw_text({
-        pos: region.pos - xy(0, ½ region.size.y + 7),
-        font: history_font,
-        color: if selected then #FFF else (if enabled then #EEE else DISABLED_ABILITY_COLOR),
-        outline: if selected then rgba(CURSOR_COLOR, 50%) else ∅,
-        text: caption})
-    
-    if sprite:     
-        draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
-    
+    draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
     // Special case for the auto button, where the sprite itself shows a number
     if name == "Remix" and size(player.remix_list):
@@ -309,22 +317,20 @@ def handle_buttons(
             else if not player.has_achievement["Exit Freestyle"] and get_mode() == Freestyle:
                 draw_tutorial(region.pos - xy(0, 20), "Leave\nFreestyle", ∅, "left")
         
-        // The "Scry Remixes" display becomes the "Remix x" button when active
-        if player.has_ability["Scry Remixes"]:
+            // The "Scry Remixes" display becomes the "Remix x" button when active
             handle_ability_button(
                 1,
                 "Remix",
-                if player.has_ability["Remix × 2"] then "Remix ×" + player.remix_uses_left else "Remix",
-                if player.has_ability["Remix"] then remix_sprite else ∅,
+                if player.has_ability["Remix × 2"] then ("Remix ×" + player.remix_uses_left) else "Remix",
+                if player.has_ability["Scry Remixes"] then remix_sprite else ABILITY_TABLE["Scry Remixes"].level,
                 if player.has_ability["Remix"] and  remix_callback then "(d)" else ∅,
                 if player.has_ability["Remix"] then remix_callback else ∅)
-
-        if player.has_ability["Wild"]:
+    
             handle_ability_button(
                 2,
                 "Wild",
                 "Wild",
-                ability_icon.wild,
+                if player.has_ability["Wild"] then ability_icon.wild else ABILITY_TABLE["Wild"].level,
                 if free_callback then "(c)" else ∅,
                 wild_callback)
             

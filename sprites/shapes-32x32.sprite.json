@@ -19,6 +19,7 @@
         "half_square": {"x": 10, "y": 0},
         "barb": {"x": 11, "y": 0},
         "asteroid": {"x": 12, "y": 0},
+        "unlock": {"x": 13, "y": 0},
         
         "open_square": {"x": 0, "y": 1},
         "open_disk": {"x": 1, "y": 1},
@@ -35,7 +36,8 @@
         "teardrop": {"x": 10, "y": 1},
         "chevron": {"x": 11, "y": 1},
         "lightning": {"x": 12, "y": 1},
-        
+        "lock": {"x": 13, "y": 1},
+
         "diagonal_corner": {"x": 0, "y": 2},
         "convex_corner": {"x": 1, "y": 2},
         "wave": {"x": 2, "y": 2},
@@ -187,7 +189,8 @@
         "hawk":            {"x": 8, "y": 12},
         "hawk_attack":     {"x": 9, "y": 12},
         "lizard":          {"x": 10, "y": 12},
-        "microscope":      {"x": 11, "y": 12}
+        "microscope":      {"x": 11, "y": 12},
+        "binoculars":      {"x": 12, "y": 12}
 },
     "license": "By Morgan McGuire 2022, released into the Public Domain/CC0"
 }

@@ -132,7 +132,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
 set_hooks()
-    
+
 easter_egg = if player.avatar.level > 20 and ξ < 12% then 2 else (if player.avatar.level > 15 and ξ < 12% then 1 else 0)
 
 if not easter_egg and player.stats.lifetime.xp > 1000 and ξ < 2%:
