@@ -226,11 +226,11 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
     
     if not selected:
         // NOT selected
-        draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then #EEE else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
+        draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then TILE_CENTER_COLOR else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
         
     if name == "Wild":
         // Make it look like a tile
-        draw_rect(region.pos, radius * xy(2, 2), if enabled then #888 else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
+        draw_rect(region.pos, radius * xy(2, 2), if enabled then TILE_COLOR else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
 
     
     draw_text({

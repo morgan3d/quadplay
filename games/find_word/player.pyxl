@@ -459,6 +459,7 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     remove_all(player.history.free)
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
+    player.wild_tile.used = false
     player.remix_list = ∅
     player.remix_uses_left = (
         if player.has_ability["Remix × 4"] then 4

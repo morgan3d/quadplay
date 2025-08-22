@@ -63,7 +63,6 @@ joined_late = (end_time - start_time < GLOBAL_GAME_TIME - 10)
 board_deselect_all(player.board, player)
 
 
-
 frame
 ────────────────────────────────────────────────────────────────────────
 const time_left = end_time - frame_utc_now   
