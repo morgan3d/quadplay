@@ -323,7 +323,8 @@ def draw_leaderboard()
 
         draw_text({…text_args, text: size(competitor.word_list), pos: pos + xy(GLOBAL_LAYOUT.LEADERBOARD.COUNT_X, 0), x_align: "right"})
 
-        let text = q_decode(if free_word then competitor.free_list[0] else competitor.word_list[0])
+        // Force unknown to string, decode
+        let text = q_decode((if free_word then competitor.free_list[0] else competitor.word_list[0]) default "∅")
 
         if competitor ≠ player_competitor: 
             text = censor(text)

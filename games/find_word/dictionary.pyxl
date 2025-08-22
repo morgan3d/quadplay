@@ -151,7 +151,7 @@ def random_safe_word(rng default random, min_size default 5, max_size default 8)
 
 
 /* Replaces the `text` with (first letter) + ∙∙∙ if it is in the 
-   sensitive dictionary */
+   sensitive dictionary. Assumes the input is q-decoded */
 def censor(text):
     return if text and sensitive[lowercase(text)] then (text[0] + slice("∙∙∙∙∙∙∙∙∙∙∙∙∙", 0, size(text) - 1)) else text
         
