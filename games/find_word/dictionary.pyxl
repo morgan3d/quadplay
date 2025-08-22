@@ -24,8 +24,6 @@ if DEBUG.RESET_PLAYER:
     debug_print("RESET PLAYER")
     save_local()
 
-/* Longest possible word */
-const MAX_WORD_LENGTH = ROWS * COLS
 
 set_random_seed()
 

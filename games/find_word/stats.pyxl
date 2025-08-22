@@ -165,17 +165,16 @@ def stats_load():
                 if not contains(valid, k):
                     debug_print("Removing unused key", k)
                     remove_key(day, k)
-        
-        if DEBUG.FORCE_LEVEL:
-            stats.lifetime.xp = level_to_xp(DEBUG.FORCE_LEVEL)
-
-        
+                
         // Everything is decoded now. Merge any
         // days before today into lifetime
         stats_merge_previous_days(stats)
     else:
         stats = {lifetime: make_empty_stats_entry()}
 
+    if DEBUG.FORCE_LEVEL:
+        stats.lifetime.xp = level_to_xp(DEBUG.FORCE_LEVEL)
+        
     // Ensure an entry for today
     stats[today_date_string()] = stats[today_date_string()] default make_empty_stats_entry()
         

@@ -207,7 +207,8 @@ def draw_round_selection(pos, radius):
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
     const radius = 14
     const region = {
-        pos: xy(radius + (if landscape() then (index + 0.25) * ⅓ (SCREEN_SIZE.x - 210) else ⅓ (index + ⅓) * SCREEN_SIZE.x), SCREEN_SIZE.y - radius - 1),
+        // In portrait mode, bring the buttons in from the edges more to avoid the browser's reload button on Safari
+        pos: xy(radius + (if landscape() then (index + 0.25) * ⅓ (SCREEN_SIZE.x - 210) else ¼ (index + ¾) * SCREEN_SIZE.x), SCREEN_SIZE.y - radius - 1),
         size: radius * xy(2, 2),
         shape: "disk"}
         
