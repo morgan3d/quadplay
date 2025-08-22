@@ -21,7 +21,7 @@ def player_free_selection_change_callback(player):
     player_remove_destroyed_free_words(player)
 
     // Look for any additions, tracking the most points seen for sound triggers
-    let max_points = 0
+    let max_points = -1
     let best_new_word = ∅
     let best_new_color = ∅
     
@@ -40,8 +40,7 @@ def player_free_selection_change_callback(player):
                 best_new_word = word
                 best_new_color = color
 
-    if max_points > 0:
-        todo("** This animation isn't playing")
+    if best_new_word:
         // At least one word was added
         player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
@@ -62,7 +61,6 @@ def player_free_selection_change_callback(player):
 /* Creates animation going from the selection to the last word in the free list */
 def player_spawn_free_score_animation(player, word, color):
     let target
-    
     let letter_array = []
     let start_array = []
     
@@ -79,7 +77,7 @@ def player_spawn_free_score_animation(player, word, color):
         for i < size(word):
             const tile = player.free_row[i]
             
-            if not tile or tile.letter ≠ word[i]: return sequence.BREAK
+            if not tile or (tile.letter ≠ word[i] and tile.letter ≠ WILDCARD_CHARACTER): return sequence.BREAK
             
             push(start_array, xy(tile.pos))
             push(letter_array, q_decode(tile.letter))
@@ -92,8 +90,9 @@ def player_spawn_free_score_animation(player, word, color):
             const pos = lerp(start_array[i], target, α)
             draw_disk(pos, 12 (1 - α), color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
-        
-    sequence({begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
+    
+    // Wait 1 frame to guarantee the tiles have been rendered
+    sequence(1, {begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
 
 
 
@@ -154,7 +153,7 @@ def draw_free_row(board_pos)
     // Move in front of the history
     set_transform(∅, ∅, 2)
     
-    const [board_grid_size, board_tile_size, board_gutter] = get_free_round_board_dims()
+    const [board_grid_size, board_tile_size, board_gutter] = get_freestyle_board_dims()
     const board_width = board_grid_size.x + ¼ board_tile_size.x
     
     let history_rect = get_history_rect()
@@ -231,8 +230,7 @@ def draw_free_row(board_pos)
             
     for size(player.free_row) ≤ i < tile_slots:
         draw_rect(xy(start_x + i * tile_spacing, tile_y), tile_size - 2, TILE_HOLE_COLOR)
-        
-            
+                
     // Draw the connectors between letters if it is a word. Intentionally
     // do not draw the selected-but-not-a-word line, as it makes them not 
     // look like tiles any more
@@ -245,7 +243,7 @@ def draw_free_row(board_pos)
 
 /* Returns `[grid_size, tile_size, gutter]` for the
    Freestyle board, which is shrunk in landscape mode. */    
-def get_free_round_board_dims():
+def get_freestyle_board_dims():
     let tile_size = xy(TILE_EXTENT, TILE_EXTENT)
     
     if landscape():
@@ -262,12 +260,12 @@ def get_free_round_board_dims():
 
 
 /* Draw the board with used tiles shown as blank */
-def draw_free_round_board(pos)
+def draw_freestyle_board(pos)
 & preserving_transform:
     // Duplicates some `player_update_board()` code because it has to draw
     // the board in a special way to make it smaller and have missing tiles
 
-    const [grid_size, tile_size, gutter] = get_free_round_board_dims()
+    const [grid_size, tile_size, gutter] = get_freestyle_board_dims()
     const center_size = tile_size - gutter
     
     set_transform(pos)
@@ -350,7 +348,7 @@ if landscape():
     board_pos.y += 17
 
 // Draw the board with used tiles as blank
-draw_free_round_board(board_pos)
+draw_freestyle_board(board_pos)
 
 // Draw free word construction area
 const history_rect = draw_free_row(board_pos)
