@@ -19,7 +19,7 @@ def insert_bots(competitor_array, target_count, max_bots):
     // Shift everybody's ability by this amount
     const match_shift = make_random(player.board.seed)(-10%, 0%)
     
-    def maybe_add_bot_competitor(descriptor, id):
+    def maybe_add_bot_competitor(descriptor):
         assert(descriptor and descriptor.sprite and descriptor.name)
         const bot_rng = make_random(descriptor.name + match_shift)
         const competitor = {
@@ -28,7 +28,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
                 name: descriptor.name,
                 bot: true,
-                id: id},
+                id: "BOT_" + descriptor.name},
             score: 0,
             word_list: [],
             freestyle_list: []}
@@ -70,7 +70,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                         word_set[w] = 1
         
         // Special case for Moo, who always finds *all* cow-related words
-        if id == BOT.MOO.ID:
+        if descriptor == BOT.MOO.descriptor:
             for word in BOT.MOO.VOCABULARY:
                 if player.board.word_set[word]:
                     word_set[word] = 1
@@ -78,12 +78,12 @@ def insert_bots(competitor_array, target_count, max_bots):
         let tries = 0        
         // Special case for caf, who sometimes finds a great word, finds all
         // three-letter cow words, and with a low probability finds a terrible word
-        if id == BOT.CAF_ID:
+        if descriptor == BOT.CAF.descriptor:
             caf_ai(word_set, player.board.word_list, bot_rng)
         else:
             // Pick up a bunch of cheap words first. For Moo these must be 3 letters.
             // For other bots they can be 3 or 4 letters
-            const short_word_length = if id == BOT.MOO.ID then 3 else 4
+            const short_word_length = if descriptor == BOT.MOO.descriptor then 3 else 4
             
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
                 ++tries
@@ -92,7 +92,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                     maybe_add_word(word)
     
         // Moo cannot find non-cow words greater than 4 letters    
-        if id ≠ BOT.MOO.ID and id ≠ BOT.CAF_ID:
+        if descriptor ≠ BOT.MOO.descriptor and descriptor ≠ BOT.CAF.descriptor:
             tries = 0
             while size(word_set) < words_found and tries < 2 words_found:
                 ++tries
@@ -115,45 +115,22 @@ def insert_bots(competitor_array, target_count, max_bots):
     // it is an odd 10 minute interval right now. Process Moo after other bots
     // so that players who don't see Moo don't have their other results affected
     if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2):
-        maybe_add_bot_competitor({
-                name: "Moo",
-                sprite: "avatar_sprite[34][22]",
-                base_ability: 0.1,
-                short_word_preference: 0.80,
-                first_hour: 0,
-                last_hour: 22},
-            BOT.MOO.ID)
+        maybe_add_bot_competitor(BOT.MOO.descriptor)
     
     // Process caf *after* Moo. Everyone who can see caf can also see Moo, so
     // this keeps it deterministic
     if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
-        maybe_add_bot_competitor({
-                name: "caf",
-                sprite: "avatar_sprite[33][22]",
-                base_ability: 0.0,
-                short_word_preference: 0.80,
-                first_hour: 0,
-                last_hour: 23, 
-                level: 1},
-            BOT.CAF_ID)
+        maybe_add_bot_competitor(BOT.CAF.descriptor)
 
     if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
         // VIL also cheats and always gets extra points. This allows them
         // to be on top of the leaderboard and annoy the player without also winning
         // every award every time (and thus being TOO annoying)
-        maybe_add_bot_competitor({
-                name: "VIL",
-                sprite: "avatar_sprite[25][20]",
-                base_ability: 42%,
-                short_word_preference: 5%,
-                first_hour: 0,
-                last_hour: 23,
-                level: 45},
-            BOT.VIL.ID).score += 150
+        maybe_add_bot_competitor(BOT.VIL.descriptor).score += 150
 
     let c = 0
     while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:
-        maybe_add_bot_competitor(BOT_DESCRIPTOR_ARRAY[c], "BOT_" + c)
+        maybe_add_bot_competitor(BOT_DESCRIPTOR_ARRAY[c])
         ++c
 
 

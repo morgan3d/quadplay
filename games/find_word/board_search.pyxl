@@ -33,6 +33,8 @@ def board_string_ngram_set(board_string, n, word_set):
     // debug_print(round((now() - before) * 1000), "ms to find", size(ngram_set), "x " + n + "-grams and all shorter words")
     return ngram_set
     
+    
+    
 /*
   Visit all possible subpaths and invoke `visit(word, index, base16_path)` on them,
   where the tile index is `xy(index mod COLS, floor(index / COLS))`.
@@ -183,19 +185,16 @@ def board_string_find_all_words(board_string):
    spell them out in the default or reverse orientation. */
 def board_string_has_obvious_sensitive_word(board_string, only_stop_offensive default false):
     
-    let dict = if only_stop_offensive then offensive else sensitive
+    const dict = if only_stop_offensive then offensive else sensitive
     
     def is_sensitive(word):
         // The sensitive dictionary has not been encoded
         word = lowercase(q_decode(word))
         return dict[word] or dict[reversed(word)]
-        
-    let ok = true
-    let word = ""
     
     // Check columns
     for i < COLS:
-        word = ""
+        let word = ""
         for j < ROWS:
             word += board_string[i + COLS * j]
         
@@ -203,7 +202,7 @@ def board_string_has_obvious_sensitive_word(board_string, only_stop_offensive de
         
     // Check rows
     for j < ROWS:
-        word = ""
+        let word = ""
         for i < COLS:
             word += board_string[i + COLS * j]
            
@@ -213,7 +212,7 @@ def board_string_has_obvious_sensitive_word(board_string, only_stop_offensive de
     // Check diagonals. If not square, make a half-hearted attempt at this
     // by using the shorter dimension
     const len = min(COLS, ROWS)
-    word = ""
+    let word = ""
     for i < len:
         word += board_string[i + COLS * i]
         

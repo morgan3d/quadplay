@@ -86,7 +86,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.383",
+    "version": "0.384",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -421,8 +421,8 @@
                 },
                 "LETTER_BAG": {
                     "type": "string",
-                    "description": "Bag for drawing from when using the bag algorithm",
-                    "value": "AAAAAAAAAABBCCDDDDEEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPPQQRRRRRRSSSSSTTTTTTUUUVVWWXYYZ"
+                    "description": "Bag for drawing from when using the bag algorithm for board generation. Note that we need enough of each letter to support words with multiples but don't want to have so many that our 16-tile board becomes filled with repeats. There are almost no words with two X's, so we give only one",
+                    "value": "AAAAABBCCDDDEEEEEFFFGGGHHIIIIIJKLLLMMMNNNNOOOOPPPQQRRRRSSSSTTTTUUUVVWWXYYZZ"
                 }
             }
         },
@@ -1031,6 +1031,10 @@
                         "LEADERBOARD": {
                             "type": "object",
                             "value": {
+                                "HEADER_HEIGHT":{
+                                    "type": "number",
+                                    "value": 14,
+                                },
                                 "WIDTH": {
                                     "type": "number",
                                     "value": "224",
@@ -1160,7 +1164,7 @@
                     "value": {
                         "ID": {
                             "type": "string",
-                            "value": "SPECIAL_BOO"
+                            "value": "BOT_BOO"
                         },
                         "VOCABULARY": {
                             "type": "raw",
@@ -1413,7 +1417,19 @@
                     "value": {
                         "ID": {
                             "type": "string",
-                            "value": "SPECIAL_VIL"
+                            "value": "BOT_VIL"
+                        },
+                        "descriptor": {
+                            "type": "raw",
+                            "value": {
+                                "name": "VIL",
+                                "sprite": "avatar_sprite[25][20]",
+                                "base_ability": 0.42,
+                                "short_word_preference": 0.05,
+                                "first_hour": 0,
+                                "last_hour": 23,
+                                "level": 45
+                            }
                         }
                     }
                 },
@@ -1422,7 +1438,20 @@
                     "value": {
                         "ID": {
                             "type": "string",
-                            "value": "SPECIAL_Moo"
+                            "description": "Must be kept in sync with MOO.descriptor.name",
+                            "value": "BOT_Moo"
+                        },
+                        "descriptor": {
+                            "type": "raw",
+                            "description": "Argument to `make_bot_competitor`",
+                            "value": {
+                                "name": "Moo",
+                                "sprite": "avatar_sprite[34][22]",
+                                "base_ability": 0.1,
+                                "short_word_preference": 0.8,
+                                "first_hour": 0,
+                                "last_hour": 22
+                            }
                         },
                         "VOCABULARY": {
                             "type": "raw",
@@ -1734,9 +1763,26 @@
                         }
                     }
                 },
-                "CAF_ID": {
-                    "type": "string",
-                    "value": "SPECIAL_caf"
+                "CAF": {
+                    "type": "object",
+                    "value": {
+                        "descriptor": {
+                            "type": "raw",
+                            "value": {
+                                "name": "caf",
+                                "sprite": "avatar_sprite[33][22]",
+                                "base_ability": 0,
+                                "short_word_preference": 0.8,
+                                "first_hour": 0,
+                                "last_hour": 23,
+                                "level": 1
+                            }
+                        },
+                        "ID": {
+                            "type": "string",
+                            "value": "BOT_caf"
+                        }
+                    }
                 }
             }
         },

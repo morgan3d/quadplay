@@ -1,10 +1,3 @@
-/* Special values of XP:
-
-    0 = first time playing, no avatar
-    1 = avatar created, haven't played global yet
-*/
-
-
 def xp_to_level(xp):
     assert(xp ≠ ∅ and not is_nan(xp))
     // Invert level_to_xp

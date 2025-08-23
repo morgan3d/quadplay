@@ -2013,7 +2013,7 @@ function findInFiles(query, options, scope) {
     
     // Search through all .pyxl files in fileContents
     for (const [url, content] of Object.entries(fileContents)) {
-        if (url.endsWith('.pyxl') && typeof content === 'string') {
+        if (url.endsWith('.pyxl') && typeof content === 'string' && ! url.match(/\/_/)) {
             const matches = searchInFile(url, content, query, options);
             if (matches.length > 0) {
                 results.push({url, matches});

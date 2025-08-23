@@ -116,9 +116,10 @@ function updateProgramDocumentation() {
             (isPrivate ? privateVariableTable : publicVariableTable)[variableName] = entry;
         });
         
-        // Helper function for sorting that ignores 'const ' prefix
+        // Helper function for sorting that ignores the `const` prefix. `let` variables
+        // don't carry a prefix.
         function sortVarNames(a, b) {
-            // Remove 'const ' prefix if present for comparison
+            // Remove 'const' prefix if present for comparison
             const aName = a.replace(/^const /, '');
             const bName = b.replace(/^const /, '');
             return aName.localeCompare(bName);
@@ -126,20 +127,20 @@ function updateProgramDocumentation() {
         
         // Generate documentation in sorted order
         // Public variables first, then public functions
-        for (let variableName of Object.keys(publicVariableTable).sort(sortVarNames)) {
+        for (const variableName of Object.keys(publicVariableTable).sort(sortVarNames)) {
             mdSource += publicVariableTable[variableName];
         }
-        for (let functionName of Object.keys(publicFunctionTable).sort()) {
+        for (const functionName of Object.keys(publicFunctionTable).sort()) {
             mdSource += publicFunctionTable[functionName];
         }
         
         if (hasPrivateFunctions || hasPrivateVariables) {
             mdSource += `## ${scriptName} Internal\n\n`;
             // Private variables first, then private functions
-            for (let variableName of Object.keys(privateVariableTable).sort(sortVarNames)) {
+            for (const variableName of Object.keys(privateVariableTable).sort(sortVarNames)) {
                 mdSource += privateVariableTable[variableName];
             }
-            for (let functionName of Object.keys(privateFunctionTable).sort()) {
+            for (const functionName of Object.keys(privateFunctionTable).sort()) {
                 mdSource += privateFunctionTable[functionName];
             }
         }
@@ -154,9 +155,12 @@ function updateProgramDocumentation() {
 <link rel="stylesheet" href="${docPath}slate.css">
 <link rel="stylesheet" href="${docPath}manual.css">
 <style>
-body {left:8px}
-.md div.title { font-size: 24px }
+body {left: 8px}
+.md div.title {font-size: 24px}
 .md h1:before, .md h2:before, .md h3:before {content: none}
+.md h1 {font-size: 28px; font-weight: 800}
+.md h2 {font-size: 22px; font-weight: normal; font-color: #DDD}
+.md h3 {font-size: 20px; font-weight: normal; font-color: #DDD}
 </style>
 <!-- Markdeep: --><script src="${docPath}markdeep.min.js" charset="utf-8"></script>`;
 

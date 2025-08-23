@@ -12,7 +12,7 @@ let prev_level
 let new_xp
 
 /* Used to prevent multiple VIL effects per intermission */
-let played_vil_sound = false
+let played_vil_sound
 
 /* Cycle through the award stages. See `INTERMISSION.STAGE` */
 let stage
@@ -23,7 +23,7 @@ let prev_stage
 
 let first_frame_this_stage
 
-let selection_index = 0
+let selection_index
 
 const STATS_BUTTON_INDEX = 1
 
@@ -157,11 +157,11 @@ def maybe_play_award_sound(winner):
         play_sound(award_sound)
     else if winner.avatar.id == BOT.MOO.ID:
         play_sound(moo_00_sound)
-    else if winner.avatar.id == BOT.CAF_ID:
+    else if winner.avatar.id == BOT.CAF.ID:
         play_sound({sound: moo_01_sound, playback_rate: 200%})
     else if winner.avatar.id == BOT.VIL.ID and not played_vil_sound:
         played_vil_sound = true
-        play_sound({sound: vil_00_sound, time: random(0, 1), pitch: random(80%, 120%)})
+        play_sound({sound: vil_00_sound, time: max(random(-1, 1), 0), pitch: random(90%, 150%)})
 
 
 
@@ -197,9 +197,8 @@ def draw_award_background(rect, field, color)
     for i < 3:
         badge_background += "\n" + badge_background
     
-    const badge_color = 90% color
     set_clip(transform_cs_to_ss(rect.corner), rect.size)
-    draw_text({font: leaderboard_font, color: badge_color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
+    draw_text({font: leaderboard_font, color: 90% color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
 
 
 
@@ -208,7 +207,6 @@ def draw_most_words_award(winner):
     ++draw_most_words_award.frames
     player.board.selection_color = HIGHLIGHT_COLOR
 
-    
     draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(35, 7), z: 2})
     draw_award_background({corner: xy(0, 12), size: xy(69, 37)}, "most_words", winner.avatar.color)
     avatar_draw_large(winner.avatar, xy(35, 31), false, player.board.selection_color, ∅, true)
@@ -231,16 +229,14 @@ def draw_most_words_award(winner):
 def draw_leaderboard()
 & preserving_transform:
     
-    const leaderboard_header_height = 14
-    
     // Dimension of the scroll rectangle on the screen
     const leaderboard_corner = (
         if landscape() then xy(SCREEN_SIZE.x - INTERMISSION.LAYOUT.LEADERBOARD.WIDTH, INTERMISSION.LAYOUT.AWARD_HEIGHT)
-        else xy(0, INTERMISSION.LAYOUT.HISTORY_PORTRAIT_HEIGHT + INTERMISSION.LAYOUT.AWARD_HEIGHT + 2)) + xy(0, leaderboard_header_height)
+        else xy(0, INTERMISSION.LAYOUT.HISTORY_PORTRAIT_HEIGHT + INTERMISSION.LAYOUT.AWARD_HEIGHT + 2)) + xy(0, INTERMISSION.LAYOUT.LEADERBOARD.HEADER_HEIGHT)
 
     const leaderboard_size = SCREEN_SIZE - leaderboard_corner - xy(0, 22)
     
-    set_transform(leaderboard_corner - xy(0, leaderboard_header_height))
+    set_transform(leaderboard_corner - xy(0, INTERMISSION.LAYOUT.LEADERBOARD.HEADER_HEIGHT))
 
     // Line at top of leaderboard against the awards
     draw_corner_rect(xy(0, 0), xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH, 2), #000, ∅, 20)
@@ -274,7 +270,6 @@ def draw_leaderboard()
         const pos = xy(0, i * INTERMISSION.LAYOUT.LEADERBOARD.ROW_SPACING + 9)
                 
         const me = (competitor == player_competitor)
-        
         const friend = competitor_is_friend(competitor)
         
         // Highlight
@@ -391,11 +386,9 @@ def notify_word_bonus()
     for word in bonus.unique_word_list:
         push(decoded, q_decode(word))
     
-    let text
-    if size(bonus.unique_word_list) ≤ 7:
-        text = join(decoded, ", ", ", and ", " and ")
-    else:
-        text = "" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 6), ", ", ", and ")
+    const text = (if size(bonus.unique_word_list) ≤ 7
+        then join(decoded, ", ", ", and ", " and ")
+        else ("" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 6), ", ", ", and ")))
 
     notify_xp_bonus(
         bonus.word_xp,
@@ -434,18 +427,17 @@ array_to_set(bonus.unique_word_list, 1, player.vocabulary)
 // avatar computed at load and not part of the stats
 player.avatar.level = xp_to_level(new_xp)
 
-// Save the updated stats (we'll save again at the end of the intermission).
-// Unlocked abilities are stored as part of the ability notification process.
-if true or not DEBUG.INTERMISSION:
+// Save the updated stats. Unlocked abilities are stored as part
+// of the ability notification process.
+if not DEBUG.INTERMISSION:
     stats_save(player.stats)
     
-
 if  prev_level == player.avatar.level:
     // See if caf has any commentary. Don't bother players who are leveling up
     // with this.
     for competitor in competitor_array:
-        if competitor.avatar.id == BOT.CAF_ID and competitor.score == 0:
-            notify(competitor.avatar.sprite, "caf", "`too hard!!!!!'", play_sound, {sound: moo_03_sound, pitch: 150%})
+        if competitor.avatar.id == BOT.CAF.ID and competitor.score == 0:
+            notify(competitor.avatar.sprite, BOT.CAF.descriptor.name, "`too hard!!!!!'", play_sound, {sound: moo_03_sound, pitch: 150%})
 
     // Note: If the level changed, these notifications move to after leveling up
     notify_badge_bonus()
@@ -497,6 +489,7 @@ if landscape():
     // Vertical separator
     draw_corner_rect(xy(SCREEN_SIZE.x - INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, 0), xy(2, SCREEN_SIZE.y), #000, ∅, -1)
 
+// History
 const history_rect = (
     if landscape() then {corner: xy(0, 0), size: xy(SCREEN_SIZE.x - INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, SCREEN_SIZE.y - 22)}
     else {corner: xy(0, 0), size: xy(SCREEN_SIZE.x, INTERMISSION.LAYOUT.HISTORY_PORTRAIT_HEIGHT)})
@@ -512,7 +505,7 @@ draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
 
 // Stats button
 if player.has_ability["Stats Tracker"]:
-    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 * xy(2, 2), shape: "disk"}
+    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 xy(2, 2), shape: "disk"}
     if touch.hover:
         selection_index = if overlaps(touch.hover, region) then STATS_BUTTON_INDEX else 0
     else if player.using_gamepad:
@@ -524,7 +517,6 @@ if player.has_ability["Stats Tracker"]:
     if (touch.pressed_a and overlaps(touch.xy, region)) or joy.pressed_q:
         push_mode(DisplayStats) because "Button"
 
-// Countdown
 update_countdown()
 
 
@@ -532,5 +524,4 @@ update_countdown()
 leave
 ────────────────────────────────────────────────────────────────────────
 disconnect_from_network()
-
 

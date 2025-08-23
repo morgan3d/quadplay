@@ -3,60 +3,69 @@ quad://scripts/screen_lib.pyxl
 
 Library for managing screen resolution.
 
-Copyright 2025, Morgan McGuire
-Open source under the MIT license
-https://opensource.org/licenses/MIT
+© 2025 Morgan McGuire
+<br>Open source under the [MIT license](https://opensource.org/licenses/MIT)
 
+## Integration
+
+Examples (call from the `enter` event of your start mode):
+
+``` PyxlScript
+// Always be 384 pixels wide, set height to fill screen vertically
+continuously_set_screen_size_for_display_aspect("x", 384)
+```
+
+``` PyxlScript
+// Always be 224 pixels tall, set width to fill screen horizontally
+continuously_set_screen_size_for_display_aspect("y", 224)
+```
+
+```
+// Set the larger dimension to 256 pixels and fill the screen
+// on the smaller dimension
+continuously_set_screen_size_for_display_aspect("larger", 256)
+```   
+
+
+## Functions
 */
 
-/* Installs a hook to check every frame, in every mode
-   for the current maximum screen aspect ratio available
-   on the OS window, and change to a non-standard resolution
-   to maintain that aspect ratio. 
+/*
+Installs a hook to continuously select a non-standard
+resolution that fills the OS window. Check everys frame,
+in every mode.
 
-   Example (call from the `enter` event of your start mode):
 
-   ```
-   // Always be 384 pixels wide, set height to fill screen vertically
-   continuously_set_screen_size_for_display_aspect("x", 384)
+This allows you to fix one dimension in quadplay pixels to
+maintain performance and a pixelated look, but still fill the
+device screen or window on different devices and during
+window resizes and orientation changes.
 
-   // Always be 224 pixels tall, set width to fill screen horizontally
-   continuously_set_screen_size_for_display_aspect("y", 224)
+Uses `device_control()` and may break the pause menu 
+and layout of the mobile touch gamepad controls due
+to the non-standard resolutions.
 
-   // Set the larger dimension to 256 pixels and fill the screen
-   // on the smaller dimension
-   continuously_set_screen_size_for_display_aspect("larger", 256)
-   ```   
-   
-   This allows you to fix
-   one dimension in quadplay pixels to maintain performance
-   and a pixelated look, but still fill the
-   device screen or window on different devices and during
-   window resizes and orientation changes.
-   
-   Uses `device_control()` and may break the pause menu 
-   and layout of the mobile touch gamepad controls due
-   to the non-standard resolutions.
-   
-   May cause `SCREEN_SIZE` to frequently change before the `frame`
-   event of each mode. So, do not
-   make assumptions about `SCREEN_SIZE` being constant after initialization.
-   
-   `axis`
-   : "x", "y", "larger", or "smaller". Beware that using "smaller" can cause
-     a skinny window to create a very large number of pixels and hurt performance.
-   
-   `extent`
-   : size along `axis`
-   
-   `private_views`
-   : same as the `set_screen_size()` argument
-   
-   `other_max`
-   : the dimension other than `axis` can be no larger than this
-   
-   Return value is the hook, so that you can cancel it later if desired.
-   */
+May cause `SCREEN_SIZE` to frequently change before the `frame`
+event of each mode. So, do not
+make assumptions about `SCREEN_SIZE` being constant after initialization.
+
+`axis`
+: `"x"`, `"y"`, `"larger"`, or `"smaller"`. Beware that using "smaller" can cause
+ a skinny window to create a very large number of pixels and hurt performance.
+
+`extent`
+: size along `axis`
+
+`private_views`
+: same as the `set_screen_size()` argument
+
+`other_max`
+: the dimension other than `axis` can be no larger than this value
+
+
+The return value is the hook, so that you can cancel it later
+if desired.
+*/
 def continuously_set_screen_size_to_window(axis, extent, other_max default ∞, private_views default false):
   device_control("enable_feature", "custom_screen_size")
 

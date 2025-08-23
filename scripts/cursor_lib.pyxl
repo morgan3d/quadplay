@@ -1,23 +1,26 @@
 /*
 quad://scripts/cursor_lib.pyxl
 
-Immediate mode GUI gamepad/mouse/touch cursor management routines
-for selection, buttons, and scroll boxes.
+Immediate mode GUI cursor management routines unified for
+all quadplay input types of gamepad, mouse, and touch.
+Handles selection, buttons, and scroll boxes. The scroll box
+routines can be used without the other cursor management.
 
-Supports multiple cursors for multiplayer games or different modes.
-However, if the mouse or touch moves it will move all cursors to that
-location.
+Supports multiple cursors for multiplayer games or different
+modes. However, if the mouse or touch moves it will move all
+cursors to that location.
 
 Does not handle overlapping GUI targets.
 
-Copyright 2025, SHMUEL
-<br>Open source under the MIT license
-<br>https://opensource.org/licenses/MIT
+© 2025 Sʜᴍᴜᴇʟ
+<br>Open source under the [MIT license](https://opensource.org/licenses/MIT)
 
 
-Cursor management:
+## Cursor Management
 
 ```````````````````````````````````````````````` PyxlScript
+////////////////////////////////////////////////////
+// Once:
 const cursor = make_cursor()
 
 // Optional, if you don't need exact control
@@ -25,11 +28,12 @@ const cursor = make_cursor()
 add_frame_hook(cursor_make_hook(cursor))
 
 // Will be called from cursor_update() when the (a)
-// button or is pressed while the cursor is on this target.
+// button is pressed while the cursor is on this target.
 def button_callback(data, cursor):
     // Do the thing
     debug_print("Button pressed")
 
+…
 
 //////////////////////////////////////////////////    
 // Per frame:
@@ -46,9 +50,16 @@ cursor_update(cursor)
 ````````````````````````````````````````````````
 
 
-Scrollbox management:
+## Scroll Box Management
 
 ```````````````````````````````````````````````` PyxlScript
+////////////////////////////////////////////////////
+// Once:
+const scroll = make_scroll_tracker()
+
+…
+
+////////////////////////////////////////////////////
 // Per frame:
 preserving_transform:
     // Whatever you want it to be
@@ -62,6 +73,9 @@ preserving_transform:
     
     scroll_tracker_update(scroll, content_size, scroll_rect, if selected then ∅ else xy(0, 0))
 ````````````````````````````````````````````````
+
+## Functions
+
 */
 
 
@@ -112,6 +126,7 @@ def cursor_register_target(cursor, region, callback default ∅, data default �
         push(cursor._target_array, target)
 
     return overlaps(target, cursor.pos) or (touch.hover and overlaps(target, touch.hover))
+
 
 
 /* Find closest target to `pos` that was declared this frame with 
