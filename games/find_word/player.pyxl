@@ -107,10 +107,10 @@ def player_spawn_score_animation(player, source default "board"):
         const α = linstep(total_frames, 0, frames_left)^1.5
         for i < size(letter_array):
             const pos = lerp(if source == "Remix" then player.remix_pos else start_array[i], target, α)
-            draw_disk(pos, ½ (TILE_EXTENT - 4) * (1 - α), entry.color, ∅, 9)
+            draw_disk(pos, ½ (TILE.EXTENT - 4) * (1 - α), entry.color, ∅, 9)
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
         
-    sequence({callback: callback, frames: POINTS_ANIMATION_FRAMES})
+    sequence({callback: callback, frames: HISTORY.POINTS_ANIMATION_FRAMES})
 
 
 
@@ -125,7 +125,7 @@ def player_selection_change_callback(player)
     const points = score_word(word)
 
     // Reset selection color
-    board.selection_color = TILE_CENTER_SELECTED_COLOR
+    board.selection_color = TILE.CENTER_SELECTED_COLOR
     
     if player.already_found[word]:
         
@@ -208,7 +208,7 @@ def player_draw_score(player, board_pos, time_left)
             x_align: "right",
             y_align: "top",
             color: #0F0,
-            z: TILE_LETTER_Z})
+            z: TILE.LETTER_Z})
             
     else:
         let score_text = format_number(score, "commas")
@@ -251,7 +251,7 @@ def player_draw_score(player, board_pos, time_left)
                 x_align: "left",
                 y_align: "top",
                 color: #FFF,
-                z: TILE_LETTER_Z})
+                z: TILE.LETTER_Z})
     else if not in_waiting_room:
         // Gamepad prompts go in this space, so only draw the avatar in mouse/touch mode
         const sprite = idle_animate_avatar(player.avatar.sprite, loop(time_left) < ½)
@@ -370,7 +370,7 @@ def player_update_board(player, pos, angle, allow_selection)
 & with board, gamepad, background_color in player:
     
     const grid_size = get_board_pixel_size()
-    const tile_size = xy(TILE_EXTENT, TILE_EXTENT)
+    const tile_size = xy(TILE.EXTENT, TILE.EXTENT)
     
     // Make the selection target slightly small to make 
     // it easier to select diagonals without hitting
@@ -381,9 +381,9 @@ def player_update_board(player, pos, angle, allow_selection)
     set_transform(pos)
     set_camera(xy(0, 0), -angle)
 
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT, background_color, board.selection_color)
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 2, ∅, board.selection_color)
-    draw_rect(xy(0, 0), grid_size + ¼ TILE_EXTENT + 4, ∅, board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE.EXTENT, background_color, board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE.EXTENT + 2, ∅, board.selection_color)
+    draw_rect(xy(0, 0), grid_size + ¼ TILE.EXTENT + 4, ∅, board.selection_color)
     
     // Store store this before selection changes so that the same
     // button can be used to start and end selection
@@ -436,7 +436,7 @@ def player_update_board(player, pos, angle, allow_selection)
         let prev_pos = _index_to_pos(board.selection[0]) 
         for 0 < s < size(board.selection):
             let pos = _index_to_pos(board.selection[s])
-            draw_line(prev_pos, pos, selection_color, TILE_CENTER_Z, ¼ TILE_EXTENT)
+            draw_line(prev_pos, pos, selection_color, TILE.CENTER_Z, ¼ TILE.EXTENT)
             prev_pos = pos
 
 

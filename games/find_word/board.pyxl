@@ -22,7 +22,7 @@ def make_board():
         selection: [],
         
         // Chosen based on the point value of the current word in _check
-        selection_color: TILE_CENTER_SELECTED_COLOR,
+        selection_color: TILE.CENTER_SELECTED_COLOR,
         
         // Q-encoded. Identified by `board_search()`
         word_list: [],
@@ -40,7 +40,7 @@ def board_find_good(board, game_type):
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    const rng_seed = (if in_waiting_room or game_type == GAME_TYPE.SOLO or DEBUG.BOARD_SEARCH then 
+    const rng_seed = (if in_waiting_room or game_type == SOLO_GAME or DEBUG.BOARD_SEARCH then 
             (10 utc_now())
         else
             // Use the seed for the curent game period, but look a few
@@ -94,7 +94,7 @@ def board_find_unencoded_word(board, unencoded_word):
 
 
 def get_board_pixel_size():
-    return xy(COLS, ROWS) * TILE_EXTENT + xy(COLS - 1, ROWS - 1) * TILE_GUTTER
+    return xy(COLS, ROWS) * TILE.EXTENT + xy(COLS - 1, ROWS - 1) * TILE.GUTTER
 
     
 
@@ -119,8 +119,8 @@ def _adjacent(A, B):
 /* Returns the center of the tile at index in pixels relative to the
    grid upper left corner */
 def _index_to_pos(index):
-    return (index * (TILE_GUTTER * xy(min(index.x, 1), min(index.y, 1)) + TILE_EXTENT)
-           - ½ xy(COLS - 1, ROWS - 1) * (TILE_EXTENT + TILE_GUTTER))
+    return (index * (TILE.GUTTER * xy(min(index.x, 1), min(index.y, 1)) + TILE.EXTENT)
+           - ½ xy(COLS - 1, ROWS - 1) * (TILE.EXTENT + TILE.GUTTER))
 
 
 
@@ -141,7 +141,7 @@ def board_select(board, index, player):
 
 
 def board_deselect_last(board, player):
-    board.selection_color = TILE_CENTER_SELECTED_COLOR
+    board.selection_color = TILE.CENTER_SELECTED_COLOR
     
     const index = pop(board.selection)
     board.tile[index.x][index.y].selected = false
@@ -152,7 +152,7 @@ def board_deselect_last(board, player):
 
 
 def board_deselect_all(board, player):
-    board.selection_color = TILE_CENTER_SELECTED_COLOR
+    board.selection_color = TILE.CENTER_SELECTED_COLOR
 
     for index in board.selection:
         board.tile[index.x][index.y].selected = false

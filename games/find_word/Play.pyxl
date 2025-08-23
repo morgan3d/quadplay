@@ -38,27 +38,18 @@ last_countdown_sound_time = now()
 start_time = frame_utc_now
 
 // Compute end_time
-if game_type == GAME_TYPE.SOLO:
-    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then 60 SOLO_PLAY_MINUTES else TUTORIAL.FIRST_PLAY_SECONDS)
+if game_type == SOLO_GAME:
+    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then 60 SOLO_GAME.PLAY_MINUTES else TUTORIAL.FIRST_PLAY_SECONDS)
 else:
-    assert(game_type == GAME_TYPE.GLOBAL)
-    
-    end_time = prev_global_game_utc_start_time() + GLOBAL_PLAY_SECONDS
+    assert(game_type == GLOBAL_GAME)    
+    end_time = prev_global_game_utc_start_time() + GLOBAL_GAME.PLAY_SECONDS
 
-    /*
-    assert(
-        end_time > frame_utc_now + GLOBAL_JOIN_MIN_REMAINING_TIME - 1 or 
-        DEBUG.INTERMISSION,
-        "The game should not end so soon")*/
 
-set_background(
-    if game_type == GAME_TYPE.GLOBAL 
-    then GLOBAL_BACKGROUND_COLOR
-    else SOLO_BACKGROUND_COLOR)
+set_background(game_type.BACKGROUND_COLOR)
 
 // Started more than 10s late, do not affect
 // ratio stats
-joined_late = (end_time - start_time < GLOBAL_PLAY_SECONDS - 10)
+joined_late = (end_time - start_time < GLOBAL_GAME.PLAY_SECONDS - 10)
 
 board_deselect_all(player.board, player)
 
@@ -88,7 +79,7 @@ if time_left ≤ 20/60:
     
 if time_left ≤ 0 or DEBUG.INTERMISSION:
     board_deselect_all(player.board, player)
-    if game_type == GAME_TYPE.SOLO:
+    if game_type == SOLO_GAME:
         set_mode(SoloSummary) because "SOLO and timer"
     else:
         set_mode(GatherGlobalResults) because "GLOBAL and timer"
@@ -97,10 +88,10 @@ if time_left ≤ 0 or DEBUG.INTERMISSION:
 leave
 ────────────────────────────────────────────────────────────────────────
 play_sound(times_up_sound)
-if game_type == GAME_TYPE.GLOBAL:
+if game_type == GLOBAL_GAME:
     player_achieve(player, "Play Global Match")
     
-else if (game_type == GAME_TYPE.SOLO and
+else if (game_type == SOLO_GAME and
     player.has_achievement["Spell EAT"] and 
     player.has_achievement["Spell SEAT"] and 
     player.has_achievement["Spell TIDE"] and 

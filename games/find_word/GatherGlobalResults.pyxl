@@ -51,7 +51,7 @@ const τ = min((frame_utc_now - start_time) / GATHER_SECONDS, 100%)
 
 update_network()
 
-set_background(GLOBAL_BACKGROUND_COLOR)
+set_background(GLOBAL_GAME.BACKGROUND_COLOR)
 
 draw_text({
     text: "Gathering Global Scores…",

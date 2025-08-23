@@ -1,7 +1,7 @@
 /* Common code across modes. Mostly UI and timing. */
 
-/* Set by Title. `GAME_TYPE.SOLO` or `GAME_TYPE.GLOBAL`. See also `in_waiting_room` */
-let game_type = GAME_TYPE.SOLO
+/* Set by Title. `SOLO_GAME` or `GLOBAL_GAME`. See also `in_waiting_room` */
+let game_type = SOLO_GAME
 
 /* In seconds, using frame_utc_now */
 let start_time
@@ -13,7 +13,7 @@ let end_time
 const cursor = make_cursor()
 
 /* If true, then the player is just warming
-   up for a `GAME_TYPE.GLOBAL` game that will start soon. */
+   up for a `GLOBAL_GAME` game that will start soon. */
 let in_waiting_room
 
 let player = make_player()
@@ -33,7 +33,7 @@ let joined_late
 
 /* Global games are synchronized to this clock, hitting this period exactly 
    relative to UTC Unix 0 time */
-const GLOBAL_PERIOD = GLOBAL_PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS
+const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS
 assert(not is_nan(GLOBAL_PERIOD))
 
 /* Array of strings for background display on the title and avatar editor, by row. See `draw_background_words()`. */
@@ -240,11 +240,11 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         
     if not selected:
         // NOT selected
-        draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then TILE_CENTER_COLOR else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
+        draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then TILE.CENTER_COLOR else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
         
     if name == "Wild":
         // Make it look like a tile
-        draw_rect(region.pos, radius * xy(2, 2), if enabled then TILE_COLOR else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
+        draw_rect(region.pos, radius * xy(2, 2), if enabled then TILE.COLOR else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
     
     draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
@@ -403,7 +403,7 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
 
 /* Returns true if `pattern` starts with `prefix`, where
    at most one `WILDCARD_CHARACTER` in pattern can match any one
-   letter from `ALPHABET`. Assumes both are q-encoded
+   letter from `DICTIONARY.ALPHABET`. Assumes both are q-encoded
    strings, so that "Qu" is the single character "Q".
    
    Note that you might expect a general purpose version of
@@ -413,7 +413,7 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
 def wildcard_starts_with(pattern, prefix):
     if contains(pattern, WILDCARD_CHARACTER):
         const part = split(pattern, WILDCARD_CHARACTER)
-        for letter in ALPHABET:
+        for letter in DICTIONARY.ALPHABET:
             if starts_with(part[0] + letter + part[1], prefix):
                 return true
         return false

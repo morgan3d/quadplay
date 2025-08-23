@@ -1,6 +1,6 @@
 Freestyle
 ════════════════════════════════════════════════════════════════════════
-let selection_color = TILE_CENTER_SELECTED_COLOR
+let selection_color = TILE.CENTER_SELECTED_COLOR
 
 /* Return the word, maybe returning a wildcard character, represented
    by the player's current `free_row` tiles */
@@ -54,7 +54,7 @@ def player_free_selection_change_callback(player):
     return (
         if max_points > 0 
         then color_for_points(max_points) 
-        else TILE_CENTER_SELECTED_COLOR)
+        else TILE.CENTER_SELECTED_COLOR)
 
 
 
@@ -92,7 +92,7 @@ def player_spawn_free_score_animation(player, word, color):
             draw_text({font: score_font, x_align: "center", y_align: "center", text: letter_array[i], pos: pos, color: rgba(1, 1, 1, 1 - α³), z: 10})
     
     // Wait 1 frame to guarantee the tiles have been rendered
-    sequence(1, {begin_callback: capture_target, callback: callback, frames: POINTS_ANIMATION_FRAMES})
+    sequence(1, {begin_callback: capture_target, callback: callback, frames: HISTORY.POINTS_ANIMATION_FRAMES})
 
 
 
@@ -184,7 +184,7 @@ def draw_free_row(board_pos)
     // Spacing between tiles
     const tile_spacing = tile_size.x + (if tile_size.x > 21 then 2 else (if tile_size.x > 12 then 1 else 0))
 
-    const last_entry = last_value(player.history.free) default {word: "", color: TILE_CENTER_SELECTED_COLOR}
+    const last_entry = last_value(player.history.free) default {word: "", color: TILE.CENTER_SELECTED_COLOR}
     let selection_length = size(last_entry.word)
     const selection_color = last_entry.color
 
@@ -229,13 +229,13 @@ def draw_free_row(board_pos)
             ++i
             
     for size(player.free_row) ≤ i < tile_slots:
-        draw_rect(xy(start_x + i * tile_spacing, tile_y), tile_size - 2, TILE_HOLE_COLOR)
+        draw_rect(xy(start_x + i * tile_spacing, tile_y), tile_size - 2, TILE.HOLE_COLOR)
                 
     // Draw the connectors between letters if it is a word. Intentionally
     // do not draw the selected-but-not-a-word line, as it makes them not 
     // look like tiles any more
     if selection_length > 1:
-        draw_line(xy(start_x, tile_y), xy(start_x + (selection_length - 1) * tile_spacing, tile_y), selection_color, TILE_CENTER_Z, ¼ tile_size.y)
+        draw_line(xy(start_x, tile_y), xy(start_x + (selection_length - 1) * tile_spacing, tile_y), selection_color, TILE.CENTER_Z, ¼ tile_size.y)
 
     return history_rect
     
@@ -244,7 +244,7 @@ def draw_free_row(board_pos)
 /* Returns `[grid_size, tile_size, gutter]` for the
    Freestyle board, which is shrunk in landscape mode. */    
 def get_freestyle_board_dims():
-    let tile_size = xy(TILE_EXTENT, TILE_EXTENT)
+    let tile_size = xy(TILE.EXTENT, TILE.EXTENT)
     
     if landscape():
         // Make the board smaller to make room for the free row.
@@ -301,7 +301,7 @@ def draw_freestyle_board(pos)
             if not tile.used:
                 tile_draw(tile, tile_pos, is_cursor_tile, 0°, #CCC, tile_size)
             else:
-                draw_rect(tile_pos, xy(35, 35), TILE_HOLE_COLOR)
+                draw_rect(tile_pos, xy(35, 35), TILE.HOLE_COLOR)
                 
                 // Cursor on used tile: border only
                 if is_cursor_tile:

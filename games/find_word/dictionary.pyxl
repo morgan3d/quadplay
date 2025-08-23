@@ -30,7 +30,7 @@ set_random_seed()
 /* Revised dictionary table of about 192k words with:
  
    - No capitalized words
-   - No words shorter than `MIN_WORD_LENGTH`
+   - No words shorter than `DICTIONARY.MIN_WORD_LENGTH`
    - No words with "Q" not followed by "U"
    - All words capitalized
    - All "QU" replaced with "Q", so that it counts as a single letter/tile
@@ -49,7 +49,7 @@ for word in keys(dictionary_source):
     //
     // We have to check max word length after q encoding because there
     // are 30 words with 2 qs, which change the length.
-    if (size(word) ≥ MIN_WORD_LENGTH and       
+    if (size(word) ≥ DICTIONARY.MIN_WORD_LENGTH and       
        not word.match(/q[^u]/g) and
        lowercase(word) == word and
        last_value(word) ≠ "q"):
@@ -57,7 +57,7 @@ for word in keys(dictionary_source):
         const w = replace(word, "qu", "q")
         const n = size(w)
         
-        if n ≥ MIN_WORD_LENGTH and n ≤ MAX_WORD_LENGTH:
+        if n ≥ DICTIONARY.MIN_WORD_LENGTH and n ≤ DICTIONARY.MAX_WORD_LENGTH:
             dictionary[uppercase(w)] = 1
 
 // Check to make sure we did the preprocessing correctly
@@ -97,7 +97,7 @@ def dictionary_search(pattern):
     const result = []
     if contains(pattern, WILDCARD_CHARACTER):
         const part = split(pattern, WILDCARD_CHARACTER)
-        for letter in ALPHABET:
+        for letter in DICTIONARY.ALPHABET:
             const word = part[0] + letter + part[1]
             if dictionary[word]:
                 push(result, word)
@@ -113,7 +113,7 @@ def dictionary_search(pattern):
    and is Q-encoded (Q appears without U) that came
    from pattern. */
 def score_word(word, pattern default word):
-    if size(word) < MIN_WORD_LENGTH or not dictionary[word]:
+    if size(word) < DICTIONARY.MIN_WORD_LENGTH or not dictionary[word]:
         return 0
         
     let score = 0
@@ -121,21 +121,21 @@ def score_word(word, pattern default word):
         score += LETTER_POINT_TABLE[letter] || 0
     
     // Length multiplier (# tiles, not letters)
-    score *= min(5, size(word) - MIN_WORD_LENGTH + 1)
+    score *= min(5, size(word) - DICTIONARY.MIN_WORD_LENGTH + 1)
     
     return max(score, 0)
 
 
 
 def color_for_points(points):
-    if points ≤ LOW_POINTS:
-        return HISTORY_COLOR[0]
-    else if points ≥ HIGH_POINTS:
-        return HISTORY_COLOR[3]
+    if points ≤ HISTORY.LOW_POINTS:
+        return HISTORY.COLOR[0]
+    else if points ≥ HISTORY.HIGH_POINTS:
+        return HISTORY.COLOR[3]
     else:
         // Scale up in discrete steps
-        const α = min(⌊⅕ (points - LOW_POINTS)⌋ / 8, 100%)
-        const c = hsv(perceptual_lerp_color(HISTORY_COLOR[1], HISTORY_COLOR[2], α))
+        const α = min(⌊⅕ (points - HISTORY.LOW_POINTS)⌋ / 8, 100%)
+        const c = hsv(perceptual_lerp_color(HISTORY.COLOR[1], HISTORY.COLOR[2], α))
         c.s *= 120%
         return rgb(c)
 

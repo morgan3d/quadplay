@@ -44,7 +44,7 @@ def history_draw(history, pos, max_height):
         // reset right before the end
         if pos.y > max_height - 8:
             pos.y = start_y
-            pos.x += max_width + HISTORY_COLUMN_SEPARATION
+            pos.x += max_width + HISTORY.COLUMN_SEPARATION
             max_width = 0
             
         const emphasize = max(0, entry.emphasize_frame - game_frames)
@@ -84,7 +84,7 @@ def history_draw(history, pos, max_height):
         pos.y += history_font.line_height + 1
 
     // Draw tutorial/help
-    if not player.has_achievement["Play Solo Match"] and game_type == GAME_TYPE.SOLO:
+    if not player.has_achievement["Play Solo Match"] and game_type == SOLO_GAME:
         for word at i in TUTORIAL.FIRST_TIME_WORD_LIST:
             if not player.has_achievement["Spell " + word]:
                 draw_text({
@@ -174,7 +174,7 @@ def history_add(history, list_name, word, points):
         text:    text + " " + points, 
         word:    word,
         emphasize_frame: 0,
-        reveal_frame: game_frames + POINTS_ANIMATION_FRAMES,
+        reveal_frame: game_frames + HISTORY.POINTS_ANIMATION_FRAMES,
         points:  points, 
         color:   text_color,
         outline: outline})
@@ -234,7 +234,7 @@ def get_history_rect():
         return {
             corner: xy(1, 1), 
             size: xy(
-                board_pos.x - ½ board_size.x - ¼ TILE_EXTENT + 1, 
+                board_pos.x - ½ board_size.x - ¼ TILE.EXTENT + 1, 
                 SCREEN_SIZE.y - (if player.has_ability["Freestyle"] and not in_waiting_room then 42 else 8))}
     else:
         // Portrait

@@ -86,7 +86,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.379",
+    "version": "0.380",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -129,16 +129,7 @@
                 }
             }
         },
-        "HIGH_POINTS": {
-            "type": "number",
-            "value": 75,
-            "description": "Highest points per word that has a unique color in the history"
-        },
-        "LOW_POINTS": {
-            "type": "number",
-            "value": 5,
-            "description": "Lowest points per word that has a unique color in the history"
-        },
+        
         "TABLE_ALT_ROW_COLOR": {
             "type": "rgb",
             "value": {
@@ -147,24 +138,30 @@
                 "b": 0.8666666666666667
             }
         },
-        "INTRO": {
+        "TITLE": {
             "type": "object",
+            "description": "Constants for the Title mode",
             "value": {
-                "PRE_FRAMES": {
-                    "type": "number",
-                    "value": 9
-                },
-                "BEAT_FRAMES": {
-                    "type": "number",
-                    "value": 35
-                },
-                "NUM_BEATS": {
-                    "type": "number",
-                    "value": 6
-                },
-                "SLIDE_FRAMES": {
-                    "type": "number",
-                    "value": 40
+                "INTRO": {
+                    "type": "object",
+                    "value": {
+                        "PRE_FRAMES": {
+                            "type": "number",
+                            "value": 9
+                        },
+                        "BEAT_FRAMES": {
+                            "type": "number",
+                            "value": 35
+                        },
+                        "NUM_BEATS": {
+                            "type": "number",
+                            "value": 6
+                        },
+                        "SLIDE_FRAMES": {
+                            "type": "number",
+                            "value": 40
+                        }
+                    }
                 }
             }
         },
@@ -272,15 +269,7 @@
                 }
             }
         },
-        "TILE_HOLE_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": 0.6666666666666666,
-                "g": 0.6666666666666666,
-                "b": 0.6666666666666666
-            },
-            "description": "Color of the hole left when a tile is used in Free Mode"
-        },
+        
         "sensitive_extra": {
             "type": "raw",
             "value": {
@@ -293,15 +282,7 @@
                 "sonya": 1
             }
         },
-        "TILE_EXTENT": {
-            "type": "number",
-            "value": "44",
-            "description": "Width of a tile",
-            "min": 16,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
+        
         "ROWS": {
             "type": "number",
             "value": "4",
@@ -335,239 +316,11 @@
                 "value": "0.5deg"
             }
         },
-        "MIN_WORD_LENGTH": {
-            "type": "number",
-            "value": "3",
-            "min": 2,
-            "max": 5,
-            "format": "0",
-            "quantum": 1,
-            "description": "In tiles (not letters: Qu is one tile)"
-        },
-        "LETTER_SET_ARRAY": {
-            "type": "raw",
-            "description": "Individual distributions when using the cube algorithm. Choice of letters is constrained by selecting from each of these individual distributions.",
-            "value": [
-                "EAGEAN",
-                "AOTOTW",
-                "ABBOOJ",
-                "ELRTTY",
-                "EHRTVW",
-                "CIMOTU",
-                "DISFTY",
-                "EIOSST",
-                "EEGHNW",
-                "AFTKPS",
-                "HLNNRZ",
-                "DEILRX",
-                "DELRVY",
-                "ACHOPS",
-                "EEINSU",
-                "HIMNQA"
-            ]
-        },
-        "LETTER_BAG": {
-            "type": "string",
-            "description": "Bag for drawing from when using the bag algorithm",
-            "value": "AAAAAAAAAABBCCDDDDEEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPPQQRRRRRRSSSSSTTTTTTUUUVVWWXYYZ"
-        },
-        "BADGE_TABLE": {
+        
+        "GENERATE_BOARD": {
             "type": "object",
             "value": {
-                "most_rare": {
-                    "type": "string",
-                    "value": "★"
-                },
-                "best_word": {
-                    "type": "string",
-                    "value": "♦"
-                },
-                "best_rare": {
-                    "type": "string",
-                    "value": "☆"
-                },
-                "longest": {
-                    "type": "string",
-                    "value": "▶"
-                },
-                "most_words": {
-                    "type": "string",
-                    "value": "∞"
-                }
-            }
-        },
-        "TIMER": {
-            "type": "object",
-            "value": {
-                "REMAP_SECONDS": {
-                    "type": "number",
-                    "value": 10,
-                    "min": 0,
-                    "max": 30,
-                    "description": "Amount of distorted time to remap. I.e., remapping starts when this time is displayed"
-                },
-                "END_TIME_SCALE": {
-                    "type": "number",
-                    "description": "How much to scale time after the pivot (< 100% = slower)",
-                    "value": "88%",
-                    "format": "%",
-                    "quantum": 0.01,
-                    "min": 0.5,
-                    "max": 1.5
-                },
-                "BEEP_SECONDS": {
-                    "type": "number",
-                    "value": "5.0",
-                    "min": 0,
-                    "max": 30,
-                    "format": "0.0",
-                    "quantum": 0.1
-                }
-            }
-        },
-        "LETTER_POINT_TABLE": {
-            "type": "raw",
-            "description": "Points per letter. This is similar to other word games but increases the score for some really difficult to use letters.",
-            "value": {
-                "A": 1,
-                "E": 1,
-                "I": 1,
-                "O": 1,
-                "U": 2,
-                "L": 1,
-                "N": 1,
-                "S": 1,
-                "R": 1,
-                "T": 1,
-                "D": 2,
-                "G": 3,
-                "B": 3,
-                "C": 3,
-                "M": 3,
-                "P": 4,
-                "F": 5,
-                "H": 4,
-                "V": 5,
-                "W": 5,
-                "Y": 5,
-                "K": 6,
-                "J": 8,
-                "X": 8,
-                "Q": 11,
-                "Z": 10,
-                "*": -2
-            }
-        },
-        "TILE_CENTER_SELECTED_COLOR": {
-            "type": "rgb",
-            "description": "Default selection gray. This is replaced by custom colors as increasingly valuable words are found. See `player_add_to_history()`",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "32%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "32%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "32%"
-                }
-            }
-        },
-        "ALPHABET": {
-            "type": "string",
-            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-            "description": "The alphabet as a lowercase string."
-        },
-        "HISTORY_COLUMN_SEPARATION": {
-            "type": "number",
-            "value": "8",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-        "HISTORY_COLOR": {
-            "type": "array",
-            "value": [
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "67%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "63%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "0%"
-                        }
-                    },
-                    "description": "Very low"
-                },
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "87%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "60%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "0%"
-                        }
-                    },
-                    "description": "Normal low gradient end"
-                },
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "82%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "15%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "100%"
-                        }
-                    },
-                    "description": "Normal high gradient end"
-                },
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "0%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "61%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "84%"
-                        }
-                    },
-                    "description": "Super high"
-                }
-            ],
-            "description": "Four color points for discontinuous super low, normal low, normal high, and discontinuous super high"
-        },
-        "BOARD_SEARCH": {
+                "CRITERIA": {
             "type": "object",
             "value": {
                 "MIN_WORDS": {
@@ -660,7 +413,130 @@
             },
             "description": "Options for controlling the search for a good board in `player_reset()`"
         },
-        "POINTS_ANIMATION_FRAMES": {
+                
+                "LETTER_SET_ARRAY": {
+                    "type": "raw",
+                    "description": "Individual distributions when using the cube algorithm. Choice of letters is constrained by selecting from each of these individual distributions.",
+                    "value": [
+                        "EAGEAN",
+                        "AOTOTW",
+                        "ABBOOJ",
+                        "ELRTTY",
+                        "EHRTVW",
+                        "CIMOTU",
+                        "DISFTY",
+                        "EIOSST",
+                        "EEGHNW",
+                        "AFTKPS",
+                        "HLNNRZ",
+                        "DEILRX",
+                        "DELRVY",
+                        "ACHOPS",
+                        "EEINSU",
+                        "HIMNQA"
+                    ]
+                },
+                "LETTER_BAG": {
+                    "type": "string",
+                    "description": "Bag for drawing from when using the bag algorithm",
+                    "value": "AAAAAAAAAABBCCDDDDEEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPPQQRRRRRRSSSSSTTTTTTUUUVVWWXYYZ"
+                }
+            }
+        },
+        "BADGE_TABLE": {
+            "type": "object",
+            "value": {
+                "most_rare": {
+                    "type": "string",
+                    "value": "★"
+                },
+                "best_word": {
+                    "type": "string",
+                    "value": "♦"
+                },
+                "best_rare": {
+                    "type": "string",
+                    "value": "☆"
+                },
+                "longest": {
+                    "type": "string",
+                    "value": "▶"
+                },
+                "most_words": {
+                    "type": "string",
+                    "value": "∞"
+                }
+            }
+        },
+        "TIMER": {
+            "type": "object",
+            "value": {
+                "REMAP_SECONDS": {
+                    "type": "number",
+                    "value": 10,
+                    "min": 0,
+                    "max": 30,
+                    "description": "Amount of distorted time to remap. I.e., remapping starts when this time is displayed"
+                },
+                "END_TIME_SCALE": {
+                    "type": "number",
+                    "description": "How much to scale time after the pivot (< 100% = slower)",
+                    "value": "88%",
+                    "format": "%",
+                    "quantum": 0.01,
+                    "min": 0.5,
+                    "max": 1.5
+                },
+                "BEEP_SECONDS": {
+                    "type": "number",
+                    "value": "5.0",
+                    "min": 0,
+                    "max": 30,
+                    "format": "0.0",
+                    "quantum": 0.1
+                }
+            }
+        },
+        "LETTER_POINT_TABLE": {
+            "type": "raw",
+            "description": "Points per letter. This is similar to other word games but increases the score for some really difficult to use letters.",
+            "value": {
+                "A": 1,
+                "E": 1,
+                "I": 1,
+                "O": 1,
+                "U": 2,
+                "L": 1,
+                "N": 1,
+                "S": 1,
+                "R": 1,
+                "T": 1,
+                "D": 2,
+                "G": 3,
+                "B": 3,
+                "C": 3,
+                "M": 3,
+                "P": 4,
+                "F": 5,
+                "H": 4,
+                "V": 5,
+                "W": 5,
+                "Y": 5,
+                "K": 6,
+                "J": 8,
+                "X": 8,
+                "Q": 11,
+                "Z": 10,
+                "*": -2
+            }
+        },
+        
+        
+        "HISTORY": {
+            "type": "object",
+            "description": "Constants for the history display",
+            "value": {
+                "POINTS_ANIMATION_FRAMES": {
             "type": "number",
             "value": "35",
             "min": 0,
@@ -669,6 +545,107 @@
             "quantum": 1,
             "description": "For animating points to history"
         },
+                "HIGH_POINTS": {
+            "type": "number",
+            "value": 75,
+            "description": "Highest points per word that has a unique color in the history"
+        },
+        "LOW_POINTS": {
+            "type": "number",
+            "value": 5,
+            "description": "Lowest points per word that has a unique color in the history"
+        },
+                "COLUMN_SEPARATION": {
+            "type": "number",
+            "value": "8",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "COLOR": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "67%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "63%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "0%"
+                        }
+                    },
+                    "description": "Very low"
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "87%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "60%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "0%"
+                        }
+                    },
+                    "description": "Normal low gradient end"
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "82%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "15%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "100%"
+                        }
+                    },
+                    "description": "Normal high gradient end"
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "0%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "61%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "84%"
+                        }
+                    },
+                    "description": "Super high"
+                }
+            ],
+            "description": "Four color points for discontinuous super low, normal low, normal high, and discontinuous super high"
+        },
+                }
+        },
+        
+        
+        
         "CURSOR_COLOR": {
             "type": "rgb",
             "value": {
@@ -686,7 +663,125 @@
                 }
             }
         },
-        "TILE_LETTER_Z": {
+        "TILE": {
+            "type":"object",
+            "value": {
+                "COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "79%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "79%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "79%"
+                }
+            }
+        },
+        "CENTER_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "HOLE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.6666666666666666,
+                "g": 0.6666666666666666,
+                "b": 0.6666666666666666
+            },
+            "description": "Color of the hole left when a tile is used in Free Mode"
+        },
+        "CENTER_SELECTED_COLOR": {
+            "type": "rgb",
+            "description": "Default selection gray. This is replaced by custom colors as increasingly valuable words are found. See `player_add_to_history()`",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "32%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "32%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "32%"
+                }
+            }
+        },
+        
+                
+        "TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        
+        "SELECTED_TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "EXTENT": {
+            "type": "number",
+            "value": "44",
+            "description": "Width of a tile",
+            "min": 16,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "GUTTER": {
+            "type": "number",
+            "value": "5",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+                        "LETTER_Z": {
             "type": "number",
             "value": "2.0",
             "description": "Z position of the label",
@@ -695,52 +790,37 @@
             "format": "0.0",
             "quantum": 0.1
         },
-        "TILE_CENTER_Z": {
+        "CENTER_Z": {
             "type": "number",
             "value": "1.0",
             "min": -5,
             "max": 5,
             "format": "0.0",
             "quantum": 0.1
+        }}
         },
-        "GAME_TYPE": {
+        "GLOBAL_GAME": {
             "type": "object",
             "value": {
-                "SOLO": {
-                    "type": "number",
-                    "value": 0,
-                    "description": "Enum constant for game_type",
-                    "format": "0",
-                    "quantum": 1
-                },
-                "GLOBAL": {
-                    "type": "number",
-                    "value": "1",
-                    "description": "Enum constant for game_type",
-                    "format": "0",
-                    "quantum": 1
-                }
-            }
+                "JOIN_MIN_REMAINING_TIME": {
+            "type": "number",
+            "value": "20",
+            "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
+            "min": 0,
+            "max": 120,
+            "format": "0",
+            "quantum": 1
         },
-        "SOLO_BACKGROUND_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "25%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "14%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "25%"
-                }
-            },
-            "description": "For game_type == SOLO"
+                "PLAY_SECONDS": {
+            "type": "number",
+            "value": "130",
+            "min": 45,
+            "max": 480,
+            "format": "0",
+            "quantum": 1,
+            "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
         },
-        "GLOBAL_BACKGROUND_COLOR": {
+                "BACKGROUND_COLOR": {
             "type": "rgb",
             "value": {
                 "r": {
@@ -756,6 +836,34 @@
                     "value": "12%"
                 }
             }
+        },
+                }
+        },
+        "DICTIONARY": {
+            "type": "object",
+            "value": {
+                "ALPHABET": {
+            "type": "string",
+            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "description": "The alphabet as a lowercase string."
+        },
+                "MIN_WORD_LENGTH": {
+            "type": "number",
+            "value": "3",
+            "min": 2,
+            "max": 5,
+            "format": "0",
+            "quantum": 1,
+            "description": "In tiles (not letters: Qu is one tile)"
+        },"MAX_WORD_LENGTH": {
+            "type": "number",
+            "value": "17",
+            "description": "Longest possible word, including using wild tile",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },}
         },
         "WAITING_ROOM_BACKGROUND_COLOR": {
             "type": "rgb",
@@ -774,32 +882,8 @@
                 }
             }
         },
-        "GLOBAL_JOIN_MIN_REMAINING_TIME": {
-            "type": "number",
-            "value": "20",
-            "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
-            "min": 0,
-            "max": 120,
-            "format": "0",
-            "quantum": 1
-        },
-        "TILE_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "79%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "79%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "79%"
-                }
-            }
-        },
+        
+        
         "BOARD_COLOR": {
             "type": "rgb",
             "value": {
@@ -817,58 +901,11 @@
                 }
             }
         },
-        "TILE_CENTER_COLOR": {
-            "type": "rgb",
+        
+        "BUTTON_REPEAT": {
+            "type": "object",
             "value": {
-                "r": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "100%"
-                }
-            }
-        },
-        "TEXT_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "0%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "0%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "0%"
-                }
-            }
-        },
-        "SELECTED_TEXT_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "100%"
-                }
-            }
-        },
-        "BUTTON_REPEAT_DELAY": {
+        "DELAY": {
             "type": "number",
             "value": "45",
             "description": "How long in frames to wait for a held touch/button press to repeat",
@@ -876,6 +913,17 @@
             "max": 128,
             "format": "0",
             "quantum": 1
+        },
+            "PERIOD": {
+            "type": "number",
+            "value": "10",
+            "description": "Frames to wait after BUTTON_REPEAT_DELAY for each subsequent touch/button repeat",
+            "min": 1,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+            }
         },
         "LOOKS_LIKE": {
             "type": "raw",
@@ -892,15 +940,6 @@
                 "9": "g",
                 "!": "I"
             }
-        },
-        "BUTTON_REPEAT_PERIOD": {
-            "type": "number",
-            "value": "10",
-            "description": "Frames to wait after BUTTON_REPEAT_DELAY for each subsequent touch/button repeat",
-            "min": 1,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
         },
         "GATHER_SECONDS": {
             "type": "number",
@@ -1074,14 +1113,7 @@
             "type": "reference",
             "value": "leaderboard_font"
         },
-        "TILE_GUTTER": {
-            "type": "number",
-            "value": "5",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
+        
         "tile_tiny_font": {
             "type": "reference",
             "value": "history_font"
@@ -1822,31 +1854,39 @@
             "type": "string",
             "value": "*"
         },
-        "MAX_WORD_LENGTH": {
-            "type": "number",
-            "value": "17",
-            "description": "Longest possible word, including using wild tile",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-        "GLOBAL_PLAY_SECONDS": {
-            "type": "number",
-            "value": "130",
-            "min": 45,
-            "max": 480,
-            "format": "0",
-            "quantum": 1,
-            "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
-        },
-        "SOLO_PLAY_MINUTES": {
-            "type": "number",
-            "value": "3.5",
-            "min": 0.5,
-            "max": 5,
-            "format": "0.0",
-            "quantum": 0.5
+        
+        
+        "SOLO_GAME": {
+            "type": "object",
+            "descriptions": "Constants for the SOLO game type",
+            "value": {
+                "PLAY_MINUTES": {
+                    "type": "number",
+                    "value": "3.5",
+                    "min": 0.5,
+                    "max": 5,
+                    "format": "0.0",
+                    "quantum": 0.5
+                },
+                "BACKGROUND_COLOR": {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "25%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "14%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "25%"
+                        }
+                    },
+                    "description": "For game_type == SOLO_GAME"
+                }
+            }
         }
     },
     "screenshot_tag": "find_word",

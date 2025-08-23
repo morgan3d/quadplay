@@ -8,13 +8,13 @@
 
 */
 
-/* The group conduit for exchanging scores. Only used in `game_type` = `GAME_TYPE.GLOBAL` */
+/* The group conduit for exchanging scores. Only used in `game_type` = `GLOBAL_GAME` */
 let conduit = ∅
 
 
 /* Called from `update_player()` and `Freestyle.frame` */
 def maybe_connect_to_network():
-    if in_waiting_room or game_type ≠ GAME_TYPE.GLOBAL or DEBUG.OFFLINE or DEBUG.INTERMISSION:
+    if in_waiting_room or game_type ≠ GLOBAL_GAME or DEBUG.OFFLINE or DEBUG.INTERMISSION:
         return
     
     // Create a stable offset based on the player's name and their first word

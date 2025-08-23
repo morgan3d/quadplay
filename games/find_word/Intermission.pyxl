@@ -252,7 +252,9 @@ def draw_leaderboard()
     //    draw_text({…args, text: "Award", x_align: "left", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.BADGE_X - 6, 7)})
     draw_text({…args, text: "Score", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.SCORE_X, 7)})
     draw_text({…args, text: "Words", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.COUNT_X, 7)})
-    draw_text({…args, text: "Free", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 7)})
+    
+    todo("Show freestyle points")
+    //draw_text({…args, text: "Free", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 7)})
     draw_text({…args, text: "Best Word", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, 7)})
 
     // Content    
@@ -346,7 +348,7 @@ def update_countdown():
     const countdown_rect = {
         corner: xy(32, timer_pos.y - 10),
         size: xy(SCREEN_SIZE.x - 64, 20)}
-        
+    
     draw_corner_rect(countdown_rect.corner, countdown_rect.size, #000, #FFF)
     draw_corner_rect(countdown_rect.corner + 1, xy(α * (countdown_rect.size.x - 2), countdown_rect.size.y - 2), #0F0)
     

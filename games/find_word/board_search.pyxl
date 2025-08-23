@@ -7,7 +7,7 @@
    Used by the solver.
    
    As a side effect, puts all members of that set and smaller
-   n-grams larger than MIN_WORD_LENGTH that are also in `dictionary`
+   n-grams larger than DICTIONARY.MIN_WORD_LENGTH that are also in `dictionary`
    into `word_set`.
    */
 def board_string_ngram_set(board_string, n, word_set):
@@ -18,7 +18,7 @@ def board_string_ngram_set(board_string, n, word_set):
     def visit(kgram, index):
         const k = size(kgram)
         
-        if k ≥ MIN_WORD_LENGTH:
+        if k ≥ DICTIONARY.MIN_WORD_LENGTH:
             // We found a real word as a side effect of trigram processing
             if dictionary[kgram]:
                 word_set[kgram] = 1
@@ -230,7 +230,7 @@ def board_string_has_obvious_sensitive_word(board_string, only_stop_offensive de
     
     
 /* Creates a random board, searching for good values as
-   controlled by `BOARD_SEARCH` constants. */
+   controlled by `GENERATE_BOARD.CRITERIA` constants. */
 def make_good_board_string(board_rng):
 
     let done = false
@@ -252,19 +252,19 @@ def make_good_board_string(board_rng):
     let vowels
 
     let tries = -1  
-    while tries < BOARD_SEARCH.RETRIES:
+    while tries < GENERATE_BOARD.CRITERIA.RETRIES:
         ++tries
-        if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because still bad after " + BOARD_SEARCH.SHUFFLE_RETRIES + " shuffles ***") 
+        if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because still bad after " + GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES + " shuffles ***") 
 
         seed_base = random_integer(0x0, 0x7FFFFFFF, board_rng)
         
         // Loop for shuffling
-        for permute_number < BOARD_SEARCH.SHUFFLE_RETRIES:
+        for permute_number < GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES:
             const gen = make_random_board_string(seed_base, permute_number)
             board_string = gen.board_string
             seed = seed_base + "." + permute_number
 
-            if (tries == BOARD_SEARCH.RETRIES - 1) and (permute_number == BOARD_SEARCH.SHUFFLE_RETRIES - 1):
+            if (tries == GENERATE_BOARD.CRITERIA.RETRIES - 1) and (permute_number == GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES - 1):
                 // Last try, so just give up and accept the board
                 if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted " + seed_base)
                 done = true
@@ -279,19 +279,19 @@ def make_good_board_string(board_rng):
                 break
 
     
-            if board_string_has_obvious_sensitive_word(board_string, tries > ½ BOARD_SEARCH.RETRIES or permute_number > 0):
+            if board_string_has_obvious_sensitive_word(board_string, tries > ½ GENERATE_BOARD.CRITERIA.RETRIES or permute_number > 0):
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it had an obvious sensitive word")
                 continue
     
             // Delay computation until trivial tests have passed
             word_array = board_string_find_all_words(board_string)
             
-            if size(word_array) < BOARD_SEARCH.MIN_WORDS:
+            if size(word_array) < GENERATE_BOARD.CRITERIA.MIN_WORDS:
                 // Not enough words to even examine the board
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + size(word_array) + " words")        
                 continue
             
-            if tries ≥ BOARD_SEARCH.RETRIES - 2:
+            if tries ≥ GENERATE_BOARD.CRITERIA.RETRIES - 2:
                 // We're running out of tries. This board passes
                 // the min words test, so just accept it instead of getting
                 // stuck with the last board we generate
@@ -336,15 +336,15 @@ def make_good_board_string(board_rng):
                         if size(word) ≥ 5:
                             ++valuable_letter_long_count[letter]
             
-            if short_word_count < BOARD_SEARCH.MIN_SHORT_WORDS:
+            if short_word_count < GENERATE_BOARD.CRITERIA.MIN_SHORT_WORDS:
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + short_word_count + " short words")        
                 continue
             
-            if long_word_count < BOARD_SEARCH.MIN_LONG_WORDS:
+            if long_word_count < GENERATE_BOARD.CRITERIA.MIN_LONG_WORDS:
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + long_word_count + " long words")        
                 continue
             
-            if very_long_word_count < BOARD_SEARCH.MIN_VERY_LONG_WORDS:
+            if very_long_word_count < GENERATE_BOARD.CRITERIA.MIN_VERY_LONG_WORDS:
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + very_long_word_count + " very long words")        
                 continue
             
@@ -363,20 +363,20 @@ def make_good_board_string(board_rng):
             mean_valuable_letter_uses = total_valuable_letter_uses / max(num_valuable_letter_instances, 1)
             mean_valuable_letter_long_uses = total_valuable_letter_long_uses / max(num_valuable_letter_instances, 1)
             
-            if mean_valuable_letter_uses < BOARD_SEARCH.MEAN_VALUABLE_LETTER_USES:
+            if mean_valuable_letter_uses < GENERATE_BOARD.CRITERIA.MEAN_VALUABLE_LETTER_USES:
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough on average")
                 continue
             
-            if mean_valuable_letter_long_uses < BOARD_SEARCH.MEAN_VALUABLE_LETTER_LONG_WORDS:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + " long words on average")
+            if mean_valuable_letter_long_uses < GENERATE_BOARD.CRITERIA.MEAN_VALUABLE_LETTER_LONG_WORDS:
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_LONG_WORDS + " long words on average")
                 continue
 
-            if min_valuable_letter_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_USES:
+            if min_valuable_letter_uses < GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_USES:
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough")
                 continue
             
-            if min_valuable_letter_long_uses < BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + BOARD_SEARCH.MIN_VALUABLE_LETTER_LONG_WORDS + " long words")
+            if min_valuable_letter_long_uses < GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_LONG_WORDS:
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_LONG_WORDS + " long words")
                 continue
     
             // Success!
@@ -420,7 +420,7 @@ def make_good_board_string(board_rng):
 def make_random_board_string(seed_base, permute_number default 0):
     const rnd = make_random(seed_base)
     
-    assert(ROWS * COLS == size(LETTER_SET_ARRAY), "Distribution does not have enough tile sets")
+    assert(ROWS * COLS == size(GENERATE_BOARD.LETTER_SET_ARRAY), "Distribution does not have enough tile sets")
 
     // If true, choose using the word dice algorithm with the
     // standard dice set. If false, choose using sampling from 
@@ -433,8 +433,8 @@ def make_random_board_string(seed_base, permute_number default 0):
     const VOWEL = {A:1, E:1, I:1, O:1, U:1}
         
     // Shuffle the sets themselves
-    const distribution = shuffled(LETTER_SET_ARRAY, rnd)
-    const letter_bag = split(LETTER_BAG)
+    const distribution = shuffled(GENERATE_BOARD.LETTER_SET_ARRAY, rnd)
+    const letter_bag = split(GENERATE_BOARD.LETTER_BAG)
     
     let vowels = 0
     let board_string = ""

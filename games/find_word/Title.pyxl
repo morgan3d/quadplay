@@ -1,6 +1,6 @@
 Title
 ════════════════════════════════════════════════════════════════════════
-const INTRO_DURATION = INTRO.PRE_FRAMES + INTRO.BEAT_FRAMES * INTRO.NUM_BEATS
+const INTRO_DURATION = TITLE.INTRO.PRE_FRAMES + TITLE.INTRO.BEAT_FRAMES * TITLE.INTRO.NUM_BEATS
 
 /* Hook for the intro sequence. If ∅ the intro is over */
 let intro = ∅
@@ -28,14 +28,14 @@ def update_stats_button(pos):
 
 
     
-def start_match(index):
-    game_type = index
+def start_match(type):
+    game_type = type
     
     // When did the previous game start?
     const prev_start = prev_global_game_utc_start_time()
     
     // Did the previous game finish (i.e., there is no current game)
-    const prev_game_finished = frame_utc_now ≥ prev_start + GLOBAL_PLAY_SECONDS
+    const prev_game_finished = frame_utc_now ≥ prev_start + GLOBAL_GAME.PLAY_SECONDS
             
     // Is the next game about to begin? If they are within 2 seconds of the next
     // game just send them to the game a little early, it isn't a huge
@@ -43,7 +43,7 @@ def start_match(index):
     const next_game_imminent = frame_utc_now > prev_start + GLOBAL_PERIOD - 2
     
     // How much time is left in the current game?
-    const curr_game_remaining_time = max((prev_start + GLOBAL_PLAY_SECONDS) - frame_utc_now, 0)
+    const curr_game_remaining_time = max((prev_start + GLOBAL_GAME.PLAY_SECONDS) - frame_utc_now, 0)
 
     /*        
     debug_print(
@@ -55,8 +55,8 @@ def start_match(index):
     // There is no game currently running because the global game is in 
     // the GameOver state, or about to be so. Send this player to the waiting room
     // so that they aren't bored. 
-    in_waiting_room = ((index == GAME_TYPE.GLOBAL and
-        (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
+    in_waiting_room = ((game_type == GLOBAL_GAME and
+        (prev_game_finished or curr_game_remaining_time < GLOBAL_GAME.JOIN_MIN_REMAINING_TIME) and
         not next_game_imminent))
     
     play_sound(blip_sound)
@@ -64,11 +64,10 @@ def start_match(index):
 
     
     
-def update_button(pos, text, index):
+def update_button(pos, text, type):
     const rect = {pos: pos, size: xy(132, 24)}
     
-    
-    const selected = cursor_register_target(cursor, rect, if intro then ∅ else start_match, index)
+    const selected = cursor_register_target(cursor, rect, if intro then ∅ else start_match, type)
         
     if selected:
         // Drop shadow
@@ -96,7 +95,7 @@ def update_button(pos, text, index):
             
 
 
-def bounce_row(y, sound default select_tile_sound, color default TILE_CENTER_SELECTED_COLOR):
+def bounce_row(y, sound default select_tile_sound, color default TILE.CENTER_SELECTED_COLOR):
     play_sound(sound)
     board_deselect_all(player.board, player)
     player.board.selection_color = color
@@ -133,25 +132,25 @@ enter
 set_background(#000)
 set_hooks()
 
-easter_egg = if player.avatar.level > 20 and ξ < 12% then 2 else (if player.avatar.level > 15 and ξ < 12% then 1 else 0)
+easter_egg = if player.avatar.level > 20 and ξ < 8% then 2 else (if player.avatar.level > 15 and ξ < 10% then 1 else 0)
 
-if not easter_egg and player.stats.lifetime.xp > 1000 and ξ < 2%:
+if not easter_egg and player.stats.lifetime.xp > 2000 and ξ < 1.5%:
     notify(shapes.lightning, "Please Backup", "FWAN is in beta and could crash!\n\nUse the gear button to export a save game as a backup.")
 
 
 // Initialize the fake board
-player_reset_match(player, GAME_TYPE.SOLO, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg], true)
-player.board.selection_color = TILE_CENTER_SELECTED_COLOR
+player_reset_match(player, SOLO_GAME, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg], true)
+player.board.selection_color = TILE.CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 
 intro = sequence(
-    INTRO.PRE_FRAMES, 
-    {begin_callback: bounce_row, data: 0, frames: INTRO.BEAT_FRAMES},
-    {begin_callback: bounce_row, data: 1, frames: INTRO.BEAT_FRAMES},
-    {begin_callback: bounce_row, data: 2, frames: INTRO.BEAT_FRAMES},
-    {begin_callback: bounce_row, data: 3, frames: INTRO.BEAT_FRAMES},
+    TITLE.INTRO.PRE_FRAMES, 
+    {begin_callback: bounce_row, data: 0, frames: TITLE.INTRO.BEAT_FRAMES},
+    {begin_callback: bounce_row, data: 1, frames: TITLE.INTRO.BEAT_FRAMES},
+    {begin_callback: bounce_row, data: 2, frames: TITLE.INTRO.BEAT_FRAMES},
+    {begin_callback: bounce_row, data: 3, frames: TITLE.INTRO.BEAT_FRAMES},
     highlight_random_row,
-    INTRO.SLIDE_FRAMES + 40,
+    TITLE.INTRO.SLIDE_FRAMES + 40,
     {begin_callback: play_sound, data: {sound: times_up_sound}, frames: 100},
     intro_cleanup)
 
@@ -167,7 +166,7 @@ if game_frames == 30:
     grant_new_abilities()
     
     if DEBUG.INTERMISSION:
-        start_match(GAME_TYPE.GLOBAL)
+        start_match(GLOBAL_GAME)
 
     
 draw_text({
@@ -188,15 +187,15 @@ player_update_board(player, pos, θ, false)
 draw_rect(pos, get_board_pixel_size() + 22, player.board.selection_color, ∅, θ, -1) 
 
 // How far to slide the buttons, 0 if the intro has been skipped
-const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - INTRO.SLIDE_FRAMES), 0)) else 0
+const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - TITLE.INTRO.SLIDE_FRAMES), 0)) else 0
 
 if player.has_achievement["Change Avatar"]:
-    update_button(pos + xy(slide, -30), "Solo", 0)
+    update_button(pos + xy(slide, -30), "Solo", SOLO_GAME)
     if not intro and not player.has_achievement["Play Solo Match"]:
         draw_tutorial(pos - xy(0, 35), "Play a match")
     
 if player.has_achievement["Play Solo Match"]:
-    update_button(pos - xy(slide, -30), "Global", 1)
+    update_button(pos - xy(slide, -30), "Global", GLOBAL_GAME)
     if not intro and not player.has_achievement["Play Global Match"]:
         draw_tutorial(pos + xy(0, 35), "Join a global match", 90°)
 

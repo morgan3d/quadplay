@@ -7,7 +7,7 @@
 def button_repeat(button_frames):
     return (
         (button_frames == 1) or 
-          (MAX(button_frames - BUTTON_REPEAT_DELAY, 0) mod BUTTON_REPEAT_PERIOD) == 1)
+          (MAX(button_frames - BUTTON_REPEAT.DELAY, 0) mod BUTTON_REPEAT.PERIOD) == 1)
 
 
 /* For sorting on size(A) */
