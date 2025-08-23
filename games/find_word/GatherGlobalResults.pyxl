@@ -90,7 +90,7 @@ for i < ⌊max(N, 10) τ⌋:
         draw_sprite(sprite, pos)
 
 if frame_utc_now ≥ end_time:
-    set_mode(GlobalIntermission) because "Timer"
+    set_mode(Intermission) because "Timer"
     
     
 leave

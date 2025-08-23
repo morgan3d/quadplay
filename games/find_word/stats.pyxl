@@ -305,10 +305,10 @@ def stats_update(stats, competitor, num_competitors, joined_late):
         ++entry.badge_count.most_words
  
     // XP for score
-    entry.xp += ⌈competitor.score * XP_VALUE.point⌉
+    entry.xp += ⌈competitor.score * XP.VALUE.point⌉
     
     // XP for badges
-    const badge_xp = if player.has_ability["Badge XP"] then (XP_VALUE.badge_per_competitor * min(num_competitors - 1, 10) * size(competitor.badges)) else 0
+    const badge_xp = if player.has_ability["Badge XP"] then (XP.VALUE.badge_per_competitor * min(num_competitors - 1, 10) * size(competitor.badges)) else 0
     entry.xp += badge_xp
 
     // Accumulate the words previously found by this player
@@ -323,7 +323,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
                 push(unique, word)
     
     
-    const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP_VALUE.unique_word else 0
+    const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP.VALUE.unique_word else 0
     entry.xp += word_xp
     
     return {unique_word_list: unique, badge_xp: badge_xp, word_xp: word_xp}

@@ -7,7 +7,7 @@ def enter_rotate_mode():
 
 enter
 ────────────────────────────────────────────────────────────────────────
-assert(game_type == GLOBAL)
+assert(game_type == GAME_TYPE.GLOBAL)
 assert(in_waiting_room == true)
 
 // End right when the next game starts so that this player can join

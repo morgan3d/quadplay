@@ -40,7 +40,7 @@ def board_find_good(board, game_type):
     // cause players within the same window to be more likely
     // to have the same board. Temporary prior to investing
     // multiplayer servers.
-    const rng_seed = (if in_waiting_room or game_type == SOLO or DEBUG.BOARD_SEARCH then 
+    const rng_seed = (if in_waiting_room or game_type == GAME_TYPE.SOLO or DEBUG.BOARD_SEARCH then 
             (10 utc_now())
         else
             // Use the seed for the curent game period, but look a few

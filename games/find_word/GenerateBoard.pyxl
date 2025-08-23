@@ -20,7 +20,7 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 if mode_frames > 3:
-    const board_string = if not player.has_achievement["Play Solo Match"] then FIRST_TIME_BOARD else ∅
+    const board_string = if not player.has_achievement["Play Solo Match"] then TUTORIAL.FIRST_TIME_BOARD else ∅
     player_reset_match(player, game_type, board_string)
     
     if DEBUG.INTERMISSION:

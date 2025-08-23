@@ -1,7 +1,7 @@
 /* Common code across modes. Mostly UI and timing. */
 
-/* Set by Title. `SOLO` or `GLOBAL`. See also `in_waiting_room` */
-let game_type = SOLO
+/* Set by Title. `GAME_TYPE.SOLO` or `GAME_TYPE.GLOBAL`. See also `in_waiting_room` */
+let game_type = GAME_TYPE.SOLO
 
 /* In seconds, using frame_utc_now */
 let start_time
@@ -13,7 +13,7 @@ let end_time
 const cursor = make_cursor()
 
 /* If true, then the player is just warming
-   up for a `GLOBAL` game that will start soon. */
+   up for a `GAME_TYPE.GLOBAL` game that will start soon. */
 let in_waiting_room
 
 let player = make_player()
@@ -382,7 +382,7 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
         sprite: tutorial_arrow[0][0],
         angle: angle,
         pos: pos - angle_to_xy(angle) * (20 + bounce),
-        z: TUTORIAL_Z}
+        z: TUTORIAL.Z}
         
     // Drop shadow
     draw_sprite({
@@ -402,7 +402,7 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
         shadow: #0008,
         x_align: text_x_align,
         y_align: text_y_align,
-        z: TUTORIAL_Z})
+        z: TUTORIAL.Z})
 
 
 

@@ -2459,7 +2459,7 @@ function $parse(source, i) {
 }
 
 
-/** Evaluate a constant value from a JSON definition. Used only while loading. */
+/** Evaluate a simple quadplay constant value from a JSON definition. */
 function evalJSONGameConstant(json) {
     if (typeof json === 'number' || typeof json === 'string' || typeof json === 'boolean') {
         // Raw values

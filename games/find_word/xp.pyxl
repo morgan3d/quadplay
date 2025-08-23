@@ -8,7 +8,7 @@
 def xp_to_level(xp):
     assert(xp ≠ ∅ and not is_nan(xp))
     // Invert level_to_xp
-    let approx = floor(floor(xp / LEVEL_DIVISOR, ½)^LEVEL_EXPONENT) + 1
+    let approx = floor(floor(xp / XP.LEVEL_DIVISOR, ½)^XP.LEVEL_EXPONENT) + 1
     if level_to_xp(approx) > xp or xp ≥ level_to_xp(approx + 1):
         ++approx
         
@@ -18,7 +18,7 @@ def xp_to_level(xp):
 
 /* XP needed to reach this level */
 def level_to_xp(level):
-    return max(0, floor((level - 1)^(1 / LEVEL_EXPONENT), ½) * LEVEL_DIVISOR)
+    return max(0, floor((level - 1)^(1 / XP.LEVEL_EXPONENT), ½) * XP.LEVEL_DIVISOR)
 
 
 

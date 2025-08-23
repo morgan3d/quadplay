@@ -1,4 +1,4 @@
-GlobalIntermission
+Intermission
 ════════════════════════════════════════════════════════════════════════
 
 todo("Separate leveling from postgame")
@@ -155,11 +155,11 @@ def maybe_play_award_sound(winner):
 
     if winner.avatar.id == player_competitor.avatar.id:
         play_sound(award_sound)
-    else if winner.avatar.id == MOO_ID:
+    else if winner.avatar.id == BOT.MOO.ID:
         play_sound(moo_00_sound)
-    else if winner.avatar.id == CAF_ID:
+    else if winner.avatar.id == BOT.CAF_ID:
         play_sound({sound: moo_01_sound, playback_rate: 200%})
-    else if winner.avatar.id == VIL.ID and not played_vil_sound:
+    else if winner.avatar.id == BOT.VIL.ID and not played_vil_sound:
         played_vil_sound = true
         play_sound({sound: vil_00_sound, time: random(0, 1), pitch: random(80%, 120%)})
 
@@ -339,7 +339,7 @@ def draw_leaderboard()
 def update_countdown():
     const time_left = max(end_time - frame_utc_now, 0)
     const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
-    const α = clamp(100% - time_left / (if game_type == SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME), 0%, 100%)
+    const α = clamp(100% - time_left / (if game_type == GAME_TYPE.SOLO then SOLO_INTERMISSION_TIME else GLOBAL_INTERMISSION_TIME), 0%, 100%)
     
     const countdown_rect = {
         corner: xy(32, timer_pos.y - 10),
@@ -439,7 +439,7 @@ if  prev_level == player.avatar.level:
     // See if caf has any commentary. Don't bother players who are leveling up
     // with this.
     for competitor in competitor_array:
-        if competitor.avatar.id == CAF_ID and competitor.score == 0:
+        if competitor.avatar.id == BOT.CAF_ID and competitor.score == 0:
             notify(competitor.avatar.sprite, "caf", "`too hard!!!!!'", play_sound, {sound: moo_03_sound, pitch: 150%})
 
     // Note: If the level changed, these notifications move to after leveling up

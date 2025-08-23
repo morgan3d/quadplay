@@ -38,10 +38,10 @@ last_countdown_sound_time = now()
 start_time = frame_utc_now
 
 // Compute end_time
-if game_type == SOLO:
-    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then SOLO_GAME_TIME else TUTORIAL_GAME_TIME_SECONDS)
+if game_type == GAME_TYPE.SOLO:
+    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then SOLO_GAME_TIME else TUTORIAL.FIRST_GAME_TIME_SECONDS)
 else:
-    assert(game_type == GLOBAL)
+    assert(game_type == GAME_TYPE.GLOBAL)
     
     end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
 
@@ -52,7 +52,7 @@ else:
         "The game should not end so soon")*/
 
 set_background(
-    if game_type == GLOBAL 
+    if game_type == GAME_TYPE.GLOBAL 
     then GLOBAL_BACKGROUND_COLOR
     else SOLO_BACKGROUND_COLOR)
 
@@ -88,7 +88,7 @@ if time_left ≤ 20/60:
     
 if time_left ≤ 0 or DEBUG.INTERMISSION:
     board_deselect_all(player.board, player)
-    if game_type == SOLO:
+    if game_type == GAME_TYPE.SOLO:
         set_mode(SoloIntermission) because "SOLO and timer"
     else:
         set_mode(GatherGlobalResults) because "GLOBAL and timer"
@@ -97,10 +97,10 @@ if time_left ≤ 0 or DEBUG.INTERMISSION:
 leave
 ────────────────────────────────────────────────────────────────────────
 play_sound(times_up_sound)
-if game_type == GLOBAL:
+if game_type == GAME_TYPE.GLOBAL:
     player_achieve(player, "Play Global Match")
     
-else if (game_type == SOLO and
+else if (game_type == GAME_TYPE.SOLO and
     player.has_achievement["Spell EAT"] and 
     player.has_achievement["Spell SEAT"] and 
     player.has_achievement["Spell TIDE"] and 

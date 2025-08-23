@@ -84,8 +84,8 @@ def history_draw(history, pos, max_height):
         pos.y += history_font.line_height + 1
 
     // Draw tutorial/help
-    if not player.has_achievement["Play Solo Match"] and game_type == SOLO:
-        for word at i in FIRST_TIME_WORD_LIST:
+    if not player.has_achievement["Play Solo Match"] and game_type == GAME_TYPE.SOLO:
+        for word at i in TUTORIAL.FIRST_TIME_WORD_LIST:
             if not player.has_achievement["Spell " + word]:
                 draw_text({
                     pos: pos + xy(0, max_height),
@@ -106,7 +106,7 @@ def history_draw(history, pos, max_height):
                 break
 
 
-    if get_mode() ≠ GlobalIntermission:
+    if get_mode() ≠ Intermission:
         // Regular list first
         for entry in history.list:
             history_draw_entry(entry)
@@ -119,7 +119,7 @@ def history_draw(history, pos, max_height):
         for entry in history.free:
             history_draw_entry(entry)
     
-    if get_mode() == GlobalIntermission:
+    if get_mode() == Intermission:
         // Separator
         if size(history.list) and size(history.free):
             history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
@@ -139,7 +139,7 @@ def history_add(history, list_name, word, points):
     assert(type(word) == "string")
     
     if not player.has_achievement["Play Solo Match"]:
-        for target at i in FIRST_TIME_WORD_LIST:
+        for target at i in TUTORIAL.FIRST_TIME_WORD_LIST:
             if not player.has_achievement["Spell " + target]:
                 if target == word:
                     player_achieve(player, "Spell " + target)

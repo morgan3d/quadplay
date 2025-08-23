@@ -55,7 +55,7 @@ def start_match(index):
     // There is no game currently running because the global game is in 
     // the GameOver state, or about to be so. Send this player to the waiting room
     // so that they aren't bored. 
-    in_waiting_room = ((index == GLOBAL and
+    in_waiting_room = ((index == GAME_TYPE.GLOBAL and
         (prev_game_finished or curr_game_remaining_time < GLOBAL_JOIN_MIN_REMAINING_TIME) and
         not next_game_imminent))
     
@@ -140,7 +140,7 @@ if not easter_egg and player.stats.lifetime.xp > 1000 and ξ < 2%:
 
 
 // Initialize the fake board
-player_reset_match(player, SOLO, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg], true)
+player_reset_match(player, GAME_TYPE.SOLO, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg], true)
 player.board.selection_color = TILE_CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 
@@ -167,7 +167,7 @@ if game_frames == 30:
     grant_new_abilities()
     
     if DEBUG.INTERMISSION:
-        start_match(GLOBAL)
+        start_match(GAME_TYPE.GLOBAL)
 
     
 draw_text({

@@ -1,12 +1,15 @@
+todo("** BOO AI **")
 
 /* Generate a stable set of bots with a range of abilities, and 
-   produce their scores and word lists for the current `player.board`. */
+   produce their scores and word lists for the current `player.board`. 
+   
+   All players see the same bots doing the same things, but individual
+   players might be able to see more of the bots based on what they
+   have unlocked.
+ */
 def insert_bots(competitor_array, target_count, max_bots):
     assert(max_bots > 0)
    
-    // Make results for the board stable so that all human players see the
-    // bots doing the same things
-    const match_rng = make_random(player.board.seed)
     target_count = min(target_count, size(competitor_array) + max_bots)
     
     // Used for determining which players are active
@@ -14,11 +17,11 @@ def insert_bots(competitor_array, target_count, max_bots):
     const minute = utc_time().minute
     
     // Shift everybody's ability by this amount
-    const match_shift = match_rng(-10%, 0%)
+    const match_shift = make_random(player.board.seed)(-10%, 0%)
     
     def maybe_add_bot_competitor(descriptor, id):
         assert(descriptor and descriptor.sprite and descriptor.name)
-        
+        const bot_rng = make_random(descriptor.name + match_shift)
         const competitor = {
             avatar: {
                 // Bots face left
@@ -35,7 +38,7 @@ def insert_bots(competitor_array, target_count, max_bots):
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
         const base_ability = descriptor.base_ability
-        const find_percentage = min(28%, match_rng(3%^⅓, 30%^⅓)³ + base_ability)
+        const find_percentage = min(28%, bot_rng(3%^⅓, 30%^⅓)³ + base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = descriptor.short_word_preference
         
@@ -58,7 +61,7 @@ def insert_bots(competitor_array, target_count, max_bots):
             // Players with higher base percentages also are better at long words.
             if (not sensitive[lowercase(word)] and
                 not word_set[word] and
-                match_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
+                bot_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
@@ -66,31 +69,33 @@ def insert_bots(competitor_array, target_count, max_bots):
                         word_set[w] = 1
         
         // Special case for Moo, who always finds *all* cow-related words
-        if id == MOO_ID:
-            for word in MOOCABULARY:
-                if not word_set[word] and contains(player.board.word_list, word):
+        if id == BOT.MOO.ID:
+            for word in BOT.MOO.VOCABULARY:
+                if player.board.word_set[word]:
                     word_set[word] = 1
                     
         let tries = 0        
         // Special case for caf, who sometimes finds a great word, finds all
         // three-letter cow words, and with a low probability finds a terrible word
-        if id == CAF_ID:
-            caf_ai(word_set, player.board.word_list, match_rng)
+        if id == BOT.CAF_ID:
+            caf_ai(word_set, player.board.word_list, bot_rng)
         else:
-            // Pick up a bunch of cheap words first
-            const short_word_length = if id == MOO_ID then 3 else 4
+            // Pick up a bunch of cheap words first. For Moo these must be 3 letters.
+            // For other bots they can be 3 or 4 letters
+            const short_word_length = if id == BOT.MOO.ID then 3 else 4
+            
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
                 ++tries
-                const word = random_value(player.board.word_list, match_rng)
+                const word = random_value(player.board.word_list, bot_rng)
                 if size(word) ≤ short_word_length:
                     maybe_add_word(word)
     
         // Moo cannot find non-cow words greater than 4 letters    
-        if id ≠ MOO_ID and id ≠ CAF_ID:
+        if id ≠ BOT.MOO.ID and id ≠ BOT.CAF_ID:
             tries = 0
             while size(word_set) < words_found and tries < 2 words_found:
                 ++tries
-                maybe_add_word(random_value(player.board.word_list, match_rng))
+                maybe_add_word(random_value(player.board.word_list, bot_rng))
     
         competitor.word_list = keys(word_set)
                 
@@ -114,7 +119,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 short_word_preference: 0.80,
                 first_hour: 0,
                 last_hour: 22},
-            MOO_ID)
+            BOT.MOO.ID)
     
     // Process caf *after* Moo. Everyone who can see caf can also see Moo, so
     // this keeps it deterministic
@@ -127,21 +132,21 @@ def insert_bots(competitor_array, target_count, max_bots):
                 first_hour: 0,
                 last_hour: 23, 
                 level: 1},
-            CAF_ID)
+            BOT.CAF_ID)
 
     if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
         // VIL also cheats and always gets extra points. This allows them
         // to be on top of the leaderboard and annoy the player without also winning
-        // every award (and thus being TOO annoying)
+        // every award every time (and thus being TOO annoying)
         maybe_add_bot_competitor({
                 name: "VIL",
                 sprite: "avatar_sprite[25][20]",
-                base_ability: 40%,
+                base_ability: 42%,
                 short_word_preference: 5%,
                 first_hour: 0,
                 last_hour: 23,
-                level: 41},
-            VIL.ID).score += 125
+                level: 45},
+            BOT.VIL.ID).score += 150
 
     let c = 0
     while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:
@@ -183,7 +188,7 @@ def caf_ai(word_set, word_list, rng):
             word_set[word] = 1
             
     // Look for short cow words
-    for word in MOOCABULARY:
+    for word in BOT.MOO.VOCABULARY:
         if size(word) ≤ 3 and contains(word_list, word):
             word_set[word] = 1
 

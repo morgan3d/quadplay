@@ -124,7 +124,7 @@ def draw_content():
         y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
     
     if player.has_ability["Discovered Words Stat"]:
-        y += draw_row(y, "Discovered Words", format_number(size(player.stats.lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
+        y += draw_row(y, "Discovered Words", format_number(size(lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
 
     y += 10
     if player.has_ability["Words/Match Stat"]:
@@ -133,7 +133,7 @@ def draw_content():
     if player.has_ability["Points/Match Stat"]:
         y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
     
-    y += draw_section_title(y, "Abilities Earned")
+    y += draw_section_title(y, "Earned " + size(player.has_ability) + " Abilities")
 
     let count = 0
     for entry at name in ABILITY_TABLE:
@@ -160,7 +160,7 @@ def draw_content():
                 
     
     if player.has_ability["Discovered Words Stat"]:
-        y += draw_section_title(y + 7, "Discovered Words") + 12
+        y += draw_section_title(y + 7, "Discovered " + format_number(size(lifetime.word_list) + size(today.word_list), "commas") + " Words") + 12
         for text in vocabulary_text_array:
             y += draw_text({
                 pos: xy(½ (SCREEN_SIZE.x - WIDTH) + 10, y),
@@ -212,7 +212,7 @@ for array in text_array:
 
 frame
 ────────────────────────────────────────────────────────────────────────
-
+todo("Show points from free word")
 
 draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(WIDTH, SCREEN_SIZE.y), #0009)
@@ -221,8 +221,13 @@ draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - 
 
 local:
     const x = ½ SCREEN_SIZE.x - ½ WIDTH + 50
-    draw_text({text: player.avatar.name + ": Level " + player.avatar.level, font: score_font, x_align: "left", pos: xy(x, 9), color: #FFF})
-    draw_text({text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", font: leaderboard_font, x_align: "left", pos: xy(x, 22), color: #FFF})
+    draw_text({text: trim_spaces(player.avatar.name) + ": Level " + player.avatar.level, font: score_font, x_align: "left", pos: xy(x, 9), color: #FFF})
+    draw_text({
+        text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", 
+        font: if player.avatar.level > 38 then history_font else leaderboard_font,
+        x_align: "left", 
+        pos: xy(x, 22), 
+        color: #FFF})
 
 preserving_transform:
     const scroll_rect = {corner: xy(0, 30), size: xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 58)}
