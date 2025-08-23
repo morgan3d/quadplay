@@ -66,13 +66,11 @@ def make_player_competitor():
 
 
 /* Called from `Intermission.enter` */
-def competitor_analyze(competitor_array):    
+def competitor_analyze(competitor_array):
     // How many players have each word; used for 
     // identifying rare words
     const count = {}
     
-    const board_word_set = array_to_set(player.board.word_list)
-        
     // Compute everyone's best results
     for competitor in competitor_array:
         competitor.badges = ""
@@ -89,16 +87,16 @@ def competitor_analyze(competitor_array):
         for word in competitor.free_list:
             const points = score_word(word)
             
-            // If a competitor's free word depends on wild tiles and this player
-            // doesn't have wild unlocked, then censor it
-            if not board_word_set[word] and not player.has_ability["Wild"]:
-                word = hide_text(word)
-
             if points > competitor.best_free_word_points:
                 competitor.best_free_word_points = points
+                // This will get hidden below if it has wildcards
                 competitor.best_free_word_text = q_decode(word)
             
-
+            // If a competitor's free word depends on wild tiles and this player
+            // doesn't have wild unlocked, then censor it within the free_list
+            if not player.board.word_set[word] and not player.has_ability["Wild"]:
+                word = hide_text(word)
+        
         competitor.best_word_points = 0
         competitor.longest_size = 0
         for word in competitor.word_list:
@@ -106,7 +104,7 @@ def competitor_analyze(competitor_array):
             count[word] = (count[word] default 0) + 1
             
             const points = score_word(word)
-            const text     = q_decode(word)
+            const text   = q_decode(word)
                         
             if points > competitor.best_word_points:
                 competitor.best_word_points = points
@@ -140,15 +138,17 @@ def competitor_analyze(competitor_array):
     
             // If a competitor's free word depends on wild tiles and this player
             // doesn't have wild unlocked, then censor it
-            if not board_word_set[word] and not player.has_ability["Wild"]:
-                word = hide_text(word)
+            if not player.board.word_set[word] and not player.has_ability["Wild"]:
+                // What the word will look like after decoding
                 const text = q_decode(word)
-                if competitor.best_rare_text == text:
-                    competitor.best_rare_text = hide_text(competitor.best_rare_text)
-                if competitor.best_word_text == text:
-                    competitor.best_word_text = hide_text(competitor.best_word_text)
-                if competitor.longest_text == text:
-                    competitor.longest_text = hide_text(competitor.longest_text)
+                
+                // Replace the word in the list itself
+                word = hide_text(word)
+                
+                // Update all of the award text
+                for field in competitor:
+                    if ends_with(field, "_text") and competitor[field] == text:
+                        competitor[field] = hide_text(competitor[field])
 
     
     // Update the history rare fields for the player competitor

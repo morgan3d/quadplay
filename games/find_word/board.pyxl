@@ -24,8 +24,11 @@ def make_board():
         // Chosen based on the point value of the current word in _check
         selection_color: TILE_CENTER_SELECTED_COLOR,
         
-        // Q-decoded. Identified by `board_search()`
-        word_list: []
+        // Q-encoded. Identified by `board_search()`
+        word_list: [],
+        
+        // Q-encoded. Set version of word_list
+        word_set: {}
     }
     
     return board
@@ -51,6 +54,7 @@ def board_find_good(board, game_type):
     
     // Convert to board
     board.word_list = word_array
+    board.word_set = array_to_set(word_array)
     board.word_count = size(word_array)
     board.seed = seed
     for x < COLS:

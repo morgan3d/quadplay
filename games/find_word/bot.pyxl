@@ -9,12 +9,6 @@ def insert_bots(competitor_array, target_count, max_bots):
     const match_rng = make_random(player.board.seed)
     target_count = min(target_count, size(competitor_array) + max_bots)
     
-    // Used for finding legal substrings
-    const word_table = {}
-    for word in player.board.word_list:
-        if dictionary[word]:
-            word_table[word] = 1
-    
     // Used for determining which players are active
     const hour = utc_time().hour
     const minute = utc_time().minute
@@ -68,7 +62,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 // Ensure that if a word is found, all substrings are found
                 for 3 ≤ s ≤ size(word):
                     const w = slice(word, 0, s)
-                    if word_table[w]:
+                    if player.board.word_set[w]:
                         word_set[w] = 1
         
         // Special case for Moo, who always finds *all* cow-related words
