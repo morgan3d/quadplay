@@ -44,9 +44,9 @@ for 0 < i < 30:
 
 /*
 local:
-    for 0 < level ≤ 40:
+    for 0 < level ≤ 50:
         debug_print(level, "|", format_number(level_to_xp(level), "commas"))
-
 */
+
 
         

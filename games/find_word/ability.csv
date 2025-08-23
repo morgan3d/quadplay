@@ -25,5 +25,7 @@ Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last
 Badge Stat,22,"Badges won is now availale in Stats!",stats_sprite[0][0]
 Remix × 2,24,"New power: Use Remix 2× per match",ability_icon.remix
 Remix × 3,28,"New power: Use Remix 3× per match",ability_icon.remix
+See VIL More Frequently,30,SILENT,
 Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.remix
 Wild,37,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
+See VIL Always,40,SILENT,

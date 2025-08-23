@@ -25,12 +25,16 @@ def grant_new_abilities():
     for ability at name in ABILITY_TABLE:
         if not contains(name, "TODO") and (not player.has_ability[name] and player.avatar.level ≥ ability.level):
             def grant_ability():
-                play_sound({sound: award_sound, pitch: 150%})
+                if ability.description ≠ "SILENT":
+                    play_sound({sound: award_sound, pitch: 150%})
+                    
                 player.has_ability[name] = true
 
+                // Skip saving when debugging intermission
+                if DEBUG.INTERMISSION: return
+            
                 // Save new abilities
-                if not DEBUG.INTERMISSION:
-                    save_local("has_ability", player.has_ability)
+                save_local("has_ability", player.has_ability)
                 
             
             if ability.description ≠ "SILENT" and not DEBUG.FORCE_LEVEL:

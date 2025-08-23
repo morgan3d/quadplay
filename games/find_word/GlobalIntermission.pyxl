@@ -159,7 +159,7 @@ def maybe_play_award_sound(winner):
         play_sound(moo_00_sound)
     else if winner.avatar.id == CAF_ID:
         play_sound({sound: moo_01_sound, playback_rate: 200%})
-    else if winner.avatar.id == VIL_ID and not played_vil_sound:
+    else if winner.avatar.id == VIL.ID and not played_vil_sound:
         played_vil_sound = true
         play_sound({sound: vil_00_sound, time: random(0, 1), pitch: random(80%, 120%)})
 
@@ -356,7 +356,7 @@ def update_countdown():
         color: #FFF})
     
     if frame_utc_now ≥ end_time and not DEBUG.INTERMISSION:
-        set_mode(GenerateBoard) because "Timer"
+        set_mode(AnimateXP) because "Timer"
     
     
     

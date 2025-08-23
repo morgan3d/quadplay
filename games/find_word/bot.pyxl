@@ -141,7 +141,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 first_hour: 0,
                 last_hour: 23,
                 level: 41},
-            VIL_ID).score += 125
+            VIL.ID).score += 125
 
     let c = 0
     while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:
@@ -150,10 +150,12 @@ def insert_bots(competitor_array, target_count, max_bots):
 
 
 def _VIL_is_online(day, hour, minute):
-    // Can only see VIL at higher levels and on occasional half hours.
-    return (((day + hour) mod 2 == 0) and
-            (⌊(day + hour + minute) / 10⌋ mod 
-                (if player.has_ability["See VIL Frequently"] then 3 else 6) == 0))
+    // Can only see VIL at higher levels and on occasional half hours,
+    // with the frequency increasing
+    return player.has_ability["See VIL Always"] or (((day + hour) mod 2 == 0) and
+        (if player.has_ability["See VIL More Frequently"] then true else
+                (⌊(day + hour + minute) / 10⌋ mod
+                    (if player.has_ability["See VIL Frequently"] then 3 else 6) == 0)))
         
 if DEBUG.VIL:
     debug_print("\nVIL's Schedule:")
