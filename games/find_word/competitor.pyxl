@@ -170,7 +170,7 @@ def competitor_assign_awards(competitor_array):
 
     // Now loop again and give badges, including for ties:
     for competitor in competitor_array:
-        // Put in the same order as the award stages
+        // Put in the same order as the award INTERMISSION.STAGEs
         if competitor.best_word_points == best_word_winner.best_word_points:
             competitor.badges += BADGE_TABLE.best_word
         

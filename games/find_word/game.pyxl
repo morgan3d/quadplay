@@ -31,15 +31,10 @@ let notification_hook
 /* Set by `Play.enter`. Used to track games that should not affect stats */
 let joined_late
 
-const SOLO_GAME_TIME = 60 SOLO_GAME_TIME_MINUTES
-
-const GLOBAL_INTERMISSION_TIME = GLOBAL_INTERMISSION_TIME_SECONDS
-const GLOBAL_GAME_TIME = GLOBAL_GAME_TIME_SECONDS
-
 /* Global games are synchronized to this clock, hitting this period exactly 
    relative to UTC Unix 0 time */
-const GLOBAL_PERIOD = GLOBAL_GAME_TIME + GATHER_TIME_SECONDS + GLOBAL_INTERMISSION_TIME
-
+const GLOBAL_PERIOD = GLOBAL_PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS
+assert(not is_nan(GLOBAL_PERIOD))
 
 /* Array of strings for background display on the title and avatar editor, by row. See `draw_background_words()`. */
 const background_word_array = []

@@ -25,7 +25,7 @@ push(competitor_array, player_competitor)
 
 share_results_with_network(player_competitor)
 
-end_time = next_global_game_utc_start_time() - GLOBAL_INTERMISSION_TIME
+end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS
 
 if DEBUG.INTERMISSION:
     end_time = frame_utc_now
@@ -46,8 +46,8 @@ if mode_frames == (if DEBUG.INTERMISSION then 0 else 60):
     const num_total_competitors = clamp(⌊4 noise(1, local_time().month + local_time().day + local_time().hour)⌋ + random_integer(6, 16), 4, 10)
     insert_bots(competitor_array, num_total_competitors, 5)
 
-const start_time = end_time - GATHER_TIME_SECONDS
-const τ = min((frame_utc_now - start_time) / GATHER_TIME_SECONDS, 100%)
+const start_time = end_time - GATHER_SECONDS
+const τ = min((frame_utc_now - start_time) / GATHER_SECONDS, 100%)
 
 update_network()
 

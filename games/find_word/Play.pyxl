@@ -39,11 +39,11 @@ start_time = frame_utc_now
 
 // Compute end_time
 if game_type == GAME_TYPE.SOLO:
-    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then SOLO_GAME_TIME else TUTORIAL.FIRST_GAME_TIME_SECONDS)
+    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then 60 SOLO_PLAY_MINUTES else TUTORIAL.FIRST_PLAY_SECONDS)
 else:
     assert(game_type == GAME_TYPE.GLOBAL)
     
-    end_time = prev_global_game_utc_start_time() + GLOBAL_GAME_TIME
+    end_time = prev_global_game_utc_start_time() + GLOBAL_PLAY_SECONDS
 
     /*
     assert(
@@ -58,7 +58,7 @@ set_background(
 
 // Started more than 10s late, do not affect
 // ratio stats
-joined_late = (end_time - start_time < GLOBAL_GAME_TIME - 10)
+joined_late = (end_time - start_time < GLOBAL_PLAY_SECONDS - 10)
 
 board_deselect_all(player.board, player)
 
@@ -89,7 +89,7 @@ if time_left ≤ 20/60:
 if time_left ≤ 0 or DEBUG.INTERMISSION:
     board_deselect_all(player.board, player)
     if game_type == GAME_TYPE.SOLO:
-        set_mode(SoloIntermission) because "SOLO and timer"
+        set_mode(SoloSummary) because "SOLO and timer"
     else:
         set_mode(GatherGlobalResults) because "GLOBAL and timer"
 

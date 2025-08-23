@@ -33,7 +33,7 @@
         "Play",
         "Rotate",
         "Freestyle",
-        "SoloIntermission",
+        "SoloSummary",
         "GatherGlobalResults",
         "Intermission",
         "AnimateXP"
@@ -666,7 +666,8 @@
             "min": 0,
             "max": 128,
             "format": "0",
-            "quantum": 1
+            "quantum": 1,
+            "description": "For animating points to history"
         },
         "CURSOR_COLOR": {
             "type": "rgb",
@@ -739,14 +740,6 @@
             },
             "description": "For game_type == SOLO"
         },
-        "SOLO_GAME_TIME_MINUTES": {
-            "type": "number",
-            "value": "3.5",
-            "min": 0.5,
-            "max": 5,
-            "format": "0.0",
-            "quantum": 0.5
-        },
         "GLOBAL_BACKGROUND_COLOR": {
             "type": "rgb",
             "value": {
@@ -763,24 +756,6 @@
                     "value": "12%"
                 }
             }
-        },
-        "GLOBAL_GAME_TIME_SECONDS": {
-            "type": "number",
-            "value": "130",
-            "min": 45,
-            "max": 480,
-            "format": "0",
-            "quantum": 1,
-            "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
-        },
-        "GLOBAL_INTERMISSION_TIME_SECONDS": {
-            "type": "number",
-            "value": "23",
-            "description": "Time between games. The total game period is GLOBAL_INTERMISSION_TIME_SECONDS + GLOBAL_GAME_TIME_MINUTES exactly",
-            "min": 1,
-            "max": 240,
-            "format": "0",
-            "quantum": 1
         },
         "WAITING_ROOM_BACKGROUND_COLOR": {
             "type": "rgb",
@@ -927,49 +902,7 @@
             "format": "0",
             "quantum": 1
         },
-        "STAGE": {
-            "type": "object",
-            "value": {
-                "BEST_WORD": {
-                    "type": "number",
-                    "value": 0
-                },
-                "MOST_WORDS": {
-                    "type": "number",
-                    "value": 1
-                },
-                "MOST_WORDS2": {
-                    "type": "number",
-                    "value": 2
-                },
-                "BEST_RARE": {
-                    "type": "number",
-                    "value": 3
-                },
-                "LONGEST": {
-                    "type": "number",
-                    "value": 4
-                },
-                "SUMMARY": {
-                    "type": "number",
-                    "value": 5
-                },
-                "SUMMARY2": {
-                    "type": "number",
-                    "value": 6
-                }
-            },
-            "description": "Constants for intermission awards stages"
-        },
-        "MOST_WORDS_AWARD_FRAMES_PER_WORD": {
-            "type": "number",
-            "value": "38",
-            "min": 1,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-        "GATHER_TIME_SECONDS": {
+        "GATHER_SECONDS": {
             "type": "number",
             "value": "3.7",
             "description": "How many seconds GatherGlobalResults runs for",
@@ -987,91 +920,155 @@
             "format": "0",
             "quantum": 1
         },
-        "GLOBAL_LAYOUT": {
+        "INTERMISSION": {
             "type": "object",
             "value": {
-                "LEADERBOARD": {
+                "STAGE": {
                     "type": "object",
                     "value": {
-                        "WIDTH": {
+                        "BEST_WORD": {
                             "type": "number",
-                            "value": "224",
-                            "description": "In pixels. Forces the award width",
-                            "min": 64,
-                            "max": 250,
-                            "format": "0",
-                            "quantum": 1
+                            "value": 0
                         },
-                        "ROW_SPACING": {
+                        "MOST_WORDS": {
                             "type": "number",
-                            "value": 16
+                            "value": 1
                         },
-                        "NAME_X": {
+                        "MOST_WORDS2": {
                             "type": "number",
-                            "value": "27",
-                            "min": 0,
-                            "max": 250,
-                            "format": "0",
-                            "quantum": 1
+                            "value": 2
                         },
-                        "BADGE_X": {
+                        "BEST_RARE": {
                             "type": "number",
-                            "value": "66",
-                            "min": 0,
-                            "max": 250,
-                            "format": "0",
-                            "quantum": 1
+                            "value": 3
                         },
-                        "SCORE_X": {
+                        "LONGEST": {
                             "type": "number",
-                            "value": "115",
-                            "min": 0,
-                            "max": 250,
-                            "format": "0",
-                            "quantum": 1
+                            "value": 4
                         },
-                        "COUNT_X": {
+                        "SUMMARY": {
                             "type": "number",
-                            "value": "142",
-                            "min": 0,
-                            "max": 250,
-                            "format": "0",
-                            "quantum": 1
+                            "value": 5
                         },
-                        "LEVEL_X": {
+                        "SUMMARY2": {
                             "type": "number",
-                            "value": "57",
-                            "min": 0,
-                            "max": 250,
-                            "format": "0",
-                            "quantum": 1
+                            "value": 6
+                        }
+                    },
+                    "description": "Constants for intermission awards stages"
+                },
+                "MOST_WORDS_AWARD_FRAMES_PER_WORD": {
+                    "type": "number",
+                    "value": "38",
+                    "min": 1,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "SECONDS": {
+                    "type": "number",
+                    "value": "23",
+                    "description": "Time between global games. The total game period is INTERMISSION.SECONDS + 60 GLOBAL_GAME_TIME_MINUTES exactly",
+                    "min": 1,
+                    "max": 240,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "LAYOUT": {
+                    "type": "object",
+                    "value": {
+                        "LEADERBOARD": {
+                            "type": "object",
+                            "value": {
+                                "WIDTH": {
+                                    "type": "number",
+                                    "value": "224",
+                                    "description": "In pixels. Forces the award width",
+                                    "min": 64,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "ROW_SPACING": {
+                                    "type": "number",
+                                    "value": 16
+                                },
+                                "NAME_X": {
+                                    "type": "number",
+                                    "value": "27",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "BADGE_X": {
+                                    "type": "number",
+                                    "value": "94",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "FREESTYLE_X": {
+                                    "type": "number",
+                                    "value": "157",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "SCORE_X": {
+                                    "type": "number",
+                                    "value": "90",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "COUNT_X": {
+                                    "type": "number",
+                                    "value": "127",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "LEVEL_X": {
+                                    "type": "number",
+                                    "value": "57",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                },
+                                "AVATAR_X": {
+                                    "type": "number",
+                                    "value": "15",
+                                    "min": 0,
+                                    "max": 250,
+                                    "format": "0",
+                                    "quantum": 1
+                                }
+                            }
                         },
-                        "AVATAR_X": {
+                        "HISTORY_PORTRAIT_HEIGHT": {
                             "type": "number",
-                            "value": "15",
-                            "min": 0,
-                            "max": 250,
+                            "value": 100,
+                            "description": "Height of the history in portrait mode"
+                        },
+                        "AWARD_HEIGHT": {
+                            "type": "number",
+                            "value": "65",
+                            "description": "In pixels. Forces the leaderboard height",
+                            "min": 32,
+                            "max": 256,
                             "format": "0",
                             "quantum": 1
                         }
-                    }
-                },
-                "HISTORY_PORTRAIT_HEIGHT": {
-                    "type": "number",
-                    "value": 100,
-                    "description": "Height of the history in portrait mode"
-                },
-                "AWARD_HEIGHT": {
-                    "type": "number",
-                    "value": "65",
-                    "description": "In pixels. Forces the leaderboard height",
-                    "min": 32,
-                    "max": 256,
-                    "format": "0",
-                    "quantum": 1
+                    },
+                    "description": "Constants for the Intermission layout"
                 }
-            },
-            "description": "Constants for the GlobalIntermission layout"
+            }
         },
         "tile_small_font": {
             "type": "reference",
@@ -1559,9 +1556,12 @@
                                 "LONGHORN",
                                 "LOW",
                                 "LOWS",
+                                "LOWED",
+                                "LOWING",
                                 "MANGER",
                                 "MANGERS",
                                 "MANURE",
+                                "MANURES",
                                 "MILK",
                                 "MILKED",
                                 "MILKING",
@@ -1571,9 +1571,13 @@
                                 "MILKMEN",
                                 "MILKS",
                                 "MILKWOMAN",
+                                "MILKWOMEN",
                                 "MOO",
                                 "MOOS",
                                 "MOW",
+                                "MOWED",
+                                "MOWING",
+                                "MOWS",
                                 "MUD",
                                 "MULE",
                                 "MULES",
@@ -1774,7 +1778,7 @@
                     "format": "0",
                     "quantum": 1
                 },
-                "FIRST_GAME_TIME_SECONDS": {
+                "FIRST_PLAY_SECONDS": {
                     "type": "number",
                     "value": "85",
                     "min": 0,
@@ -1826,6 +1830,23 @@
             "max": 128,
             "format": "0",
             "quantum": 1
+        },
+        "GLOBAL_PLAY_SECONDS": {
+            "type": "number",
+            "value": "130",
+            "min": 45,
+            "max": 480,
+            "format": "0",
+            "quantum": 1,
+            "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
+        },
+        "SOLO_PLAY_MINUTES": {
+            "type": "number",
+            "value": "3.5",
+            "min": 0.5,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.5
         }
     },
     "screenshot_tag": "find_word",
