@@ -35,55 +35,104 @@ table tr {
 
 
 
-## Kenney
-![`quad://sprites/kenney-blocks-16x16.sprite.json`](../sprites/kenney-blocks-16x16.png) ![`quad://sprites/kenney-ui-16x16.sprite.json`](../sprites/kenney-ui-16x16.png) 
-![`quad://sprites/kenney-cartography-64x64.sprite.json`](../sprites/kenney-cartography-64x64.png) ![`quad://sprites/kenney-1bit-14x14.sprite.json`](../sprites/kenney-1bit-14x14.png)
-![`quad://sprites/kenney-alien-blue-16x32.sprite.json`](../sprites/kenney-alien-blue-16x32.png) ![`quad://sprites/kenney-alien-purple-16x32.sprite.json`](../sprites/kenney-alien-purple-16x32.png)
-![`quad://sprites/kenney-alien-red-16x32.sprite.json`](../sprites/kenney-alien-red-16x32.png) ![`quad://sprites/kenney-alien-yellow-16x32.sprite.json`](../sprites/kenney-alien-yellow-16x32.png)
-![`quad://sprites/kenney-alien-green-16x32.sprite.json`](../sprites/kenney-alien-green-16x32.png) ![`quad://sprites/kenney-alien-pink-16x32.sprite.json`](../sprites/kenney-alien-pink-16x32.png)
+<script>
+const spriteCategories = {
+  'Kenney': [
+    'kenney-blocks-16x16',
+    'kenney-ui-16x16',
+    'kenney-cartography-64x64',
+    'kenney-1bit-14x14',
+    'kenney-alien-blue-16x32',
+    'kenney-alien-purple-16x32',
+    'kenney-alien-red-16x32',
+    'kenney-alien-yellow-16x32',
+    'kenney-alien-green-16x32',
+    'kenney-alien-pink-16x32'
+  ],
+  'Ninja': [
+    'ninja-black-32x32',
+    'ninja-red-32x32',
+    'ninja-yellow-32x32',
+    'ninja-blue-32x32',
+    'ninja-purple-32x32',
+    'ninja-white-32x32',
+    'ninja-green-32x32',
+    'ninja-pink-32x32',
+    'ninja-bow-32x32',
+    'ninja-sword-32x32',
+    'ninja-idle-64x64'
+  ],
+  'Dawnlike': [
+    'dawnlike-level-16x16',
+    'dawnlike-npcs-16x16',
+    'dawnlike-engineer-16x16',
+    'dawnlike-generic-16x16',
+    'dawnlike-mage-16x16',
+    'dawnlike-paladin-16x16',
+    'dawnlike-rogue-16x16',
+    'dawnlike-warrior-16x16',
+    'dawnlike-ui-16x16'
+  ],
+  'Space': [
+    'space-atmosphere',
+    'space-planet',
+    'space-moon',
+    'space-ring',
+    'spaceship128',
+    'spaceship64',
+    'spaceship32'
+  ],
+  'Action Hero': [
+    'sportscar-32x64',
+    {json: 'tank-body-46x85', png: 'tank-46x85'},
+    {json: 'tank-turret-46x108', png: 'tank-46x85'},
+    {json: 'chopper-body-44x99', png: 'chopper-44x99'},
+    {json: 'chopper-blades-96x96', png: 'chopper-44x99'},
+    'road_tiles_64',
+    'top-runner-16x25',
+    'top-runner-32x50'
+  ],
+  'Other': [
+    'ortho-city-32x16',
+    'beast-soldier-32x32',
+    'miniroguelike-8x8',
+    'controllers-64x44',
+    'controllers-32x22',
+    'explosion-realistic-128x128',
+    'blasphemer-tiles-64x64',
+    'freedoom-tiles-64x64',
+    'mc-pixel-perfection-16x16',
+    'cursor-9x9',
+    'cards-poker-24x36',
+    'cards-solitaire-24x36',
+    'shapes-32x32'
+  ]
+};
 
-
-## Ninja
-
-![`quad://sprites/ninja-black-32x32.sprite.json`](../sprites/ninja-black-32x32.png) ![`quad://sprites/ninja-red-32x32.sprite.json`](../sprites/ninja-red-32x32.png)
-![`quad://sprites/ninja-yellow-32x32.sprite.json`](../sprites/ninja-yellow-32x32.png) ![`quad://sprites/ninja-blue-32x32.sprite.json`](../sprites/ninja-blue-32x32.png)
-![`quad://sprites/ninja-purple-32x32.sprite.json`](../sprites/ninja-purple-32x32.png) ![`quad://sprites/ninja-white-32x32.sprite.json`](../sprites/ninja-white-32x32.png)
-![`quad://sprites/ninja-green-32x32.sprite.json`](../sprites/ninja-green-32x32.png) ![`quad://sprites/ninja-pink-32x32.sprite.json`](../sprites/ninja-pink-32x32.png) 
-![`quad://sprites/ninja-bow-32x32.sprite.json`](../sprites/ninja-bow-32x32.png) ![`quad://sprites/ninja-sword-32x32.sprite.json`](../sprites/ninja-sword-32x32.png) 
-![`quad://sprites/ninja-idle-64x64.sprite.json`](../sprites/ninja-idle-64x64.png)
-
-## Dawnlike
-
-![`quad://sprites/dawnlike-level-16x16.sprite.json`](../sprites/dawnlike-level-16x16.png) ![`quad://sprites/dawnlike-npcs-16x16.sprite.json`](../sprites/dawnlike-npcs-16x16.png)
-![`quad://sprites/dawnlike-engineer-16x16.sprite.json`](../sprites/dawnlike-engineer-16x16.png) ![`quad://sprites/dawnlike-generic-16x16.sprite.json`](../sprites/dawnlike-generic-16x16.png)
-![`quad://sprites/dawnlike-mage-16x16.sprite.json`](../sprites/dawnlike-mage-16x16.png) ![`quad://sprites/dawnlike-paladin-16x16.sprite.json`](../sprites/dawnlike-paladin-16x16.png)
-![`quad://sprites/dawnlike-rogue-16x16.sprite.json`](../sprites/dawnlike-rogue-16x16.png) ![`quad://sprites/dawnlike-warrior-16x16.sprite.json`](../sprites/dawnlike-warrior-16x16.png)
-![`quad://sprites/dawnlike-ui-16x16.sprite.json`](../sprites/dawnlike-ui-16x16.png)
-
-
-## Space
-![`quad://sprites/space-atmosphere.sprite.json`](../sprites/space-atmosphere.png) ![`quad://sprites/space-planet.sprite.json`](../sprites/space-planet.png)
-![`quad://sprites/space-moon.sprite.json`](../sprites/space-moon.png) ![`quad://sprites/space-ring.sprite.json`](../sprites/space-ring.png)
-![`quad://sprites/spacship128.sprite.json`](../sprites/spaceship128.png) ![`quad://sprites/spaceship64.sprite.json`](../sprites/spaceship64.png)
-![`quad://sprites/spacship32.sprite.json`](../sprites/spaceship32.png)
-
-
-## Action Hero
-
-![`quad://sprites/sportscar-32x64.sprite.json`](../sprites/sportscar-32x64.png) ![`quad://sprites/tank-body-46x85.sprite.json`](../sprites/tank-46x85.png)
-![`quad://sprites/chopper-body-44x99.sprite.json`](../sprites/chopper-44x99.png) ![`quad://sprites/road_tiles_64.sprite.json`](../sprites/road_tiles_64.png) 
-![`quad://sprites/top-runner-16x25.sprite.json`](../sprites/top-runner-16x25.png) ![`quad://sprites/top-runner-32x50.sprite.json`](../sprites/top-runner-32x50.png)
-
-
-## Other
-
-![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png) ![`quad://sprites/beast-soldier-32x32.sprite.json`](../sprites/beast-soldier-32x32.png)
-![`quad://sprites/miniroguelike-8x8.sprite.json`](../sprites/miniroguelike-8x8.png)  ![`quad://sprites/controllers-64x44.sprite.json`](../sprites/controllers-64x44.png)
-![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png) ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
-![`quad://sprites/blasphemer-tiles-64x64.sprite.json`](../sprites/blasphemer-tiles-64x64.png) ![`quad://sprites/freedoom-tiles-64x64.sprite.json`](../sprites/freedoom-tiles-64x64.png)
-![`quad://sprites/mc-pixel-perfection-16x16.sprite.json`](../sprites/mc-pixel-perfection-16x16.png) ![`quad://sprites/cursor-9x9.sprite.json`](../sprites/cursor-9x9.png)
-![`quad://sprites/cards-poker-24x36.sprite.json`](../sprites/cards-poker-24x36.png) ![`quad://sprites/cards-solitaire-24x36.sprite.json`](../sprites/cards-solitaire-24x36.png)
-![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png) 
+for (const [categoryTitle, sprites] of Object.entries(spriteCategories)) {
+  document.write(`\n## ${categoryTitle}\n\n`);
+  
+  for (let i = 0; i < sprites.length; ++i) {
+    const sprite = sprites[i];
+    
+    // Handle both string and object formats
+    let jsonName = sprite, pngName = sprite;
+    if (typeof sprite !== 'string') {
+      jsonName = sprite.json;
+      pngName = sprite.png;
+    }
+    
+    document.write(`![\`quad://sprites/${jsonName}.sprite.json\`](../sprites/${pngName}.png) `);
+    
+    // Add line break after every 2 sprites or at the end of the array
+    if (((i & 1) === 1) || (i === sprites.length - 1)) {
+      document.write('\n');
+    }
+  }
+  
+  document.write('\n');
+}
+</script> 
 
 </div>
 
@@ -156,50 +205,125 @@ for (const font of [
 Sounds
 ====================================================================================
 
-## Music
+<script>
+const musicCategories = {
+  'Music': [
+    'music-opening',
+    'music-race',
+    'music-moon',
+    'music-boss',
+    'music-vice',
+    'music-saturday',
+    'music-brawl',
+    'music-credits',
+    'music-days',
+    'music-viper',
+    'music-royal',
+    'music-sonata'
+  ],
+  'Music Loops': [
+    'loop-arcade',
+    'loop-mega',
+    'loop-edm',
+    'loop-munster',
+    'loop-tastic',
+    'loop-frantic',
+    'loop-soar',
+    'loop-agent',
+    'loop-castle',
+    'loop-space',
+    'loop-splash',
+    'loop-sanctuary',
+    'loop-town',
+    'loop-overworld',
+    'loop-victory',
+    'loop-joy',
+    'loop-built-this',
+    'loop-fight',
+    'loop-select',
+    'loop-metal',
+    'loop-puzzle',
+    'loop-triumphant',
+    'loop-dark-thriller',
+    'loop-chilltech',
+    'loop-prometheus',
+    'loop-departure',
+    'loop-beat'
+  ],
+  'Three Red Hearts Music': {
+    note: 'From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-red-hearts) chiptune album by Abstraction:',
+    sounds: [
+      'music-three_red_hearts',
+      'music-box_jump',
+      'music-candy',
+      'music-connected',
+      'music-deep_blue',
+      'music-go',
+      'music-modern_bits',
+      'music-out_of_time',
+      'music-penguin_town',
+      'music-penguins_vs_rabbits',
+      'music-penultimate',
+      'music-pixel_war_1',
+      'music-pixel_war_2',
+      'music-princess_quest',
+      'music-puzzle_pieces',
+      'music-rabbit_town',
+      'music-rumble_at_the_gates',
+      'music-sanctuary',
+      'music-save_the_city'
+    ]
+  },
+  'Quadplay album Music': {
+    note: 'From the Quadplay album by Abstraction:',
+    sounds: [
+      'loop-smooth_drops',
+      'loop-all_you_can_yeet',
+      'loop-get_off_my_planet',
+      {json: 'loop-someday_gone', mp3: 'loop-someday_gone'}
+    ]
+  }
+};
 
-![`quad://sounds/music-opening.sound.json`](../sounds/music-opening.mp3) ![`quad://sounds/music-race.sound.json`](../sounds/music-race.mp3)
-![`quad://sounds/music-moon.sound.json`](../sounds/music-moon.mp3)  ![`quad://sounds/music-boss.sound.json`](../sounds/music-boss.mp3)
-![`quad://sounds/music-vice.sound.json`](../sounds/music-vice.mp3)  ![`quad://sounds/music-saturday.sound.json`](../sounds/music-saturday.mp3)
-![`quad://sounds/music-brawl.sound.json`](../sounds/music-brawl.mp3) ![`quad://sounds/music-credits.sound.json`](../sounds/music-credits.mp3)
-![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)   ![`quad://sounds/music-viper.sound.json`](../sounds/music-viper.mp3)
-![`quad://sounds/music-royal.sound.json`](../sounds/music-royal.mp3) ![`quad://sounds/music-sonata.sound.json`](../sounds/music-sonata.mp3)
-
-From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-red-hearts) chiptune album by Abstraction:
-
-![`quad://sounds/music-three_red_hearts.sound.json`](../sounds/music-three_red_hearts.mp3) ![`quad://sounds/music-box_jump.sound.json`](../sounds/music-box_jump.mp3)
-![`quad://sounds/music-candy.sound.json`](../sounds/music-candy.mp3) ![`quad://sounds/music-connected.sound.json`](../sounds/music-connected.mp3)
-![`quad://sounds/music-deep_blue.sound.json`](../sounds/music-deep_blue.mp3) ![`quad://sounds/music-go.sound.json`](../sounds/music-go.mp3)
-![`quad://sounds/music-modern_bits.sound.json`](../sounds/music-modern_bits.mp3) ![`quad://sounds/music-out_of_time.sound.json`](../sounds/music-out_of_time.mp3)
-![`quad://sounds/music-penguin_town.sound.json`](../sounds/music-penguin_town.mp3) ![`quad://sounds/music-penguins_vs_rabbits.sound.json`](../sounds/music-penguins_vs_rabbits.mp3)
-![`quad://sounds/music-penultimate.sound.json`](../sounds/music-penultimate.mp3) ![`quad://sounds/music-pixel_war_1.sound.json`](../sounds/music-pixel_war_1.mp3)
-![`quad://sounds/music-pixel_war_2.sound.json`](../sounds/music-pixel_war_2.mp3) ![`quad://sounds/music-princess_quest.sound.json`](../sounds/music-princess_quest.mp3)
-![`quad://sounds/music-puzzle_pieces.sound.json`](../sounds/music-puzzle_pieces.mp3) ![`quad://sounds/music-rabbit_town.sound.json`](../sounds/music-rabbit_town.mp3)
-![`quad://sounds/music-rumble_at_the_gates.sound.json`](../sounds/music-rumble_at_the_gates.mp3) ![`quad://sounds/music-sanctuary.sound.json`](../sounds/music-sanctuary.mp3)
-![`quad://sounds/music-save_the_city.sound.json`](../sounds/music-save_the_city.mp3)
-
-
-## Music Loops
-
-![`quad://sounds/loop-arcade.sound.json`](../sounds/loop-arcade.mp3) ![`quad://sounds/loop-mega.sound.json`](../sounds/loop-mega.mp3)
-![`quad://sounds/loop-edm.sound.json`](../sounds/loop-edm.mp3) ![`quad://sounds/loop-munster.sound.json`](../sounds/loop-munster.mp3)
-![`quad://sounds/loop-tastic.sound.json`](../sounds/loop-tastic.mp3) ![`quad://sounds/loop-frantic.sound.json`](../sounds/loop-frantic.mp3)
-![`quad://sounds/loop-soar.sound.json`](../sounds/loop-soar.mp3)  ![`quad://sounds/loop-agent.sound.json`](../sounds/loop-agent.mp3)
-![`quad://sounds/loop-castle.sound.json`](../sounds/loop-castle.mp3)  ![`quad://sounds/loop-space.sound.json`](../sounds/loop-space.mp3)
-![`quad://sounds/loop-splash.sound.json`](../sounds/loop-splash.mp3) ![`quad://sounds/loop-sanctuary.sound.json`](../sounds/loop-sanctuary.mp3)
-![`quad://sounds/loop-town.sound.json`](../sounds/loop-town.mp3)  ![`quad://sounds/loop-overworld.sound.json`](../sounds/loop-overworld.mp3)
-![`quad://sounds/loop-victory.sound.json`](../sounds/loop-victory.mp3)  ![`quad://sounds/loop-joy.sound.json`](../sounds/loop-joy.mp3)
-![`quad://sounds/loop-built-this.sound.json`](../sounds/loop-built-this.mp3) ![`quad://sounds/loop-fight.sound.json`](../sounds/loop-fight.mp3)
-![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3)
-![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3)
-![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
-![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3)  ![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
-![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3) 
-
-From the Quadplay album by Abstraction:
-
-![`quad://sounds/loop-smooth_drops.sound.json`](../sounds/loop-smooth_drops.mp3) ![`quad://sounds/loop-all_you_can_yeet.sound.json`](../sounds/loop-all_you_can_yeet.mp3)
-![`quad://sounds/loop-get_off_my_planet.sound.json`](../sounds/loop-get_off_my_planet.mp3) ![`quad://sounds/loop-someday_gone.json`](../sounds/loop-someday_gone.mp3)
+for (const [categoryTitle, categoryData] of Object.entries(musicCategories)) {
+  document.write(`\n## ${categoryTitle}\n`);
+  
+  // Handle both array format and object format with optional note
+  let sounds, note;
+  if (Array.isArray(categoryData)) {
+    sounds = categoryData;
+  } else {
+    sounds = categoryData.sounds;
+    note = categoryData.note;
+  }
+  
+  if (note) {
+    document.write(`${note}\n`);
+  }
+  
+  document.write('\n');
+  
+  for (let i = 0; i < sounds.length; ++i) {
+    const sound = sounds[i];
+    
+    // Handle both string and object formats
+    let jsonName = sound, mp3Name = sound;
+    if (typeof sound !== 'string') {
+      jsonName = sound.json;
+      mp3Name = sound.mp3;
+    }
+    
+    document.write(`![\`quad://sounds/${jsonName}.sound.json\`](../sounds/${mp3Name}.mp3) `);
+    
+    // Add line break after every 2 sounds or at the end of the array
+    if (((i & 1) === 1) || (i === sounds.length - 1)) {
+      document.write('\n');
+    }
+  }
+  
+  document.write('\n');
+}
+</script>
 
 
 ## Effect Loops

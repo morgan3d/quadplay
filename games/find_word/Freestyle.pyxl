@@ -18,7 +18,7 @@ def free_row_pattern(player):
    See also `player_selection_change_callback()` for the `Play` mode. */
 def player_free_selection_change_callback(player):    
     // Clean up the list for any removals
-    player_remove_destroyed_free_words(player)
+    player_remove_destroyed_freestyle_words(player)
 
     // Look for any additions, tracking the most points seen for sound triggers
     let max_points = -1
@@ -97,7 +97,7 @@ def player_spawn_free_score_animation(player, word, color):
 
 
 /* Remove any previous entry of player.history.free that does not belong */
-def player_remove_destroyed_free_words(player):
+def player_remove_destroyed_freestyle_words(player):
     const pattern = free_row_pattern(player)
     
     def maybe_remove(entry):

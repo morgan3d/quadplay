@@ -13,12 +13,12 @@
         longest_text
         best_word_points
         best_word_text
-        best_free_word_points
-        best_free_word_text
+        best_freestyle_word_points
+        best_freestyle_word_text
         best_rare_points
         best_rare_text
         word_list
-        free_word_list
+        freestyle_word_list
         score
     }```
    
@@ -54,13 +54,13 @@ def make_player_competitor():
         avatar: player.avatar,
         score: player.score,
         word_list: [],
-        free_list: []}
+        freestyle_list: []}
 
     for list in [
         [player.history.list, competitor.word_list],
-        [player.history.free, competitor.free_list]]:
+        [player.history.free, competitor.freestyle_list]]:
         for entry in list[0]:
-            push(list[1], entry.word)
+            push(list[1], {word: entry.word, points: entry.points})
     
     return competitor
 
@@ -82,22 +82,20 @@ def competitor_analyze(competitor_array):
         if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
 
-
-        competitor.best_free_word_points = 0
-        competitor.best_free_word_text = ""
+        competitor.best_freestyle_word_points = 0
+        competitor.best_freestyle_word_text = ""
         competitor.freestyle_points = 0
-        for word in competitor.free_list:
-            const points = score_word(word)
+        for word, points in entry in competitor.freestyle_list:
             competitor.freestyle_points += points
             
-            if points > competitor.best_free_word_points:
-                competitor.best_free_word_points = points
+            if points > competitor.best_freestyle_word_points:
+                competitor.best_freestyle_word_points = points
                 // This will get hidden below if it has wildcards
-                competitor.best_free_word_text = q_decode(word)
+                competitor.best_freestyle_word_text = q_decode(word)
                     
         competitor.best_word_points = 0
         competitor.longest_size = 0
-        for word in competitor.word_list:
+        for word in entry in competitor.word_list:
             // Increment the count
             count[word] = (count[word] default 0) + 1
             

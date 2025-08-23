@@ -9,8 +9,8 @@ def make_empty_stats_entry():
             highest_score: 0,
             most_words: 0,
         },
-        best_free_word_text: "", 
-        best_free_word_points: 0,
+        best_freestyle_word_text: "", 
+        best_freestyle_word_points: 0,
         best_word_text: "", 
         best_word_points: 0,
         best_score: 0,
@@ -21,11 +21,12 @@ def make_empty_stats_entry():
         word_list: [],
         xp: 0}
         
+        
 
 def stats_total_xp(stats):
     let xp = 0
-    for entry in stats:
-        xp += entry.xp
+    for stats_entry in stats:
+        xp += stats_entry.xp
     return xp
     
     
@@ -204,9 +205,9 @@ def stats_merge_previous_days(stats):
             lifetime.best_word_points = day.best_word_points
             lifetime.best_word_text = day.best_word_text
 
-        if day.best_free_word_points > lifetime.best_free_word_points:
-            lifetime.best_free_word_points = day.best_free_word_points
-            lifetime.best_free_word_text = day.best_free_word_text
+        if day.best_freestyle_word_points > lifetime.best_freestyle_word_points:
+            lifetime.best_freestyle_word_points = day.best_freestyle_word_points
+            lifetime.best_freestyle_word_text = day.best_freestyle_word_text
 
         lifetime.most_words = max(lifetime.most_words, day.most_words)
         lifetime.best_score = max(lifetime.best_score, day.best_score)
@@ -263,68 +264,68 @@ def stats_update(stats, competitor, num_competitors, joined_late):
 
     assert(stats)
     
-    const entry = stats[today_date_string()]
-    sort(entry.word_list)
+    const stats_entry = stats[today_date_string()]
+    sort(stats_entry.word_list)
 
-    if size(competitor.longest_text) > size(entry.longest_text):
-        entry.longest_text = competitor.longest_text
+    if size(competitor.longest_text) > size(stats_entry.longest_text):
+        stats_entry.longest_text = competitor.longest_text
 
-    if competitor.best_free_word_points > (entry.best_free_word_points default 0):
-        entry.best_free_word_points = competitor.best_free_word_points
-        entry.best_free_word_text = competitor.best_free_word_text
+    if competitor.best_freestyle_word_points > (stats_entry.best_freestyle_word_points default 0):
+        stats_entry.best_freestyle_word_points = competitor.best_freestyle_word_points
+        stats_entry.best_freestyle_word_text = competitor.best_freestyle_word_text
         
-    if competitor.best_word_points > entry.best_word_points:
-        entry.best_word_points = competitor.best_word_points
-        entry.best_word_text = competitor.best_word_text
+    if competitor.best_word_points > stats_entry.best_word_points:
+        stats_entry.best_word_points = competitor.best_word_points
+        stats_entry.best_word_text = competitor.best_word_text
     
-    entry.best_score = max(competitor.score, entry.best_score)
+    stats_entry.best_score = max(competitor.score, stats_entry.best_score)
     
-    const N = size(competitor.word_list) + size(competitor.free_list)
-    if N > entry.most_words:
-        entry.most_words = N
+    const N = size(competitor.word_list) + size(competitor.freestyle_list)
+    if N > stats_entry.most_words:
+        stats_entry.most_words = N
     
     if not joined_late:
-        entry.words += N
-        entry.points += competitor.score
-        ++entry.matches
+        stats_entry.words += N
+        stats_entry.points += competitor.score
+        ++stats_entry.matches
     
     todo("Abstract the badge system to allow iteration")
     if competitor == competitor_array[0]:
-        ++entry.badge_count.highest_score
+        ++stats_entry.badge_count.highest_score
         
     if competitor == best_word_winner:
-        ++entry.badge_count.best_word
+        ++stats_entry.badge_count.best_word
     
     if competitor == best_rare_winner:
-        ++entry.badge_count.best_rare
+        ++stats_entry.badge_count.best_rare
 
     if competitor == longest_winner:
-        ++entry.badge_count.longest
+        ++stats_entry.badge_count.longest
         
     if competitor == most_words_winner:
-        ++entry.badge_count.most_words
+        ++stats_entry.badge_count.most_words
  
     // XP for score
-    entry.xp += ⌈competitor.score * XP.VALUE.point⌉
+    stats_entry.xp += ⌈competitor.score * XP.VALUE.point⌉
     
     // XP for badges
     const badge_xp = if player.has_ability["Badge XP"] then (XP.VALUE.badge_per_competitor * min(num_competitors - 1, 10) * size(competitor.badges)) else 0
-    entry.xp += badge_xp
+    stats_entry.xp += badge_xp
 
     // Accumulate the words previously found by this player
-    const word_set = array_to_set([…stats.lifetime.word_list, …entry.word_list], 1)
+    const word_set = array_to_set([…stats.lifetime.word_list, …stats_entry.word_list], 1)
     
     // Add the new words
     const unique = []
-    for list in [competitor.word_list, competitor.free_list]:
-        for word in list:
+    for list in [competitor.word_list, competitor.freestyle_list]:
+        for word in entry in list:
             if not word_set[word]:
-                push(entry.word_list, word)
+                push(stats_entry.word_list, word)
                 push(unique, word)
     
     
     const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP.VALUE.unique_word else 0
-    entry.xp += word_xp
+    stats_entry.xp += word_xp
     
     return {unique_word_list: unique, badge_xp: badge_xp, word_xp: word_xp}
     

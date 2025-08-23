@@ -94,10 +94,10 @@ def draw_content():
             if better then "↑" else ∅)
     
     if player.has_ability["Freestyle"]:
-        const better = today.best_free_word_text and (today.best_free_word_points ≥ lifetime.best_free_word_points)
+        const better = today.best_freestyle_word_text and (today.best_freestyle_word_points ≥ lifetime.best_freestyle_word_points)
         y += draw_row(y, "Best Free",
-            if (lifetime.best_free_word_text ≠ "") then lifetime.best_free_word_text + " " + lifetime.best_free_word_points else "-",
-            if (today.best_free_word_text ≠ "") then (today.best_free_word_text + " " + today.best_free_word_points) else "-",
+            if (lifetime.best_freestyle_word_text ≠ "") then lifetime.best_freestyle_word_text + " " + lifetime.best_freestyle_word_points else "-",
+            if (today.best_freestyle_word_text ≠ "") then (today.best_freestyle_word_text + " " + today.best_freestyle_word_points) else "-",
             TABLE_ALT_ROW_COLOR,
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)

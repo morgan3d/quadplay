@@ -216,7 +216,7 @@ def draw_most_words_award(winner):
     let word
     // Find a non-offensive word, but give up after four tries instead of locking up
     for i < 4:
-        word = array_value(winner.word_list, (draw_most_words_award.frames / INTERMISSION.MOST_WORDS_AWARD_FRAMES_PER_WORD) + draw_most_words_award.skip, "loop")
+        word = array_value(winner.word_list, (draw_most_words_award.frames / INTERMISSION.MOST_WORDS_AWARD_FRAMES_PER_WORD) + draw_most_words_award.skip, "loop").word
         if winner ≠ player_competitor and offensive[lowercase(q_decode(word))]:
             // Skip over this word
             ++draw_most_words_award.skip
@@ -267,7 +267,7 @@ def draw_leaderboard()
     set_transform(leaderboard_corner - leaderboard_scroll.offset)
     // Alternating animation frames for avatar idle animations
     const alt = ⌊mode_frames / 30⌋ mod 2
-    const show_free_word = ⌊mode_frames / (60*4.5)⌋ mod 2
+    const show_freestyle_word = ⌊mode_frames / (60*4.5)⌋ mod 2
     
     for competitor at i in competitor_array:
         // Center of avatar
@@ -326,8 +326,8 @@ def draw_leaderboard()
 
         draw_text({…text_args, text: size(competitor.word_list), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.COUNT_X, 0), x_align: "right"})
 
-        const free_word = (show_free_word and size(competitor.free_list))
-        let text = q_decode((if free_word then competitor.free_list[0] else competitor.word_list[0]) default "∅")
+        const freestyle_word = (show_freestyle_word and size(competitor.freestyle_list))
+        let text = q_decode(if freestyle_word then competitor.freestyle_list[0].word else (competitor.word_list[0] default {word: "∅"}).word)
 
         if competitor ≠ player_competitor:
             text = censor(text)
@@ -335,7 +335,7 @@ def draw_leaderboard()
         draw_text({
             …text_args, 
             font: history_font, 
-            text: if free_word then "«" + text + "»" else text, 
+            text: if freestyle_word then "«" + text + "»" else text, 
             x_align: "right", 
             pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, 0)})
 
