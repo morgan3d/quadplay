@@ -1,0 +1,6 @@
+{
+    "url": "english_common.csv.zip",
+    "type": "array",
+    "description": "Derived from the NGSL 1.2 and supplement with lemmatization",
+    "license": "By Morgan McGuire and Browne, C., Culligan, B., and Phillips, J. is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License."
+}

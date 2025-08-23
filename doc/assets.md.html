@@ -337,6 +337,14 @@ Data
 :  All English language word-game words as an array of strings.
    This adds about 700 kB to a game download.
 
+`quad://data/english_common_array.json`
+:  The most common ~9000 English language words, based on
+   the New General Service List that has been cleaned. 
+   This is a strict subset of `english_all_array.json`.
+
+`quad://data/english_common_table.json`
+: `english_common_array.json` as an object mapping words to `true`.
+
 `quad://data/english_sensitive.json`
 : List of words that a game designer may not want a word game to generate by 
   itself, even if it accepts these words. Words in the 

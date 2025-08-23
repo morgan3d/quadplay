@@ -60,6 +60,11 @@ for word in keys(dictionary_source):
         if n ≥ DICTIONARY.MIN_WORD_LENGTH and n ≤ DICTIONARY.MAX_WORD_LENGTH:
             dictionary[uppercase(w)] = 1
 
+// Restore months and days of the week, even though they are capitalized
+array_to_set(DICTIONARY.EXTRA, 1, dictionary)
+const sensitive = {…sensitive_source, …DICTIONARY.SENSITIVE_EXTRA}
+
+
 // Check to make sure we did the preprocessing correctly
 assert(dictionary["COLOR"])
 assert(dictionary["COLORS"])
@@ -84,7 +89,6 @@ def q_decode(word):
     return replace(word, "Q", "QU")
 
     
-const sensitive = {…sensitive_source, …sensitive_extra}
 def q_encode(word):
     return replace(word, "QU", "Q")
 

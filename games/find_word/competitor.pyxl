@@ -6,6 +6,7 @@
         avatar
         text
         badges
+        freestyle_points
    
         num_rare
         longest_size
@@ -84,8 +85,10 @@ def competitor_analyze(competitor_array):
 
         competitor.best_free_word_points = 0
         competitor.best_free_word_text = ""
+        competitor.freestyle_points = 0
         for word in competitor.free_list:
             const points = score_word(word)
+            competitor.freestyle_points += points
             
             if points > competitor.best_free_word_points:
                 competitor.best_free_word_points = points

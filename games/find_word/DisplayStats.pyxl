@@ -209,11 +209,10 @@ for array in text_array:
     push(vocabulary_text_array, join(array, ", "))
 
 
+todo("Max freestyle points")
 
 frame
 ────────────────────────────────────────────────────────────────────────
-todo("Show points from free word")
-
 draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(WIDTH, SCREEN_SIZE.y), #0009)
 

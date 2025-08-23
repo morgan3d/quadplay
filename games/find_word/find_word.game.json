@@ -86,7 +86,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.380",
+    "version": "0.381",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -129,7 +129,6 @@
                 }
             }
         },
-        
         "TABLE_ALT_ROW_COLOR": {
             "type": "rgb",
             "value": {
@@ -269,20 +268,6 @@
                 }
             }
         },
-        
-        "sensitive_extra": {
-            "type": "raw",
-            "value": {
-                "quadplay": 1,
-                "wryl": 1,
-                "shmuel": 1,
-                "sarah": 1,
-                "levi": 1,
-                "morgan": 1,
-                "sonya": 1
-            }
-        },
-        
         "ROWS": {
             "type": "number",
             "value": "4",
@@ -316,104 +301,102 @@
                 "value": "0.5deg"
             }
         },
-        
         "GENERATE_BOARD": {
             "type": "object",
             "value": {
                 "CRITERIA": {
-            "type": "object",
-            "value": {
-                "MIN_WORDS": {
-                    "description": "including long words",
-                    "type": "number",
-                    "value": "120",
-                    "min": 0,
-                    "max": 200,
-                    "format": "0",
-                    "quantum": 1
+                    "type": "object",
+                    "value": {
+                        "MIN_WORDS": {
+                            "description": "including long words",
+                            "type": "number",
+                            "value": "120",
+                            "min": 0,
+                            "max": 200,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "RETRIES": {
+                            "type": "number",
+                            "value": "23",
+                            "min": 0,
+                            "max": 50,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MIN_LONG_WORDS": {
+                            "description": "5-6 letters",
+                            "type": "number",
+                            "value": "30",
+                            "min": 0,
+                            "max": 50,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MIN_VERY_LONG_WORDS": {
+                            "description": "7+ letters",
+                            "type": "number",
+                            "value": "7",
+                            "min": 0,
+                            "max": 50,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "SHUFFLE_RETRIES": {
+                            "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
+                            "type": "number",
+                            "value": "17",
+                            "min": 0,
+                            "max": 50,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MIN_VALUABLE_LETTER_USES": {
+                            "description": "How many times every good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                            "type": "number",
+                            "value": "10",
+                            "min": 0,
+                            "max": 20,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MIN_VALUABLE_LETTER_LONG_WORDS": {
+                            "description": "How many times every good letter (such as Q) must be used in 5+ letter words . -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                            "type": "number",
+                            "value": "8",
+                            "min": 0,
+                            "max": 20,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MEAN_VALUABLE_LETTER_USES": {
+                            "description": "How many times good letters (such as Q) must be used in words on average. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                            "type": "number",
+                            "value": "16",
+                            "min": 0,
+                            "max": 20,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MEAN_VALUABLE_LETTER_LONG_WORDS": {
+                            "description": "How many times good letters (such as Q) must be used in 5+ letter words on average. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
+                            "type": "number",
+                            "value": "14",
+                            "min": 0,
+                            "max": 20,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MIN_SHORT_WORDS": {
+                            "type": "number",
+                            "value": "25",
+                            "description": "3-4 letters",
+                            "format": "0",
+                            "quantum": 1
+                        }
+                    },
+                    "description": "Options for controlling the search for a good board in `player_reset()`"
                 },
-                "RETRIES": {
-                    "type": "number",
-                    "value": "23",
-                    "min": 0,
-                    "max": 50,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MIN_LONG_WORDS": {
-                    "description": "5-6 letters",
-                    "type": "number",
-                    "value": "30",
-                    "min": 0,
-                    "max": 50,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MIN_VERY_LONG_WORDS": {
-                    "description": "7+ letters",
-                    "type": "number",
-                    "value": "7",
-                    "min": 0,
-                    "max": 50,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "SHUFFLE_RETRIES": {
-                    "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
-                    "type": "number",
-                    "value": "17",
-                    "min": 0,
-                    "max": 50,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MIN_VALUABLE_LETTER_USES": {
-                    "description": "How many times every good letter (such as Q) must be used in words. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
-                    "type": "number",
-                    "value": "10",
-                    "min": 0,
-                    "max": 20,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MIN_VALUABLE_LETTER_LONG_WORDS": {
-                    "description": "How many times every good letter (such as Q) must be used in 5+ letter words . -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
-                    "type": "number",
-                    "value": "8",
-                    "min": 0,
-                    "max": 20,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MEAN_VALUABLE_LETTER_USES": {
-                    "description": "How many times good letters (such as Q) must be used in words on average. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
-                    "type": "number",
-                    "value": "16",
-                    "min": 0,
-                    "max": 20,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MEAN_VALUABLE_LETTER_LONG_WORDS": {
-                    "description": "How many times good letters (such as Q) must be used in 5+ letter words on average. -ER, -S, -ED, -ING, RE-, UN-, end up amplifying this in some cases, so the words might not be very different.",
-                    "type": "number",
-                    "value": "14",
-                    "min": 0,
-                    "max": 20,
-                    "format": "0",
-                    "quantum": 1
-                },
-                "MIN_SHORT_WORDS": {
-                    "type": "number",
-                    "value": "25",
-                    "description": "3-4 letters",
-                    "format": "0",
-                    "quantum": 1
-                }
-            },
-            "description": "Options for controlling the search for a good board in `player_reset()`"
-        },
-                
                 "LETTER_SET_ARRAY": {
                     "type": "raw",
                     "description": "Individual distributions when using the cube algorithm. Choice of letters is constrained by selecting from each of these individual distributions.",
@@ -530,122 +513,117 @@
                 "*": -2
             }
         },
-        
-        
         "HISTORY": {
             "type": "object",
             "description": "Constants for the history display",
             "value": {
                 "POINTS_ANIMATION_FRAMES": {
-            "type": "number",
-            "value": "35",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1,
-            "description": "For animating points to history"
-        },
+                    "type": "number",
+                    "value": "35",
+                    "min": 0,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1,
+                    "description": "For animating points to history"
+                },
                 "HIGH_POINTS": {
-            "type": "number",
-            "value": 75,
-            "description": "Highest points per word that has a unique color in the history"
-        },
-        "LOW_POINTS": {
-            "type": "number",
-            "value": 5,
-            "description": "Lowest points per word that has a unique color in the history"
-        },
+                    "type": "number",
+                    "value": 75,
+                    "description": "Highest points per word that has a unique color in the history"
+                },
+                "LOW_POINTS": {
+                    "type": "number",
+                    "value": 5,
+                    "description": "Lowest points per word that has a unique color in the history"
+                },
                 "COLUMN_SEPARATION": {
-            "type": "number",
-            "value": "8",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-        "COLOR": {
-            "type": "array",
-            "value": [
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "67%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "63%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "0%"
-                        }
-                    },
-                    "description": "Very low"
+                    "type": "number",
+                    "value": "8",
+                    "min": 0,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
                 },
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "87%"
+                "COLOR": {
+                    "type": "array",
+                    "value": [
+                        {
+                            "type": "rgb",
+                            "value": {
+                                "r": {
+                                    "type": "number",
+                                    "value": "67%"
+                                },
+                                "g": {
+                                    "type": "number",
+                                    "value": "63%"
+                                },
+                                "b": {
+                                    "type": "number",
+                                    "value": "0%"
+                                }
+                            },
+                            "description": "Very low"
                         },
-                        "g": {
-                            "type": "number",
-                            "value": "60%"
+                        {
+                            "type": "rgb",
+                            "value": {
+                                "r": {
+                                    "type": "number",
+                                    "value": "87%"
+                                },
+                                "g": {
+                                    "type": "number",
+                                    "value": "60%"
+                                },
+                                "b": {
+                                    "type": "number",
+                                    "value": "0%"
+                                }
+                            },
+                            "description": "Normal low gradient end"
                         },
-                        "b": {
-                            "type": "number",
-                            "value": "0%"
+                        {
+                            "type": "rgb",
+                            "value": {
+                                "r": {
+                                    "type": "number",
+                                    "value": "82%"
+                                },
+                                "g": {
+                                    "type": "number",
+                                    "value": "15%"
+                                },
+                                "b": {
+                                    "type": "number",
+                                    "value": "100%"
+                                }
+                            },
+                            "description": "Normal high gradient end"
+                        },
+                        {
+                            "type": "rgb",
+                            "value": {
+                                "r": {
+                                    "type": "number",
+                                    "value": "0%"
+                                },
+                                "g": {
+                                    "type": "number",
+                                    "value": "61%"
+                                },
+                                "b": {
+                                    "type": "number",
+                                    "value": "84%"
+                                }
+                            },
+                            "description": "Super high"
                         }
-                    },
-                    "description": "Normal low gradient end"
-                },
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "82%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "15%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "100%"
-                        }
-                    },
-                    "description": "Normal high gradient end"
-                },
-                {
-                    "type": "rgb",
-                    "value": {
-                        "r": {
-                            "type": "number",
-                            "value": "0%"
-                        },
-                        "g": {
-                            "type": "number",
-                            "value": "61%"
-                        },
-                        "b": {
-                            "type": "number",
-                            "value": "84%"
-                        }
-                    },
-                    "description": "Super high"
+                    ],
+                    "description": "Four color points for discontinuous super low, normal low, normal high, and discontinuous super high"
                 }
-            ],
-            "description": "Four color points for discontinuous super low, normal low, normal high, and discontinuous super high"
+            }
         },
-                }
-        },
-        
-        
-        
         "CURSOR_COLOR": {
             "type": "rgb",
             "value": {
@@ -664,206 +642,243 @@
             }
         },
         "TILE": {
-            "type":"object",
+            "type": "object",
             "value": {
                 "COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "79%"
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "79%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "79%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "79%"
+                        }
+                    }
                 },
-                "g": {
-                    "type": "number",
-                    "value": "79%"
+                "CENTER_COLOR": {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "100%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "100%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "100%"
+                        }
+                    }
                 },
-                "b": {
+                "HOLE_COLOR": {
+                    "type": "rgb",
+                    "value": {
+                        "r": 0.6666666666666666,
+                        "g": 0.6666666666666666,
+                        "b": 0.6666666666666666
+                    },
+                    "description": "Color of the hole left when a tile is used in Free Mode"
+                },
+                "CENTER_SELECTED_COLOR": {
+                    "type": "rgb",
+                    "description": "Default selection gray. This is replaced by custom colors as increasingly valuable words are found. See `player_add_to_history()`",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "32%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "32%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "32%"
+                        }
+                    }
+                },
+                "TEXT_COLOR": {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "0%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "0%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "0%"
+                        }
+                    }
+                },
+                "SELECTED_TEXT_COLOR": {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "100%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "100%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "100%"
+                        }
+                    }
+                },
+                "EXTENT": {
                     "type": "number",
-                    "value": "79%"
+                    "value": "44",
+                    "description": "Width of a tile",
+                    "min": 16,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "GUTTER": {
+                    "type": "number",
+                    "value": "5",
+                    "min": 0,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "LETTER_Z": {
+                    "type": "number",
+                    "value": "2.0",
+                    "description": "Z position of the label",
+                    "min": -5,
+                    "max": 5,
+                    "format": "0.0",
+                    "quantum": 0.1
+                },
+                "CENTER_Z": {
+                    "type": "number",
+                    "value": "1.0",
+                    "min": -5,
+                    "max": 5,
+                    "format": "0.0",
+                    "quantum": 0.1
                 }
             }
-        },
-        "CENTER_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "100%"
-                }
-            }
-        },
-        "HOLE_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": 0.6666666666666666,
-                "g": 0.6666666666666666,
-                "b": 0.6666666666666666
-            },
-            "description": "Color of the hole left when a tile is used in Free Mode"
-        },
-        "CENTER_SELECTED_COLOR": {
-            "type": "rgb",
-            "description": "Default selection gray. This is replaced by custom colors as increasingly valuable words are found. See `player_add_to_history()`",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "32%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "32%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "32%"
-                }
-            }
-        },
-        
-                
-        "TEXT_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "0%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "0%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "0%"
-                }
-            }
-        },
-        
-        "SELECTED_TEXT_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "100%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "100%"
-                }
-            }
-        },
-        "EXTENT": {
-            "type": "number",
-            "value": "44",
-            "description": "Width of a tile",
-            "min": 16,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-        "GUTTER": {
-            "type": "number",
-            "value": "5",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-                        "LETTER_Z": {
-            "type": "number",
-            "value": "2.0",
-            "description": "Z position of the label",
-            "min": -5,
-            "max": 5,
-            "format": "0.0",
-            "quantum": 0.1
-        },
-        "CENTER_Z": {
-            "type": "number",
-            "value": "1.0",
-            "min": -5,
-            "max": 5,
-            "format": "0.0",
-            "quantum": 0.1
-        }}
         },
         "GLOBAL_GAME": {
             "type": "object",
             "value": {
                 "JOIN_MIN_REMAINING_TIME": {
-            "type": "number",
-            "value": "20",
-            "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
-            "min": 0,
-            "max": 120,
-            "format": "0",
-            "quantum": 1
-        },
+                    "type": "number",
+                    "value": "20",
+                    "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
+                    "min": 0,
+                    "max": 120,
+                    "format": "0",
+                    "quantum": 1
+                },
                 "PLAY_SECONDS": {
-            "type": "number",
-            "value": "130",
-            "min": 45,
-            "max": 480,
-            "format": "0",
-            "quantum": 1,
-            "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
-        },
+                    "type": "number",
+                    "value": "130",
+                    "min": 45,
+                    "max": 480,
+                    "format": "0",
+                    "quantum": 1,
+                    "description": "Game time. Has to be long enough that it doesn't immediately restart from the intermission when debugging."
+                },
                 "BACKGROUND_COLOR": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": "12%"
-                },
-                "g": {
-                    "type": "number",
-                    "value": "12%"
-                },
-                "b": {
-                    "type": "number",
-                    "value": "12%"
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": "12%"
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": "12%"
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": "12%"
+                        }
+                    }
                 }
             }
-        },
-                }
         },
         "DICTIONARY": {
             "type": "object",
             "value": {
                 "ALPHABET": {
-            "type": "string",
-            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-            "description": "The alphabet as a lowercase string."
-        },
+                    "type": "string",
+                    "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                    "description": "The alphabet as a lowercase string."
+                },
+                "EXTRA": {
+                    "type": "raw",
+                    "description": "Words to add to the dictionary even though they violate some technical rule, such as capitalization. Must be pre-Q-encoded",
+                    "value": [
+                        "MONDAY",
+                        "TUESDAY",
+                        "WEDNESDAY",
+                        "THURSDAY",
+                        "FRIDAY",
+                        "SATURDAY",
+                        "SUNDAY",
+                        "JANUARY",
+                        "FEBRUARY",
+                        "MARCH",
+                        "APRIL",
+                        "MAY",
+                        "JUNE",
+                        "JULY",
+                        "AUGUST",
+                        "SEPTEMBER",
+                        "OCTOBER",
+                        "NOVEMBER",
+                        "DECEMBER"
+                    ]
+                },
                 "MIN_WORD_LENGTH": {
-            "type": "number",
-            "value": "3",
-            "min": 2,
-            "max": 5,
-            "format": "0",
-            "quantum": 1,
-            "description": "In tiles (not letters: Qu is one tile)"
-        },"MAX_WORD_LENGTH": {
-            "type": "number",
-            "value": "17",
-            "description": "Longest possible word, including using wild tile",
-            "min": 0,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },}
+                    "type": "number",
+                    "value": "3",
+                    "min": 2,
+                    "max": 5,
+                    "format": "0",
+                    "quantum": 1,
+                    "description": "In tiles (not letters: Qu is one tile)"
+                },
+                "SENSITIVE_EXTRA": {
+                    "type": "raw",
+                    "value": {
+                        "quadplay": 1,
+                        "wryl": 1,
+                        "shmuel": 1,
+                        "sarah": 1,
+                        "levi": 1,
+                        "morgan": 1,
+                        "sonya": 1
+                    }
+                },
+                "MAX_WORD_LENGTH": {
+                    "type": "number",
+                    "value": "17",
+                    "description": "Longest possible word, including using wild tile",
+                    "min": 0,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
+                }
+            }
         },
         "WAITING_ROOM_BACKGROUND_COLOR": {
             "type": "rgb",
@@ -882,8 +897,6 @@
                 }
             }
         },
-        
-        
         "BOARD_COLOR": {
             "type": "rgb",
             "value": {
@@ -901,28 +914,27 @@
                 }
             }
         },
-        
         "BUTTON_REPEAT": {
             "type": "object",
             "value": {
-        "DELAY": {
-            "type": "number",
-            "value": "45",
-            "description": "How long in frames to wait for a held touch/button press to repeat",
-            "min": 1,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
-            "PERIOD": {
-            "type": "number",
-            "value": "10",
-            "description": "Frames to wait after BUTTON_REPEAT_DELAY for each subsequent touch/button repeat",
-            "min": 1,
-            "max": 128,
-            "format": "0",
-            "quantum": 1
-        },
+                "DELAY": {
+                    "type": "number",
+                    "value": "45",
+                    "description": "How long in frames to wait for a held touch/button press to repeat",
+                    "min": 1,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
+                },
+                "PERIOD": {
+                    "type": "number",
+                    "value": "10",
+                    "description": "Frames to wait after BUTTON_REPEAT_DELAY for each subsequent touch/button repeat",
+                    "min": 1,
+                    "max": 128,
+                    "format": "0",
+                    "quantum": 1
+                }
             }
         },
         "LOOKS_LIKE": {
@@ -1113,7 +1125,6 @@
             "type": "reference",
             "value": "leaderboard_font"
         },
-        
         "tile_tiny_font": {
             "type": "reference",
             "value": "history_font"
@@ -1854,8 +1865,6 @@
             "type": "string",
             "value": "*"
         },
-        
-        
         "SOLO_GAME": {
             "type": "object",
             "descriptions": "Constants for the SOLO game type",
