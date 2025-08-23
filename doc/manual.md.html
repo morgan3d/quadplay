@@ -1018,7 +1018,7 @@ for c in choices:
    pos.y += 16
 
 // Button press to choose
-if gamepad_array[0].aa:
+if gamepad_array[0].pressed_a:
    if selection == 0:      set_mode(Play)  because "Chose play"
    else if selection == 1: set_mode(Map)   because "Chose map"
    else:                   push_mode(ConfirmDialog) because "Chose abandon"

@@ -47,7 +47,15 @@ def draw_outlined_sprite(args, outline_color default #000):
         draw_sprite({…args, override_color: outline_color, pos: args.pos + xy(0, 2i - 1)})
     
     draw_sprite(args)
-    
+
+
+/* Converts an array into an object where each value of the array becomes a key
+   that is mapped to value in the resulting object, i.e., a mathematical set. 
+   Puts the output in `set` and returns `set`.*/
+def array_to_set(array, value default true, set default {}):
+    for element in array:
+        set[element] = value
+    return set
     
 
 /* Convert base 10 number to base 16 string. We use this to assign a unique

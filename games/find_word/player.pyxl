@@ -10,12 +10,7 @@ def player_achieve(player, name, make_notification default false):
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
-    
-    const vocabulary = {}
-    for list in [stats.lifetime.word_list, stats[today_date_string()].word_list]:
-        for word in list:
-            vocabulary[word] = 1
-    
+        
     return {
         board: make_board(),
         
@@ -26,7 +21,7 @@ def make_player():
         
         // Q-encoded dictionary of all words this player has ever
         // found
-        vocabulary: vocabulary,
+        vocabulary: array_to_set([…stats.lifetime.word_list, …stats[today_date_string()].word_list], 1),
         
         // The words that the Remix ability will find if activated.
         // Updated when the player completes a word. When ∅ the 

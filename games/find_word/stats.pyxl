@@ -312,10 +312,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     entry.xp += badge_xp
 
     // Accumulate the words previously found by this player
-    const word_set = {}
-    for list in [stats.lifetime.word_list, entry.word_list]: 
-        for word in list:
-            word_set[word] = 1
+    const word_set = array_to_set([…stats.lifetime.word_list, …entry.word_list], 1)
     
     // Add the new words
     const unique = []
@@ -328,7 +325,6 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     
     const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP_VALUE.unique_word else 0
     entry.xp += word_xp
-
     
     return {unique_word_list: unique, badge_xp: badge_xp, word_xp: word_xp}
     

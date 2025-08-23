@@ -182,21 +182,20 @@ if DEBUG.VIL:
 def caf_ai(word_set, word_list, rng):
     if rng() < 10% or DEBUG.CAF:     
         const word = word_list[random_integer(max(0, size(word_list) - 6), size(word_list) - 1, rng)]
-        if word and not word_set[word]:
+        if word:
             // Find this word
             word_set[word] = 1
             
     // Look for short cow words
     for word in MOOCABULARY:
-        if size(word) ≤ 3 and not word_set[word] and contains(word_list, word):
+        if size(word) ≤ 3 and contains(word_list, word):
             word_set[word] = 1
 
     // Find all words with "CAF" as a substring
     for word in player.board.word_list:
-        if contains(word, "CAF") and not word_set[word]:
+        if contains(word, "CAF"):
             word_set[word] = 1
             
     if rng() < 50% and size(word_set) == 0 and size(word_list):
         // Try to find another word so that caf doesn't complain too often
-        if not word_set[word_list[0]]:
-            word_set[word_list[0]] = 1
+        word_set[word_list[0]] = 1
