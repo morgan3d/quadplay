@@ -200,7 +200,8 @@ for view in VIEW_ARRAY:
             play_sound($moveUISound)
        
         // Touch selection
-        if touch.pressed_a and overlaps(touch, bounds):
+        if touch.pressed_a and overlaps(touch.xy, bounds):
+            choice_index = i
             choose()
    
         if active: $draw_system_menu_text({text: "✜", pos: xy(x - 40% line_height + 1, y + yOffset), x_align: "right", y_align: "center"}, true)

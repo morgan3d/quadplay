@@ -303,7 +303,7 @@ def this_line_number(): return str(inspect.currentframe().f_back.f_lineno)
 
 # Throws an exception with the output on a non-zero error code,
 # otherwise returns the command's output.
-def run_shell_command(cmd, noExceptions, quiet):
+def run_shell_command(cmd, noExceptions=False, quiet=False):
     if not quiet: maybe_print(cmd)
     
     with os.popen(cmd) as stream:
@@ -1287,10 +1287,12 @@ def main():
         url += '&game=' + t
 
     if args.serve:
-        # Do not support POST in host mode
-        maybe_print('Your firewall may need to be configured to load on other devices.\n')
-    else:
-        url += '&quadserver=1'
+        maybe_print('Operating in --serve mode. Your firewall may need to be configured to load on other devices.\n')
+        if isMacOS:
+            maybe_print('Opening macOS firewall settings')
+            os.system('open "x-apple.systempreferences:com.apple.preference.network"')
+
+    url += '&quadserver=1'
 
     maybe_print('\nServing from:\n\n   ' + url + '\n')
     

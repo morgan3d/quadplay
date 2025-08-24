@@ -21,6 +21,7 @@ of [<quadplay/>](manual.md.html).
 - IDE changes:
   - "Go to API" dropdown list for code files for jumping to constants, variables, functions, and events
   - Blocks surrounded by `if DEBUG:` no longer count against the statement limit (case insensitive, and any identifier beginning with the prefix `DEBUG` matches)
+  - Launching the IDE in --serve mode on macOS now opens the Firewall settings panel to make it easier to configure security
 - Incompatible API changes:
   - `play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)` ->
     `play_sound(sound, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, loop default false, stopped default false)`
@@ -30,6 +31,7 @@ of [<quadplay/>](manual.md.html).
   - `parse()` and `unparse()` now handle escape sequences including double quotes correctly
   - Touching off of the system dropdown menu on mobile for an exported game now closes the menu
   - System dropdown menu on mobile is now larger
+  - Pause menu now supports touch controls as well as mouse, gamepad, and keyboard
   - Prevented Safari from caching `version.js` to ensure the latest version of the runtime is always loaded
 
     
