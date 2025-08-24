@@ -2201,7 +2201,8 @@ button.license {
 /* Phone-friendly dropdown font size */
 @media screen and (max-device-width: 800px), screen and (max-device-height: 400px) {
     .dropdown {
-        font-size: 200%;
+        font-size: 150%;
+        line-height: 125%;
     }
 }
 

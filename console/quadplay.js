@@ -1966,7 +1966,7 @@ function closeDropdowns() {
 }
 
 
-window.onclick = function(event) {
+function handleDropdownClose(event) {
     /*
     // Hide modal dialogs
     if (event.target.classList.contains('modal') && (event.target !== document.getElementById('waitDialog'))) {
@@ -1979,7 +1979,11 @@ window.onclick = function(event) {
         // menus aren't closed before we know their state
         closeDropdowns();
     }
-} 
+}
+
+// On click doesn't seem to reliably happen on mobile
+window.onclick = handleDropdownClose;
+window.ontouchend = handleDropdownClose; 
 
 
 function onStepButton() {
