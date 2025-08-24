@@ -86,7 +86,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.384",
+    "version": "0.386",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1031,9 +1031,9 @@
                         "LEADERBOARD": {
                             "type": "object",
                             "value": {
-                                "HEADER_HEIGHT":{
+                                "HEADER_HEIGHT": {
                                     "type": "number",
-                                    "value": 14,
+                                    "value": 14
                                 },
                                 "WIDTH": {
                                     "type": "number",

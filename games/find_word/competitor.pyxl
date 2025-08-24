@@ -118,19 +118,16 @@ def competitor_analyze(competitor_array):
     
         competitor.num_rare = 0
         competitor.best_rare_points = 0
-        competitor.best_rare_text = 0
+        competitor.best_rare_text = ""
     
-        for word in competitor.word_list:
+        for word, points in entry in competitor.word_list:
             if count[word] ≤ rare_threshold:
-                const points = score_word(word)
-                const text = q_decode(word)
-                
                 // This word has appeared very few times
                 ++competitor.num_rare
                 
                 if points > competitor.best_rare_points:
                     competitor.best_rare_points = points
-                    competitor.best_rare_text = text
+                    competitor.best_rare_text = q_decode(word)
     
     // Update the history rare fields for the player competitor
     // as these are used for display. We don't need this for others
