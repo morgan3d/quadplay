@@ -86,7 +86,7 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "remix_available_sound": "quad://sounds/good-03.sound.json"
     },
-    "version": "0.386",
+    "version": "0.387",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

@@ -12,7 +12,7 @@ const cursor = make_cursor(∅, ∅, false, select_tile_sound)
 
 
 def go_to_stats():
-    push_mode(DisplayStats) because "Button"
+    push_mode(DisplayStats, update_stats_done_button) because "Button"
 
 
 
@@ -125,6 +125,24 @@ def skip_intro():
     highlight_random_row()
     remove_frame_hook(intro)
     intro = ∅
+
+
+def update_stats_done_button():
+    const rect = {pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 15), size: xy(150, 21)}
+    
+    for 1 ≤ i < 4: 
+        draw_rect(rect.pos, rect.size + 2i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
+            
+    draw_rect(rect.pos, rect.size, CURSOR_COLOR, #FFF)
+    draw_text({
+        font: score_font,
+        text: "Done",
+        pos: rect.pos + xy(0, 1),
+        outline: #000,
+        color: #FFF})
+        
+    if (gamepad_array[0].pressed_a or gamepad_array[0].pressed_b or (touch.pressed_a and overlaps(touch.xy, rect))) and mode_frames > 2:
+        pop_mode()
 
 
 enter

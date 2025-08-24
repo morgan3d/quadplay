@@ -336,29 +336,76 @@ def draw_leaderboard()
 
 
 
-def update_countdown():
-    const time_left = max(end_time - frame_utc_now, 0)
+def update_intermission_countdown():
+    const time_left = if DEBUG.INTERMISSION then 21 else max(end_time - frame_utc_now, 0)
     const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
     const α = clamp(100% - time_left / INTERMISSION.SECONDS, 0%, 100%)
     
     const countdown_rect = {
-        corner: xy(32, timer_pos.y - 10),
-        size: xy(SCREEN_SIZE.x - 64, 20)}
+        corner: xy(34, timer_pos.y - 10),
+        size: xy(SCREEN_SIZE.x - 68, 20)}
     
+    // Bar
+    draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
+    
+    // Stats button
+    const stats_region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 xy(2, 2), shape: "disk"}
+    if touch.hover:
+        selection_index = if overlaps(touch.hover, stats_region) then STATS_BUTTON_INDEX else 0
+    else if player.using_gamepad:
+        selection_index = 0
+        draw_text({font: leaderboard_font, pos: stats_region.pos + xy(-12, 4), text: joy.prompt["(q)"], color: #DDD, outline: #000, z: 10})
+
+    if get_mode() == DisplayStats:
+        draw_disk(stats_region.pos, 10, #FFF)
+        draw_sprite({sprite: ability_icon.cancel, pos: stats_region.pos, scale: 75%})
+        if mode_frames > 20 and ((touch.pressed_a and overlaps(touch.xy, stats_region)) or joy.pressed_q):
+            pop_mode()
+
+    else if player.has_ability["Stats Tracker"]:
+
+        draw_stats_button(stats_region.pos, selection_index == STATS_BUTTON_INDEX, ½ stats_region.size.x)
+        
+        if (touch.pressed_a and overlaps(touch.xy, stats_region)) or joy.pressed_q:
+            push_mode(DisplayStats, update_intermission_countdown) because "Button"
+
+    // Progress bar
     draw_corner_rect(countdown_rect.corner, countdown_rect.size, #000, #FFF)
-    draw_corner_rect(countdown_rect.corner + 1, xy(α * (countdown_rect.size.x - 2), countdown_rect.size.y - 2), #0F0)
+    draw_corner_rect(countdown_rect.corner + 1, xy(α * (countdown_rect.size.x - 2), countdown_rect.size.y - 2), if α < 95% then HIGHLIGHT_COLOR else #0F0)
     
     draw_text({
         font: score_font,
-        text: "Next match in " + format_number(time_left, "timer"),
-        outline: #090,
+        text: if α < 100% then ("New match in " + format_number(time_left, "timer")) else "New match now!",
+        outline: #0009,
         pos: timer_pos + xy(0, 1),
         color: #FFF})
+
+    // Check box
+    const autostart_rect = {pos: SCREEN_SIZE - xy(15, 10), size: xy(20, 20)}
+    draw_rect(autostart_rect.pos - xy(0, 5), autostart_rect.size - 9, #000, #FFF)
     
-    if frame_utc_now ≥ end_time and not DEBUG.INTERMISSION:
-        set_mode(AnimateXP) because "Timer"
-    
-    
+    if touch.pressed_a and overlaps(touch.xy, autostart_rect):
+        todo("play sound")
+        update_intermission_countdown.ready = not update_intermission_countdown.ready
+        
+    if update_intermission_countdown.ready:
+        draw_text({
+            pos: autostart_rect.pos + xy(0, -4),
+            color: #0F0,
+            font: score_font,
+            text: "✓"})
+    draw_text({
+        pos: autostart_rect.pos + xy(0, 6),
+        color: #FFF,
+        font: history_font,
+        text: "Ready"})    
+        
+    if α ≥ 100% and (update_intermission_countdown.ready or touch.pressed_a):
+        set_mode(AnimateXP) because "Timer and Ready"
+        
+update_intermission_countdown.ready = true   
+   
+
     
 def notify_badge_bonus()
 & if bonus.badge_xp > 0:
@@ -500,24 +547,7 @@ draw_awards()
 
 draw_leaderboard()
 
-// Bottom bar
-draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
-
-// Stats button
-if player.has_ability["Stats Tracker"]:
-    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 xy(2, 2), shape: "disk"}
-    if touch.hover:
-        selection_index = if overlaps(touch.hover, region) then STATS_BUTTON_INDEX else 0
-    else if player.using_gamepad:
-        selection_index = 0
-        draw_text({font: leaderboard_font, pos: region.pos + xy(-12, 4), text: joy.prompt["(q)"], color: #DDD, outline: #000, z: 10})
-            
-    draw_stats_button(region.pos, selection_index == STATS_BUTTON_INDEX, ½ region.size.x)
-    
-    if (touch.pressed_a and overlaps(touch.xy, region)) or joy.pressed_q:
-        push_mode(DisplayStats) because "Button"
-
-update_countdown()
+update_intermission_countdown()
 
 
 

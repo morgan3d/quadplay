@@ -110,7 +110,9 @@ def player_remove_destroyed_freestyle_words(player):
     
 /* Add a tile to the free row */
 def add_tile_to_word(tile):
-    assert(not tile.used)    
+    assert(not tile.used)
+    
+    todo("Special sound for wild tile")
     _board_play_sound(select_tile_sound, 85%, 100%, xy(2, 2))
     
     tile.used = true

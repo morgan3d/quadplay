@@ -10,6 +10,7 @@ let vocabulary_text_array
 
 const scroll = make_scroll_tracker()
 
+let bottom_bar_callback
 
 /*
  - `caption`  Left column value
@@ -176,8 +177,10 @@ def draw_content():
     return y
     
 
-enter
+enter(_bottom_bar_callback)
 ────────────────────────────────────────────────────────────────────────
+bottom_bar_callback = _bottom_bar_callback
+
 player_achieve(player, "Check Stats")
 
 scroll.scroll = 0
@@ -235,25 +238,7 @@ preserving_transform:
     const content_size = xy(0, draw_content())    
     scroll_tracker_update(scroll, content_size, scroll_rect)
 
-
-
-// Large done button, which is always selected
-local:
-    const rect = {pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 15), size: xy(150, 21)}
-    
-    for 1 ≤ i < 4: 
-        draw_rect(rect.pos, rect.size + 2i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
-            
-    draw_rect(rect.pos, rect.size, CURSOR_COLOR, #FFF)
-    draw_text({
-        font: score_font,
-        text: "Done",
-        pos: rect.pos + xy(0, 1),
-        outline: #000,
-        color: #FFF})
-        
-    if (gamepad_array[0].pressed_a or gamepad_array[0].pressed_b or (touch.pressed_a and overlaps(touch.xy, rect))) and mode_frames > 2:
-        pop_mode()
+bottom_bar_callback()
 
 
 
