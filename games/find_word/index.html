@@ -33,7 +33,7 @@
       const game_url = "https://morgan3d.github.io/quadplay/console/quadplay.html?game=quad://" +
             (location.host.endsWith(".itch.io") || location.host.endsWith(".itch.zone") || location.host.endsWith("tracewords.com") || location.host.endsWith("casual-effects.com") ? 
           'games/find_word' : 
-          location.href.match(/([^/]+\/){1,2}(?=[^/]*$)/)[0]);
+          location.href.match(/([^/]+\/){1,2}(?=[^/]*$)/)[0]) + '&refresh=' + new Date().getTime();
     </script>
     <title>FIND WORD ALLL NITE</title>
     <!-- Do not modify below here -->
