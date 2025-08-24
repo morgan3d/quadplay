@@ -16,10 +16,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <!-- Force a reload version.js immediately and synchronously. This tells us whether we need to force a refresh on other scripts -->
-    <script src="version.js?"></script>
-
     <script>
+      // Force a reload of version.js immediately and synchronously. This tells us whether we need to force a refresh on other scripts
+      document.write('<script src="version.js?v=' + new Date().getTime() + '"><' + '/script>');
+
       performance.mark('Loading quadplay.html');
   
       // Track if quadplay was updated since the previous load of this game
@@ -295,7 +295,7 @@
       <div id="right-side-toolbar" style="background: #000; border-top: 3px solid #000; display: inline-block; position: absolute; right: 8px; font-size: 10px">
 
         <script>
-          if (! useIDE) { 
+          if (! useIDE) {
             makeButton('<div class="buttonIcon"></div>', 'systemMenuButton', 'Pause (P)', "onSystemMenuButton('system')");
 
             document.write('&nbsp;&nbsp;&nbsp;');
