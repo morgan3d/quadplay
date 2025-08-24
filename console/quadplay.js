@@ -2021,12 +2021,30 @@ function onPauseButton() {
 function onSystemMenuButton(why) {
     assert(!useIDE);
     if (QRuntime) {
-        if (QRuntime.$gameMode.$name[0] === '$') {
-            // Already in a system menu. Treat as pressing P
-            // to exit that menu
-            //QRuntime.$goToSystemMenu = 'cancel';
+
+        if (why === 'system') {
+            // Fake a keyboard event (could also set QRuntime.$goToSystemMenu = 'system')
+            const buttonCode = 'KeyP';
+            const fakeEvent = {code: buttonCode, stopPropagation:Math.abs, preventDefault:Math.abs}
+            
+            onEmulatorKeyDown(fakeEvent);
+            emulatorButtonState[buttonCode] = 1;
+            setTimeout(function() {
+                onEmulatorKeyUp(fakeEvent);
+                emulatorButtonState[buttonCode] = 0;
+            });
+
         } else {
-            QRuntime.$goToSystemMenu = why;
+            {
+            /*
+            if (QRuntime.$gameMode.$name[0] === '$') {
+                // Already in a system menu. Treat as pressing P
+                // to exit that menu
+                QRuntime.$goToSystemMenu = 'cancel';
+            } else {
+                */
+                QRuntime.$goToSystemMenu = why;
+            }
         }
     }
 
