@@ -216,7 +216,6 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
             
     const enabled = activate_callback
 
-    todo("Remix tutorial")
     if enabled:
         if touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:
             handle_ability_button.selected_button = name
@@ -313,13 +312,14 @@ def handle_buttons(
                 draw_tutorial(region.pos - xy(0, 20), "Leave\nFreestyle", ∅, "left")
         
             // The "Scry Remixes" display becomes the "Remix x" button when active
-            handle_ability_button(
+            const remix_region = handle_ability_button(
                 1,
                 "Remix",
                 if player.has_ability["Remix × 2"] then ("Remix ×" + player.remix_uses_left) else "Remix",
                 if player.has_ability["Scry Remixes"] then remix_sprite else ABILITY_TABLE["Scry Remixes"].level,
                 if player.has_ability["Remix"] and  remix_callback then "(d)" else ∅,
                 if player.has_ability["Remix"] then remix_callback else ∅)
+            todo("Remix tutorial")
     
             handle_ability_button(
                 2,

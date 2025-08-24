@@ -212,7 +212,7 @@ for array in text_array:
     push(vocabulary_text_array, join(array, ", "))
 
 
-todo("Max freestyle points")
+todo("Most Freestyle points/match trend stat")
 
 frame
 ────────────────────────────────────────────────────────────────────────

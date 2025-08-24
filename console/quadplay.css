@@ -494,6 +494,8 @@ b.projectTitle.remote:before {
     font-size: 100%;
 }
 
+
+
 .dropdown > *, .dropdown .IDEOnly > * {
     margin-top:3px;
     margin-bottom:3px;
@@ -2194,5 +2196,12 @@ button.license {
 .button.disabled label,
 .button.disabled input {
     cursor: default;
+}
+
+/* Phone-friendly dropdown font size */
+@media screen and (max-device-width: 800px), screen and (max-device-height: 400px) {
+    .dropdown {
+        font-size: 200%;
+    }
 }
 
