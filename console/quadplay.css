@@ -2202,7 +2202,7 @@ button.license {
 @media screen and (max-device-width: 800px), screen and (max-device-height: 400px) {
     .dropdown {
         font-size: 150%;
-        line-height: 125%;
+        line-height: 150%;
     }
 }
 
