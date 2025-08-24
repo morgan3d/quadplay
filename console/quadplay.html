@@ -310,7 +310,7 @@
             <div class="midiAbsent" id="midiIcon0" title="Connect a USB MIDI device" style="display:block; margin-bottom: -1px"></div>
             <div class="midiAbsent" id="midiIcon1" title="Connect a USB MIDI device"></div>
           </div>
-          <div style="display:inline-block; position: relative; padding-left: 1px; top: 1px" onclick="useIDE ? showGamepads() : (QRuntime && QRuntime.$gameMode && QRuntime.$gameMode.$name[0] === '$' ? null : onSystemMenuButton('controls'))">
+          <div style="display:inline-block; position: relative; padding-left: 1px; top: 1px" onclick="useIDE ? showGamepads() : onSystemMenuButton('controls')">
             <div style="width:48px; margin-top: -4px">
               <div class="controllerAbsent" id="controllerIcon0" title="Connect a game controller and press a button on it"></div>
               <div class="controllerAbsent" id="controllerIcon1" title="Connect a game controller and press a button on it"></div>

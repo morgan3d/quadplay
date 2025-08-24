@@ -2024,7 +2024,7 @@ function onSystemMenuButton(why) {
         if (QRuntime.$gameMode.$name[0] === '$') {
             // Already in a system menu. Treat as pressing P
             // to exit that menu
-            QRuntime.$goToSystemMenu = 'cancel';
+            //QRuntime.$goToSystemMenu = 'cancel';
         } else {
             QRuntime.$goToSystemMenu = why;
         }
