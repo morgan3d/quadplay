@@ -1,6 +1,6 @@
 {
     "url": "cursor-9x9.png",
-    "license": "© 2020 Morgan McGuire. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "license": "© 2020 SHMUEL. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
     "sprite_size": {"x":9, "y":9},
     "names": {
         "arrow": {
@@ -64,6 +64,16 @@
         "eye": {"x": 23, "y": 0},
         "talk": {"x": 24, "y": 0},
         "crosshair_dot": {"x": 25, "y": 0},
+        "clock": {"x": 26, "y": 0},
+        "move": {"x": 27, "y": 0},
+        "clock": {"x": 26, "y": 0},
+        "move": {"x": 27, "y": 0},
+        "marquee": {"x": 28, "y": 0},
+        "droplet": {"x": 29, "y": 0},
+        "eraser": {"x": 30, "y": 0},
+        "eyedropper": {"x": 31, "y": 0},
+        "pencil": {"x": 32, "y": 0},
+        "fine_brush": {"x": 33, "y": 0},
 
         "arrow_outline": {
             "x": 0,
@@ -121,5 +131,15 @@
         "eye_outline": {"x": 23, "y": 1},
         "talk_outline": {"x": 24, "y": 1},
         "crosshair_dot_outline": {"x": 25, "y": 1},
-    }
+        "clock_outline": {"x": 26, "y": 1},
+        "move_outline": {"x": 27, "y": 1},
+        "clock_outline": {"x": 26, "y": 1},
+        "move_outline": {"x": 27, "y": 1},
+        "marquee_outline": {"x": 28, "y": 1},
+        "droplet_outline": {"x": 29, "y": 1},
+        "eraser_outline": {"x": 30, "y": 1},
+        "eyedropper_outline": {"x": 31, "y": 1},
+        "pencil_outline": {"x": 32, "y": 1},
+        "fine_brush_outline": {"x": 33, "y": 1}
+        }
 }

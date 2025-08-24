@@ -2988,7 +2988,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.http_poll           = http_poll;
 
         // When the game forces a framebuffer change, preserve the background to prevent flicker
-        QRuntime.$setFramebufferSize = function (w, h, p) { return setFramebufferSize(w, h, p, true); };
+        QRuntime.$setFramebufferSize = function (w, h, p) { setFramebufferSize(w, h, p, true); };
         QRuntime.$escapeHTMLEntities = escapeHTMLEntities;
         QRuntime.$sleep              = useIDE ? null : sleep;
         QRuntime.disconnect_guest    = disconnectGuest;
