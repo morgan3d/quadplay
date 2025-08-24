@@ -345,7 +345,7 @@ def update_intermission_countdown():
         corner: xy(34, timer_pos.y - 10),
         size: xy(SCREEN_SIZE.x - 68, 20)}
     
-    // Bar
+    // Separator bar
     draw_corner_rect(xy(0, SCREEN_SIZE.y - 22), xy(SCREEN_SIZE.x, 2), #000, ∅, -1)
     
     // Stats button
@@ -387,6 +387,7 @@ def update_intermission_countdown():
     if touch.pressed_a and overlaps(touch.xy, autostart_rect):
         todo("play sound")
         update_intermission_countdown.ready = not update_intermission_countdown.ready
+        save_local("autostart", update_intermission_countdown.ready)
         
     if update_intermission_countdown.ready:
         draw_text({
@@ -400,10 +401,10 @@ def update_intermission_countdown():
         font: history_font,
         text: "Ready"})    
         
-    if α ≥ 100% and (update_intermission_countdown.ready or touch.pressed_a):
+    if α ≥ 100% and (update_intermission_countdown.ready or touch.pressed_a and overlaps(countdown_rect, touch.xy)):
         set_mode(AnimateXP) because "Timer and Ready"
         
-update_intermission_countdown.ready = true   
+update_intermission_countdown.ready = load_local("autostart") default true   
    
 
     
