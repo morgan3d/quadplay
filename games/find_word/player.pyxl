@@ -447,6 +447,7 @@ def player_update_board(player, pos, angle, allow_selection)
    searching for all possible words in the title.
 */
 def player_reset_match(player, game_type, board_space_string default ∅, skip_word_search default false):
+    assert(not board_space_string or board_space_string[4] == " ", "board_space_string must have rows separated by spaces")
     player.score = 0
     player.background_color = BOARD_COLOR
     remove_all(player.free_row)
@@ -463,8 +464,7 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
         else (if player.has_ability["Remix × 2"] then 2
         else (if player.has_ability["Remix"] then 1 else 0))))
     
-    if board_space_string:
-        
+    if board_space_string:   
         for y < ROWS:
             for x < COLS:
                 // COLS + 1 = there are spaces in the board_space_string
@@ -473,6 +473,7 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
         // Collapse out the spaces
         player.board.seed = replace(board_space_string, " ", "")
         player.board.word_list = if skip_word_search then [] else board_string_find_all_words(player.board.seed)
+        player.board.word_set = array_to_set(player.board.word_list)
         player.board.word_count = size(player.board.word_list)
     
     else:

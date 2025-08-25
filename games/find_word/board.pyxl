@@ -27,7 +27,7 @@ def make_board():
         // Q-encoded. Identified by `board_search()`
         word_list: [],
         
-        // Q-encoded. Set version of word_list
+        // Q-encoded. Set version of word_list produced by `board_search()`
         word_set: {}
     }
     
@@ -55,6 +55,7 @@ def board_find_good(board, game_type):
     // Convert to board
     board.word_list = word_array
     board.word_set = array_to_set(word_array)
+    assert(size(board.word_set) == size(word_array))
     board.word_count = size(word_array)
     board.seed = seed
     for x < COLS:

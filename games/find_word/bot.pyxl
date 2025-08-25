@@ -1,5 +1,3 @@
-todo("** BOO AI **")
-
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. 
    
@@ -9,6 +7,8 @@ todo("** BOO AI **")
  */
 def insert_bots(competitor_array, target_count, max_bots):
     assert(max_bots > 0)
+    assert(size(player.board.word_set) == size(player.board.word_list) and size(player.board.word_list) > 0)
+    if DEBUG.BOTS: debug_print("------------------------\ninsert_bots()")
    
     target_count = min(target_count, size(competitor_array) + max_bots)
     
@@ -19,6 +19,7 @@ def insert_bots(competitor_array, target_count, max_bots):
     // Shift everybody's ability by this amount
     const match_shift = make_random(player.board.seed)(-10%, 0%)
     
+    /* If vocabulary is specified, the bot is limited to that vocabulary (except for Moo) */
     def maybe_add_bot_competitor(descriptor):
         assert(descriptor and descriptor.sprite and descriptor.name)
         const bot_rng = make_random(descriptor.name + match_shift)
@@ -38,49 +39,81 @@ def insert_bots(competitor_array, target_count, max_bots):
         
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const base_ability = descriptor.base_ability
-        const find_percentage = min(28%, bot_rng(3%^⅓, 30%^⅓)³ + base_ability)
+        const find_percentage = min(28%, bot_rng(3%^⅓, 30%^⅓)³ + descriptor.base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = descriptor.short_word_preference
         
         // Is this particular competitor available right now?
-        if descriptor.last_hour > descriptor.first_hour:
-            if hour < descriptor.first_hour or hour > descriptor.last_hour: 
-                return
-        else if hour > descriptor.last_hour and hour < descriptor.first_hour:
+        if ((descriptor.last_hour > descriptor.first_hour and
+            (hour < descriptor.first_hour or hour > descriptor.last_hour)) or
+        
             // Wraparound hours case
+            (descriptor.last_hour ≤ descriptor.first_hour and
+            hour > descriptor.last_hour and hour < descriptor.first_hour)):
+                
+            if DEBUG.BOTS: debug_print("Bot " + descriptor.name + " is not available now")
             return
         
         // Make a word list for this competitor and score it.
         // Higher chance of discovering shorter words via rejection sampling.
         
         const word_set = {}
+        
+        // Add word and its substrings to word_set if not sensitive
         def maybe_add_word(word):
             assert(word)
+                        
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if (not sensitive[lowercase(word)] and
-                not word_set[word] and
-                bot_rng() ≤ (2.8 base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
+            if (not word_set[word] 
+                and bot_rng() ≤ (2.8 descriptor.base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
+
                 // Ensure that if a word is found, all substrings are found
-                for 3 ≤ s ≤ size(word):
-                    const w = slice(word, 0, s)
-                    if player.board.word_set[w]:
-                        word_set[w] = 1
-        
-        // Special case for Moo, who always finds *all* cow-related words
-        if descriptor == BOT.MOO.descriptor:
-            for word in BOT.MOO.VOCABULARY:
-                if player.board.word_set[word]:
+                for 3 ≤ len ≤ size(word):
+                    const subword = slice(word, 0, len)
+                    if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))]:
+                        word_set[subword] = 1
+
+
+        /* Special case AI for the caf bot. `word_set` is the output found words */
+        def caf_ai():
+            // Randomly choose a fantastic word 10% of the time
+            if bot_rng() < 10% or DEBUG.CAF:
+                const word = player.board.word_list[random_integer(max(0, size(player.board.word_list) - 6), size(player.board.word_list) - 1, bot_rng)]
+                if word: maybe_add_word(word)
+                    
+            // Look for short cow words. These can't be sensitive and don't have
+            // substrings
+            for word in BOT.MOO.descriptor.vocabulary:
+                if size(word) ≤ 3 and player.board.word_set[word]:
                     word_set[word] = 1
+        
+            // Find all words with "CAF" as a substring, of any length
+            for word in player.board.word_list:
+                if contains(word, "CAF"):
+                    maybe_add_word(word)
+                    
+            if size(word_set) == 0 and (bot_rng() < 50%):
+                // caf has no words. Try to find another word so that caf doesn't complain too often
+                for word in player.board.word_list:
+                    if size(word) == 3:
+                        // Add this word and exit
+                        return maybe_add_word(word)
+                    
+        
+        // Special case for bots with a vocabulary, who always find *all* of their words
+        for word in (descriptor.vocabulary default []):
+            if player.board.word_set[word]:
+                word_set[word] = 1
                     
         let tries = 0        
-        // Special case for caf, who sometimes finds a great word, finds all
-        // three-letter cow words, and with a low probability finds a terrible word
         if descriptor == BOT.CAF.descriptor:
-            caf_ai(word_set, player.board.word_list, bot_rng)
-        else:
+            // Special case for caf, who sometimes finds a great word, finds all
+            // three-letter cow words, and with a low probability finds a terrible word
+            caf_ai()
+            
+        else if not descriptor.vocabulary or descriptor == BOT.MOO.descriptor:
             // Pick up a bunch of cheap words first. For Moo these must be 3 letters.
             // For other bots they can be 3 or 4 letters
             const short_word_length = if descriptor == BOT.MOO.descriptor then 3 else 4
@@ -91,16 +124,17 @@ def insert_bots(competitor_array, target_count, max_bots):
                 if size(word) ≤ short_word_length:
                     maybe_add_word(word)
     
-        // Moo cannot find non-cow words greater than 4 letters    
-        if descriptor ≠ BOT.MOO.descriptor and descriptor ≠ BOT.CAF.descriptor:
+        // Bots without a fixed vocabulary now look for random words
+        if not descriptor.vocabulary and not descriptor == BOT.CAF.descriptor:
             tries = 0
             while size(word_set) < words_found and tries < 2 words_found:
                 ++tries
                 maybe_add_word(random_value(player.board.word_list, bot_rng))
-    
+
+        // Convert the set of words into a word list
         for ignore at word in word_set:
             push(competitor.word_list, {word: word, points: score_word(word)})
-        
+
         sort(competitor.word_list, "points", true)
         sort(competitor.freestyle_list, "points", true)
         
@@ -108,19 +142,24 @@ def insert_bots(competitor_array, target_count, max_bots):
             for points in entry in list:
                 competitor.score += points
 
-        return push(competitor_array, competitor)
-    
+        // Only add bots with a vocabulary if they found a word, except for MOO (caf has no vocabulary)
+        if (not descriptor.vocabulary) or (descriptor == BOT.MOO.descriptor) or size(competitor.word_list):
+            return push(competitor_array, competitor)
+        else if DEBUG.BOT:
+            debug_print("Bot " + descriptor.name + " left because they couldn't find words")
+
+
     // Moo is a special case
-    // ALWAYS insert Moo if the player has the See Moo ability, otherwise insert Moo if
+    // ALWAYS insert Moo if the player has the See Moo ability. Otherwise insert Moo if
     // it is an odd 10 minute interval right now. Process Moo after other bots
     // so that players who don't see Moo don't have their other results affected
-    if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2):
+    if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2) or DEBUG.CAF:
         maybe_add_bot_competitor(BOT.MOO.descriptor)
     
-    // Process caf *after* Moo. Everyone who can see caf can also see Moo, so
-    // this keeps it deterministic
-    if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
-        maybe_add_bot_competitor(BOT.CAF.descriptor)
+        // caf only shows up if Moo is also there
+        if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
+            maybe_add_bot_competitor(BOT.CAF.descriptor)
+
 
     if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
         // VIL also cheats and always gets extra points. This allows them
@@ -128,10 +167,15 @@ def insert_bots(competitor_array, target_count, max_bots):
         // every award every time (and thus being TOO annoying)
         maybe_add_bot_competitor(BOT.VIL.descriptor).score += 150
 
+    // Boo arrives when at least one of their words is available
+    maybe_add_bot_competitor(BOT.BOO.descriptor)
+    
+    // Add random bots based on time of day
     let c = 0
     while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:
         maybe_add_bot_competitor(BOT_DESCRIPTOR_ARRAY[c])
         ++c
+
 
 
 def _VIL_is_online(day, hour, minute):
@@ -142,6 +186,7 @@ def _VIL_is_online(day, hour, minute):
                 (⌊(day + hour + minute) / 10⌋ mod
                     (if player.has_ability["See VIL Frequently"] then 3 else 6) == 0)))
         
+
 if DEBUG.VIL:
     debug_print("\nVIL's Schedule:")
     let online = 0
@@ -158,25 +203,4 @@ if DEBUG.VIL:
     debug_print("VIL is online " + format_number(online / total, "%") + "\n")
 
 
-/* Special case AI for the caf bot. `word_list` is the input,
-   `word_set` is the output found words */
-def caf_ai(word_set, word_list, rng):
-    if rng() < 10% or DEBUG.CAF:     
-        const word = word_list[random_integer(max(0, size(word_list) - 6), size(word_list) - 1, rng)]
-        if word:
-            // Find this word
-            word_set[word] = 1
-            
-    // Look for short cow words
-    for word in BOT.MOO.VOCABULARY:
-        if size(word) ≤ 3 and contains(word_list, word):
-            word_set[word] = 1
 
-    // Find all words with "CAF" as a substring
-    for word in player.board.word_list:
-        if contains(word, "CAF"):
-            word_set[word] = 1
-            
-    if rng() < 50% and size(word_set) == 0 and size(word_list):
-        // Try to find another word so that caf doesn't complain too often
-        word_set[word_list[0]] = 1

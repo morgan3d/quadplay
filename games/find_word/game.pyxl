@@ -319,7 +319,9 @@ def handle_buttons(
                 if player.has_ability["Scry Remixes"] then remix_sprite else ABILITY_TABLE["Scry Remixes"].level,
                 if player.has_ability["Remix"] and  remix_callback then "(d)" else ∅,
                 if player.has_ability["Remix"] then remix_callback else ∅)
-            todo("Remix tutorial")
+                
+            if player.has_ability["Remix"] and not player.has_achievement["Use Remix"] and size(player.remix_list) ≥ 4:
+                draw_tutorial(remix_region.pos - xy(0, 20), "Activate Remix")                  
     
             handle_ability_button(
                 2,
