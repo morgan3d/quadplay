@@ -1,5 +1,7 @@
 /*
-quad://scripts/cursor_lib.pyxl
+@url quad://scripts/cursor_lib.pyxl
+@license © 2025 Sʜᴍᴜᴇʟ. Open source under the [MIT license](https://opensource.org/licenses/MIT)
+@summary Immediate mode GUI gamepad, mouse, and touch cursor management routines for selection, buttons, and scroll boxes
 
 Immediate mode GUI cursor management routines unified for
 all quadplay input types of gamepad, mouse, and touch.
@@ -11,9 +13,6 @@ modes. However, if the mouse or touch moves it will move all
 cursors to that location.
 
 Does not handle overlapping GUI targets.
-
-© 2025 Sʜᴍᴜᴇʟ
-<br>Open source under the [MIT license](https://opensource.org/licenses/MIT)
 
 
 ## Cursor Management
@@ -73,9 +72,6 @@ preserving_transform:
     
     scroll_tracker_update(scroll, content_size, scroll_rect, if selected then ∅ else xy(0, 0))
 ````````````````````````````````````````````````
-
-## Functions
-
 */
 
 

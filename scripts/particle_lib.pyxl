@@ -1,7 +1,7 @@
 /*
- quad://scripts/particle_lib.pyxl
-
- @meta {license: "Copyright 2020 Morgan McGuire, Open source under the MIT License, https://opensource.org/licenses/MIT"}
+ @url quad://scripts/particle_lib.pyxl
+ @summary Single-pixel particle system.
+ @license Copyright 2020 Morgan McGuire, Open source under the [MIT License](https://opensource.org/licenses/MIT)
  */
 
 def make_particles(time_rate default 100%):

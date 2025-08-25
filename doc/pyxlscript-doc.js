@@ -1,20 +1,38 @@
 "use strict";
 
-function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url) {
-    let mdSource = `# ${scriptName}\n\n`;
+function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgramAPIOverloads = {}) {
+    console.assert(typeof pyxlCode === 'string', typeof pyxlCode);
 
-    // Extract doc comment for the entire file
-    let needAPIHeader = false;
+    let mdSource = `# ${scriptName}\n\n`;
+    let license = null;
+    let summary = null;
+
     {
         const match = pyxlCode.match(/^\/\*((?:\*(?!\/)|[^*])+)\*\/\S*(?!\ndef|\nlet|\nconst)/);
         if (match) {
-            mdSource += match[1] + '\n';
+            const overview = match[1];
+
+            // Process metadata:
+            license = overview.match(/^\s*@license\s+(.*)$/m);
+            summary = overview.match(/^\s*@summary\s+(.*)$/m);
+    
+            if (summary) {
+                summary = summary[1];
+                mdSource += `*${summary}*\n\n`;
+            }
+            if (license) {
+                license = license[1];
+                mdSource += `<small>\`${url}\`<br>${license.replace(/copyright/gi, '©')}</small>\n\n`;
+            }
+            if (summary || license) {
+                mdSource += '\n------------------------------\n';
+            }
+
+            // Remove metadata from the overview
+            mdSource += overview.replace(/^@.*$/gm, '') + '\n';
 
             // Remove the overview comment, which might confusingly define functions in examples
             pyxlCode = pyxlCode.replace(/^\/\*((?:\*(?!\/)|[^*])+)\*\//, '');
-
-            // Need a header to separate the API from the overview doc
-            // mdSource += `## ${scriptName} API\n`;
         }
     }
 
@@ -26,8 +44,6 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url) {
     const privateFunctionTable = {};
     const publicVariableTable = {};
     const privateVariableTable = {};
-    let hasPrivateFunctions = false;
-    let hasPrivateVariables = false;
     
     // Find function definitions, with optional preceding documentation
     // in a block comment.
@@ -37,8 +53,7 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url) {
 
         const api = proto.replace(/\(.*$/, '');
 
-        documentationProgramAPIOverloads[api] =
-                (documentationProgramAPIOverloads[api] || 0) + 1;
+        documentationProgramAPIOverloads[api] = (documentationProgramAPIOverloads[api] || 0) + 1;
 
         //console.log('Found', api);
         let doc = (match[1] || '').trim();
@@ -52,7 +67,6 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url) {
 
         const entry = '`' + proto + '`\n: ' + doc + '\n\n';
         const isPrivate = proto[0] === '_';
-        hasPrivateFunctions = hasPrivateFunctions || isPrivate;
         (isPrivate ? privateFunctionTable : publicFunctionTable)[proto] = entry;
     });
     
@@ -74,7 +88,6 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url) {
         const displayName = declType === 'const' ? 'const ' + variableName : variableName;
         const entry = '`' + displayName + '`\n: ' + doc + '\n\n';
         const isPrivate = variableName[0] === '_';
-        hasPrivateVariables = hasPrivateVariables || isPrivate;
         (isPrivate ? privateVariableTable : publicVariableTable)[variableName] = entry;
     });
     
@@ -89,22 +102,32 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url) {
     
     // Generate documentation in sorted order
     // Public variables first, then public functions
-    for (const variableName of Object.keys(publicVariableTable).sort(sortVarNames)) {
-        mdSource += publicVariableTable[variableName];
+    if (Object.keys(publicVariableTable).length > 0) {
+        mdSource += `## Variables\n\n`;
+    
+        for (const variableName of Object.keys(publicVariableTable).sort(sortVarNames)) {
+            mdSource += publicVariableTable[variableName];
+        }
     }
-    for (const functionName of Object.keys(publicFunctionTable).sort()) {
-        mdSource += publicFunctionTable[functionName];
+
+    if (Object.keys(publicFunctionTable).length > 0) {
+        mdSource += `## Functions\n\n`;
+        for (const functionName of Object.keys(publicFunctionTable).sort()) {
+            mdSource += publicFunctionTable[functionName];
+        }
     }
     
-    if (hasPrivateFunctions || hasPrivateVariables) {
-        mdSource += `## ${scriptName} Internal\n\n`;
+    if (Object.keys(privateVariableTable).length || Object.keys(privateFunctionTable).length) {
+        mdSource += `## Internal\n\n`;
         // Private variables first, then private functions
         for (const variableName of Object.keys(privateVariableTable).sort(sortVarNames)) {
             mdSource += privateVariableTable[variableName];
         }
+
         for (const functionName of Object.keys(privateFunctionTable).sort()) {
             mdSource += privateFunctionTable[functionName];
         }
     }   
-    return mdSource;
+
+    return {markdown: mdSource, license: license, summary: summary};
 }

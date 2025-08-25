@@ -1,8 +1,7 @@
 /* 
-midi_8x8.pyxl
-Copyright 2023 Morgan McGuire 
-Available as open source under the MIT License 
-https://opensource.org/license/mit/
+@url quad://scripts/midi_8x8.pyxl
+@license Copyright 2023 Morgan McGuire. Available as open source under the [MIT License](https://opensource.org/license/mit/)
+@summary MIDI device I/O and graphics support for 8x8 devices such as Ableton Push.
 
 quadplay✜ supports ALL MIDI I/O devices through the `midi` and
 `midi_send_raw()` APIs. This script simplifies and standardizes

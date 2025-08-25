@@ -1,9 +1,7 @@
 /*
-quad://scripts/platformer_lib.pyxl
-
-Library for side platformers, including
-double jump, wall jump, friction, and
-map management.
+@url quad://scripts/platformer_lib.pyxl
+@license Copyright 2024 Sʜᴍᴜᴇʟ. Available as open source under the [MIT License](https://opensource.org/license/mit/)
+@summary Library for side platformers, including double jump, wall jump, friction, and map management.
 
 
 Assumes that Y = down and that both character sprites and map cells are about the same size.
@@ -30,10 +28,6 @@ hazard: boolean
 climbable: boolean
 :   Can be traversed through using up and down arrows (need hpass or vpass or pass to enter it!)
 
-
-Copyright 2024, Morgan McGuire
-Open source under the MIT license
-https://opensource.org/licenses/MIT
 */
 
 

@@ -1,9 +1,9 @@
 /*
-quad://scripts/dice_lib.pyxl
+@url quad://scripts/dice_lib.pyxl
+@license © 2025 Sʜᴍᴜᴇʟ. Open source under the [MIT license](https://opensource.org/licenses/MIT)
+@summary 3D rendered polyhedral dice.
 
-Library for working with 3D rendered polyhedral dice.
-
-Requires quad://scripts/mat3x3_lib.pyxl
+@require quad://scripts/mat3x3_lib.pyxl
 
 ───────────────────────────────────────────────
 

@@ -1,10 +1,8 @@
 /*
-quad://scripts/screen_lib.pyxl
+@url quad://scripts/screen_lib.pyxl
+@license © 2025 Morgan McGuire. Open source under the [MIT license](https://opensource.org/licenses/MIT)
+@summary Library for managing screen resolution.
 
-Library for managing screen resolution.
-
-© 2025 Morgan McGuire
-<br>Open source under the [MIT license](https://opensource.org/licenses/MIT)
 
 ## Integration
 
@@ -26,8 +24,6 @@ continuously_set_screen_size_for_display_aspect("y", 224)
 continuously_set_screen_size_for_display_aspect("larger", 256)
 ```   
 
-
-## Functions
 */
 
 /*

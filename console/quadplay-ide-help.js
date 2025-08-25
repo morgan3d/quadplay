@@ -34,7 +34,7 @@ function updateProgramDocumentation() {
         
         // Hide system scripts
         if (scriptName[0] !== '$' && scriptName[0] !== '_') {
-            mdSource += pyxlScriptToMarkdeepDoc(scriptName, fileContents[url], url);
+            mdSource += pyxlScriptToMarkdeepDoc(scriptName, fileContents[url], url, documentationProgramAPIOverloads).markdown;
         }
     }
 
