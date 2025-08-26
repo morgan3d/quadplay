@@ -16,7 +16,7 @@ const cursor = make_cursor()
    up for a `GLOBAL_GAME` game that will start soon. */
 let in_waiting_room
 
-let player = make_player()
+const player = make_player()
 
 // When debugging, do not make a reset player at a reasonable level re-do basic achievements
 if DEBUG.FORCE_LEVEL > 3:

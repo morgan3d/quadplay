@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.393",
+    "version": "0.394",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1958,6 +1958,15 @@
                     "description": "For game_type == SOLO_GAME"
                 }
             }
+        },
+        "GRACE_SECONDS": {
+            "type": "number",
+            "value": "0.7",
+            "description": "Time to allow input while hiding the screen for Play and Freestyle modes.",
+            "min": 0,
+            "max": 2,
+            "format": "0.0",
+            "quantum": 0.1
         }
     },
     "screenshot_tag": "find_word",

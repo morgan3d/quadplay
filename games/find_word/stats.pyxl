@@ -215,8 +215,8 @@ def stats_merge_previous_days(stats)
     
         const day = stats[date]
                     
-        for value at field in lifetime.badge_count:
-            value += day.badge_count[field]
+        for ignore at field in lifetime.badge_count:
+            lifetime.badge_count[field] += day.badge_count[field]
             
         if size(day.longest_text) > size(lifetime.longest_text):
             lifetime.longest_text = day.longest_text

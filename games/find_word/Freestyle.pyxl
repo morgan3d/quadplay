@@ -377,9 +377,9 @@ handle_buttons(
 // we check the network timer here to see if we should log on
 update_network()
 
-if time_left ≤ 20/60:
+if time_left ≤ GRACE_SECONDS:
     // Grace frames drawn in black
-    draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 100)
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 200)
 
 if time_left ≤ 0:
     // Go back to Play, which will then go to the intermission
