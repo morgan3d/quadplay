@@ -13,6 +13,8 @@
         longest_text
         best_word_points
         best_word_text
+        best_wild_word_points
+        best_wild_word_text
         best_freestyle_word_points
         best_freestyle_word_text
         best_rare_points
@@ -53,6 +55,8 @@ def make_player_competitor():
     const competitor = {
         avatar: player.avatar,
         score: player.score,
+        best_wild_word_points: player.wild_word_points,
+        best_wild_word_text: player.wild_word_text,
         word_list: [],
         freestyle_list: []}
 

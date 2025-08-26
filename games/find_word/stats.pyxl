@@ -1,7 +1,6 @@
 /* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */
 def make_empty_stats_entry():
     return {
-        longest_text: "",
         badge_count: {
             best_rare: 0,
             longest: 0,
@@ -9,17 +8,32 @@ def make_empty_stats_entry():
             highest_score: 0,
             most_words: 0,
         },
-        best_freestyle_word_text: "", 
-        best_freestyle_word_points: 0,
+
+        longest_text: "",
+
         best_word_text: "", 
         best_word_points: 0,
+
+        best_freestyle_word_text: "",
+        best_freestyle_word_points: 0,
+        
+        // Includes the wildcard
+        best_wild_word_text: "",
+        best_wild_word_points: 0,
+
         best_score: 0,
+
         most_words: 0,
+
         words: 0,
+
         points: 0,
+
         matches: 0,
-        word_list: [],
-        xp: 0}
+
+        xp: 0,
+
+        word_list: []}
         
         
 
@@ -134,6 +148,8 @@ def decompress_word_list(string):
 
 
 def stats_save(stats):
+    todo("** Why did my longest word get lost in stats")
+    
     const s = deep_clone(stats)
     for day in s:
         day.xp = encode_xp(day.xp)
@@ -147,7 +163,7 @@ def stats_load():
     let stats = load_local("stats")
 
     if stats:
-        // Template
+        // Template for missing fields
         const empty = make_empty_stats_entry()
         
         // Decode all entries
@@ -185,39 +201,40 @@ def stats_load():
 
 /* Roll up every day other than today into the lifetime stats, and
    then delete those days. */
-def stats_merge_previous_days(stats):
+def stats_merge_previous_days(stats)
+& with lifetime in stats:
     const today_date = today_date_string(true)
-    const lifetime = stats.lifetime
     
     // Ensure there is a stats entry for today
     stats[today_date] = stats[today_date] default make_empty_stats_entry()
                 
     for date in keys(stats):
-        // Skip the elements we are not modifying
+        // Skip the two elements we are not modifying: the new day and 
+        // the lifetime stats
         if date == "lifetime" or date == today_date: continue
     
         const day = stats[date]
                     
+        for value at field in lifetime.badge_count:
+            value += day.badge_count[field]
+            
         if size(day.longest_text) > size(lifetime.longest_text):
             lifetime.longest_text = day.longest_text
+        
+        for field in ["best_word", "best_freestyle_word", "best_wild_word"]:
+            if day[field + "_points"] > lifetime[field + "_points"]:
+                lifetime[field + "_points"] = day[field + "_points"]
+                lifetime[field + "_text"] = day[field + "_text"]
+
+        for field in ["best_score", "most_words"]:
+            lifetime[field] = max(lifetime[field], day[field])
+        
+        for field in ["words", "points", "matches", "xp"]:
+            lifetime[field] += day[field]
             
-        if day.best_word_points > lifetime.best_word_points:
-            lifetime.best_word_points = day.best_word_points
-            lifetime.best_word_text = day.best_word_text
-
-        if day.best_freestyle_word_points > lifetime.best_freestyle_word_points:
-            lifetime.best_freestyle_word_points = day.best_freestyle_word_points
-            lifetime.best_freestyle_word_text = day.best_freestyle_word_text
-
-        lifetime.most_words = max(lifetime.most_words, day.most_words)
-        lifetime.best_score = max(lifetime.best_score, day.best_score)
-        lifetime.words += day.words
-        lifetime.points += day.points
-        lifetime.matches += day.matches
-        lifetime.xp += day.xp
         push(lifetime.word_list, …day.word_list)
         
-        // Remove this day now that it is rolled up
+        // Remove this old day now that it is rolled up into lifetime
         remove_key(stats, date)
     
     
@@ -243,7 +260,7 @@ def decode_xp(str):
 /* Don't let the value change except when stats are updated in
    `stats_merge_previous_days()`, otherwise we'll access uncollected data. */
 def today_date_string(update default false):
-    if update:
+    if update or not today_date_string.today_date:
         const date = local_time()
         today_date_string.today_date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
     return today_date_string.today_date
@@ -255,6 +272,7 @@ def today_date_string(update default false):
     competitor from a global match. Does not save.
     
     Returns a list of new unique words and the XP for badges and words.
+    
 */
 def stats_update(stats, competitor, num_competitors, joined_late):
 
@@ -266,6 +284,11 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     
     const stats_entry = stats[today_date_string()]
     sort(stats_entry.word_list)
+
+    todo("merge duplicated comparison code")    
+    if competitor.best_wild_word_points > stats_entry.best_wild_word_points:
+        stats_entry.best_wild_word_points = competitor.best_wild_word_points
+        stats_entry.best_wild_word_text = competitor.best_wild_word_text
 
     if size(competitor.longest_text) > size(stats_entry.longest_text):
         stats_entry.longest_text = competitor.longest_text

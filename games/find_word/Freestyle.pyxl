@@ -15,7 +15,9 @@ def free_row_pattern(player):
 
 
 /* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
-   See also `player_selection_change_callback()` for the `Play` mode. */
+   See also `player_selection_change_callback()` for the `Play` mode.
+   
+   Also updates player.wild_word_text and player.wild_word_points */
 def player_free_selection_change_callback(player):    
     // Clean up the list for any removals
     player_remove_destroyed_freestyle_words(player)
@@ -39,24 +41,35 @@ def player_free_selection_change_callback(player):
                 max_points = points
                 best_new_word = word
                 best_new_color = color
-
+                                    
     if best_new_word:
         // At least one word was added
         player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
         player_achieve(player, "Freestyle Word")
     
+    // Check for the presence of the wild character in the pattern
+    // instead of player.wild_tile.used because
+    // that is future-proof against possible multiple wildcards
+    const wild = contains(pattern, WILDCARD_CHARACTER)
+    player.wild_word_text = if wild then q_decode(pattern) else ""
+
     // Choose the color based on the best selection
+    player.wild_word_points = 0
     max_points = 0
     for points in entry in player.history.free:
         max_points = max(max_points, points)
+        if wild: player.wild_word_points += points
+    
+    debug_print(pattern, wild, player.wild_word_text, player.wild_word_points)
 
     return (
         if max_points > 0 
         then color_for_points(max_points) 
         else TILE.CENTER_SELECTED_COLOR)
 
-
+todo("** Removing wild words once found regularly isn't working for wildcard situations")
+todo("Handle sensitive wild words that the player didn't explicitly enter")
 
 /* Creates animation going from the selection to the last word in the free list */
 def player_spawn_free_score_animation(player, word, color):

@@ -34,7 +34,7 @@ def draw_row(y, caption, lifetime, today, color default #fff, today_color defaul
             text: today_suffix,
             color: today_color})
     
-    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free")): args.font = history_font
+    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free") or ends_with(caption, "Wild")): args.font = history_font
     args.x_align = "right"
     draw_text({…args, text: lifetime, pos: xy(x_center, y)})
     if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x_right, y), color: today_color})
@@ -85,6 +85,9 @@ def draw_content():
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
     
+    todo("Automate TABLE_ALT_ROW_COLOR use")
+    todo("Merge common code for different kinds of stats")
+    
     if player.has_ability["Best Word Stat"]:
         const better = today.best_word_text and (today.best_word_points ≥ lifetime.best_word_points)
         y += draw_row(y, "Best Word",
@@ -99,6 +102,15 @@ def draw_content():
         y += draw_row(y, "Best Free",
             if (lifetime.best_freestyle_word_text ≠ "") then lifetime.best_freestyle_word_text + " " + lifetime.best_freestyle_word_points else "-",
             if (today.best_freestyle_word_text ≠ "") then (today.best_freestyle_word_text + " " + today.best_freestyle_word_points) else "-",
+            TABLE_ALT_ROW_COLOR,
+            if better then HIGHLIGHT_COLOR else ∅,
+            if better then "↑" else ∅)
+
+    if player.has_ability["Wild"]:
+        const better = today.best_wild_word_text and (today.best_wild_word_points ≥ lifetime.best_wild_word_points)
+        y += draw_row(y, "Best Wild",
+            if (lifetime.best_wild_word_text ≠ "") then lifetime.best_wild_word_text + " " + lifetime.best_wild_word_points else "-",
+            if (today.best_wild_word_text ≠ "") then (today.best_wild_word_text + " " + today.best_wild_word_points) else "-",
             TABLE_ALT_ROW_COLOR,
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
@@ -211,10 +223,8 @@ vocabulary_text_array = []
 for array in text_array:
     push(vocabulary_text_array, join(array, ", "))
 
-
 todo("Freestyle points/match trend stat")
-todo("Best wild trend stat")
-todo("Why did my longest word get lost in stats")
+
 
 frame
 ────────────────────────────────────────────────────────────────────────

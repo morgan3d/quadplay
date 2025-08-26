@@ -61,6 +61,10 @@ def make_player():
         history: make_history(),
         
         wild_tile: make_tile(WILDCARD_CHARACTER),
+
+        // Needed for stats tracking
+        wild_word_points: 0,
+        wild_word_text: "",
         
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
@@ -457,6 +461,8 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
     player.wild_tile.used = false
+    player.wild_word_points = 0
+    player.wild_word_text = ""
     player.remix_list = ∅
     player.remix_uses_left = (
         if player.has_ability["Remix × 4"] then 4
@@ -475,7 +481,6 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
         player.board.word_list = if skip_word_search then [] else board_string_find_all_words(player.board.seed)
         player.board.word_set = array_to_set(player.board.word_list)
         player.board.word_count = size(player.board.word_list)
-    
     else:
         board_find_good(player.board, game_type)
     

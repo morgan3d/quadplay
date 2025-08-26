@@ -31,6 +31,8 @@ def insert_bots(competitor_array, target_count, max_bots):
                 bot: true,
                 id: "BOT_" + descriptor.name},
             score: 0,
+            best_wild_word_points: 0,
+            best_wild_word_text: "",            
             word_list: [],
             freestyle_list: []}
     
