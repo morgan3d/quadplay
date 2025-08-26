@@ -1,6 +1,6 @@
 Play
 ════════════════════════════════════════════════════════════════════════
-// See jam_notes.md.html and midi_8x8.pyxl for more info
+// See jam_notes.md.html and midi_8x8_lib.pyxl for more info
             
 const allow_gamepad = true
 

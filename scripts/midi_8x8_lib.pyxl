@@ -1,5 +1,5 @@
 /* 
-@url quad://scripts/midi_8x8.pyxl
+@url quad://scripts/midi_8x8_lib.pyxl
 @license Copyright 2023 Morgan McGuire. Available as open source under the [MIT License](https://opensource.org/license/mit/)
 @summary MIDI device I/O and graphics support for 8x8 devices such as Ableton Push.
 

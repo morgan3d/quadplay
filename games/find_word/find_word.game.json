@@ -53,7 +53,8 @@
         "tile_font": "quad://fonts/deja-bold-15.font.json",
         "select_tile_sound": "quad://sounds/hit-08.sound.json",
         "word_sound": "quad://sounds/powerup-03.sound.json",
-        "dictionary_source": "quad://data/english_all_table.data.json",
+        "dictionary_source": "quad://data/english_all_array.data.json",
+        "common_source": "quad://data/english_common_array.data.json",
         "score_font": "quad://fonts/novarese-10.font.json",
         "history_font": "quad://fonts/scoreboard-6.font.json",
         "history_emphasis_font": "quad://fonts/scoreboard-7.font.json",
@@ -84,9 +85,10 @@
         "tutorial_arrow": "tutorial_arrow.sprite.json",
         "vil_00_sound": "vil-00.sound.json",
         "remix_sound": "quad://sounds/explode-12.sound.json",
-        "remix_available_sound": "quad://sounds/good-03.sound.json"
+        "remix_available_sound": "quad://sounds/good-03.sound.json",
+        "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.390",
+    "version": "0.392",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

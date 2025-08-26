@@ -112,8 +112,7 @@ def player_remove_destroyed_freestyle_words(player):
 def add_tile_to_word(tile):
     assert(not tile.used)
     
-    todo("Special sound for wild tile")
-    _board_play_sound(select_tile_sound, 85%, 100%, xy(2, 2))
+    _board_play_sound(if tile == player.wild_tile then wild_placement_sound else select_tile_sound, 85%, 100%, xy(2, 2))
     
     tile.used = true
     push(player.free_row, {

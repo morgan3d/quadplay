@@ -3,11 +3,10 @@
 @license © 2025 Sʜᴍᴜᴇʟ. Open source under the [MIT license](https://opensource.org/licenses/MIT)
 @summary 3D rendered polyhedral dice.
 
-@require quad://scripts/mat3x3_lib.pyxl
+@requires quad://scripts/mat3x3_lib.pyxl
 
-───────────────────────────────────────────────
 
-Usage:
+## Usage
 
 `````````````````
 // Prepare:
@@ -38,11 +37,6 @@ const t = dice_roll_time(dice)
 if joy.pressed_a:
     die_set_result_index(die, n)
 `````````````````
-
-Copyright 2025, Morgan McGuire
-Open source under the MIT license
-https://opensource.org/licenses/MIT
-
 */
 
 let _dice_geometry_cache = {}

@@ -5,7 +5,7 @@
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
-        "quad://scripts/midi_8x8.pyxl",
+        "quad://scripts/midi_8x8_lib.pyxl",
         "demo.pyxl"
     ],
     "modes": [

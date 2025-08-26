@@ -34,7 +34,7 @@ Note that unlike the standard library API, bundled libraries:
         'cursor_lib',
         'dice_lib',
         'mat3x3_lib',
-        'midi_8x8',
+        'midi_8x8_lib',
         'particle_lib',
         'platformer_lib',
         'screen_lib'
@@ -65,7 +65,6 @@ Note that unlike the standard library API, bundled libraries:
                 source += entry.markdown || '';
             }
 
-            console.log(summary);
             // Insert into the document
             document.getElementById('summary-placeholder').outerHTML = summary;
             document.getElementById('doc-placeholder').outerHTML = source;

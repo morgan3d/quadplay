@@ -6,6 +6,7 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgram
     let mdSource = `# ${scriptName}\n\n`;
     let license = null;
     let summary = null;
+    let requires_array = [];
 
     {
         const match = pyxlCode.match(/^\/\*((?:\*(?!\/)|[^*])+)\*\/\S*(?!\ndef|\nlet|\nconst)/);
@@ -15,7 +16,8 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgram
             // Process metadata:
             license = overview.match(/^\s*@license\s+(.*)$/m);
             summary = overview.match(/^\s*@summary\s+(.*)$/m);
-    
+            requires_array = [...overview.matchAll(/^\s*@requires\s+(.*)$/gm)].map(match => match[1]);
+
             if (summary) {
                 summary = summary[1];
                 mdSource += `*${summary}*\n\n`;
@@ -24,12 +26,16 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgram
                 license = license[1];
                 mdSource += `<small>\`${url}\`<br>${license.replace(/copyright/gi, '©')}</small>\n\n`;
             }
-            if (summary || license) {
-                mdSource += '\n------------------------------\n';
+            if (requires_array.length > 0) {
+                mdSource += '*Requires*:\n' + requires_array.map(name => `- \`${name}\``).join('\n') + '\n';
+            }
+
+            if (summary || license || requires_array.length > 0) {
+                mdSource += '<hr>\n';
             }
 
             // Remove metadata from the overview
-            mdSource += overview.replace(/^@.*$/gm, '') + '\n';
+            mdSource += overview.replace(/^\s*@.*$/gm, '') + '\n';
 
             // Remove the overview comment, which might confusingly define functions in examples
             pyxlCode = pyxlCode.replace(/^\/\*((?:\*(?!\/)|[^*])+)\*\//, '');

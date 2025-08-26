@@ -39,29 +39,29 @@ set_random_seed()
    Use `q_decode()` for expanding the "Q" back to "QU" before displaying
    to the user.
 */
-const dictionary = {}
 
 // Compute `dictionary`
-for word in keys(dictionary_source):
+def _filter_dictionary(text):
     // Use JavaScript regexp undocumented quadplay feature to exclude 
     // words with capital letters or q without u. Also ensure the word
     // does not end in a q (without u).
     //
     // We have to check max word length after q encoding because there
     // are 30 words with 2 qs, which change the length.
-    if (size(word) ≥ DICTIONARY.MIN_WORD_LENGTH and       
-       not word.match(/q[^u]/g) and
-       lowercase(word) == word and
-       last_value(word) ≠ "q"):
+    if (size(text) ≥ DICTIONARY.MIN_WORD_LENGTH and       
+       not text.match(/q[^u]/g) and
+       lowercase(text) == text and
+       last_value(text) ≠ "q"):
            
-        const w = replace(word, "qu", "q")
-        const n = size(w)
+        const w = replace(text, "qu", "q")
         
-        if n ≥ DICTIONARY.MIN_WORD_LENGTH and n ≤ DICTIONARY.MAX_WORD_LENGTH:
-            dictionary[uppercase(w)] = 1
+        return if size(w) ≥ DICTIONARY.MIN_WORD_LENGTH and size(w) ≤ DICTIONARY.MAX_WORD_LENGTH then uppercase(w) else ∅
+
+const dictionary = array_to_set(dictionary_source, 1, ∅, _filter_dictionary)
 
 // Restore months and days of the week, even though they are capitalized
 array_to_set(DICTIONARY.EXTRA, 1, dictionary)
+
 const sensitive = {…sensitive_source, …DICTIONARY.SENSITIVE_EXTRA}
 
 
