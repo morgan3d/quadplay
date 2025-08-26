@@ -89,30 +89,33 @@ def competitor_analyze(competitor_array):
         competitor.best_freestyle_word_points = 0
         competitor.best_freestyle_word_text = ""
         competitor.freestyle_points = 0
-        for word, points in entry in competitor.freestyle_list:
-            competitor.freestyle_points += points
-            
-            if points > competitor.best_freestyle_word_points:
-                competitor.best_freestyle_word_points = points
-                // This will get hidden below if it has wildcards
-                competitor.best_freestyle_word_text = q_decode(word)
-                    
         competitor.best_word_points = 0
         competitor.longest_size = 0
-        for word in entry in competitor.word_list:
-            // Increment the count
-            count[word] = (count[word] default 0) + 1
-            
-            const points = score_word(word)
-            const text   = q_decode(word)
-                        
-            if points > competitor.best_word_points:
-                competitor.best_word_points = points
-                competitor.best_word_text = text
         
-            if size(text) > competitor.longest_size:
-                competitor.longest_size = size(text)
-                competitor.longest_text = text
+        for list in [competitor.freestyle_list, competitor.word_list]:
+            for word, points in entry in list:
+                // Increment the count
+                count[word] = (count[word] default 0) + 1
+                
+                const text = q_decode(word)
+                
+                // "best word" is solely from regular words
+                if list == competitor.word_list:
+                    if points > competitor.best_word_points:
+                        competitor.best_word_points = points
+                        competitor.best_word_text = text
+                else:
+                    // Freestyle 
+                    competitor.freestyle_points += points
+            
+                if points > competitor.best_freestyle_word_points:
+                    competitor.best_freestyle_word_points = points
+                    // This will get hidden below if it has wildcards
+                    competitor.best_freestyle_word_text = text
+
+                if size(text) > competitor.longest_size:
+                    competitor.longest_size = size(text)
+                    competitor.longest_text = text
 
     // Count at which a word is rare
     const rare_threshold = max(1, ⌊⅙ size(competitor_array)⌋)

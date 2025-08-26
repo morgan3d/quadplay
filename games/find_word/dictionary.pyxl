@@ -119,17 +119,21 @@ def dictionary_search(pattern):
 def score_word(word, pattern default word):
     if size(word) < DICTIONARY.MIN_WORD_LENGTH or not dictionary[word]:
         return 0
-        
+            
+    // Length multiplier (# tiles, not letters)
+    const multiplier = min(5, size(word) - DICTIONARY.MIN_WORD_LENGTH + 1) + clamp(0.25 (size(word) - 7), 0, 2.25)
+
     let score = 0
     for letter in slice(pattern, 0, size(word)):
-        score += LETTER_POINT_TABLE[letter] || 0
+        score += (LETTER_POINT_TABLE[letter] default 0) * multiplier
     
-    // Length multiplier (# tiles, not letters)
-    score *= min(5, size(word) - DICTIONARY.MIN_WORD_LENGTH + 1)
-    
-    return max(score, 0)
+    return max(round(score), 0)
 
-
+/*
+// Print the score multiplier table
+for 3 ≤ W < 17:
+    debug_print(W, "|", min(5, W - DICTIONARY.MIN_WORD_LENGTH + 1) + clamp(0.25 (W - 7), 0, 2.25))
+*/
 
 def color_for_points(points):
     if points ≤ HISTORY.LOW_POINTS:
