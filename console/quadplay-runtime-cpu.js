@@ -826,7 +826,8 @@ function remove_values(t, value, comparator = $equalComparator) {
     }
 
     if (typeof comparator === 'string' || typeof comparator === 'number') {
-        comparator = function (A, B) { return A[comparator] === B[comparator]; }
+        const key = comparator;
+        comparator = function (A, B) { return A[key] === B[key]; }
     }
     
     if (Array.isArray(t)) {

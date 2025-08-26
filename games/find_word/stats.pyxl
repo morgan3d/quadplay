@@ -148,7 +148,7 @@ def decompress_word_list(string):
 
 
 def stats_save(stats):
-    todo("** Why did my longest word get lost in stats")
+    todo("** Test a longest word getting merged into stats")
     
     const s = deep_clone(stats)
     for day in s:
@@ -283,23 +283,14 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     assert(stats)
     
     const stats_entry = stats[today_date_string()]
-    sort(stats_entry.word_list)
-
-    todo("merge duplicated comparison code")    
-    if competitor.best_wild_word_points > stats_entry.best_wild_word_points:
-        stats_entry.best_wild_word_points = competitor.best_wild_word_points
-        stats_entry.best_wild_word_text = competitor.best_wild_word_text
 
     if size(competitor.longest_text) > size(stats_entry.longest_text):
         stats_entry.longest_text = competitor.longest_text
 
-    if competitor.best_freestyle_word_points > (stats_entry.best_freestyle_word_points default 0):
-        stats_entry.best_freestyle_word_points = competitor.best_freestyle_word_points
-        stats_entry.best_freestyle_word_text = competitor.best_freestyle_word_text
-        
-    if competitor.best_word_points > stats_entry.best_word_points:
-        stats_entry.best_word_points = competitor.best_word_points
-        stats_entry.best_word_text = competitor.best_word_text
+    for field in ["best_word", "best_freestyle_word", "best_wild_word"]:
+        if competitor[field + "_points"] > stats_entry[field + "_points"]:
+            stats_entry[field + "_points"] = competitor[field + "_points"]
+            stats_entry[field + "_text"]   = competitor[field + "_text"] 
     
     stats_entry.best_score = max(competitor.score, stats_entry.best_score)
     
@@ -336,13 +327,13 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     stats_entry.xp += badge_xp
 
     // Accumulate the words previously found by this player
-    const word_set = array_to_set([…stats.lifetime.word_list, …stats_entry.word_list], 1)
+    const previously_found = array_to_set([…stats.lifetime.word_list, …stats_entry.word_list], 1)
     
     // Add the new words
     const unique = []
     for list in [competitor.word_list, competitor.freestyle_list]:
         for word in entry in list:
-            if not word_set[word]:
+            if not previously_found[word]:
                 push(stats_entry.word_list, word)
                 push(unique, word)
     

@@ -75,7 +75,7 @@ def make_player():
 
 
 
-def player_free_row_contains(player, word):
+def player_free_contains(player, word):
     return contains(player.history.free, {word: word}, "word")
 
 
@@ -168,10 +168,10 @@ def player_add_to_free(player, word, points):
 /* Returns the color. Updates the score. Does not verify that the word has
    not been found previously. `word` is Q-encoded */ 
 def player_add_to_history(player, word, points):
-    if player_free_row_contains(player, word):
+    if player_free_contains(player, word):
         // This word was made in free mode unnecessarily. Steal it
         // so that it is locked in if they later change the free row
-        todo("Animate going away")
+        todo("Animate moving from free list to regular history")
         remove_values(player.history.free, {word: word}, "word")
     
     player.already_found[word] = true

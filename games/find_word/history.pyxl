@@ -48,7 +48,6 @@ def history_draw(history, pos, max_height):
             max_width = 0
             
         const emphasize = max(0, entry.emphasize_frame - game_frames)
-        
         const wiggle = xy(oscillate(18% emphasize, -1, +1) - sign(emphasize), 0)
     
         // Save for animation later
@@ -57,7 +56,6 @@ def history_draw(history, pos, max_height):
         // Hide while animation is playing for this word, but
         // draw invisibly so we get bounds
         const show = game_frames > entry.reveal_frame
-        const color = entry.color
         const outline = if emphasize then #FFF else entry.outline
         
         let text = entry.text
@@ -74,7 +72,7 @@ def history_draw(history, pos, max_height):
             font: if emphasize then history_emphasis_font else history_font,
             x_align: "left",
             y_align: "top",
-            color: if show then (if flash then #fff else color) else #0000,
+            color: if show then (if flash then #fff else entry.color) else #0000,
             outline: if show then outline else #0000,
             z: emphasize,
             text: text})
@@ -108,16 +106,14 @@ def history_draw(history, pos, max_height):
 
     if get_mode() ≠ Intermission:
         // Regular list first
-        for entry in history.list:
-            history_draw_entry(entry)
+        iterate(history.list, history_draw_entry)
+        
         // Separator
         if size(history.list) and size(history.free):
             history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
             
-    if size(history.free):        
-        // free list
-        for entry in history.free:
-            history_draw_entry(entry)
+    // Draw the free list
+    iterate(history.free, history_draw_entry)
     
     if get_mode() == Intermission:
         // Separator
@@ -125,31 +121,26 @@ def history_draw(history, pos, max_height):
             history_draw_entry({text: "", color: #888, reveal_frame: 0, emphasize_frame: 0})
             
         // Regular list second
-        for entry in history.list:
-            history_draw_entry(entry)
+        iterate(history.list, history_draw_entry)
     
     return pos.x + max_width
    
     
 
-/* Adds to `history[list_name]`. Returns the color to use for the
-   selection. Does not change `score` or `free_score` */
+/* Adds to `history[list_name]`, where `list_name` must be `"free"` or `"list"`. 
+   Returns the color to use for the selection on the board.
+   
+   Does not change `score` or `free_score` */
 def history_add(history, list_name, word, points):
     assert(word)
     assert(type(word) == "string")
     
     if not player.has_achievement["Play Solo Match"]:
         for target at i in TUTORIAL.FIRST_TIME_WORD_LIST:
-            if not player.has_achievement["Spell " + target]:
-                if target == word:
-                    player_achieve(player, "Spell " + target)
-                else:
-                    // Do not accept any other word for an achievement
-                    // until the required word has been spelled
-                    break
+            if target == word and not player.has_achievement["Spell " + target]:
+                player_achieve(player, "Spell " + target)
                     
-    let color = color_for_points(points)
-    
+    const color = color_for_points(points)
     let text_color = color
     let outline = ∅
     
@@ -166,18 +157,14 @@ def history_add(history, list_name, word, points):
     
     // Put free words in quotes to clarify that they
     // were not found during the regular game
-    let text = q_decode(word)
-    if list_name == "free":
-        text = "«" + text + "»"
-        
     push(history[list_name], {
-        text:    text + " " + points, 
-        word:    word,
+        text:       enquote_if(list_name == "free", q_decode(word)) + " " + points, 
+        word:       word,
         emphasize_frame: 0,
         reveal_frame: game_frames + HISTORY.POINTS_ANIMATION_FRAMES,
-        points:  points, 
-        color:   text_color,
-        outline: outline})
+        points:     points, 
+        color:      text_color,
+        outline:    outline})
     
     return color
     

@@ -105,6 +105,12 @@ def landscape():
     return SCREEN_SIZE.x + 28 > SCREEN_SIZE.y
 
     
+
+/* Enquotes text if freestyle is true */
+def enquote_if(freestyle, text):
+    return if freestyle then "«" + text + "»" else text
+
+
     
 def set_hooks():
     if not notification_hook:

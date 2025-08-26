@@ -30,7 +30,7 @@ def player_free_selection_change_callback(player):
     // Find all words matching this sequence in the dictionary
     const pattern = free_row_pattern(player)
     for word in dictionary_search(pattern):
-        if player.already_found[word] or player_free_row_contains(player, word):
+        if player.already_found[word] or player_free_contains(player, word):
             // Show that we've already seen these just-completed words by 
             // finding and emphasizing them
             player_emphasize_history_word(player, word)
@@ -61,14 +61,11 @@ def player_free_selection_change_callback(player):
         max_points = max(max_points, points)
         if wild: player.wild_word_points += points
     
-    debug_print(pattern, wild, player.wild_word_text, player.wild_word_points)
-
     return (
         if max_points > 0 
         then color_for_points(max_points) 
         else TILE.CENTER_SELECTED_COLOR)
 
-todo("** Removing wild words once found regularly isn't working for wildcard situations")
 todo("Handle sensitive wild words that the player didn't explicitly enter")
 
 /* Creates animation going from the selection to the last word in the free list */

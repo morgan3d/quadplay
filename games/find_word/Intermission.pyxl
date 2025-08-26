@@ -330,7 +330,7 @@ def draw_leaderboard()
         draw_text({
             …text_args, 
             font: history_font, 
-            text: if freestyle_word then "«" + text + "»" else text, 
+            text: enquote_if(freestyle_word, text), 
             x_align: "right", 
             pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, 0)})
 
