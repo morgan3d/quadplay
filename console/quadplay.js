@@ -1974,9 +1974,13 @@ function handleDropdownClose(event) {
     }
     */
 
-    if (event.target.parentElement.id !== 'consoleMenuButtonLabel') {
-        // Hide dropdown menus if this isn't the menu itself; the IF is needed so that
-        // menus aren't closed before we know their state
+    // Don't close dropdowns if clicking on the console menu button or within a dropdown menu
+    const target = event.target;
+    const isConsoleMenuButton = target.id === 'consoleMenuButton' || target.parentElement?.id === 'consoleMenuButton';
+    const isWithinDropdown = target.closest('.dropdown');
+    
+    if (!isConsoleMenuButton && !isWithinDropdown) {
+        // Hide dropdown menus if this isn't the menu button or within a dropdown
         closeDropdowns();
     }
 }

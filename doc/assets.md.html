@@ -207,7 +207,7 @@ Sounds
 ====================================================================================
 
 <script>
-const musicCategories = {
+const soundCategories = {
   'Music': [
     'music-opening',
     'music-race',
@@ -283,10 +283,84 @@ const musicCategories = {
       'loop-get_off_my_planet',
       {json: 'loop-someday_gone', mp3: 'loop-someday_gone'}
     ]
-  }
+  },
+  'Effect Loops': [
+    'engine-00',
+    'engine-01',
+    'loop-escalator',
+    'loop-winch',
+    'loop-wind',
+    'loop-footsteps',
+    'loop-footsteps-indoor',
+    'loop-footsteps-puddle',
+    'loop-footsteps-water',
+    'loop-footsteps-snow',
+    'loop-spin',
+    'loop-alarm',
+    'loop-helicopter',
+    'loop-forest'
+  ],
+  'Coin': [
+    'coin-00', 'coin-01', 'coin-02', 'coin-03', 'coin-04',
+    'coin-05', 'coin-06', 'coin-07', 'coin-08', 'coin-09'
+  ],
+  'Shoot': [
+    'shoot-00', 'shoot-01', 'shoot-02', 'shoot-03', 'shoot-04',
+    'shoot-05', 'shoot-06', 'shoot-07', 'shoot-08', 'shoot-09',
+    'shoot-10', 'shoot-11', 'shoot-12', 'shoot-13', 'shoot-14'
+  ],
+  'Explode': [
+    'explode-00', 'explode-01', 'explode-02', 'explode-03', 'explode-04',
+    'explode-05', 'explode-06', 'explode-07', 'explode-08', 'explode-09',
+    'explode-10', 'explode-11', 'explode-12'
+  ],
+  'Good': [
+    'good-00', 'good-01', 'good-02', 'good-03'
+  ],
+  'Powerup': [
+    'powerup-00', 'powerup-01', 'powerup-02', 'powerup-03', 'powerup-04',
+    'powerup-05', 'powerup-06', 'powerup-07', 'powerup-08', 'powerup-09',
+    'powerup-10', 'powerup-11'
+  ],
+  'Hit': [
+    'hit-00', 'hit-01', 'hit-02', 'hit-03', 'hit-04',
+    'hit-05', 'hit-06', 'hit-07', 'hit-08', 'hit-09',
+    'hit-10', 'hit-11', 'hit-12'
+  ],
+  'Jump': [
+    'jump-00', 'jump-01', 'jump-02', 'jump-03', 'jump-04',
+    'jump-05', 'jump-06', 'jump-07', 'jump-08', 'jump-09'
+  ],
+  'Blip': [
+    'blip-00', 'blip-01', 'blip-02', 'blip-03', 'blip-04',
+    'blip-05', 'blip-06', 'blip-07', 'blip-08', 'blip-09',
+    'blip-10', 'blip-11', 'blip-12', 'blip-13', 'blip-14',
+    'blip-15', 'blip-16', 'blip-17'
+  ],
+  'Wild': [
+    'wild-00', 'wild-01', 'wild-02', 'wild-03', 'wild-04',
+    'wild-05', 'wild-06', 'wild-07', 'wild-08', 'wild-09'
+  ],
+  'Drum': [
+    'drum-00', 'drum-01', 'drum-02', 'drum-03', 'drum-04'
+  ],
+  'Attack': [
+    'attack-00', 'attack-01'
+  ],
+  'Splash': [
+    'splash-00', 'splash-01', 'splash-02', 'splash-03', 'splash-04',
+    'splash-05', 'splash-06', 'splash-07', 'splash-08', 
+    {json: 'splash-08', mp3: 'splash-09'}
+  ],
+  'Sparks': [
+    'sparks-00', 'sparks-01', 'sparks-02', 'sparks-03', 'sparks-04'
+  ],
+  'Other': [
+    'silence'
+  ]
 };
 
-for (const [categoryTitle, categoryData] of Object.entries(musicCategories)) {
+for (const [categoryTitle, categoryData] of Object.entries(soundCategories)) {
   document.write(`\n## ${categoryTitle}\n`);
   
   // Handle both array format and object format with optional note
@@ -327,126 +401,6 @@ for (const [categoryTitle, categoryData] of Object.entries(musicCategories)) {
 </script>
 
 
-## Effect Loops
-
-![`quad://sounds/engine-00.sound.json`](../sounds/engine-00.mp3) ![`quad://sounds/engine-01.sound.json`](../sounds/engine-01.mp3)
-![`quad://sounds/loop-escalator.sound.json`](../sounds/loop-escalator.mp3)  ![`quad://sounds/loop-winch.sound.json`](../sounds/loop-winch.mp3) 
-![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3) ![`quad://sounds/loop-footsteps.sound.json`](../sounds/loop-footsteps.mp3)
-![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
-![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
-![`quad://sounds/loop-spin.sound.json`](../sounds/loop-spin.mp3) ![`quad://sounds/loop-alarm.sound.json`](../sounds/loop-alarm.mp3)
-![`quad://sounds/loop-helicopter.sound.json`](../sounds/loop-helicopter.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
-
-## Coin
-
-![`quad://sounds/coin-00.sound.json`](../sounds/coin-00.mp3) ![`quad://sounds/coin-01.sound.json`](../sounds/coin-01.mp3)
-![`quad://sounds/coin-02.sound.json`](../sounds/coin-02.mp3) ![`quad://sounds/coin-03.sound.json`](../sounds/coin-03.mp3)
-![`quad://sounds/coin-04.sound.json`](../sounds/coin-04.mp3) ![`quad://sounds/coin-05.sound.json`](../sounds/coin-05.mp3)
-![`quad://sounds/coin-06.sound.json`](../sounds/coin-06.mp3) ![`quad://sounds/coin-07.sound.json`](../sounds/coin-07.mp3)
-![`quad://sounds/coin-08.sound.json`](../sounds/coin-08.mp3) ![`quad://sounds/coin-09.sound.json`](../sounds/coin-09.mp3)
-
-
-## Shoot
-
-![`quad://sounds/shoot-00.sound.json`](../sounds/shoot-00.mp3) ![`quad://sounds/shoot-01.sound.json`](../sounds/shoot-01.mp3)
-![`quad://sounds/shoot-02.sound.json`](../sounds/shoot-02.mp3) ![`quad://sounds/shoot-03.sound.json`](../sounds/shoot-03.mp3)
-![`quad://sounds/shoot-04.sound.json`](../sounds/shoot-04.mp3) ![`quad://sounds/shoot-05.sound.json`](../sounds/shoot-05.mp3)
-![`quad://sounds/shoot-06.sound.json`](../sounds/shoot-06.mp3) ![`quad://sounds/shoot-07.sound.json`](../sounds/shoot-07.mp3)
-![`quad://sounds/shoot-08.sound.json`](../sounds/shoot-08.mp3) ![`quad://sounds/shoot-09.sound.json`](../sounds/shoot-09.mp3)
-![`quad://sounds/shoot-10.sound.json`](../sounds/shoot-10.mp3) ![`quad://sounds/shoot-11.sound.json`](../sounds/shoot-11.mp3)
-![`quad://sounds/shoot-12.sound.json`](../sounds/shoot-12.mp3) ![`quad://sounds/shoot-13.sound.json`](../sounds/shoot-13.mp3)
-![`quad://sounds/shoot-14.sound.json`](../sounds/shoot-14.mp3)
-
-## Explode
-
-![`quad://sounds/explode-00.sound.json`](../sounds/explode-00.mp3) ![`quad://sounds/explode-01.sound.json`](../sounds/explode-01.mp3)
-![`quad://sounds/explode-02.sound.json`](../sounds/explode-02.mp3) ![`quad://sounds/explode-03.sound.json`](../sounds/explode-03.mp3)
-![`quad://sounds/explode-04.sound.json`](../sounds/explode-04.mp3) ![`quad://sounds/explode-05.sound.json`](../sounds/explode-05.mp3)
-![`quad://sounds/explode-06.sound.json`](../sounds/explode-06.mp3) ![`quad://sounds/explode-07.sound.json`](../sounds/explode-07.mp3)
-![`quad://sounds/explode-08.sound.json`](../sounds/explode-08.mp3) ![`quad://sounds/explode-09.sound.json`](../sounds/explode-09.mp3)
-![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3) ![`quad://sounds/explode-10.sound.json`](../sounds/explode-10.mp3)
-![`quad://sounds/explode-12.sound.json`](../sounds/explode-12.mp3)
-
-## Good
-
-![`quad://sounds/good-00.sound.json`](../sounds/good-00.mp3) ![`quad://sounds/good-01.sound.json`](../sounds/good-01.mp3)
-![`quad://sounds/good-02.sound.json`](../sounds/good-02.mp3) ![`quad://sounds/good-03.sound.json`](../sounds/good-03.mp3)
-
-## Powerup
-
-![`quad://sounds/powerup-00.sound.json`](../sounds/powerup-00.mp3) ![`quad://sounds/powerup-01.sound.json`](../sounds/powerup-01.mp3)
-![`quad://sounds/powerup-02.sound.json`](../sounds/powerup-02.mp3) ![`quad://sounds/powerup-03.sound.json`](../sounds/powerup-03.mp3)
-![`quad://sounds/powerup-04.sound.json`](../sounds/powerup-04.mp3) ![`quad://sounds/powerup-05.sound.json`](../sounds/powerup-05.mp3)
-![`quad://sounds/powerup-06.sound.json`](../sounds/powerup-06.mp3) ![`quad://sounds/powerup-07.sound.json`](../sounds/powerup-07.mp3)
-![`quad://sounds/powerup-08.sound.json`](../sounds/powerup-08.mp3) ![`quad://sounds/powerup-09.sound.json`](../sounds/powerup-09.mp3)
-![`quad://sounds/powerup-10.sound.json`](../sounds/powerup-10.mp3) ![`quad://sounds/powerup-11.sound.json`](../sounds/powerup-11.mp3)
-
-## Hit
-
-![`quad://sounds/hit-00.sound.json`](../sounds/hit-00.mp3) ![`quad://sounds/hit-01.sound.json`](../sounds/hit-01.mp3)
-![`quad://sounds/hit-02.sound.json`](../sounds/hit-02.mp3) ![`quad://sounds/hit-03.sound.json`](../sounds/hit-03.mp3)
-![`quad://sounds/hit-04.sound.json`](../sounds/hit-04.mp3) ![`quad://sounds/hit-05.sound.json`](../sounds/hit-05.mp3)
-![`quad://sounds/hit-06.sound.json`](../sounds/hit-06.mp3) ![`quad://sounds/hit-07.sound.json`](../sounds/hit-07.mp3)
-![`quad://sounds/hit-08.sound.json`](../sounds/hit-08.mp3) ![`quad://sounds/hit-09.sound.json`](../sounds/hit-09.mp3)
-![`quad://sounds/hit-10.sound.json`](../sounds/hit-10.mp3) ![`quad://sounds/hit-11.sound.json`](../sounds/hit-11.mp3)
-![`quad://sounds/hit-12.sound.json`](../sounds/hit-12.mp3)
-
-## Jump
-
-![`quad://sounds/jump-00.sound.json`](../sounds/jump-00.mp3) ![`quad://sounds/jump-01.sound.json`](../sounds/jump-01.mp3)
-![`quad://sounds/jump-02.sound.json`](../sounds/jump-02.mp3) ![`quad://sounds/jump-03.sound.json`](../sounds/jump-03.mp3)
-![`quad://sounds/jump-04.sound.json`](../sounds/jump-04.mp3) ![`quad://sounds/jump-05.sound.json`](../sounds/jump-05.mp3)
-![`quad://sounds/jump-06.sound.json`](../sounds/jump-06.mp3) ![`quad://sounds/jump-07.sound.json`](../sounds/jump-07.mp3)
-![`quad://sounds/jump-08.sound.json`](../sounds/jump-08.mp3) ![`quad://sounds/jump-09.sound.json`](../sounds/jump-09.mp3)
-
-## Blip
-
-![`quad://sounds/blip-00.sound.json`](../sounds/blip-00.mp3) ![`quad://sounds/blip-01.sound.json`](../sounds/blip-01.mp3)
-![`quad://sounds/blip-02.sound.json`](../sounds/blip-02.mp3) ![`quad://sounds/blip-03.sound.json`](../sounds/blip-03.mp3)
-![`quad://sounds/blip-04.sound.json`](../sounds/blip-04.mp3) ![`quad://sounds/blip-05.sound.json`](../sounds/blip-05.mp3)
-![`quad://sounds/blip-06.sound.json`](../sounds/blip-06.mp3) ![`quad://sounds/blip-07.sound.json`](../sounds/blip-07.mp3)
-![`quad://sounds/blip-08.sound.json`](../sounds/blip-08.mp3) ![`quad://sounds/blip-09.sound.json`](../sounds/blip-09.mp3)
-![`quad://sounds/blip-10.sound.json`](../sounds/blip-10.mp3) ![`quad://sounds/blip-11.sound.json`](../sounds/blip-11.mp3)
-![`quad://sounds/blip-12.sound.json`](../sounds/blip-12.mp3) ![`quad://sounds/blip-13.sound.json`](../sounds/blip-13.mp3)
-![`quad://sounds/blip-14.sound.json`](../sounds/blip-14.mp3) ![`quad://sounds/blip-15.sound.json`](../sounds/blip-15.mp3)
-![`quad://sounds/blip-16.sound.json`](../sounds/blip-16.mp3) ![`quad://sounds/blip-17.sound.json`](../sounds/blip-17.mp3)
-
-## Wild
-
-![`quad://sounds/wild-00.sound.json`](../sounds/wild-00.mp3) ![`quad://sounds/wild-01.sound.json`](../sounds/wild-01.mp3)
-![`quad://sounds/wild-02.sound.json`](../sounds/wild-02.mp3) ![`quad://sounds/wild-03.sound.json`](../sounds/wild-03.mp3)
-![`quad://sounds/wild-04.sound.json`](../sounds/wild-04.mp3) ![`quad://sounds/wild-05.sound.json`](../sounds/wild-05.mp3)
-![`quad://sounds/wild-06.sound.json`](../sounds/wild-06.mp3) ![`quad://sounds/wild-07.sound.json`](../sounds/wild-07.mp3)
-![`quad://sounds/wild-08.sound.json`](../sounds/wild-08.mp3) ![`quad://sounds/wild-09.sound.json`](../sounds/wild-09.mp3)
-
-## Drum
-
-![`quad://sounds/drum-00.sound.json`](../sounds/drum-00.mp3) ![`quad://sounds/drum-01.sound.json`](../sounds/drum-01.mp3)
-![`quad://sounds/drum-02.sound.json`](../sounds/drum-02.mp3) ![`quad://sounds/drum-03.sound.json`](../sounds/drum-03.mp3)
-![`quad://sounds/drum-04.sound.json`](../sounds/drum-04.mp3)
-
-## Attack
-
-![`quad://sounds/attack-00.sound.json`](../sounds/attack-00.mp3) ![`quad://sounds/attack-01.sound.json`](../sounds/attack-01.mp3)
-
-## Splash
-
-![`quad://sounds/splash-00.sound.json`](../sounds/splash-00.mp3) ![`quad://sounds/splash-01.sound.json`](../sounds/splash-01.mp3)
-![`quad://sounds/splash-02.sound.json`](../sounds/splash-02.mp3) ![`quad://sounds/splash-03.sound.json`](../sounds/splash-03.mp3)
-![`quad://sounds/splash-04.sound.json`](../sounds/splash-04.mp3) ![`quad://sounds/splash-05.sound.json`](../sounds/splash-05.mp3)
-![`quad://sounds/splash-06.sound.json`](../sounds/splash-06.mp3) ![`quad://sounds/splash-07.sound.json`](../sounds/splash-07.mp3)
-![`quad://sounds/splash-08.sound.json`](../sounds/splash-08.mp3) ![`quad://sounds/splash-08.sound.json`](../sounds/splash-09.mp3)
-
-
-## Sparks
-
-![`quad://sounds/sparks-00.sound.json`](../sounds/sparks-00.mp3) ![`quad://sounds/sparks-01.sound.json`](../sounds/sparks-01.mp3)
-![`quad://sounds/sparks-02.sound.json`](../sounds/sparks-02.mp3) ![`quad://sounds/sparks-03.sound.json`](../sounds/sparks-03.mp3)
-![`quad://sounds/sparks-04.sound.json`](../sounds/sparks-04.mp3)
-
-## Other
-
-![`quad://sounds/silence.sound.json`](../sounds/silence.mp3)
 
 
 Data

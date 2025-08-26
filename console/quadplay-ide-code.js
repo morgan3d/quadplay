@@ -2115,6 +2115,10 @@ Shows a custom context menu for the editor with options based on selection or wo
 : The right-click event
 */
 function showEditorContextMenu(event) {
+    // Store the right-click position for getWordUnderCursor()
+    const pos = aceEditor.renderer.screenToTextCoordinates(event.clientX, event.clientY);
+    lastRightClickPosition = pos;
+    
     const selectedText = aceEditor.getSelectedText();
     const hasSelection = selectedText && selectedText.trim().length > 0;
     
@@ -2154,27 +2158,27 @@ function showEditorContextMenu(event) {
 }
 
 
+// Store the last right-click position for context menu operations
+let lastRightClickPosition = null;
+
 /*
-Gets the word under the cursor in the editor
+Gets the word under the text cursor in the editor, or at the last right-click position if available
 
 Returns the word as a string, or null if cursor is not on a word
 */
 function getWordUnderCursor() {
     const session = aceEditor.session;
-    const cursor = aceEditor.getCursorPosition();
-    const line = session.getLine(cursor.row);
+    // Use the right-click position if available, otherwise fall back to cursor position
+    const position = lastRightClickPosition || aceEditor.getCursorPosition();
     
-    // Find word boundaries around cursor position
-    const wordRegex = /[a-zA-Z_][a-zA-Z0-9_]*/g;
-    let match;
+    // Use ACE's token-based approach for more accurate word detection
+    const token = session.getTokenAt(position.row, position.column);
     
-    while ((match = wordRegex.exec(line)) !== null) {
-        const start = match.index;
-        const end = match.index + match[0].length;
-        
-        if (cursor.column >= start && cursor.column <= end) {
-            return match[0];
-        }
+    if (token && (token.type === 'identifier' || 
+                  token.type === 'support.function' || 
+                  token.type === 'variable' ||
+                  token.type === 'entity.name.function')) {
+        return token.value;
     }
     
     return null;
@@ -2182,24 +2186,17 @@ function getWordUnderCursor() {
 
 
 /*
-Checks if a word is a language keyword that should not have context menu actions
-
-`word`
-: The word to check
-
-Returns true if the word is a language keyword
+Returns true if the word is a Pyxl language keyword
 */
 function isLanguageKeyword(word) {
     const keywords = {
-        // PyXL/Python keywords
-        'if': true, 'else': true, 'elif': true, 'then': true,
+        // Pyxl keywords
+        'if': true, 'else': true, 'then': true,
         'for': true, 'while': true, 'with': true, 'in': true,
         'def': true, 'return': true, 'break': true, 'continue': true,
         'let': true, 'const': true, 'local': true,
-        'and': true, 'or': true, 'not': true, 'xor': true,
+        'nil': true, 'and': true, 'or': true, 'not': true, 'xor': true,
         'true': true, 'false': true, 'nil': true, 'infinity': true,
-        'try': true, 'catch': true, 'finally': true,
-        'import': true, 'from': true, 'as': true
     };
     
     return keywords[word] || false;
@@ -2298,6 +2295,8 @@ function onEditorFindInFiles() {
     let searchText = aceEditor.getSelectedText();
     if (! searchText || ! searchText.trim()) {
         searchText = getWordUnderCursor();
+        // Clear the stored position after use
+        lastRightClickPosition = null;
     }
     
     if (searchText && searchText.trim() && ! isLanguageKeyword(searchText.trim())) {
@@ -2310,20 +2309,17 @@ function onEditorFindInFiles() {
 
 
 /*
-Go to definition of selected text or word under cursor
+Go to definition of the word under the editor's text cursor
 */
 function onEditorGoToDefinition() {
-    let identifier = aceEditor.getSelectedText();
-    if (! identifier || ! identifier.trim()) {
-        identifier = getWordUnderCursor();
-    }
+    let identifier = getWordUnderCursor();
+    // Clear the stored position after use
+    lastRightClickPosition = null;
     
     if (! identifier || isLanguageKeyword(identifier)) {
         customContextMenu.style.visibility = 'hidden';
         return;
     }
-    
-    identifier = identifier.trim();
     
     // Check if this is a built-in API function - do nothing if so
     if (isBuiltInAPI(identifier)) {
@@ -2528,6 +2524,8 @@ function onEditorFindAndReplace() {
     let searchText = aceEditor.getSelectedText();
     if (! searchText || ! searchText.trim()) {
         searchText = getWordUnderCursor();
+        // Clear the stored position after use
+        lastRightClickPosition = null;
         // If we found a word under cursor, select it so ace's find/replace will use it
         if (searchText && ! isLanguageKeyword(searchText)) {
             const cursor = aceEditor.getCursorPosition();
