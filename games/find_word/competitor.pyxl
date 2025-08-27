@@ -86,6 +86,7 @@ def competitor_analyze(competitor_array):
         if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
 
+        todo("Separate longest and longest regular for award purposes")
         competitor.best_freestyle_word_points = 0
         competitor.best_freestyle_word_text = ""
         competitor.freestyle_points = 0
