@@ -22,12 +22,15 @@ See VIL,18,SILENT,
 Award XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Scry Word Count,20,You can now see the total number of possible words while playing!,shapes.eye
 Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.remix
-Badge Stat,22,"Badges won is now availale in Stats!",stats_sprite[0][0]
+Badge Stat,22,"Badges won is now tracked in Stats!",stats_sprite[0][0]
 "Meet Mz. Kiwi",23,"`I know many quirky words with Ks, dear. Kindly let me be the your key to unlocking the knack for this tricky task.'",avatar_sprite[15][28]
-Remix × 2,24,"New power: Use Remix 2× per match",ability_icon.remix
+Freestyle Points/Match Stat,24,"Freestyle points per match are now tracked in stats!",stats_sprite[0][0]
+Remix × 2,25,"New power: Use Remix 2× per match",ability_icon.remix
 See VIL Frequently,25,SILENT,
 Remix × 3,28,"New power: Use Remix 3× per match",ability_icon.remix
 See VIL More Frequently,30,SILENT,
 Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.remix
 Wild,37,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 See VIL Always,40,SILENT
+Remix × 5,45,"New power: Use Remix 5× per match",ability_icon.remix
+

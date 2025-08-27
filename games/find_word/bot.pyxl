@@ -1,5 +1,3 @@
-todo("Restrict most bots to common words")
-
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. 
    
@@ -142,7 +140,6 @@ def insert_bots(competitor_array, target_count, max_bots):
                 if size(word) ≤ short_word_length:
                     maybe_add_word(word)
     
-            todo("Bots should not appear with no words")
             // Bots without a fixed vocabulary now look for random words
             if not descriptor.vocabulary and not descriptor == BOT.CAF.descriptor:
                 tries = 0
@@ -191,7 +188,6 @@ def insert_bots(competitor_array, target_count, max_bots):
     maybe_add_bot_competitor(BOT.BOO.descriptor)
     
     if player.has_ability["See Mz. Kiwi"]:
-        todo("Why is Mz K appearing with zero points?")
         maybe_add_bot_competitor(BOT.MZK.descriptor)
     
 

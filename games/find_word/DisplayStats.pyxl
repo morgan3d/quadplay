@@ -12,6 +12,11 @@ const scroll = make_scroll_tracker()
 
 let bottom_bar_callback
 
+def alternating_color():
+    ++alternating_color.count
+    return if alternating_color.count mod 2 then TABLE_ALT_ROW_COLOR else #FFF
+
+
 /*
  - `caption`  Left column value
  - `lifetime` Center column value
@@ -19,7 +24,7 @@ let bottom_bar_callback
  - `color`    Color of the left and center values
  - `today_color` Color of the today value
 */
-def draw_row(y, caption, lifetime, today, color default #fff, today_color default color, today_suffix default ∅):
+def draw_row(y, caption, lifetime, today, color default alternating_color(), today_color default color, today_suffix default ∅):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
     const x_left   = x - ½ WIDTH + 12
@@ -69,6 +74,7 @@ def draw_section_title(y, title):
         
         
 def draw_content():
+    alternating_color.count = 0
     const lifetime = player.stats.lifetime
     const today    = player.stats[today_date_string()] default make_empty_stats_entry()
     
@@ -85,7 +91,6 @@ def draw_content():
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
     
-    todo("Automate TABLE_ALT_ROW_COLOR use")
     todo("Merge common code for different kinds of stats")
     
     if player.has_ability["Best Word Stat"]:
@@ -93,7 +98,7 @@ def draw_content():
         y += draw_row(y, "Best Word",
             if (lifetime.best_word_text ≠ "") then lifetime.best_word_text + " " + lifetime.best_word_points else "", 
             (if today.best_word_text then (today.best_word_text + " " + today.best_word_points) else "-"),
-            TABLE_ALT_ROW_COLOR,
+            ∅,
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
     
@@ -102,7 +107,7 @@ def draw_content():
         y += draw_row(y, "Best Free",
             if (lifetime.best_freestyle_word_text ≠ "") then lifetime.best_freestyle_word_text + " " + lifetime.best_freestyle_word_points else "-",
             if (today.best_freestyle_word_text ≠ "") then (today.best_freestyle_word_text + " " + today.best_freestyle_word_points) else "-",
-            TABLE_ALT_ROW_COLOR,
+            ∅,
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
 
@@ -111,7 +116,7 @@ def draw_content():
         y += draw_row(y, "Best Wild",
             if (lifetime.best_wild_word_text ≠ "") then lifetime.best_wild_word_text + " " + lifetime.best_wild_word_points else "-",
             if (today.best_wild_word_text ≠ "") then (today.best_wild_word_text + " " + today.best_wild_word_points) else "-",
-            TABLE_ALT_ROW_COLOR,
+            ∅,
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
     
@@ -119,58 +124,66 @@ def draw_content():
         y += draw_trend_row(y, "Most Words/Match", "0", lifetime.most_words, today.most_words, ∅, HIGHLIGHT_COLOR)
         
     if player.has_ability["High Score Stat"]:
-        y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
+        y += draw_trend_row(y, "Highest Score", "commas", lifetime.best_score, today.best_score, ∅, HIGHLIGHT_COLOR)
     
     y += 10
     if player.has_ability["Badge Stat"]:
         for title at i in ["Highest Score", "Best Word", "Best Rare", "Longest", "Most Words"]:
             const field = lowercase(replace(title, " ", "_"))
-            y += draw_row(y, title + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"), if i mod 2 then TABLE_ALT_ROW_COLOR else ∅)
+            y += draw_row(y, title + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"))
     
     y += 10
     y += draw_row(y, "XP", format_number(lifetime.xp, "commas"), "+" + format_number(today.xp, "commas"))
     
     if player.has_ability["Total Words Stat"]:
-        y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"), TABLE_ALT_ROW_COLOR)
+        y += draw_row(y, "Total Words",  format_number(lifetime.words, "commas"), "+" + format_number(today.words, "commas"))
     
     if player.has_ability["Total Matches Stat"]:
         y += draw_row(y, "Total Matches",format_number(lifetime.matches, "commas"), "+" + today.matches)
     
     if player.has_ability["Discovered Words Stat"]:
-        y += draw_row(y, "Discovered Words", format_number(size(lifetime.word_list), "commas"),  "+" + size(today.word_list), TABLE_ALT_ROW_COLOR)
+        y += draw_row(y, "Discovered Words", format_number(size(lifetime.word_list), "commas"),  "+" + size(today.word_list))
 
     y += 10
     if player.has_ability["Words/Match Stat"]:
         y += draw_trend_row(y, "Avg. Words/Match", "0.0", lifetime.words / max(lifetime.matches, 1), today.words / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
     
     if player.has_ability["Points/Match Stat"]:
-        y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), TABLE_ALT_ROW_COLOR, HIGHLIGHT_COLOR)
+        y += draw_trend_row(y, "Avg. Points/Match", "0", lifetime.points / max(lifetime.matches, 1), today.points / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
+
+    if player.has_ability["Freestyle Points/Match Stat"]:
+        // This is misleading because when the player first unlocks freestyle they have played a lot of matches.
+        // However, that makes it easy to get a new personal best every day, so we compute it this way as motivation.
+        y += draw_trend_row(y, "Avg. Freestyle Pts/Match", "0", lifetime.freestyle_points / max(lifetime.matches, 1), today.freestyle_points / max(today.matches, 1), ∅, HIGHLIGHT_COLOR)
     
     y += draw_section_title(y, "Earned " + size(player.has_ability) + " Abilities")
 
-    let count = 0
-    for entry at name in ABILITY_TABLE:
-        if player.has_ability[name] and entry.description ≠ "SILENT":
-            ++count
+    // Assumes the entries are sorted by increasing level    
+    for entry at name in ABILITY_TABLE
+    & if entry.description ≠ "SILENT":
+        if not player.has_ability[name]: y += 10
+        
+        const pos = xy(½ SCREEN_SIZE.x - 36, y)        
+        const sprite = if player.has_ability[name] then evaluate_constant_expression(entry.sprite_name) else shapes.lock
+        draw_disk(pos + xy(-17, 5), 7, #999)
+        draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 10 / sprite.size.x})
             
-            const pos = xy(½ SCREEN_SIZE.x - 36, y)
+        y += draw_text({
+            pos: pos,
+            color: if player.has_ability[name] then alternating_color() else #999,
+            outline: #000,
+            font: leaderboard_font,
+            text: if player.has_ability[name] then name else "New ability at level " + entry.level + "!",
+            wrap_width: WIDTH - 20,
+            markup: true,
+            y_align: "top",
+            x_align: "left"}).height + 6
+
+        if not player.has_ability[name]:
+            // We're done
+            break
+        
             
-            if entry.sprite_name ≠ "<default>":
-                const sprite = evaluate_constant_expression(entry.sprite_name)
-                draw_disk(pos + xy(-17, 5), 7, #999)
-                draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 10 / sprite.size.x})
-                
-            y += draw_text({
-                pos: pos,
-                color: if count mod 2 then TABLE_ALT_ROW_COLOR else #FFF,
-                outline: #000,
-                font: leaderboard_font,
-                text: name,
-                wrap_width: WIDTH - 20,
-                markup: true,
-                y_align: "top",
-                x_align: "left"}).height + 6
-                
     
     if player.has_ability["Discovered Words Stat"]:
         y += draw_section_title(y + 7, "Discovered " + format_number(size(lifetime.word_list) + size(today.word_list), "commas") + " Words") + 12
@@ -223,7 +236,6 @@ vocabulary_text_array = []
 for array in text_array:
     push(vocabulary_text_array, join(array, ", "))
 
-todo("Freestyle points/match trend stat")
 
 
 frame

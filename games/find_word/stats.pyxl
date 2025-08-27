@@ -28,6 +28,8 @@ def make_empty_stats_entry():
         words: 0,
 
         points: 0,
+        
+        freestyle_points: 0,
 
         matches: 0,
 
@@ -151,6 +153,9 @@ def stats_save(stats):
     const s = deep_clone(stats)
     for day in s:
         day.xp = encode_xp(day.xp)
+        
+        // This may improve compression under LZW
+        sort(day.word_list)
         day.word_list = compress_word_list(day.word_list)
     save_local("stats", s)
     
@@ -270,7 +275,6 @@ def today_date_string(update default false):
     competitor from a global match. Does not save.
     
     Returns a list of new unique words and the XP for badges and words.
-    
 */
 def stats_update(stats, competitor, num_competitors, joined_late):
 
@@ -291,6 +295,8 @@ def stats_update(stats, competitor, num_competitors, joined_late):
             stats_entry[field + "_text"]   = competitor[field + "_text"] 
     
     stats_entry.best_score = max(competitor.score, stats_entry.best_score)
+    
+    stats_entry.freestyle_points += competitor.freestyle_points
     
     const N = size(competitor.word_list) + size(competitor.freestyle_list)
     if N > stats_entry.most_words:
