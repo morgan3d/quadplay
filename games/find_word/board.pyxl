@@ -260,10 +260,13 @@ def board_draw_mini(board, pos)
    so that pulse animation works */
 def board_select_word(board, word, color default HIGHLIGHT_COLOR):
     assert(word)
-    if q_decode(board_selected_word(board)) == word: return
+    // In the case of a word that is not findable (because it uses wild card tiles
+    // for example), becomes []
+    const selection = board_find_unencoded_word(board, word)
+    if not selection or q_decode(board_selected_word(board)) == word: return
 
     board_deselect_all(player.board)
-    board.selection = board_find_unencoded_word(board, word) default []
+    board.selection = selection
     board.selection_color = color
     
     // Select these letters

@@ -168,7 +168,7 @@ def maybe_play_award_sound(winner):
 /* Used for best_word, longest, The title is used to compute the field */
 def draw_word_award(title, winner)
 & preserving_transform:
-        
+ 
     const field = replace(lowercase(title), {" ": "_"})
     const text = winner[field + "_text"]
 
