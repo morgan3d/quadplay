@@ -514,10 +514,10 @@ first_frame_this_stage = 0
 frame
 ────────────────────────────────────────────────────────────────────────
 
+prev_stage = stage
 if not notifications_pending():
     // Cycle through awards, giving equal time to each. Don't advance
     // while notifications are appearing
-    prev_stage = stage
     stage = min(⌊size(INTERMISSION.STAGE) * mode_frames / (60 INTERMISSION.SECONDS)⌋, size(INTERMISSION.STAGE) - 1)
 
     if player.avatar.level ≠ prev_level:

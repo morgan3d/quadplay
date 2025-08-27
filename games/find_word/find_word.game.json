@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.395",
+    "version": "0.396",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -782,7 +782,7 @@
             "value": {
                 "JOIN_MIN_REMAINING_TIME": {
                     "type": "number",
-                    "value": "20",
+                    "value": "18",
                     "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
                     "min": 0,
                     "max": 120,
@@ -791,7 +791,7 @@
                 },
                 "PLAY_SECONDS": {
                     "type": "number",
-                    "value": "130",
+                    "value": "131",
                     "min": 45,
                     "max": 480,
                     "format": "0",
@@ -1281,7 +1281,6 @@
                                     "HOWLING",
                                     "HOWLS",
                                     "INCANTATION",
-                                    "JACK-O-LANTERN",
                                     "LEGEND",
                                     "LICH",
                                     "LICHES",
@@ -1315,6 +1314,8 @@
                                     "NIGHTMARES",
                                     "NIGHTMARISH",
                                     "OCCULT",
+                                    "OMEN",
+                                    "OMENS",
                                     "OMINOUS",
                                     "OUIJA",
                                     "OWL",
@@ -1332,6 +1333,7 @@
                                     "POSSESSING",
                                     "POSSESSION",
                                     "PREMONITION",
+                                    "PREMONITIONS",
                                     "PRESENCE",
                                     "PRESENCES",
                                     "PUMPKIN",
@@ -1958,7 +1960,7 @@
         },
         "GRACE_SECONDS": {
             "type": "number",
-            "value": "0.7",
+            "value": "1.0",
             "description": "Time to allow input while hiding the screen for Play and Freestyle modes.",
             "min": 0,
             "max": 2,
