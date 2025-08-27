@@ -57,26 +57,29 @@ def _filter_dictionary(text):
         
         return if size(w) ≥ DICTIONARY.MIN_WORD_LENGTH and size(w) ≤ DICTIONARY.MAX_WORD_LENGTH then uppercase(w) else ∅
 
-const dictionary = array_to_set(dictionary_source, 1, ∅, _filter_dictionary)
+const dictionary = {
+    all: array_to_set(dictionary_source, 1, ∅, _filter_dictionary),
+    common: array_to_set(common_source, 1, ∅, _filter_dictionary)}
 
 // Restore months and days of the week, even though they are capitalized
-array_to_set(DICTIONARY.EXTRA, 1, dictionary)
+for value at field in dictionary:
+    array_to_set(DICTIONARY.EXTRA, 1, value)
 
 const sensitive = {…sensitive_source, …DICTIONARY.SENSITIVE_EXTRA}
 
 
 // Check to make sure we did the preprocessing correctly
-assert(dictionary["COLOR"])
-assert(dictionary["COLORS"])
-assert(dictionary["COLOUR"])
-assert(not dictionary["colors"])
-assert(not dictionary["QUEST"])
-assert(dictionary["QEST"])
+assert(dictionary.all["COLOR"])
+assert(dictionary.all["COLORS"])
+assert(dictionary.all["COLOUR"])
+assert(not dictionary.all["colors"])
+assert(not dictionary.all["QUEST"])
+assert(dictionary.all["QEST"])
 
 
-/* Array of all of the words in `dictionary` */
-const dictionary_array = keys(dictionary)
-debug_print(format_number(size(dictionary_array), "commas"), "total words in dictionary")
+/* Array of all of the words in `dictionary.all` */
+const dictionary_array = {all: keys(dictionary.all), common: keys(dictionary.common)}
+debug_print(format_number(size(dictionary.all.array), "commas"), "total words in dictionary")
 
 
 /* Return `word` in which every "Q" has been replaced with "QU".
@@ -103,9 +106,9 @@ def dictionary_search(pattern):
         const part = split(pattern, WILDCARD_CHARACTER)
         for letter in DICTIONARY.ALPHABET:
             const word = part[0] + letter + part[1]
-            if dictionary[word]:
+            if dictionary.all[word]:
                 push(result, word)
-    else if dictionary[pattern]:
+    else if dictionary.all[pattern]:
         push(result, pattern)
             
     return result
@@ -117,7 +120,7 @@ def dictionary_search(pattern):
    and is Q-encoded (Q appears without U) that came
    from pattern. */
 def score_word(word, pattern default word):
-    if size(word) < DICTIONARY.MIN_WORD_LENGTH or not dictionary[word]:
+    if size(word) < DICTIONARY.MIN_WORD_LENGTH or not dictionary.all[word]:
         return 0
             
     // Length multiplier (# tiles, not letters)
@@ -150,10 +153,10 @@ def color_for_points(points):
 
 
 /* Returns a word from the dictionary that is not sensitive */
-def random_safe_word(rng default random, min_size default 5, max_size default 8):        
+def random_safe_word(array default dictionary_array.all, rng default random, min_size default 5, max_size default 8):        
     let word = ∅
     while not word or size(word) < min_size or size(word) > max_size or sensitive[word]:
-        word = lowercase(q_decode(random_value(dictionary_array, rng)))
+        word = lowercase(q_decode(random_value(array, rng)))
     return word
 
 

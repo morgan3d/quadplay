@@ -36,13 +36,19 @@ let joined_late
 const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS
 assert(not is_nan(GLOBAL_PERIOD))
 
-/* Array of strings for background display on the title and avatar editor, by row. See `draw_background_words()`. */
-const background_word_array = []
-
 
 /* Used by Title and AvatarEditor */
 def draw_background_words():
-    for s at y in background_word_array:
+    if not draw_background_words.array:
+        // Initialize the background words
+        draw_background_words.array = make_array(20, "")
+        const dict_array = if player.avatar.level < 10 then dictionary_array.common else dictionary_array.all
+        for y < size(draw_background_words.array):
+            while size(draw_background_words.array[y]) < 250:
+                draw_background_words.array[y] += " " + random_safe_word(dict_array, ∅, min(7, 3 + ⌊¼ player.avatar.level⌋), min(5 + ⌊⅓ player.avatar.level⌋, 16))
+
+    
+    for s at y in draw_background_words.array:
         draw_text({
             font: tile_font,
             color: #333,
@@ -163,14 +169,15 @@ def draw_timer(board_pos):
             time_left *= TIMER.END_TIME_SCALE
         
     // Display slightly less time than is actually available
-    // so it doesn't feel like we're ending too abruptly on 0
-    time_left -= 3/60
+    // so it doesn't feel like we're ending too abruptly on 0.
+    // Also remove the grace time from the displayed time.
+    time_left -= 3/60 + GRACE_SECONDS
     
     const pos = board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16)
     draw_text({
         pos: pos,
         font: score_font,
-        text: format_number(time_left, "timer"),
+        text: format_number(max(time_left, 0), "timer"),
         color: if in_waiting_room then #0F0 else #FFF,
         y_align: "center",
         x_align: "right"})
@@ -428,13 +435,4 @@ def wildcard_starts_with(pattern, prefix):
     else:
         return starts_with(pattern, prefix)
     
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Initialize the background words
-for y < 20:
-    background_word_array[y] = random_safe_word()
-    while size(background_word_array[y]) < 250:
-        background_word_array[y] += " " + random_safe_word()
 

@@ -1,3 +1,5 @@
+todo("Restrict most bots to common words")
+
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. 
    
@@ -22,6 +24,7 @@ def insert_bots(competitor_array, target_count, max_bots):
     /* If vocabulary is specified, the bot is limited to that vocabulary (except for Moo) */
     def maybe_add_bot_competitor(descriptor):
         assert(descriptor and descriptor.sprite and descriptor.name)
+
         const bot_rng = make_random(descriptor.name + match_shift)
         const competitor = {
             avatar: {
@@ -29,6 +32,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
                 name: descriptor.name,
                 bot: true,
+                appears_human: descriptor.appears_human default false,
                 id: "BOT_" + descriptor.name},
             score: 0,
             best_wild_word_points: 0,
@@ -71,10 +75,12 @@ def insert_bots(competitor_array, target_count, max_bots):
             if (not word_set[word] 
                 and bot_rng() ≤ (2.8 descriptor.base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
 
-                // Ensure that if a word is found, all substrings are found
+                // If a word is found, all substrings are found.
+                // Ensure that bots do not find sensitive words or
+                // words that are not in their dictionary
                 for 3 ≤ len ≤ size(word):
                     const subword = slice(word, 0, len)
-                    if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))]:
+                    if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary][word]:
                         word_set[subword] = 1
 
 
@@ -100,10 +106,15 @@ def insert_bots(competitor_array, target_count, max_bots):
                 // caf has no words. Try to find another word so that caf doesn't complain too often
                 for word in player.board.word_list:
                     if size(word) == 3:
-                        // Add this word and exit
+                        // Add this word and exit (return value is ignored)
                         return maybe_add_word(word)
+    
+        def MzK_ai():       
+            for word in player.board.word_list:
+                if contains(word, "K") and bot_rng() < 50%:
+                    maybe_add_word(word)
                     
-        
+
         // Special case for bots with a vocabulary, who always find *all* of their words
         for word in (descriptor.vocabulary default []):
             if player.board.word_set[word]:
@@ -114,8 +125,13 @@ def insert_bots(competitor_array, target_count, max_bots):
             // Special case for caf, who sometimes finds a great word, finds all
             // three-letter cow words, and with a low probability finds a terrible word
             caf_ai()
+        else if descriptor == BOT.MZK.descriptor:
+            // Special case for MzK
+            MzK_ai()
             
         else if not descriptor.vocabulary or descriptor == BOT.MOO.descriptor:
+            // Default AI + Moo's short words
+            //
             // Pick up a bunch of cheap words first. For Moo these must be 3 letters.
             // For other bots they can be 3 or 4 letters
             const short_word_length = if descriptor == BOT.MOO.descriptor then 3 else 4
@@ -126,12 +142,13 @@ def insert_bots(competitor_array, target_count, max_bots):
                 if size(word) ≤ short_word_length:
                     maybe_add_word(word)
     
-        // Bots without a fixed vocabulary now look for random words
-        if not descriptor.vocabulary and not descriptor == BOT.CAF.descriptor:
-            tries = 0
-            while size(word_set) < words_found and tries < 2 words_found:
-                ++tries
-                maybe_add_word(random_value(player.board.word_list, bot_rng))
+            todo("Bots should not appear with no words")
+            // Bots without a fixed vocabulary now look for random words
+            if not descriptor.vocabulary and not descriptor == BOT.CAF.descriptor:
+                tries = 0
+                while size(word_set) < words_found and tries < 2 words_found:
+                    ++tries
+                    maybe_add_word(random_value(player.board.word_list, bot_rng))
 
         // Convert the set of words into a word list
         for ignore at word in word_set:
@@ -144,8 +161,9 @@ def insert_bots(competitor_array, target_count, max_bots):
             for points in entry in list:
                 competitor.score += points
 
-        // Only add bots with a vocabulary if they found a word, except for MOO (caf has no vocabulary)
-        if (not descriptor.vocabulary) or (descriptor == BOT.MOO.descriptor) or size(competitor.word_list):
+        // Only add bots if they found a word
+        if descriptor.allow_zero_score or size(competitor.word_list):
+            if descriptor.name == "MzK": debug_print(descriptor, competitor)
             return push(competitor_array, competitor)
         else if DEBUG.BOT:
             debug_print("Bot " + descriptor.name + " left because they couldn't find words")
@@ -172,6 +190,11 @@ def insert_bots(competitor_array, target_count, max_bots):
     // Boo arrives when at least one of their words is available
     maybe_add_bot_competitor(BOT.BOO.descriptor)
     
+    if player.has_ability["See Mz. Kiwi"]:
+        todo("Why is Mz K appearing with zero points?")
+        maybe_add_bot_competitor(BOT.MZK.descriptor)
+    
+
     // Add random bots based on time of day
     let c = 0
     while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:

@@ -46,6 +46,7 @@ def competitor_is_friend(competitor):
     return ((competitor.avatar.id == BOT.MOO.ID and player.has_ability["Friend of Moo"]) or
             (competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"]) or    
             ((competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or
+             competitor.avatar.appears_human or
              not competitor.avatar.bot)))
         
 

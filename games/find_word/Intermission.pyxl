@@ -393,8 +393,11 @@ def update_intermission_countdown():
         draw_text({
             pos: autostart_rect.pos + xy(0, -4),
             color: #0F0,
+            outline: #000,
+            shadow: #0008,
             font: score_font,
             text: "✓"})
+            
     draw_text({
         pos: autostart_rect.pos + xy(0, 6),
         color: #FFF,

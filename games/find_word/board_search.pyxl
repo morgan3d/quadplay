@@ -20,7 +20,7 @@ def board_string_ngram_set(board_string, n, word_set):
         
         if k ≥ DICTIONARY.MIN_WORD_LENGTH:
             // We found a real word as a side effect of trigram processing
-            if dictionary[kgram]:
+            if dictionary.all[kgram]:
                 word_set[kgram] = 1
         
             // We have completed an n-gram, done with this path    
@@ -147,7 +147,7 @@ def board_string_find_all_words(board_string):
     const short_count = size(word_set)
     
     // Search all words of length > 5 in the dictionary for likely hits
-    for word in dictionary_array:
+    for word in dictionary_array.all:
         const k = size(word)
         
         if (k > 5 and

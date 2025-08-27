@@ -148,8 +148,6 @@ def decompress_word_list(string):
 
 
 def stats_save(stats):
-    todo("** Test a longest word getting merged into stats")
-    todo("Is freestyle word counting as longest word?")
     const s = deep_clone(stats)
     for day in s:
         day.xp = encode_xp(day.xp)
