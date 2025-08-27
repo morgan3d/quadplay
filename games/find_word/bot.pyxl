@@ -80,7 +80,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 // words that are not in their dictionary
                 for 3 ≤ len ≤ size(word):
                     const subword = slice(word, 0, len)
-                    if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary][word]:
+                    if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary default "common"][word]:
                         word_set[subword] = 1
 
 
