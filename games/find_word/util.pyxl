@@ -16,6 +16,13 @@ def size_comparator(A, B):
 
 
 
+/* Returns its argument; the identity function. Not named `identity` to avoid 
+   confusion with the constructor for identity matrices. */
+def pass_through(x):
+    return x
+
+
+
 /* Returns str with str[index] replaced with `replacement` */
 def letter_replaced(str, index, replacement):
     return slice(str, 0, index) + replacement + slice(str, index + 1)

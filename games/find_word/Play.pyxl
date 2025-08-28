@@ -35,23 +35,24 @@ enter
 assert(not in_waiting_room)
 
 play_sound(start_sound)
-    
+
 last_countdown_sound_time = now()
-start_time = frame_utc_now
 
 // Compute end_time
 if game_type == SOLO_GAME:
-    end_time = frame_utc_now + (if player.has_achievement["Play Solo Match"] then 60 SOLO_GAME.PLAY_MINUTES else TUTORIAL.FIRST_PLAY_SECONDS)
+    start_time = frame_utc_now
+    end_time = start_time + (if player.has_achievement["Play Solo Match"] then 60 SOLO_GAME.PLAY_MINUTES else TUTORIAL.FIRST_PLAY_SECONDS)
 else:
     assert(game_type == GLOBAL_GAME)    
-    end_time = prev_global_game_utc_start_time() + GLOBAL_GAME.PLAY_SECONDS
+    start_time = prev_global_game_utc_start_time()
+    end_time = start_time + GLOBAL_GAME.PLAY_SECONDS
 
 
 set_background(game_type.BACKGROUND_COLOR)
 
 // Started more than 10s late, do not affect
 // ratio stats
-joined_late = (end_time - start_time < GLOBAL_GAME.PLAY_SECONDS - 10)
+joined_late = (frame_utc_now > start_time + 10)
 
 board_deselect_all(player.board, player)
 
@@ -72,6 +73,7 @@ handle_buttons(
 
 
 if time_left ≤ GRACE_SECONDS:
+    todo("Set the post FX and fade")
     // Make a few frames black at the end so that a player can
     // still trace a little further but can't see. This makes
     // it feel like they squeezed in one more word and weren't
@@ -80,7 +82,10 @@ if time_left ≤ GRACE_SECONDS:
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 200)
     
     
-if time_left ≤ 0 or DEBUG.INTERMISSION:
+if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
+    debug_print("frame_utc_now =", frame_utc_now)
+    debug_print("end_time =", end_time)
+    debug_print("time_left =", time_left)
     board_deselect_all(player.board, player)
     if game_type == SOLO_GAME:
         set_mode(SoloSummary) because "SOLO and timer"

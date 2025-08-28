@@ -72,9 +72,7 @@ def compress_word_list(array):
     array = sorted(array, size_comparator, true)
 
     // Maps each word to PRESENT or ALREADY_SAVED
-    let set = {}
-    for i < size(array):
-        set[array[i]] = PRESENT
+    let set = array_to_set(array, PRESENT)
         
     // Encode the words of array. Process in order from longest
     // to shortest so that suffix encodings work
@@ -106,18 +104,8 @@ def compress_word_list(array):
     // string.
     set = ∅
     array = ∅
-
-    dest = join(dest, ",")
     
-    const lz = string_compress(dest)
-    
-    // Because the array was not empty, the output
-    // must have at least 3 characters
-    assert(size(lz) ≥ 3)
-    
-    assert(string_decompress(lz) == dest)        
-    
-    return lz
+    return string_compress(join(dest, ","))
     
     
 
@@ -157,6 +145,7 @@ def stats_save(stats):
         // This may improve compression under LZW
         sort(day.word_list)
         day.word_list = compress_word_list(day.word_list)
+        
     save_local("stats", s)
     
     
@@ -178,13 +167,14 @@ def stats_load():
             for v at k in empty:
                 day[k] = day[k] default deep_clone(v)
             
-            todo("This can be removed after August or when the format stabilizes")
+            /*            
             // Remove unused fields on old save files
             let valid = keys(empty)
             for k in keys(day):
                 if not contains(valid, k):
                     debug_print("Removing unused key", k)
                     remove_key(day, k)
+                    */
                 
         // Everything is decoded now. Merge any
         // days before today into lifetime
@@ -206,6 +196,9 @@ def stats_load():
    then delete those days. */
 def stats_merge_previous_days(stats)
 & with lifetime in stats:
+    
+    todo("*Days are not rolling over at midnight*")
+
     const today_date = today_date_string(true)
     
     // Ensure there is a stats entry for today
@@ -266,6 +259,7 @@ def today_date_string(update default false):
     if update or not today_date_string.today_date:
         const date = local_time()
         today_date_string.today_date = "" + date.year + "-" + (date.month + 1) + "-" + date.day
+
     return today_date_string.today_date
 
 

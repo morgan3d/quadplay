@@ -7,6 +7,7 @@
     "scripts": [
         "quad://scripts/screen_lib.pyxl",
         "quad://scripts/cursor_lib.pyxl",
+        "notify_lib.pyxl",
         "util.pyxl",
         "dictionary.pyxl",
         "tile.pyxl",
@@ -16,7 +17,6 @@
         "xp.pyxl",
         "ability.pyxl",
         "avatar.pyxl",
-        "notify.pyxl",
         "player.pyxl",
         "game.pyxl",
         "board_search.pyxl",
@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.401",
+    "version": "0.403",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -99,6 +99,23 @@
     "midi_sysex": false,
     "description": "Uncover words hidden in the grid in a world-wide real-time competition.",
     "constants": {
+        "ANIMATE_XP": {
+            "type": "object",
+            "value": {
+                "PRE_FRAMES": {
+                    "type": "number",
+                    "value": 140
+                },
+                "FRAMES": {
+                    "type": "number",
+                    "value": 130
+                },
+                "POST_FRAMES": {
+                    "type": "number",
+                    "value": 140
+                }
+            }
+        },
         "XP": {
             "type": "object",
             "value": {
@@ -863,7 +880,6 @@
                     "type": "raw",
                     "value": {
                         "quadplay": 1,
-                        "wryl": 1,
                         "shmuel": 1,
                         "sarah": 1,
                         "levi": 1,
@@ -979,33 +995,29 @@
                 "STAGE": {
                     "type": "object",
                     "value": {
-                        "BEST_WORD": {
+                        "SUMMARY": {
                             "type": "number",
                             "value": 0
                         },
-                        "MOST_WORDS": {
+                        "BEST_WORD": {
                             "type": "number",
                             "value": 1
                         },
-                        "MOST_WORDS2": {
+                        "MOST_WORDS": {
                             "type": "number",
                             "value": 2
                         },
-                        "BEST_RARE": {
+                        "MOST_WORDS2": {
                             "type": "number",
                             "value": 3
                         },
-                        "LONGEST": {
+                        "BEST_RARE": {
                             "type": "number",
                             "value": 4
                         },
-                        "SUMMARY": {
+                        "LONGEST": {
                             "type": "number",
                             "value": 5
-                        },
-                        "SUMMARY2": {
-                            "type": "number",
-                            "value": 6
                         }
                     },
                     "description": "Constants for intermission awards stages"
@@ -1831,6 +1843,10 @@
                     "type": "boolean",
                     "value": false
                 },
+                "ANIMATE_XP": {
+                    "type": "boolean",
+                    "value": false
+                },
                 "BOARD_SEARCH": {
                     "type": "boolean",
                     "value": false
@@ -1987,7 +2003,7 @@
         },
         "GRACE_SECONDS": {
             "type": "number",
-            "value": "1.0",
+            "value": "0.6",
             "description": "Time to allow input while hiding the screen for Play and Freestyle modes.",
             "min": 0,
             "max": 2,

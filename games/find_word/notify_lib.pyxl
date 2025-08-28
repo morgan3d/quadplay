@@ -1,12 +1,21 @@
-/* Popup notification system. Only shows one at a time and enqueues the rest.
-   This code has some fonts hardcoded but is intended to be generalized towards
-   eventually becoming a library independent of the game. */
+/* 
+@url notify_lib.pyxl
+@license © 2025 Sʜᴍᴜᴇʟ. Open source under the [MIT license](https://opensource.org/licenses/MIT)
+@summary Popup notification system 
+
+Configure by mutating the fields of NOTIFY.
+
+Only shows one at a time and enqueues the rest of the notifications.
+This is intended to be generalized towards
+eventually becoming a library independent of the game. 
+   
+*/
 
 
 // The notification at the front of the queue is currently displayed
 const _notification_queue = []
 
-let NOTIFY = {
+const NOTIFY = {
     BACKGROUND_COLOR: #EEE,
     TITLE_FONT:       score_font,
     DESCRIPTION_FONT: leaderboard_font,

@@ -13,7 +13,7 @@ assert(in_waiting_room == true)
 // End right when the next game starts so that this player can join
 end_time = prev_global_game_utc_start_time() + GLOBAL_PERIOD
 
-assert((end_time - frame_utc_now - 2 < INTERMISSION.SECONDS + GLOBAL_GAME.JOIN_MIN_REMAINING_TIME) or DEBUG.INTERMISSION, 
+assert((end_time - frame_utc_now - 2 < INTERMISSION.SECONDS + GLOBAL_GAME.JOIN_MIN_REMAINING_TIME) or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP, 
     "WaitingRoom time should not exceed intermission plus join min time. " +
     "end_time = " + end_time + ", frame_utc_now = " + frame_utc_now + ", " + (end_time - frame_utc_now - 2) + " >= " + (INTERMISSION.SECONDS + GLOBAL_GAME.JOIN_MIN_REMAINING_TIME))
 
@@ -31,7 +31,7 @@ handle_buttons(
     ability_icon.remix, ∅,
     aux_icon.rotate, enter_rotate_mode)
 
-if frame_utc_now ≥ end_time or DEBUG.INTERMISSION:
+if frame_utc_now ≥ end_time or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
     in_waiting_room = false
     reset_post_effects()
     set_mode(GenerateBoard) because "GLOBAL start"

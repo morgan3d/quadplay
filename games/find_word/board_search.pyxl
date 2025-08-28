@@ -63,15 +63,16 @@ const _neighbor_index_array_table = make_array(COLS * ROWS, [], clone)
 // Initialize `_neighbor_index_array_table`.
 // Iteration order doesn't matter for these loops, but this makes 
 // more obvious that we're using row-major indexing.
-for y < ROWS:
-    for x < COLS:
-        const tile = _neighbor_index_array_table[x + y * COLS]
-        for -1 ≤ dx ≤ +1:
-            if x + dx ≥ 0 and x + dx < COLS:
-                for -1 ≤ dy ≤ +1:
-                    // Is this neighbor in bounds?
-                    if y + dy ≥ 0 and y + dy < ROWS and (dx ≠ 0 or dy ≠ 0):
-                        push(tile, (x + dx) + (y + dy) * COLS)
+for y < ROWS
+& for x < COLS:
+    const tile = _neighbor_index_array_table[x + y * COLS]
+    
+    // For each direction
+    for -1 ≤ dx ≤ +1:
+        for -1 ≤ dy ≤ +1:
+            // Is this neighbor in bounds?
+            if x + dx ≥ 0 and x + dx < COLS and y + dy ≥ 0 and y + dy < ROWS and (dx ≠ 0 or dy ≠ 0):
+                push(tile, (x + dx) + (y + dy) * COLS)
 
 
 /* Recursive portion of `board_string_visit_subpaths` 
@@ -141,13 +142,9 @@ def board_string_find_all_words(board_string):
     // This produces the 5-grams used for filtering and in the process
     // also finds all words of length 3, 4, 5.
     const quintgram_set = board_string_ngram_set(board_string, 5, word_set)
-
-    // Used for performance profiling
-    let long_count = 0
-    const short_count = size(word_set)
     
     // Search all words of length > 5 in the dictionary for likely hits
-    for word in dictionary_array.all:
+    def test_against_board(word):
         const k = size(word)
         
         if (k > 5 and
@@ -162,19 +159,9 @@ def board_string_find_all_words(board_string):
 
             // This long word is very likely to appear, but we
             // must validate it.
-            if board_string_validate_word(board_string, word):
-                word_set[word] = 1
-                ++long_count
-
-    /*    
-    debug_print("\nAfter n-gram filtering:\n", 
-        short_count, "words with 3-5 letters\n",
-        long_count, "likely words with 6+ letters\nAfter validation:\n",
-        short_count, "words with 3-5 letters\n",
-        size(word_set) - short_count, "actual words with 6+ letters\n")
-    */
-    
-    const word_array = keys(word_set)
+            return if board_string_validate_word(board_string, word) then word else ∅
+                
+    const word_array = keys(array_to_set(dictionary_array.all, ∅, word_set, test_against_board))
     sort(word_array)
     return word_array
 

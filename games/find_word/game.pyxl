@@ -3,10 +3,10 @@
 /* Set by Title. `SOLO_GAME` or `GLOBAL_GAME`. See also `in_waiting_room` */
 let game_type = SOLO_GAME
 
-/* In seconds, using frame_utc_now */
+/* In seconds, based on frame_utc_now */
 let start_time
 
-/* In seconds, using frame_utc_now */
+/* In seconds, based on frame_utc_now */
 let end_time
 
 /* `cursor.lib` cursor */
@@ -31,9 +31,16 @@ let notification_hook
 /* Set by `Play.enter`. Used to track games that should not affect stats */
 let joined_late
 
-/* Global games are synchronized to this clock, hitting this period exactly 
-   relative to UTC Unix 0 time */
-const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS
+
+// Used by Intermission and AnimateXP to pass information
+let prev_xp
+let prev_level
+let new_xp
+
+
+/* Global games are synchronized to this clock in seconds, hitting
+   this period exactly relative to UTC Unix 0 time */
+const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS + (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
 assert(not is_nan(GLOBAL_PERIOD))
 
 
@@ -154,7 +161,7 @@ def draw_timer(board_pos):
     let time_left = real_time_left
     
     if not in_waiting_room:
-        // Varies per player because they may have entered late
+        // Start time is when the match started, not when this player joined it
         const game_total_time = end_time - start_time
         
         // Real time at which we pivot to expanding time

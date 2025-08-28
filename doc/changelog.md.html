@@ -10,7 +10,7 @@ of [<quadplay/>](manual.md.html).
 ===================================
 
 - API and language changes:
-  - Released the docs for the (unimplemented) experimental HTTP API.
+  - Released the docs for the experimental HTTP API.
     Note that this API is blocked for safety reasons in the quadplay
     launcher and kiosk mode, but exported games may use it.
   - Added support for numbers as strings in CSV file parsing (example: `"=""12345"""`)
@@ -26,11 +26,14 @@ of [<quadplay/>](manual.md.html).
   - Blocks surrounded by `if DEBUG:` no longer count against the statement limit (case insensitive, and any identifier beginning with the prefix `DEBUG` matches)
   - Launching the IDE in --serve mode on macOS now opens the Firewall settings panel to make it easier to configure security
   - Added full documentation generation for [libraries](lib.md.html)
+  - Initialization during declaration of a variable to `∅`, `false`, `0`, or `""` now does not count against the statement limit
 - Incompatible API changes:
   - `play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)` ->
     `play_sound(sound, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, loop default false, stopped default false)`
 - Bug fixes:
   - Blank lines at the start of the program no longer count against the statements limit
+  - Prevented `"raw"` constants from crashing the constant editor in the IDE
+  - All trailing whitespace is trimmed from CSV files on load, so multiple blank lines do not create empty rows
   - Workaround for `crypto.randomUUID() is not a function` 
   - `parse()` and `unparse()` now handle escape sequences including double quotes correctly
   - Touching off of the system dropdown menu on mobile for an exported game now closes the menu

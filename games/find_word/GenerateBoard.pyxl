@@ -28,7 +28,10 @@ if mode_frames > 3:
             const word = random_value(player.board.word_list)
             if not player.already_found[word]:
                 player_add_to_history(player, word, score_word(word))
-    
+                
+    if DEBUG.ANIMATE_XP:
+        player.score = 500
+                    
     if in_waiting_room:
         set_mode(WaitingRoom) because "No GLOBAL in progress"
     else:

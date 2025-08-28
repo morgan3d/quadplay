@@ -2157,8 +2157,10 @@ function addCodeToSourceStats(code, scriptURL) {
     // Remove function definition lines
     code = code.replace(/^\s*def\s[^\n]+:\s*$/gm, '\n');
 
-    // Remove variable declarations with no assignment, or assignment to nil
-    code = code.replace(/^\s*let\s+[^\s\n=]+\s*(=\s*(nil|∅)\s)?$/gm, '');
+    // Remove variable declarations with no assignment, or assignment to ∅, false, 0, "".
+    // A programmer could cheat those by leaving them uninitialized and then using a default
+    // statement and it is clearer for them to just explicitly say they are setting to this.
+    code = code.replace(/^\s*let\s+[^\s\n=]+\s*(=\s*(nil|∅|false|0|"")\s)?$/gm, '');
 
     // Remove LOCAL, WITH, and PRESERVING_TRANSFORM lines
     code = code.replace(/\n *&? *(local:?|preserving_transform:?|with .*) *\n/gm, '\n');
@@ -2629,10 +2631,9 @@ function transposeGrid(src) {
 function parseCSV(strData, trim) {
     console.assert(! (strData instanceof Promise));
     console.assert(strData);
-    // Trim trailing newline
-    if (strData.endsWith('\n')) {
-        strData = strData.slice(0, strData.length - 1);
-    }
+
+    // Trim trailing whitespace
+    strData = strData.trimEnd();
     
     const objPattern = /(,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^,\r\n]*))/gi;
     let arrMatches = null, data = [[]];

@@ -1,15 +1,94 @@
 AnimateXP
 ════════════════════════════════════════════════════════════════════════
 
+let last_level_displayed
+
+let xp_audio
+
 enter
 ────────────────────────────────────────────────────────────────────────
-set_mode(GenerateBoard) because "Timer"
+
+last_level_displayed = prev_level
+set_background(#000)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
+    
+// Animation time between 0% and 100%
+const τ = clamp((mode_frames - ANIMATE_XP.PRE_FRAMES) / ANIMATE_XP.FRAMES, 0%, 100%)
 
-leave
-────────────────────────────────────────────────────────────────────────
+// Currently-displayed XP
+const xp = round(lerp(prev_xp, new_xp, τ))
 
+// Currently-displayed level
+const level = xp_to_level(xp)
+
+// Lower bound for xp bar
+const xp_lo = level_to_xp(level)
+
+// Upper bound for xp bar
+const xp_hi = level_to_xp(level + 1)
+
+// Progress bar value
+const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
+
+// Play the glissando sound
+if mode_frames == ANIMATE_XP.PRE_FRAMES - 2 and player.score > 0:
+    xp_audio = play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
+
+if mode_frames > 1 and (last_level_displayed ≠ level):
+    // Level up
+    play_sound(level_up_sound)
+    
+    // Give the abilities after the sound has finished
+    delay(grant_new_abilities, 30)
+
+last_level_displayed = level
+
+const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0)
+
+preserving_transform:
+    set_transform(½ SCREEN_SIZE)
+    
+    // Flash and turn pink on level up
+    draw_text({
+        color:   if flash then HIGHLIGHT_COLOR else #FFF,
+        outline: if flash then #FFF else ∅,
+        font:    leaderboard_font,
+        text:    "Level " + level,
+        pos:     xy(0, -26)})
+        
+    avatar_draw_large(player.avatar, xy(0, 0), false, #FFF)
+
+    // XP bar outline
+    const xp_rect = {corner: xy(-100, 50), size: xy(200, 10)}
+    
+    draw_text({font: history_font,
+        color: #FFF,
+        text: "New XP Earned +" + (new_xp - prev_xp),
+        pos: xy(0, xp_rect.corner.y - 5),
+        color: #FFF})
+    
+    draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size)
+    
+    // Progress bar
+    draw_corner_rect(
+        xp_rect.corner + 1,
+        xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), 
+        HIGHLIGHT_COLOR)
+    
+    draw_text({font: history_font,
+        color: #FFF,
+        shadow: #0008,
+        font: history_font,
+        text: format_number(xp, "commas") + " XP",
+        x_align: "right",
+        y_align: "baseline",
+        pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
+        
+    draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
+    
+if frame_utc_now ≥ end_time:
+    set_mode(GenerateBoard) because "Timer"

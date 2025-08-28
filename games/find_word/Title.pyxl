@@ -69,22 +69,16 @@ def update_button(pos, text, type):
     
     const selected = cursor_register_target(cursor, rect, if intro then ∅ else start_match, type)
         
+    // Drop shadow
+    draw_rect(pos + xy(0, if selected then 4 else 2), rect.size + (if selected then 6 else 0), #0004, ∅, ∅, 100)
     if selected:
-        // Drop shadow
-        draw_rect(pos + xy(0, 4), rect.size + 6, #0004, ∅, ∅, 100)
-        
         // Highlight
         for 1 ≤ i < 4: 
             draw_rect(pos, rect.size + 2 i, ∅, rgba(lerp(#FFF, CURSOR_COLOR, (i + 1) / 4), 50%), ∅, 100)
-        draw_rect(pos, rect.size, CURSOR_COLOR, #FFF, ∅, 100)
         
-    else:
-        // Drop shadow
-        draw_rect(pos + xy(0, 2), rect.size, #0003, ∅, ∅, 100)
-        
-        // Background
-        draw_rect(pos, rect.size, #FFFD, #666, ∅, 100)
-        
+    // Background
+    draw_rect(pos, rect.size, if selected then CURSOR_COLOR else #FFFD, if selected then #FFF else #666, ∅, 100)
+    
     draw_text({
         text: text, 
         font: score_font,
@@ -110,18 +104,13 @@ def highlight_random_row():
 
 
     
-def intro_cleanup():
-    intro = ∅ 
-    
-    
-    
 def ease_out(f):
     return sign(f) * |f|^1.3
     
     
 
 /* Jump to the end of the intro */
-def skip_intro():
+def end_intro():
     highlight_random_row()
     remove_frame_hook(intro)
     intro = ∅
@@ -170,7 +159,7 @@ intro = sequence(
     highlight_random_row,
     TITLE.INTRO.SLIDE_FRAMES + 40,
     {begin_callback: play_sound, data: {sound: times_up_sound}, frames: 100},
-    intro_cleanup)
+    end_intro)
 
 if DEBUG.STATS:
     go_to_stats()
@@ -182,8 +171,7 @@ if game_frames == 30:
     // Check for any upgrades since the previous version of the game on
     // start
     grant_new_abilities()
-    
-    if DEBUG.INTERMISSION:
+    if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
         start_match(GLOBAL_GAME)
 
     
@@ -248,7 +236,7 @@ if player.has_ability["Stats Tracker"]:
 
 
 if intro and (any_button_press() or touch.pressed_a):
-    skip_intro()
+    end_intro()
 
 cursor_update(cursor)
 

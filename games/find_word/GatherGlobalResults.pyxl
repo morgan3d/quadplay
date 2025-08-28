@@ -25,9 +25,10 @@ push(competitor_array, player_competitor)
 
 share_results_with_network(player_competitor)
 
-end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS
+// End time of GatherGlobalResults mode
+end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
 
-if DEBUG.INTERMISSION:
+if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
     end_time = frame_utc_now
     
 if player.score > player.stats[today_date_string()].high_score and player.stats[today_date_string()].high_score > 0:
@@ -58,17 +59,13 @@ draw_text({
     font: score_font,
     color: HIGHLIGHT_COLOR,
     y_align: "center",
-    pos: ½ SCREEN_SIZE})
+    pos: ½ SCREEN_SIZE + xy(0, 20)})
 
-const y = ½ SCREEN_SIZE.y + 20
-const w = 200
-draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w * τ, 10), HIGHLIGHT_COLOR)
-draw_corner_rect(xy(½ SCREEN_SIZE.x - ½ w, y), xy(w, 10), ∅, HIGHLIGHT_COLOR)
-
-draw_globe(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y - 40), 20)
+draw_globe(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y - 20), 20)
 
 // Make avatars pop up on the bottom of the screen as if they were
 // being discovered over the network
+const w = 200
 const row_size = ⌊w / 20⌋
 const N = size(competitor_array)
 for i < ⌊max(N, 10) τ⌋:

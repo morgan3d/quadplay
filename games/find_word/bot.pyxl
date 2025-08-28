@@ -58,6 +58,9 @@ def insert_bots(competitor_array, target_count, max_bots):
             if DEBUG.BOTS: debug_print("Bot " + descriptor.name + " is not available now")
             return
         
+        if DEBUG.BOTS: debug_print("Bot " + descriptor.name + ":")
+        if DEBUG.BOTS: debug_print("  gathering up to " + words_found + " words")
+
         // Make a word list for this competitor and score it.
         // Higher chance of discovering shorter words via rejection sampling.
         
@@ -66,16 +69,18 @@ def insert_bots(competitor_array, target_count, max_bots):
         // Add word and its substrings to word_set if not sensitive
         def maybe_add_word(word):
             assert(word)
+            if DEBUG.BOTS: debug_print("  considering " + word)
                         
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
             if (not word_set[word] 
-                and bot_rng() ≤ (2.8 descriptor.base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
+                and bot_rng() ≤ (2.9 descriptor.base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference)):
 
                 // If a word is found, all substrings are found.
                 // Ensure that bots do not find sensitive words or
                 // words that are not in their dictionary
+                if DEBUG.BOTS: debug_print("  found " + word)
                 for 3 ≤ len ≤ size(word):
                     const subword = slice(word, 0, len)
                     if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary default "common"][word]:
@@ -134,6 +139,7 @@ def insert_bots(competitor_array, target_count, max_bots):
             // For other bots they can be 3 or 4 letters
             const short_word_length = if descriptor == BOT.MOO.descriptor then 3 else 4
             
+            if DEBUG.BOTS: debug_print("  looking for short words")
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
                 ++tries
                 const word = random_value(player.board.word_list, bot_rng)
@@ -141,29 +147,27 @@ def insert_bots(competitor_array, target_count, max_bots):
                     maybe_add_word(word)
     
             // Bots without a fixed vocabulary now look for random words
-            if not descriptor.vocabulary and not descriptor == BOT.CAF.descriptor:
+            if not descriptor.vocabulary and descriptor ≠ BOT.CAF.descriptor:
+                if DEBUG.BOTS: debug_print("  looking for random words")
                 tries = 0
                 while size(word_set) < words_found and tries < 2 words_found:
                     ++tries
                     maybe_add_word(random_value(player.board.word_list, bot_rng))
 
         // Convert the set of words into a word list
-        for ignore at word in word_set:
+        for word in keys(word_set):
             push(competitor.word_list, {word: word, points: score_word(word)})
 
-        sort(competitor.word_list, "points", true)
-        sort(competitor.freestyle_list, "points", true)
-        
         for list in [competitor.word_list, competitor.freestyle_list]:
+            sort(list, "points", true)
             for points in entry in list:
                 competitor.score += points
 
         // Only add bots if they found a word
         if descriptor.allow_zero_score or size(competitor.word_list):
-            if descriptor.name == "MzK": debug_print(descriptor, competitor)
             return push(competitor_array, competitor)
         else if DEBUG.BOT:
-            debug_print("Bot " + descriptor.name + " left because they couldn't find words")
+            debug_print("  left because they couldn't find words")
 
 
     // Moo is a special case

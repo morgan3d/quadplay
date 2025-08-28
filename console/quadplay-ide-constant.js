@@ -115,7 +115,11 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
 
     let html = '';
 
-    if (type === 'string') {        
+    if (type === 'raw') {
+
+        return `<code>${value}</code>`;
+
+    } else if (type === 'string') {        
 
         const isLarge = value.length > 20 || value.indexOf('\n') !== -1;
         html += `"<textarea ${json.url ? 'disabled' : ''} style="${isLarge ? '' : 'display: inline-block;'} vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=${isLarge ? 4 : 1} cols=${isLarge ? 40 : 20}>${value}</textarea>"<br>`;
