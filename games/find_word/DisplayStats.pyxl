@@ -83,22 +83,15 @@ def draw_content():
     y += draw_row(y, ∅, "Past", "Today", HIGHLIGHT_COLOR)
     
     const long_row_array = [
-        {ability: "Longest Word Stat",   title: "Longest Word"}]
-    //for ability, title, field in entry in long_row_array:
-    if player.has_ability["Longest Word Stat"]:
-        const better = size(today.longest_text) ≥ size(lifetime.longest_text) and (today.longest_text ≠ "")
-        y += draw_row(y, "Longest Word", 
-            lifetime.longest_text,
-            today.longest_text or "-",
-            ∅,
-            if better then HIGHLIGHT_COLOR else ∅,
-            if better then "↑" else ∅)
+        {ability: "Longest Word Stat",   title: "Longest Word", field: "longest_text"},
+        {ability: "Freestyle",   title: "Longest Free", field: "longest_freestyle_text"}]
 
-    if player.has_ability["Freestyle"]:
-        const better = size(today.longest_text) ≥ size(lifetime.longest_text) and (today.longest_text ≠ "")
-        y += draw_row(y, "Longest Free", 
-            lifetime.longest_freestyle_text,
-            today.longest_freestyle_text or "-",
+    for ability, title, field in entry in long_row_array
+    & if player.has_ability[ability]:
+        const better = size(today[field]) ≥ size(lifetime[field]) and (today[field])
+        y += draw_row(y, "Longest Word", 
+            lifetime[field],
+            today[field] or "-",
             ∅,
             if better then HIGHLIGHT_COLOR else ∅,
             if better then "↑" else ∅)
