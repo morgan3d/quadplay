@@ -32,11 +32,6 @@ let notification_hook
 let joined_late
 
 
-// Used by Intermission and AnimateXP to pass information
-let prev_xp
-let prev_level
-let new_xp
-
 const ANIMATE_XP_SECONDS = (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
 
 /* Global games are synchronized to this clock in seconds, hitting

@@ -2,14 +2,81 @@ AnimateXP
 ════════════════════════════════════════════════════════════════════════
 
 let last_level_displayed
-
+let prev_xp
+let prev_level
+let new_xp
 let xp_audio
+
+/* For notifications */
+let bonus
+
+    
+def notify_badge_bonus()
+& if bonus.badge_xp > 0:
+    
+    const title_array = []
+    for badge in player_competitor.badges:
+        // Convert the badge back into a title
+        let title = replace(find(BADGE_TABLE, badge), "_", " ")
+        if not contains(title, "word"):
+            title += " word"
+        
+        push(title_array, uppercase(title))
+
+    notify_xp_bonus(
+        bonus.badge_xp,
+        "winning " + join(title_array, ", ", ", and ", " and ") + " in a " + size(competitor_array) + "-player match!")
+
+
+
+def notify_word_bonus()
+& if bonus.word_xp > 0:
+    assert(bonus.unique_word_list ≠ ∅)
+    
+    let decoded = []
+    for word in bonus.unique_word_list:
+        push(decoded, q_decode(word))
+    
+    const text = (if size(bonus.unique_word_list) ≤ 7
+        then join(decoded, ", ", ", and ", " and ")
+        else ("" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 6), ", ", ", and ")))
+
+    notify_xp_bonus(
+        bonus.word_xp,
+        "discovering " + text + "!")        
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
 
 last_level_displayed = prev_level
 set_background(#000)
+
+
+prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+prev_level = player.avatar.level
+
+bonus = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
+
+// Avoid recomputing every frame during the XP animation
+new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+
+// Update level based on the new total XP, as this is part of the 
+// avatar computed at load and not part of the stats. Do this now 
+// because we're about to save stats
+player.avatar.level = xp_to_level(new_xp)
+
+// Update the net vocabulary. Vocabulary was originally computed on load of stats
+// so is not updated by stats_update.
+array_to_set(bonus.unique_word_list, 1, player.vocabulary)
+
+// Save the updated stats. Unlocked abilities are stored as part
+// of the ability notification process.
+if not DEBUG.INTERMISSION and not DEBUG.ANIMATE_XP:
+    stats_save(player.stats)
+    
+notify_badge_bonus()
+notify_word_bonus()
 
 
 frame
