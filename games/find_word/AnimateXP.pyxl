@@ -46,6 +46,20 @@ def notify_word_bonus()
         "discovering " + text + "!")        
 
 
+todo("** Build a table of XP computation")
+/*
+  ### points                   +### XP
+  
+  Badges
+     Longest word              +### XP
+     Highest score             +### XP
+     
+  Discovered words
+     FOOD                      +### XP
+
+  First game today             +### XP
+*/
+
 enter
 ────────────────────────────────────────────────────────────────────────
 
