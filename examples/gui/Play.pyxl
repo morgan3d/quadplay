@@ -1,0 +1,102 @@
+Play
+════════════════════════════════════════════════════════════════════════
+/*
+
+The cursor_lib.pyxl library helps with creating UI by abstracting
+the input device and handling selection.
+
+It can be used in two ways: with an automatically drawn cursor
+(so that you don't have to change your rendering to show selection)
+or with an invisible cursor to give you full control of selection
+rendering per-GUI element.
+
+This demo showcases the invisible cursor method because it is
+slightly more complicated.
+
+*/
+
+// Make one per mode or game
+const cursor = make_cursor(∅, ∅, false)
+add_frame_hook(cursor_make_hook(cursor))
+
+// Make one per scrollbox
+const text_scroll = make_scroll_tracker()
+
+
+let current = {sprite: shapes.unknown, color: #CCC}
+
+def callback(data):
+    play_sound(choice_sound)
+    current = data
+
+
+def change_callback():
+    play_sound(blip_sound)
+    
+    
+def button_tick(button):
+    const selected = cursor_register_target(cursor, button, callback, button.data, change_callback)
+
+    // Drop shadow
+    draw_rect(button.pos + xy(2, 3), button.size, #0007)
+    
+    // Button
+    draw_rect(button.pos, button.size, if selected then #FDE else #A9A, if selected then #FFF else ∅)
+    
+    // Label
+    draw_text({text: button.text, font: font, pos: button.pos, color: #000, outline: if selected then #FFF else ∅})
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_background(#426)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_text({pos: xy(½ SCREEN_SIZE.x, 20), text: "Use gamepad, keyboard, mouse, or touch screen to navigate the GUI", color: #DDD, wrap_width: 200})
+
+draw_text({pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), text: replace("[^][v] change   (a) activate", joy.prompt), color: #DDD, wrap_width: 200})
+
+// Buttons
+preserving_transform:
+    set_transform(xy(75, 120))
+    
+    button_tick({pos: xy(0, -48), size: xy(90, 18), text: "Lion",    data: {sprite: shapes.lion, color: #EE0}})
+    button_tick({pos: xy(0, -16), size: xy(90, 18), text: "Dragon",  data: {sprite: shapes.dragon, color: #E00}})
+    button_tick({pos: xy(0, +16), size: xy(90, 18), text: "Horse",   data: {sprite: shapes.rearing_horse, color:#850}})
+    button_tick({pos: xy(0, +48), size: xy(90, 18), text: "Dolphin", data: {sprite: shapes.dolphin, color: #09F}})
+
+
+// Arbitrary GUI
+preserving_transform:
+    set_transform(xy(203, 120))
+    draw_rect(xy(0, 0), xy(114, 114), #333, #AAA)
+    draw_sprite({sprite: current.sprite, pos: xy(0, 0), scale: 300%, override_color: current.color})
+
+
+// Scroll box
+preserving_transform:
+    const scroll_rect = {corner: xy(285, 120 - 114/2), size: xy(70, 114)}
+    const content_size = xy(70, 410)
+    
+    draw_corner_rect(scroll_rect.corner, scroll_rect.size, #333, #AAA)
+
+    // Scroll thumb
+    const α = text_scroll.offset.y / max(content_size.y - scroll_rect.size.y, 1)
+    const thumb_size = 12
+    const y = α * (scroll_rect.size.y - thumb_size - 1)
+    
+    //scroll_rect.size.y / content_size.y)
+    draw_line(scroll_rect.corner + xy(scroll_rect.size.x - 3, y),
+              scroll_rect.corner + xy(scroll_rect.size.x - 3, y + thumb_size),
+              #AAA, 5, 2)
+    
+    set_clip({corner: scroll_rect.corner + 1, size: scroll_rect.size - 2})
+    compose_transform(scroll_rect.corner - text_scroll.offset)
+
+    for i < 40:
+        draw_text({text: i, pos: xy(35, 10i + 10), color: if i mod 2 then #FFF else #0BF})
+    
+    scroll_tracker_update(text_scroll, content_size, scroll_rect, xy(0, 0))
+    

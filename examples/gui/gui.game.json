@@ -1,0 +1,38 @@
+{
+    "title": "GUI",
+    "developer": "SHMUEL",
+    "copyright": "©2025 Factory 797",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/cursor_lib.pyxl"
+    ],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "blip_sound": "quad://sounds/blip-04.sound.json",
+        "choice_sound": "quad://sounds/good-03.sound.json",
+        "font": "quad://fonts/wright-8.font.json"
+    },
+    "version": "0.01",
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "high_scores": false,
+    "dual_dpad": false,
+    "midi_sysex": false,
+    "description": "Example of cursor_lib for buttons and scroll boxes.",
+    "constants": {},
+    "screenshot_tag": "GUI",
+    "online_menu": true,
+    "show_arcade_keyboard_options": true,
+    "show_start_animation": true,
+    "show_controls_button": true,
+    "mobile_touch_gamepad": true
+}

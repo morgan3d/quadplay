@@ -9,9 +9,7 @@
         freestyle_points
    
         num_rare
-        longest_size
         longest_text
-        longest_freestyle_size
         longest_freestyle_text
         best_word_points
         best_word_text
@@ -89,16 +87,12 @@ def competitor_analyze(competitor_array):
         if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
 
-        todo("** Separate longest and longest regular for award tracking purposes")
         competitor.best_freestyle_word_points = 0
         competitor.best_freestyle_word_text = ""
         competitor.freestyle_points = 0
         competitor.best_word_points = 0
-        competitor.longest_size = 0
-        competitor.longest_freestyle_size = 0
         
         todo("Fix naming conventions so that freestyle variations on data structures can be accessed procedurally")
-        todo("Eliminate longest_size in favor of computing dynamically")
         for list in [competitor.freestyle_list, competitor.word_list]:
             for word, points in entry in list:
                 // Increment the count
@@ -112,15 +106,13 @@ def competitor_analyze(competitor_array):
                         competitor.best_word_points = points
                         competitor.best_word_text = text
                         
-                    if size(text) > competitor.longest_size:
-                        competitor.longest_size = size(text)
+                    if size(text) > size(competitor.longest_text):
                         competitor.longest_text = text
                 else:
                     // Freestyle 
                     competitor.freestyle_points += points
 
-                    if size(text) > competitor.longest_freestyle_size:
-                        competitor.longest_freestyle_size = size(text)
+                    if size(text) > size(competitor.longest_freestyle_text):
                         competitor.longest_freestyle_text = text
             
                 if points > competitor.best_freestyle_word_points:
@@ -179,7 +171,7 @@ def competitor_assign_awards(competitor_array):
         if competitor.best_rare_points > best_rare_winner.best_rare_points:
             best_rare_winner = competitor
 
-        if competitor.longest_size > longest_winner.longest_size:
+        if size(competitor.longest_text) > size(longest_winner.longest_text):
             longest_winner = competitor
             
         if size(competitor.word_list) > size(most_words_winner.word_list):
@@ -194,7 +186,7 @@ def competitor_assign_awards(competitor_array):
         if competitor.best_rare_points == best_rare_winner.best_rare_points:
             competitor.badges += BADGE_TABLE.best_rare
 
-        if competitor.longest_size == longest_winner.longest_size:
+        if size(competitor.longest_text) == size(longest_winner.longest_text):
             competitor.badges += BADGE_TABLE.longest
 
         if size(competitor.word_list) == size(most_words_winner.word_list):
