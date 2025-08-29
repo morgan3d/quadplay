@@ -7,23 +7,23 @@ Friend of Moo,4,"`Hi I'm Moo. Let's Be Friends!'",avatar_sprite[34][22].x_flippe
 High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprite[0][0]
 Longest Word Stat,6,Your Longest Word is now available in Stats!,shapes.triangle.rotated_270
 Best Word Stat,7,Best Word is now available in Stats!,shapes.diamond
+See caf,8,SILENT,
+Friend of caf,8,`moo is my mom-cow! be my pal too??',avatar_sprite[33][22].x_flipped
 Discovered Words Stat,8,Discovered Words count is now available in Stats!,stats_sprite[0][0]
-Discovery XP,11,Get an XP bonus for every time you discover a new word!,notify_icon.xp
-See caf,12,SILENT,
-Friend of caf,12,`moo is my mom-cow! be my pal too??',avatar_sprite[33][22].x_flipped
-Words/Match Stat,13,Average Words per Match is now available in Stats!,stats_sprite[0][0]
-Points/Match Stat,14,Average Points per Match is now available in Stats!,stats_sprite[0][0]
-See Mz. Kiwi,14,SILENT,
-Total Words Stat,15,Total Words count is now available in Stats!,stats_sprite[0][0]
-Freestyle,16,New ability: Use Freestyle to make one unordered sequence per match,ability_icon.freestyle
-Total Matches Stat,17,Total Matches count is now available in Stats!,stats_sprite[0][0]
+Discovery XP,9,Get an XP bonus for every time you discover a new word!,notify_icon.xp
+See Mz. Kiwi,10,SILENT,
+Words/Match Stat,10,Average Words per Match is now available in Stats!,stats_sprite[0][0]
+Points/Match Stat,11,Average Points per Match is now available in Stats!,stats_sprite[0][0]
+"Meet Mz. Kiwi",13,"`I know many quirky words with Ks, dear. Kindly let me be the your key to unlocking the knack for this tricky task.'",avatar_sprite[15][28]
+Total Words Stat,14,Total Words count is now available in Stats!,stats_sprite[0][0]
+Freestyle,15,New ability: Use Freestyle to make one unordered sequence per match,ability_icon.freestyle
+Total Matches Stat,16,Total Matches count is now available in Stats!,stats_sprite[0][0]
 Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.remix
-See VIL,18,SILENT,
 Award XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Scry Word Count,20,You can now see the total number of possible words while playing!,shapes.eye
+See VIL,20,SILENT,
 Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.remix
 Badge Stat,22,"Badges won is now tracked in Stats!",stats_sprite[0][0]
-"Meet Mz. Kiwi",23,"`I know many quirky words with Ks, dear. Kindly let me be the your key to unlocking the knack for this tricky task.'",avatar_sprite[15][28]
 Freestyle Points/Match Stat,24,"Freestyle points per match are now tracked in stats!",stats_sprite[0][0]
 Remix × 2,25,"New power: Use Remix 2× per match",ability_icon.remix
 See VIL Frequently,25,SILENT,

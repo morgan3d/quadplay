@@ -372,14 +372,19 @@ handle_buttons(
     aux_icon.backspace, if size(player.free_row) then remove_last_tile else ∅, true,
     if player.wild_tile.used or size(player.free_row) == 0 then ∅ else wild_callback)
     
-
 // In case the player parks in Freestyle for too long
 // we check the network timer here to see if we should log on
 update_network()
 
 if time_left ≤ GRACE_SECONDS:
-    // Grace frames drawn in black
-    draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 200)
+    // Make a few frames black at the end so that a player can
+    // still trace a little further but can't see. This makes
+    // it feel like they squeezed in one more word and weren't
+    // "robbed" if in the process of selecting. Without this
+    // it always feels like "I was just about to finish my word"
+    
+    // Fade to black
+    set_post_effects({color: rgba(0, 0, 0, 100% - time_left / GRACE_SECONDS)})
 
 if time_left ≤ 0:
     // Go back to Play, which will then go to the intermission

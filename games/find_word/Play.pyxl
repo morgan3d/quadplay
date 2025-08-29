@@ -73,13 +73,14 @@ handle_buttons(
 
 
 if time_left ≤ GRACE_SECONDS:
-    todo("Set the post FX and fade")
     // Make a few frames black at the end so that a player can
     // still trace a little further but can't see. This makes
     // it feel like they squeezed in one more word and weren't
     // "robbed" if in the process of selecting. Without this
     // it always feels like "I was just about to finish my word"
-    draw_corner_rect(xy(0, 0), SCREEN_SIZE, #000, ∅, 200)
+    
+    // Fade to black
+    set_post_effects({color: rgba(0, 0, 0, 100% - time_left / GRACE_SECONDS)})
     
     
 if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
@@ -92,6 +93,7 @@ if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
 
 leave
 ────────────────────────────────────────────────────────────────────────
+reset_post_effects()
 play_sound(times_up_sound)
 if game_type == GLOBAL_GAME:
     player_achieve(player, "Play Global Match")

@@ -40,9 +40,8 @@ def draw_row(y, caption, lifetime, today, color default alternating_color(), tod
             color: today_color})
     
     if caption and (ends_with(caption, "Word") or ends_with(caption, "Free") or ends_with(caption, "Wild")): args.font = history_font
-    args.x_align = "right"
-    draw_text({…args, text: lifetime, pos: xy(x_center, y)})
-    if today and today ≠ "N/A": draw_text({…args, text: today, pos: xy(x_right, y), color: today_color})
+    draw_text({…args, x_align: "right", text: lifetime, pos: xy(x_center, y)})
+    if today and today ≠ "N/A": draw_text({…args, x_align: "right", text: today, pos: xy(x_right, y), color: today_color})
 
     return 13
 

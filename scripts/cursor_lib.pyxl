@@ -199,8 +199,6 @@ def cursor_update(cursor)
             // Move off the target
             pos = xy(mouse_pos)
         
-    todo("Allow there to be NO target at all")
-    
     let target = cursor_find_closest_target(cursor, pos)
     if target and XY_DISTANCE(pos, target.pos) > 1: target = ∅ 
     
