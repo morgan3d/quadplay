@@ -442,3 +442,11 @@ def make_random_board_string(seed_base, permute_number default 0):
         
     if DEBUG.BOARD_SEARCH: debug_print(board_string)
     return {board_string: board_string, vowels: vowels}
+
+/*
+local:
+    todo("Remove")
+    const a = board_string_find_all_words("HOSTURDELOMADSGE")
+    debug_print(a)
+    debug_print(size(a))
+*/

@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.403",
+    "version": "0.405",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -99,20 +99,47 @@
     "midi_sysex": false,
     "description": "Uncover words hidden in the grid in a world-wide real-time competition.",
     "constants": {
+        "DEC_TO_HEX": {
+            "type": "string",
+            "description": "Convert base 10 number to base 16 string. We use this to assign a unique character to each tile when searching for words, so that a string is a path through the board.",
+            "value": "0123456789ABCDEF"
+        },
+        "HEX_TO_DEC": {
+            "type": "raw",
+            "description": "Convert single digit base 36 string to base 10 number. See also `DECIMAL_TO_BASE36`.",
+            "value": {
+                "0": 0,
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8,
+                "9": 9,
+                "A": 10,
+                "B": 11,
+                "C": 12,
+                "D": 13,
+                "E": 14,
+                "F": 15
+            }
+        },
         "ANIMATE_XP": {
             "type": "object",
             "value": {
                 "PRE_FRAMES": {
                     "type": "number",
-                    "value": 140
+                    "value": 100
                 },
                 "FRAMES": {
                     "type": "number",
-                    "value": 130
+                    "value": 100
                 },
                 "POST_FRAMES": {
                     "type": "number",
-                    "value": 140
+                    "value": 90
                 }
             }
         },

@@ -308,6 +308,8 @@ Array
 : Clone the array, sort it, and return the sorted array. See `sort()`
   for details.
   
+`swap(array, i, j)`
+: Swaps elements `i` and `j` in the array in place.
 
 String
 ---------------------------------------------------------
@@ -563,6 +565,9 @@ Object
 `size(object)`
 : The number of entries in the object.
 
+`swap(object, i, j)`
+: Swaps elements with keys `i` and `j` in the object in place.
+  
 `values(object)`
 : An array of the values in the object.
 
@@ -996,6 +1001,11 @@ Math
   [`lo`, `hi`], including both ends. Works with negative and fractional values.
   Let `k = 2 m - 2; w = loop(x, k)`.
   `oscillate(x, m)` is `w` if `w < m`, otherwise it is `k - w`.
+
+`pass_through(x)`
+: Returns its argument. Convenient in cases where a function is needed that 
+  does nothing, when mapping or filtering arrays. Not named `identity` to avoid 
+  confusion with the constructor for identity matrices.
 
 `pow(a, b)`
 : Exponent. See also the `^` operator.
