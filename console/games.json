@@ -220,6 +220,18 @@
             "achievements": false
         },
         {
+            "url": "quad://examples/gui/",
+            "title": "GUI",
+            "description": "Example of cursor_lib for buttons and scroll boxes.",
+            "version": "0.01",
+            "developer": "SHMUEL",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false
+        },
+        {
             "url": "quad://examples/helloworld/",
             "title": "Hello World",
             "description": "",

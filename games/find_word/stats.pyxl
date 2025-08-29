@@ -10,6 +10,7 @@ def make_empty_stats_entry():
         },
 
         longest_text: "",
+        longest_freestyle_text: "",
 
         best_word_text: "", 
         best_word_points: 0,
@@ -213,9 +214,10 @@ def stats_merge_previous_days(stats)
                     
         for ignore at field in lifetime.badge_count:
             lifetime.badge_count[field] += day.badge_count[field]
-            
-        if size(day.longest_text) > size(lifetime.longest_text):
-            lifetime.longest_text = day.longest_text
+
+        for field in ["longest_text", "longest_freestyle_text"]:            
+            if size(day[field]) > size(lifetime[field]):
+                lifetime[field] = day[field]
         
         for field in ["best_word", "best_freestyle_word", "best_wild_word"]:
             if day[field + "_points"] > lifetime[field + "_points"]:
@@ -280,8 +282,9 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     
     const stats_entry = stats[today_date_string()]
 
-    if size(competitor.longest_text) > size(stats_entry.longest_text):
-        stats_entry.longest_text = competitor.longest_text
+    for field in ["longest_text", "longest_freestyle_text"]:
+        if size(competitor[field]) > size(stats_entry[field]):
+            stats_entry[field] = competitor[field]
 
     for field in ["best_word", "best_freestyle_word", "best_wild_word"]:
         if competitor[field + "_points"] > stats_entry[field + "_points"]:

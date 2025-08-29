@@ -38,7 +38,7 @@ def button_callback(data, cursor):
 // Per frame:
 
 const button = {pos: xy(100, 100), size: xy(50, 15), shape: "rect"}
-cursor_register_target(cursor, button, button_callback);
+cursor_register_target(cursor, button, button_callback)
 
 …
 
@@ -185,12 +185,15 @@ def cursor_update(cursor)
 
         // Make sure the target is actually under the mouse
         // and not just nearby
-        if new_target and overlaps(new_target, mouse_pos):
-            // Only play sound if this is a change of target
-            if XY_DISTANCE(cursor.pos, new_target.pos) > 1:
-                changed = true
-                if cursor.new_target_sound: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
-            target = new_target
+        if new_target:
+            if overlaps(new_target, mouse_pos):
+                // Only play sound if this is a change of target
+                if XY_DISTANCE(cursor.pos, new_target.pos) > 1:
+                    changed = true
+                    if cursor.new_target_sound: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
+                target = new_target
+    
+    todo("Allow there to be NO target at all")
     
     if not target:
         // If here, no new user input was processed, so the target
