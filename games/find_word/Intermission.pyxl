@@ -267,8 +267,8 @@ def draw_leaderboard()
 
         draw_text({…text_args, text: size(competitor.word_list), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.COUNT_X, 0), x_align: "right"})
 
-        const freestyle_word = (show_freestyle_word and size(competitor.freestyle_list))
-        let text = q_decode(if freestyle_word then competitor.freestyle_list[0].word else (competitor.word_list[0] default {word: "∅"}).word)
+        const freestyle_word = (show_freestyle_word and size(competitor.freestyle_word_list))
+        let text = q_decode(if freestyle_word then competitor.freestyle_word_list[0].word else (competitor.word_list[0] default {word: "∅"}).word)
 
         if competitor ≠ player_competitor:
             text = censor(text)

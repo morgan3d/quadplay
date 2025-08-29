@@ -83,9 +83,6 @@ if time_left ≤ GRACE_SECONDS:
     
     
 if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
-    debug_print("frame_utc_now =", frame_utc_now)
-    debug_print("end_time =", end_time)
-    debug_print("time_left =", time_left)
     board_deselect_all(player.board, player)
     if game_type == SOLO_GAME:
         set_mode(SoloSummary) because "SOLO and timer"

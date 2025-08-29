@@ -198,8 +198,6 @@ def stats_load():
 def stats_merge_previous_days(stats)
 & with lifetime in stats:
     
-    todo("*Days are not rolling over at midnight*")
-
     const today_date = today_date_string(true)
     
     // Ensure there is a stats entry for today
@@ -295,7 +293,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     
     stats_entry.freestyle_points += competitor.freestyle_points
     
-    const N = size(competitor.word_list) + size(competitor.freestyle_list)
+    const N = size(competitor.word_list) + size(competitor.freestyle_word_list)
     if N > stats_entry.most_words:
         stats_entry.most_words = N
     
@@ -332,7 +330,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     
     // Add the new words
     const unique = []
-    for list in [competitor.word_list, competitor.freestyle_list]:
+    for list in [competitor.word_list, competitor.freestyle_word_list]:
         for word in entry in list:
             if not previously_found[word]:
                 push(stats_entry.word_list, word)

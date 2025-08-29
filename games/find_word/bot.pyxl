@@ -36,7 +36,7 @@ def insert_bots(competitor_array, target_count, max_bots):
             best_wild_word_points: 0,
             best_wild_word_text: "",            
             word_list: [],
-            freestyle_list: []}
+            freestyle_word_list: []}
     
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
         competitor.avatar.level = descriptor.level default clamp(⌈140 descriptor.base_ability^(1.3)⌉, 1, 40)
@@ -158,7 +158,7 @@ def insert_bots(competitor_array, target_count, max_bots):
         for word in keys(word_set):
             push(competitor.word_list, {word: word, points: score_word(word)})
 
-        for list in [competitor.word_list, competitor.freestyle_list]:
+        for list in [competitor.word_list, competitor.freestyle_word_list]:
             sort(list, "points", true)
             for points in entry in list:
                 competitor.score += points

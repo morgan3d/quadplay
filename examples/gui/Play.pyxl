@@ -37,11 +37,14 @@ def change_callback():
 def button_tick(button):
     const selected = cursor_register_target(cursor, button, callback, button.data, change_callback)
 
-    // Drop shadow
-    draw_rect(button.pos + xy(2, 3), button.size, #0007)
-    
-    // Button
-    draw_rect(button.pos, button.size, if selected then #FDE else #A9A, if selected then #FFF else ∅)
+    if button.shape == "disk":
+        // Drop shadow
+        draw_disk(button.pos + xy(2, 3), ½ button.size.x, #0007)
+        // Button
+        draw_disk(button.pos, ½ button.size.x, if selected then #FDE else #A9A, if selected then #FFF else ∅)
+    else:
+        draw_rect(button.pos + xy(2, 3), button.size, #0007)    
+        draw_rect(button.pos, button.size, if selected then #FDE else #A9A, if selected then #FFF else ∅)
     
     // Label
     draw_text({text: button.text, font: font, pos: button.pos, color: #000, outline: if selected then #FFF else ∅})
@@ -56,7 +59,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 draw_text({pos: xy(½ SCREEN_SIZE.x, 20), text: "Use gamepad, keyboard, mouse, or touch screen to navigate the GUI", color: #DDD, wrap_width: 200})
 
-draw_text({pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), text: replace("[^][v] change   (a) activate", joy.prompt), color: #DDD, wrap_width: 200})
+draw_text({pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 20), text: replace("[^][<][v][>] change   (a) activate", joy.prompt), color: #DDD, wrap_width: 200})
 
 // Buttons
 preserving_transform:
@@ -67,12 +70,15 @@ preserving_transform:
     button_tick({pos: xy(0, +16), size: xy(90, 18), text: "Horse",   data: {sprite: shapes.rearing_horse, color:#850}})
     button_tick({pos: xy(0, +48), size: xy(90, 18), text: "Dolphin", data: {sprite: shapes.dolphin, color: #09F}})
 
+// Button in a different transform, still accessible and still navigable by gamepad
+button_tick({pos: xy(257, 65), size: xy(12, 12), shape: "disk", text: "×"})
 
 // Arbitrary GUI
 preserving_transform:
-    set_transform(xy(203, 120))
+    set_transform(xy(203, 120), ∅, -1)
     draw_rect(xy(0, 0), xy(114, 114), #333, #AAA)
-    draw_sprite({sprite: current.sprite, pos: xy(0, 0), scale: 300%, override_color: current.color})
+    if current:
+        draw_sprite({sprite: current.sprite, pos: xy(0, 0), scale: 300%, override_color: current.color})
 
 
 // Scroll box

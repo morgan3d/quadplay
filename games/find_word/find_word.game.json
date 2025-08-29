@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.406",
+    "version": "0.407",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -131,7 +131,7 @@
             "value": {
                 "PRE_FRAMES": {
                     "type": "number",
-                    "value": 100
+                    "value": "80"
                 },
                 "FRAMES": {
                     "type": "number",
@@ -139,7 +139,7 @@
                 },
                 "POST_FRAMES": {
                     "type": "number",
-                    "value": 90
+                    "value": "100"
                 }
             }
         },
@@ -1059,7 +1059,7 @@
                 },
                 "SECONDS": {
                     "type": "number",
-                    "value": "23",
+                    "value": "21",
                     "description": "Time between global games. The total game period is INTERMISSION.SECONDS + 60 GLOBAL_GAME_TIME_MINUTES exactly",
                     "min": 1,
                     "max": 240,

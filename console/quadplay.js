@@ -13,7 +13,7 @@ const ALLOW_EDITING_EXAMPLES = ! deployed;
 
 // Set to true to automatically reload on switching
 // to the browser when the game is stopped.
-const AUTO_RELOAD_ON_FOCUS = deployed;
+const AUTO_RELOAD_ON_FOCUS = true;
 
 const launcherURL = 'quad://console/launcher';
 
@@ -4483,7 +4483,7 @@ window.addEventListener('focus', function() {
     // Reset the bloom state; it might have disabled
     // while defocused due to browser throttling.
     allow_bloom = true;
-    
+
     // Quadplay development; avoid autoreloading because it makes
     // debugging the compiler and IDE difficult.  Also if loaded in an
     // iframe there is an immediate focus event while still loading

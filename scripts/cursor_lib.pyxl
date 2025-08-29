@@ -166,16 +166,19 @@ def cursor_update(cursor)
     let changed = false
     
     // Process input:
-    let target = ∅
     if gamepad.xx or gamepad.yy:
         const new_target = cursor_find_closest_target(cursor, pos, gamepad.xy)
         if new_target:
-            if cursor.new_target_sound:
-                play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
-            target = new_target
-            changed = true
+            if XY_DISTANCE(pos, new_target.pos) > 1:
+                if cursor.new_target_sound: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
+                    
+                // We have a target, move the cursor to it.
+                // This is how selection persists between frames
+                pos = xy(new_target.pos)
+                changed = true
         else if cursor.bad_sound:
             play_sound({sound: cursor.bad_sound, pan: pos})
+    
     
     if touch.hover or touch.pressed_a:
         const mouse_pos = touch.hover or touch.xy
@@ -185,27 +188,23 @@ def cursor_update(cursor)
 
         // Make sure the target is actually under the mouse
         // and not just nearby
-        if new_target:
-            if overlaps(new_target, mouse_pos):
-                // Only play sound if this is a change of target
-                if XY_DISTANCE(cursor.pos, new_target.pos) > 1:
-                    changed = true
-                    if cursor.new_target_sound: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
-                target = new_target
-    
+        if new_target and overlaps(new_target, mouse_pos):
+            if XY_DISTANCE(pos, new_target.pos) > 1:
+                changed = true
+                if cursor.new_target_sound: play_sound({sound: cursor.new_target_sound, pan: new_target.pos})
+                // We have a target, move the cursor to it.
+                // This is how selection persists between frames
+                pos = xy(new_target.pos)
+        else:
+            // Move off the target
+            pos = xy(mouse_pos)
+        
     todo("Allow there to be NO target at all")
     
-    if not target:
-        // If here, no new user input was processed, so the target
-        // remains whatever is currently under the cursor's position
-        target = cursor_find_closest_target(cursor, pos)
-        
-    if target:
-        // We have a target, move the cursor to it.
-        // This is how selection persists between frames
-        pos = xy(target.pos)
-
-    changed = changed or (XY_DISTANCE(cursor.pos, old_pos) > 1)
+    let target = cursor_find_closest_target(cursor, pos)
+    if target and XY_DISTANCE(pos, target.pos) > 1: target = ∅ 
+    
+    changed = changed or (XY_DISTANCE(pos, old_pos) > 1)
     if target and changed and target.hover_callback:
         target.hover_callback(target.data, cursor)
         
