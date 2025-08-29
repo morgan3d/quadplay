@@ -89,6 +89,11 @@ preserving_transform:
         pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
         
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
-    
+
+if frame_utc_now ≥ end_time - 1.5:
+    const pos = SCREEN_SIZE - xy(24, 18)
+    draw_sprite({sprite: shapes.gear, pos: pos, angle: -1.5° mode_frames, override_color: #888, scale: 50%})
+    draw_text({font: history_font, text: "Saving", pos: pos + xy(0, 14), color: #888})
+
 if frame_utc_now ≥ end_time:
     set_mode(GenerateBoard) because "Timer"

@@ -383,8 +383,7 @@ if time_left ≤ GRACE_SECONDS:
     // "robbed" if in the process of selecting. Without this
     // it always feels like "I was just about to finish my word"
     
-    // Fade to black
-    set_post_effects({color: rgba(0, 0, 0, 100% - time_left / GRACE_SECONDS)})
+    set_post_effects({color: #000})
 
 if time_left ≤ 0:
     // Go back to Play, which will then go to the intermission

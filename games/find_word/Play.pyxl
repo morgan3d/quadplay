@@ -78,9 +78,7 @@ if time_left ≤ GRACE_SECONDS:
     // it feel like they squeezed in one more word and weren't
     // "robbed" if in the process of selecting. Without this
     // it always feels like "I was just about to finish my word"
-    
-    // Fade to black
-    set_post_effects({color: rgba(0, 0, 0, 100% - time_left / GRACE_SECONDS)})
+    set_post_effects({color: #000})
     
     
 if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
