@@ -37,10 +37,11 @@ let prev_xp
 let prev_level
 let new_xp
 
+const ANIMATE_XP_SECONDS = (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
 
 /* Global games are synchronized to this clock in seconds, hitting
    this period exactly relative to UTC Unix 0 time */
-const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS + (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
+const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS + ANIMATE_XP_SECONDS
 assert(not is_nan(GLOBAL_PERIOD))
 
 

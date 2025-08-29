@@ -1,6 +1,6 @@
 Play
 ════════════════════════════════════════════════════════════════════════
-todo("Implement MzK in-game help")
+todo("** Implement MzK in-game help")
 
 def enter_freestyle():
     board_deselect_all(player.board, player)

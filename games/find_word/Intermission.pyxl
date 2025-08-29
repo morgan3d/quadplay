@@ -319,9 +319,11 @@ def update_intermission_countdown():
     draw_corner_rect(countdown_rect.corner, countdown_rect.size, #000, #FFF)
     draw_corner_rect(countdown_rect.corner + 1, xy(α * (countdown_rect.size.x - 2), countdown_rect.size.y - 2), if α < 95% then HIGHLIGHT_COLOR else #0F0)
     
+    // Show the additional ANIMATE_XP_SECONDS time so that players don't feel like
+    // the level up animation counts against their play time
     draw_text({
         font: score_font,
-        text: if α < 100% then ("New match in " + format_number(time_left, "timer")) else "New match now!",
+        text: if α < 100% then ("New match in " + format_number(time_left + ANIMATE_XP_SECONDS, "timer")) else "New match now!",
         outline: #0009,
         pos: timer_pos + xy(0, 1),
         color: #FFF})
@@ -417,7 +419,7 @@ draw_most_words_award.skip = 0
 
 // End time of the post-game sequence INCLUDING the AnimateXP mode
 end_time = next_global_game_utc_start_time()
-intermission_end_time = end_time - (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
+intermission_end_time = end_time - ANIMATE_XP_SECONDS
 
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level

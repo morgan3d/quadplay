@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.408",
+    "version": "0.409",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

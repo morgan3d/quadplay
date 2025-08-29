@@ -26,7 +26,7 @@ push(competitor_array, player_competitor)
 share_results_with_network(player_competitor)
 
 // End time of GatherGlobalResults mode
-end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
+end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - ANIMATE_XP_SECONDS
 
 if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
     end_time = frame_utc_now
