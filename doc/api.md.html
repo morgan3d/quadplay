@@ -5056,9 +5056,9 @@ launcher or in kiosk mode. You can make the API calls in this case, but they wil
 `http_poll(http, success_handler default nil, failure_handler default nil)`
 : Poll the HTTP request.
   If complete, it invokes one of the two handlers. Each has the form
-  `handler(response, http, data)` where `response` has the form of a JavaScript
-  [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-  object and `data` is the corresponding value passed to `make_http()`.
+  `handler(response, http, data)` where `response = {ok, status, status_text, type, redirected, url, text, json, bytes}`,  
+  similar to a JavaScript
+  [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), and `data` is the corresponding value passed to `make_http()`.
   
   If the request fails because of quadplay security restrictions, 
   then the failure status code will be 418.

@@ -226,7 +226,7 @@ body {
     }
 
     .md .admonition.warn .admonition-title, .md .admonition.warning .admonition-title {
-        border-bottom: 1px solid rgba(68,138,255,1);
+        border-bottom: 1px solid rgba(255,170,0,1);
     }
 
     .md .admonition.tip {

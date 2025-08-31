@@ -2851,7 +2851,7 @@ function mainLoopStep() {
                     return;
                 }
                 
-                default:// 'launcher'
+                default:// 'launcher', 'ide'
                     goToLauncher();
             }
         } else if (e.launch_game !== undefined) {
@@ -4687,7 +4687,7 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 const quitAction = (function() {
     if (useIDE) {
         // When the IDE is on, always quit to the IDE
-        return 'launcher';
+        return 'ide';
     }
     
     const q = getQueryString('quit');

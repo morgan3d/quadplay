@@ -1599,7 +1599,31 @@ function make_http(url, options = {method: "GET"}, data = undefined) {
         http.$response = {ok: false, status: 418};
     } else {
         fetch(url, options).then(function (response) {
-            http.$response = response;
+            let count = 0;
+            const quadplay_response = {
+                status: response.status,
+                status_text: response.status_text,
+                redirected: response.redirected,
+                ok: response.ok,
+                type: response.type,
+                url: response.url,
+                json: undefined,
+                text: undefined,
+                bytes: undefined,
+
+            };
+            
+            const types = ['json', 'text', 'bytes'];
+            for (const prop of types) {
+                response.clone()[prop]().then(function (value) {
+                    quadplay_response[prop] = value;
+                    ++count;
+                    if (count === types.length) { 
+                        http.$response = quadplay_response; 
+                    }
+                });
+            }
+            
         });
     }
 

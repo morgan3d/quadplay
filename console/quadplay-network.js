@@ -2,7 +2,7 @@
 
   This is the default host networking that operates by streaming the screen.
   See quadplay-conduit.js for the explicit state synchronization API and
-  quadplay-http.js for the HTTP API.
+  quadplay-browser.js for the HTTP API.
 
 */
 "use strict";

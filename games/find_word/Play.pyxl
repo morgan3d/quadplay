@@ -95,11 +95,11 @@ reset_post_effects()
 play_sound(times_up_sound)
 if game_type == GLOBAL_GAME:
     if not player.has_achievement["Play Global Match"]:
-        // Completed second game
-        player_achieve(player, "Play Second Global Match")
-    else:
         // Completed first game (ok to keep giving this)
         player_achieve(player, "Play Global Match")
+    else:
+        // Completed second game
+        player_achieve(player, "Play Second Global Match")
     
 else if (game_type == SOLO_GAME and
     player.has_achievement["Spell EAT"] and 
