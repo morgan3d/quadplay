@@ -3,6 +3,7 @@ Intermission
 
 todo("Favoriting UI + save")
 todo("Send emotes?!")
+todo("notify on personal best ever score > best free score > best wild > best daily")
 
 /* Used to prevent multiple VIL effects per intermission */
 let played_vil_sound
@@ -116,7 +117,6 @@ def draw_word_award(title, winner):
         draw_award_background({corner: xy(0, 12), size: xy(69, 37)}, field, winner.avatar.color)
     
         draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(35, 7), z: 2})
-        draw_text({font: history_font, text: "→", color: player.board.selection_color, shadow: #000, pos: xy(75, 7), z: 2})
         
         avatar_draw_large(winner.avatar, xy(35, 31), false, ∅, ∅, true)
         

@@ -25,8 +25,9 @@ def draw_xp_table()
     for i < τ * size(xp_array):
         const row = xp_array[i]
         
-        // xp == 0 if this is a header row, if i == last then leave extra space for the line
-        y += if i == last_key(xp_array) then 10 else (if row.xp then 3 else 6)
+        // Extra spacing
+        // Note: Leave extra space for header row, and last line
+        y += if i == last_key(xp_array) then 10 else (if row.color ≠ TABLE_ALT_ROW_COLOR then 7 else (if row.xp then 6 else 3))
 
         // Audio as each new XP entry is first displayed
         if i > last_xp_row_displayed:
@@ -37,7 +38,7 @@ def draw_xp_table()
             // Final row
             draw_line(xy(0, y - 5), xy(200, y - 5), TABLE_ALT_ROW_COLOR)
         
-        if row.xp: 
+        if row.xp:
             draw_text({
                 text: "+" + format_number(row.xp, "commas") + " XP" default "", 
                 font: leaderboard_font, 
@@ -52,7 +53,7 @@ def draw_xp_table()
             color: row.color,
             x_align: "left",
             y_align: "top",
-            wrap_width: 160,
+            wrap_width: 145,
             pos: xy(if row.xp or row.font then 16 else 0, y)}).height
             
 
