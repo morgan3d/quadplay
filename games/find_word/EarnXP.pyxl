@@ -1,7 +1,5 @@
-AnimateXP
+EarnXP
 ════════════════════════════════════════════════════════════════════════
-
-todo("More sounds")
 
 let last_xp_row_displayed
 let last_level_displayed
@@ -16,12 +14,12 @@ let scroll_offset
 
 def draw_xp_table()
 & preserving_transform:
-    const rect_height = SCREEN_SIZE.y - ANIMATE_XP.BAR_SECTION_HEIGHT
+    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT
     
     set_clip(xy(0, 0), xy(SCREEN_SIZE.x, rect_height))
     set_transform(xy(½ SCREEN_SIZE.x - 100, scroll_offset))
     
-    const τ = clamp((mode_frames - ANIMATE_XP.TIMING.PRE_FRAMES) / ANIMATE_XP.TIMING.TABLE_FRAMES, 0%, 100%)
+    const τ = clamp((mode_frames - EARN_XP.TIMING.PRE_FRAMES) / EARN_XP.TIMING.TABLE_FRAMES, 0%, 100%)
     
     let y = 0
     for i < τ * size(xp_array):
@@ -66,7 +64,7 @@ def draw_xp_bar()
 & preserving_transform:
 
     // Animation time between 0% and 100% for the bar
-    const τ = clamp((mode_frames - ANIMATE_XP.TIMING.PRE_FRAMES - ANIMATE_XP.TIMING.TABLE_FRAMES - ANIMATE_XP.TIMING.POST_TABLE_FRAMES - ANIMATE_XP.TIMING.MID_FRAMES) / ANIMATE_XP.TIMING.BAR_FRAMES, 0%, 100%)
+    const τ = clamp((mode_frames - EARN_XP.TIMING.PRE_FRAMES - EARN_XP.TIMING.TABLE_FRAMES - EARN_XP.TIMING.POST_TABLE_FRAMES - EARN_XP.TIMING.MID_FRAMES) / EARN_XP.TIMING.BAR_FRAMES, 0%, 100%)
     
     // Currently-displayed XP
     const xp = round(lerp(prev_xp, new_xp, τ))
@@ -84,7 +82,7 @@ def draw_xp_bar()
     const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
     
     // Play the glissando sound
-    if mode_frames == ANIMATE_XP.TIMING.PRE_FRAMES + ANIMATE_XP.TIMING.TABLE_FRAMES + ANIMATE_XP.TIMING.POST_TABLE_FRAMES + ANIMATE_XP.TIMING.MID_FRAMES - 2 and player.score > 0:
+    if mode_frames == EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES - 2 and player.score > 0:
         play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
     
     if mode_frames > 1 and (last_level_displayed ≠ level):
@@ -98,7 +96,7 @@ def draw_xp_bar()
     
     const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0)
     
-    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ ANIMATE_XP.BAR_SECTION_HEIGHT))
+    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ EARN_XP.BAR_SECTION_HEIGHT))
         
     draw_sprite({sprite: player.avatar.sprite, pos: xy(-16, 3), scale: 200%})
     draw_text({text: player.avatar.name, pos: xy(8, -4), font: score_font, x_align: "left", color: #FFF})
@@ -112,7 +110,7 @@ def draw_xp_bar()
         pos:     xy(8, 10)})
 
     // Don't draw the bar at first
-    if mode_frames < ANIMATE_XP.TIMING.PRE_FRAMES + ANIMATE_XP.TIMING.TABLE_FRAMES + ANIMATE_XP.TIMING.POST_TABLE_FRAMES: return
+    if mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES: return
     
     // XP bar outline
     const xp_rect = {corner: xy(-100, -30), size: xy(200, 10)}
@@ -177,6 +175,7 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
                 font: history_font,
                 color: TABLE_ALT_ROW_COLOR})
         
+        
 if player_competitor.badges and player.has_ability["Award XP"]:
     push(xp_array, {text: "Awards (" + size(competitor_array) + "-Player Match)", color: #FFF})
 
@@ -192,9 +191,27 @@ if player_competitor.badges and player.has_ability["Award XP"]:
         push(xp_array, {text: capitalize(text + (if contains(text, "word") then "" else " word")), xp: badge_xp, color: TABLE_ALT_ROW_COLOR})
 
 
+// Only give streak awards for games where the player
+// actually earned points, otherwise it could have been
+// running unmonitored in the background
+if player.score > 0 and not joined_late:
+    const streak = []
+    
+    if player.stats[today_date_string()].matches == 1:
+        push(streak, {text: "First Match Today", xp: XP.VALUE.first_match_today, color: TABLE_ALT_ROW_COLOR})
+    
+    else if player.stats[today_date_string()].matches mod 10 == 0:
+        push(streak, {
+            text: "" + player.stats[today_date_string()].matches + "ᵗʰ Match Today", 
+            xp: XP.VALUE.decimatch_today + 10 ⌊player.stats[today_date_string()].matches / 10 - 1⌋, 
+            color: TABLE_ALT_ROW_COLOR})
+    
+    if size(streak):
+        push(xp_array, 
+            {text: "Streak", color: #FFF},
+            …streak)
+        
 todo("Give XP for rare words")
-
-todo("Give XP for first game of day")
 
 for row in xp_array:
     player.stats[today_date_string()].xp += row.xp default 0
@@ -217,7 +234,7 @@ array_to_set(discovered_word_list, 1, player.vocabulary)
 
 // Save the updated stats. Unlocked abilities are stored as part
 // of the ability notification process.
-if not DEBUG.INTERMISSION and not DEBUG.ANIMATE_XP:
+if not DEBUG.INTERMISSION and not DEBUG.EARN_XP:
     stats_save(player.stats)
 
 
