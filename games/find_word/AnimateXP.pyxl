@@ -3,7 +3,7 @@ AnimateXP
 
 todo("More sounds")
 
-
+let last_xp_row_displayed
 let last_level_displayed
 let prev_xp
 let prev_level
@@ -27,10 +27,15 @@ def draw_xp_table()
     for i < τ * size(xp_array):
         const row = xp_array[i]
         
-        // xp == 0 if this is a header row
-        y += if i == size(xp_array) - 1 then 10 else (if row.xp then 3 else 6)
+        // xp == 0 if this is a header row, if i == last then leave extra space for the line
+        y += if i == last_key(xp_array) then 10 else (if row.xp then 3 else 6)
 
-        if i == size(xp_array) - 1:
+        // Audio as each new XP entry is first displayed
+        if i > last_xp_row_displayed:
+            last_xp_row_displayed = i
+            play_sound(select_tile_sound, 80%)
+            
+        if i == last_key(xp_array):
             // Final row
             draw_line(xy(0, y - 5), xy(200, y - 5), TABLE_ALT_ROW_COLOR)
         
@@ -141,6 +146,7 @@ scroll_offset = 0
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 last_level_displayed = prev_level
+last_xp_row_displayed = 0
 
 const discovered_word_list = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
 
@@ -219,13 +225,16 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 todo("Remove network debugging code")
-draw_rect(xy(½ SCREEN_SIZE.x, 8), xy(64, 8), #000A)
+draw_rect(xy(½ SCREEN_SIZE.x, 10), xy(224, 15), #B0FA, ∅, ∅, 100)
 draw_text({
-    text: debug_network_status,
-    font: history_font,
+    text: "Test: " + debug_network_status,
+    font: leaderboard_font,
     color: #CCC,
+    outline: #000,
+    shadow: #000,
     pos: xy(½ SCREEN_SIZE.x, 5),
-    y_align: "top"})
+    y_align: "top",
+    z: 101})
 
 
 draw_xp_table()

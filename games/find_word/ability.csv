@@ -8,7 +8,7 @@ High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprit
 Longest Word Stat,6,Your Longest Word is now available in Stats!,shapes.triangle.rotated_270
 Best Word Stat,7,Best Word is now available in Stats!,shapes.diamond
 See caf,8,SILENT,
-Friend of caf,8,`moo is my mom-cow! be my pal too??',avatar_sprite[33][22].x_flipped
+Friend of caf,8,`moo is my mom-cow! you be my pal??',avatar_sprite[33][22].x_flipped
 Discovered Words Stat,8,Discovered Words count is now available in Stats!,stats_sprite[0][0]
 Discovery XP,9,Get an XP bonus for every time you discover a new word!,notify_icon.xp
 See Mz. Kiwi,10,SILENT,

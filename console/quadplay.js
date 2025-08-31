@@ -4262,9 +4262,14 @@ function loadGameAndConfigureUI(url, callback, loadFast, noUpdateCode) {
                     // Sort by length
                     entryArray.sort(function (a, b) { return b[1] - a[1]; });
                     
-                    s += `<table width=100%><tr><th style="text-align:left">File</th><th width=120 colspan=2>${resource.units}</th></tr>\n`;
+                    const isSprite = resource.prop === 'spritePixels';
+                    const sizeColumn = isSprite ? '<th width=80>Size</th>' : '';
+                    s += `<table width=100%><tr><th style="text-align:left">File</th>${sizeColumn}<th width=120 colspan=2 style="text-align:right">${resource.units}</th></tr>\n`;
+                    
                     for (const entry of entryArray) {
-                        s += `<tr><td>${entry[0].replace(/^.*\//, '')}</td><td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=30px></td></tr>\n`;
+                        const fileName = entry[0].replace(/^.*\//, '');
+                        const dimensionsCell = isSprite ? `<td style="text-align:center">${resourceStats.spriteSizeByURL[entry[0]] || ''}</td>` : '';
+                        s += `<tr><td>${fileName}</td>${dimensionsCell}<td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=0.5em></td></tr>\n`;
                     }
                     s += '</table>';
                 }

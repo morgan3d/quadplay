@@ -294,6 +294,7 @@ function loadGame(gameURL, callback, errorCallback) {
         sounds: 0,
         sourceStatementsByURL: {},
         spritePixelsByURL: {},
+        spriteSizeByURL: {},
         soundKilobytesByURL: {},
 
         // Maps API functions to a list of scripts that use each API, or undefined if no scripts use it
@@ -1041,6 +1042,7 @@ function recordSpriteStats(spritesheet) {
     }
     resourceStats.spritePixels += count;
     resourceStats.spritePixelsByURL[spritesheet.$url] = count;
+    resourceStats.spriteSizeByURL[spritesheet.$url] = `${data.width} × ${data.height}`;
     
     ++resourceStats.spritesheets;
     resourceStats.maxSpritesheetWidth = Math.max(resourceStats.maxSpritesheetWidth, data.width);
