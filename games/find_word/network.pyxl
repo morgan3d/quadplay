@@ -33,6 +33,8 @@ def maybe_connect_to_network():
 
 /* Called from `GatherGlobalResults.enter` */
 def share_results_with_network(player_competitor):
+    if DEBUG.OFFLINE: return
+
     if conduit:
         if conduit.status == "online":
             conduit_send(conduit, player_competitor)
@@ -62,5 +64,12 @@ def update_network():
     
 /* Called from `GatherGlobalResults.leave` */
 def disconnect_from_network():
-    if conduit:
+    if DEBUG.OFFLINE: return
+
+    if conduit and conduit.status == "online":
         conduit = conduit_close(conduit)
+    else:
+        // We never made a conduit successfully. Reset
+        // the entire network system so that it can
+        // start fresh next time
+        conduit = reset_conduits()
