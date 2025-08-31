@@ -1,5 +1,7 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
+todo("New ability unlock for per day stats, and show days")
+
 // Stable size independent of aspect ratio
 const WIDTH = min(SCREEN_SIZE.x, SCREEN_SIZE.y)
 

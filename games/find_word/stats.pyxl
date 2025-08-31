@@ -33,6 +33,9 @@ def make_empty_stats_entry():
         freestyle_points: 0,
 
         matches: 0,
+        
+        // Intentionally 1, so that each day is counted
+        days: 1,
 
         xp: 0,
 
@@ -225,7 +228,7 @@ def stats_merge_previous_days(stats)
         for field in ["best_score", "most_words"]:
             lifetime[field] = max(lifetime[field], day[field])
         
-        for field in ["words", "points", "matches", "xp"]:
+        for field in ["words", "points", "matches", "xp", "days", "freestyle_points"]:
             lifetime[field] += day[field]
             
         push(lifetime.word_list, …day.word_list)

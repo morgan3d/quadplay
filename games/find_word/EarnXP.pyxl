@@ -1,13 +1,15 @@
 EarnXP
 ════════════════════════════════════════════════════════════════════════
 
+todo("Tweak colors on XP bar to separate new vs previous")
+
 let last_xp_row_displayed
 let last_level_displayed
 let prev_xp
 let prev_level
 let new_xp
 
-/* {text, xp} objects shown sequentially to explain the XP awards  */
+/* {text, xp, color} objects shown sequentially to explain the XP awards  */
 let xp_array
 
 let scroll_offset
@@ -57,7 +59,6 @@ def draw_xp_table()
             wrap_width: 145,
             pos: xy(if row.xp or row.font then 16 else 0, y)}).height
             
-
     scroll_offset = min(0, rect_height - y)
     
 
