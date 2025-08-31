@@ -1,11 +1,13 @@
 AnimateXP
 ════════════════════════════════════════════════════════════════════════
 
+todo("More sounds")
+
+
 let last_level_displayed
 let prev_xp
 let prev_level
 let new_xp
-let xp_audio
 
 /* {text, xp} objects shown sequentially to explain the XP awards  */
 let xp_array
@@ -26,22 +28,12 @@ def draw_xp_table()
         const row = xp_array[i]
         
         // xp == 0 if this is a header row
-        if i > 0: 
-            y += if i == size(xp_array) - 1 then 20 else (if row.xp then 13 else 16)
+        y += if i == size(xp_array) - 1 then 10 else (if row.xp then 3 else 6)
 
         if i == size(xp_array) - 1:
             // Final row
             draw_line(xy(0, y - 5), xy(200, y - 5), TABLE_ALT_ROW_COLOR)
         
-        draw_text({
-            text: row.text,
-            font: row.font default leaderboard_font,
-            color: row.color,
-            x_align: "left",
-            y_align: "top",
-            wrap_width: 200,
-            pos: xy(if row.xp or row.font then 16 else 0, y)})
-            
         if row.xp: 
             draw_text({
                 text: "+" + format_number(row.xp, "commas") + " XP" default "", 
@@ -50,6 +42,16 @@ def draw_xp_table()
                 x_align: "right", 
                 y_align: "top",
                 pos: xy(180, y)})
+                
+        y += draw_text({
+            text: row.text,
+            font: row.font default leaderboard_font,
+            color: row.color,
+            x_align: "left",
+            y_align: "top",
+            wrap_width: 160,
+            pos: xy(if row.xp or row.font then 16 else 0, y)}).height
+            
 
     scroll_offset = rect_height - (y + 10)
     
@@ -77,8 +79,8 @@ def draw_xp_bar()
     const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
     
     // Play the glissando sound
-    if mode_frames == ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.TABLE_FRAMES + ANIMATE_XP.POST_TABLE_FRAMES + ANIMATE_XP.MID_FRAMES - 2 and player.score > 0:
-        xp_audio = play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
+    if mode_frames == ANIMATE_XP.TIMING.PRE_FRAMES + ANIMATE_XP.TIMING.TABLE_FRAMES + ANIMATE_XP.TIMING.POST_TABLE_FRAMES + ANIMATE_XP.TIMING.MID_FRAMES - 2 and player.score > 0:
+        play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
     
     if mode_frames > 1 and (last_level_displayed ≠ level):
         // Level up
@@ -91,10 +93,10 @@ def draw_xp_bar()
     
     const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0)
     
-    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ ANIMATE_XP.BAR_SECTION_HEIGHT + 10))
+    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ ANIMATE_XP.BAR_SECTION_HEIGHT))
         
-    draw_sprite({sprite: player.avatar.sprite, pos: xy(-16, -20), scale: 200%})
-    draw_text({text: player.avatar.name, pos: xy(8, -24), font: score_font, x_align: "left", color: #FFF})
+    draw_sprite({sprite: player.avatar.sprite, pos: xy(-16, 3), scale: 200%})
+    draw_text({text: player.avatar.name, pos: xy(8, -4), font: score_font, x_align: "left", color: #FFF})
     // Flash and turn pink on level change
     draw_text({
         color:   if flash then HIGHLIGHT_COLOR else #FFF,
@@ -102,13 +104,13 @@ def draw_xp_bar()
         font:    leaderboard_font,
         text:    "Level " + level,
         x_align: "left",
-        pos:     xy(8, -9)})
+        pos:     xy(8, 10)})
 
     // Don't draw the bar at first
     if mode_frames < ANIMATE_XP.TIMING.PRE_FRAMES + ANIMATE_XP.TIMING.TABLE_FRAMES + ANIMATE_XP.TIMING.POST_TABLE_FRAMES: return
     
     // XP bar outline
-    const xp_rect = {corner: xy(-100, 0), size: xy(200, 10)}
+    const xp_rect = {corner: xy(-100, -30), size: xy(200, 10)}
         
     draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size)
     
@@ -148,7 +150,7 @@ xp_array = [
     {text: format_number(player_competitor.score, "commas") + " Points", xp: ⌈player_competitor.score * XP.VALUE.point⌉, color: TABLE_ALT_ROW_COLOR}]
 
 
-if size(discovered_word_list):
+if size(discovered_word_list) and player.has_ability["Discovery XP"]:
     push(xp_array, {text: "Discovered Words", color: #FFF})
     
     // To keep the length of this list managable, we group 
@@ -164,14 +166,13 @@ if size(discovered_word_list):
                 xp: (num_tiles - 2) * XP.VALUE.unique_word_per_tile,
                 color: TABLE_ALT_ROW_COLOR})
                 
-            todo("need q-decode")
             push(xp_array, {
                 text: join(word_list, ", "),
                 font: history_font,
                 color: TABLE_ALT_ROW_COLOR})
         
-if player_competitor.badges:
-    push(xp_array, {text: "Badges (" + size(competitor_array) + "-Player Match)", color: #FFF})
+if player_competitor.badges and player.has_ability["Award XP"]:
+    push(xp_array, {text: "Awards (" + size(competitor_array) + "-Player Match)", color: #FFF})
 
     const badge_xp = XP.VALUE.badge_per_competitor * min(size(competitor_array) - 1, 10)
 
@@ -216,6 +217,16 @@ if not DEBUG.INTERMISSION and not DEBUG.ANIMATE_XP:
 
 frame
 ────────────────────────────────────────────────────────────────────────
+
+todo("Remove network debugging code")
+draw_rect(xy(½ SCREEN_SIZE.x, 8), xy(64, 8), #000A)
+draw_text({
+    text: debug_network_status,
+    font: history_font,
+    color: #CCC,
+    pos: xy(½ SCREEN_SIZE.x, 5),
+    y_align: "top"})
+
 
 draw_xp_table()
 draw_xp_bar()

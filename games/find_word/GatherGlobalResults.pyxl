@@ -54,16 +54,6 @@ update_network()
 
 set_background(GLOBAL_GAME.BACKGROUND_COLOR)
 
-todo("Remove network debugging statement")
-draw_text({
-    text: 
-        get_conduit_online_status() + ", " +
-        (if conduit then conduit.status else ∅),
-    font: history_font,
-    color: #CCC,
-    pos: xy(½ SCREEN_SIZE.x, 2),
-    y_align: "top"})
-
 draw_text({
     text: "Gathering Global Scores…",
     font: score_font,
@@ -102,4 +92,6 @@ if frame_utc_now ≥ end_time:
     
 leave
 ────────────────────────────────────────────────────────────────────────
+debug_network_status = get_conduit_online_status() + ", " + (if conduit then conduit.status else "∅")
+
 competitor_analyze(competitor_array)

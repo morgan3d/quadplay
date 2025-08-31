@@ -119,7 +119,7 @@ def draw_content():
             y += draw_trend_row(y, title, format, lifetime[field], today[field])
         
     y += 10
-    if player.has_ability["Badge Stat"]:
+    if player.has_ability["Award Stat"]:
         for title at i in ["Highest Score", "Best Word", "Best Rare", "Longest", "Most Words"]:
             const field = lowercase(replace(title, " ", "_"))
             y += draw_row(y, title + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"))

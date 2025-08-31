@@ -32,6 +32,8 @@ const competitor_array = []
 
 let player_competitor
 
+todo("Add most rare award")
+
 // Competitors winning each award
 let best_word_winner
 let best_rare_winner

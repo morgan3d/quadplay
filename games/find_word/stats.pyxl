@@ -302,7 +302,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
         stats_entry.points += competitor.score
         ++stats_entry.matches
     
-    todo("Abstract the badge system to allow iteration")
+    todo("Abstract the award system to allow iteration")
     if competitor == competitor_array[0]:
         ++stats_entry.badge_count.highest_score
         

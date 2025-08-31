@@ -9,6 +9,9 @@ let start_time
 /* In seconds, based on frame_utc_now */
 let end_time
 
+/* For saving the network status at the time of entering Intermission, to debug*/
+let debug_network_status
+
 /* `cursor.lib` cursor */
 const cursor = make_cursor()
 

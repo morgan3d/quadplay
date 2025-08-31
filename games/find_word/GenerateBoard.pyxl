@@ -18,6 +18,7 @@ draw_text({
     font: score_font,
     color: HIGHLIGHT_COLOR,
     pos: ½ SCREEN_SIZE})
+    
 
 if mode_frames > 3:
     const board_string = if DEBUG.BOO or DEBUG.INTERMISSION then "GHOS BOOT FEAR HALE" else (if not player.has_achievement["Play Solo Match"] then TUTORIAL.FIRST_TIME_BOARD else ∅)
