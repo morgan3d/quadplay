@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.418",
+    "version": "0.419",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -129,9 +129,43 @@
         "EARN_XP": {
             "type": "object",
             "value": {
+                "xp_rect": {
+                    "type": "object",
+                    "description": "XP bar outline within its set_transform area",
+                    "value": {
+                        "corner": {
+                            "type": "xy",
+                            "value": {
+                                "x": {
+                                    "type": "number",
+                                    "value": "-100"
+                                },
+                                "y": {
+                                    "type": "number",
+                                    "value": "33"
+                                }
+                            },
+                            "nudge": {
+                                "x": "+1",
+                                "y": "-1"
+                            }
+                        },
+                        "size": {
+                            "type": "xy",
+                            "value": {
+                                "x": 200,
+                                "y": 10
+                            },
+                            "nudge": {
+                                "x": "+1",
+                                "y": -1
+                            }
+                        }
+                    }
+                },
                 "BAR_SECTION_HEIGHT": {
                     "type": "number",
-                    "value": 65
+                    "value": "44"
                 },
                 "TIMING": {
                     "type": "object",

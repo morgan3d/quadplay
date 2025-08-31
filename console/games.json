@@ -783,7 +783,7 @@
             "url": "quad://games/find_word/",
             "title": "FIND WORD ALLL NITE",
             "description": "Uncover words hidden in the grid in a world-wide real-time competition.",
-            "version": "0.418",
+            "version": "0.419",
             "developer": "SHMUEL",
             "min_players": 1,
             "max_players": "\u221e",

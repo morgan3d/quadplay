@@ -14,10 +14,11 @@ let scroll_offset
 
 def draw_xp_table()
 & preserving_transform:
-    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT
+    // -16 is for the debugging stuff at the bottom
+    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT - 16
     
-    set_clip(xy(0, 0), xy(SCREEN_SIZE.x, rect_height))
-    set_transform(xy(½ SCREEN_SIZE.x - 100, scroll_offset))
+    set_clip(xy(0, EARN_XP.BAR_SECTION_HEIGHT), xy(SCREEN_SIZE.x, rect_height))
+    set_transform(xy(½ SCREEN_SIZE.x - 100, scroll_offset + EARN_XP.BAR_SECTION_HEIGHT))
     
     const τ = clamp((mode_frames - EARN_XP.TIMING.PRE_FRAMES) / EARN_XP.TIMING.TABLE_FRAMES, 0%, 100%)
     
@@ -57,12 +58,13 @@ def draw_xp_table()
             pos: xy(if row.xp or row.font then 16 else 0, y)}).height
             
 
-    scroll_offset = rect_height - (y + 10)
+    scroll_offset = min(0, rect_height - y)
     
 
 
 def draw_xp_bar()
 & preserving_transform:
+    set_transform(xy(½ SCREEN_SIZE.x, 0))
 
     // Animation time between 0% and 100% for the bar
     const τ = clamp((mode_frames - EARN_XP.TIMING.PRE_FRAMES - EARN_XP.TIMING.TABLE_FRAMES - EARN_XP.TIMING.POST_TABLE_FRAMES - EARN_XP.TIMING.MID_FRAMES) / EARN_XP.TIMING.BAR_FRAMES, 0%, 100%)
@@ -95,12 +97,11 @@ def draw_xp_bar()
     
     last_level_displayed = level
     
-    const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0)
+    const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0) and mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES + EARN_XP.TIMING.BAR_FRAMES + ½ EARN_XP.TIMING.POST_FRAMES
     
-    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ EARN_XP.BAR_SECTION_HEIGHT))
-        
-    draw_sprite({sprite: player.avatar.sprite, pos: xy(-16, 3), scale: 200%})
-    draw_text({text: player.avatar.name, pos: xy(8, -4), font: score_font, x_align: "left", color: #FFF})
+    draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(-20, 16), scale: 200%})
+    draw_text({text: player.avatar.name, pos: xy(10, 10), font: score_font, x_align: "left", color: #FFF})
+
     // Flash and turn pink on level change
     draw_text({
         color:   if flash then HIGHLIGHT_COLOR else #FFF,
@@ -108,20 +109,17 @@ def draw_xp_bar()
         font:    leaderboard_font,
         text:    "Level " + level,
         x_align: "left",
-        pos:     xy(8, 10)})
+        pos:     xy(10, 22)})
 
     // Don't draw the bar at first
-    if mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES: return
-    
-    // XP bar outline
-    const xp_rect = {corner: xy(-100, -30), size: xy(200, 10)}
-        
-    draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size)
+    //if mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES: return
+
+    draw_corner_rect(EARN_XP.xp_rect.corner + xy(0, 1), EARN_XP.xp_rect.size)
     
     // Progress bar
     draw_corner_rect(
-        xp_rect.corner + 1,
-        xy(α * (xp_rect.size.x - 2), xp_rect.size.y - 2), 
+        EARN_XP.xp_rect.corner + 1,
+        xy(α * (EARN_XP.xp_rect.size.x - 2), EARN_XP.xp_rect.size.y - 2), 
         HIGHLIGHT_COLOR)
     
     draw_text({font: history_font,
@@ -131,9 +129,9 @@ def draw_xp_bar()
         text: format_number(xp, "commas") + " XP",
         x_align: "right",
         y_align: "baseline",
-        pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
+        pos: EARN_XP.xp_rect.corner + ½ EARN_XP.xp_rect.size + xy(17, 2)})
         
-    draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
+    draw_corner_rect(EARN_XP.xp_rect.corner, EARN_XP.xp_rect.size, ∅, #FFF)
     
 
     
@@ -243,24 +241,26 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 todo("Remove network debugging code")
-draw_rect(xy(½ SCREEN_SIZE.x, 10), xy(224, 15), #B0FA, ∅, ∅, 100)
-draw_text({
-    text: "Test: " + debug_network_status,
-    font: leaderboard_font,
-    color: #CCC,
-    outline: #000,
-    shadow: #000,
-    pos: xy(½ SCREEN_SIZE.x, 5),
-    y_align: "top",
-    z: 101})
+preserving_transform:
+    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 16))
+    draw_rect(xy(0, 10), xy(224, 15), #B0FA, ∅, ∅, 100)
+    draw_text({
+        text: "Test: " + debug_network_status,
+        font: leaderboard_font,
+        color: #CCC,
+        outline: #000,
+        shadow: #000,
+        pos: xy(0, 5),
+        y_align: "top",
+        z: 101})
 
 
 draw_xp_table()
 draw_xp_bar()
 
 
-if frame_utc_now ≥ end_time - 1.5:
-    const pos = SCREEN_SIZE - xy(24, 18)
+if frame_utc_now ≥ end_time - 1.75:
+    const pos = xy(SCREEN_SIZE.x - 24, 12)
     draw_sprite({sprite: shapes.gear, pos: pos, angle: -1.5° mode_frames, override_color: #888, scale: 50%})
     draw_text({font: history_font, text: "Saving", pos: pos + xy(0, 14), color: #888})
 
