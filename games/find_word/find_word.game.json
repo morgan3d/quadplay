@@ -36,7 +36,7 @@
         "SoloSummary",
         "GatherGlobalResults",
         "Intermission",
-        "AnimateXP"
+        "EarnXP"
     ],
     "start_mode": "Title",
     "docs": [
@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.415",
+    "version": "0.416",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -126,7 +126,7 @@
                 "F": 15
             }
         },
-        "ANIMATE_XP": {
+        "EARN_XP": {
             "type": "object",
             "value": {
                 "BAR_SECTION_HEIGHT": {
@@ -177,6 +177,14 @@
                         "badge_per_competitor": {
                             "type": "number",
                             "value": "7"
+                        },
+                        "first_match_today": {
+                            "type": "number",
+                            "value": "75"
+                        },
+                        "decimatch_today": {
+                            "type": "number",
+                            "value": "25"
                         },
                         "unique_word_per_tile": {
                             "description": "The first two letters don't count",
@@ -1892,7 +1900,7 @@
                     "type": "boolean",
                     "value": false
                 },
-                "ANIMATE_XP": {
+                "EARN_XP": {
                     "type": "boolean",
                     "value": false
                 },

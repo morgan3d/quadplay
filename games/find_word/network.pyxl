@@ -14,7 +14,7 @@ let conduit = ∅
 
 /* Called from `update_player()` and `Freestyle.frame` */
 def maybe_connect_to_network():
-    if in_waiting_room or game_type ≠ GLOBAL_GAME or DEBUG.OFFLINE or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
+    if in_waiting_room or game_type ≠ GLOBAL_GAME or DEBUG.OFFLINE or DEBUG.INTERMISSION or DEBUG.EARN_XP:
         return
     
     // Create a stable offset based on the player's name and their first word

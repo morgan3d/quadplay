@@ -1,5 +1,5 @@
 def xp_to_level(xp):
-    assert(xp ≠ ∅ and not is_nan(xp))
+    assert(xp ≠ ∅ and not is_nan(xp), "" + xp)
     // Invert level_to_xp
     let approx = floor(floor(xp / XP.LEVEL_DIVISOR, ½)^XP.LEVEL_EXPONENT) + 1
     if level_to_xp(approx) > xp or xp ≥ level_to_xp(approx + 1):

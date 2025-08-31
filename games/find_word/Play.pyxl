@@ -81,7 +81,7 @@ if time_left ≤ GRACE_SECONDS:
     set_post_effects({color: #000})
     
     
-if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
+if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.EARN_XP:
     board_deselect_all(player.board, player)
     if game_type == SOLO_GAME:
         set_mode(SoloSummary) because "SOLO and timer"

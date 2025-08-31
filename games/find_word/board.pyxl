@@ -28,8 +28,7 @@ def make_board():
         word_list: [],
         
         // Q-encoded. Set version of word_list produced by `board_search()`
-        word_set: {}
-    }
+        word_set: {}}
     
     return board
     

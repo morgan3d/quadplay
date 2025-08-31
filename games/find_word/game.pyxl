@@ -35,13 +35,13 @@ let notification_hook
 let joined_late
 
 
-let ANIMATE_XP_SECONDS = 0
-for frames at stage in ANIMATE_XP.TIMING:
-    ANIMATE_XP_SECONDS += frames / 60
+let EARN_XP_SECONDS = 0
+for frames at stage in EARN_XP.TIMING:
+    EARN_XP_SECONDS += frames / 60
 
 /* Global games are synchronized to this clock in seconds, hitting
    this period exactly relative to UTC Unix 0 time */
-const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS + ANIMATE_XP_SECONDS
+const GLOBAL_PERIOD = GLOBAL_GAME.PLAY_SECONDS + GATHER_SECONDS + INTERMISSION.SECONDS + EARN_XP_SECONDS
 assert(not is_nan(GLOBAL_PERIOD))
 
 

@@ -171,7 +171,7 @@ if game_frames == 30:
     // Check for any upgrades since the previous version of the game on
     // start
     grant_new_abilities()
-    if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
+    if DEBUG.INTERMISSION or DEBUG.EARN_XP:
         start_match(GLOBAL_GAME)
 
     

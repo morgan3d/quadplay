@@ -1217,8 +1217,8 @@ function pyxlToJS(src, noYield, internalMode) {
         src = src.replace(/\*[ ]*(default|xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
 
         // Replace exponents
-        src = src.replace(/([⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾][⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾ ]*)/g, '^($1)');
-        src = src.replace(/[⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏʸᶻᵘⁿ⁽⁾]/g, function (match) { return superscriptToNormal[match]; });
+        src = src.replace(/([⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿᵈᵉʰᵐᵒʳˢᵗ⁽⁾][⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿᵈᵉʰᵐᵒʳˢᵗ⁽⁾ ]*)/g, '^($1)');
+        src = src.replace(/[⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏʸᶻᵘⁿᵈᵉʰᵐᵒʳˢᵗ⁽⁾]/g, function (match) { return superscriptToNormal[match]; });
         
         // Replace subscripts
         //src = src.replace(/([₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎][₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎ ]*)/g, '[($1)]');
@@ -1886,6 +1886,14 @@ const superscriptToNormal = Object.freeze({
     'ᵘ':' u ',
     'ᵏ':' k ',
     'ⁿ':' n ',
+    'ᵈ':' d ',
+    'ᵉ':' e ',
+    'ʰ':' h ',
+    'ᵐ':' m ',
+    'ᵒ':' o ',
+    'ʳ':' r ',
+    'ˢ':' s ',
+    'ᵗ':' t ',
     '⁽':'(',
     '⁾':')'});
     

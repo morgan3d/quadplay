@@ -26,9 +26,9 @@ push(competitor_array, player_competitor)
 share_results_with_network(player_competitor)
 
 // End time of GatherGlobalResults mode
-end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - ANIMATE_XP_SECONDS
+end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - EARN_XP_SECONDS
 
-if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
+if DEBUG.INTERMISSION or DEBUG.EARN_XP:
     end_time = frame_utc_now
     
 if player.score > player.stats[today_date_string()].high_score and player.stats[today_date_string()].high_score > 0:
@@ -40,7 +40,7 @@ if player.score > player.stats[today_date_string()].high_score and player.stats[
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if mode_frames == (if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP then 0 else 60):
+if mode_frames == (if DEBUG.INTERMISSION or DEBUG.EARN_XP then 0 else 60):
     // Make some bots to fill out the competitor list if offline or
     // there are too few players. Do this after almost a second so that
     // other players could come in first
@@ -92,6 +92,9 @@ if frame_utc_now ≥ end_time:
     
 leave
 ────────────────────────────────────────────────────────────────────────
-debug_network_status = get_conduit_online_status() + ", " + (if conduit then conduit.status else "∅")
+if DEBUG.OFFLINE:
+    debug_network_status = "DEBUG.OFFLINE"
+else:
+    debug_network_status = get_conduit_online_status() + ", " + (if conduit then conduit.status else "∅")
 
 competitor_analyze(competitor_array)

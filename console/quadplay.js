@@ -4268,8 +4268,31 @@ function loadGameAndConfigureUI(url, callback, loadFast, noUpdateCode) {
                     
                     for (const entry of entryArray) {
                         const fileName = entry[0].replace(/^.*\//, '');
+                        const fullURL = entry[0];
+                        
+                        // Determine the appropriate onProjectSelect call based on resource type
+                        let clickHandler = '';
+                        if (resource.prop === 'spritePixels') {
+                            // For sprites, find the corresponding asset
+                            const assetName = Object.keys(gameSource.assets).find(name => {
+                                const asset = gameSource.assets[name];
+                                return asset.$url === fullURL || 
+                                       (asset.spritesheet_table && Object.values(asset.spritesheet_table).some(sheet => sheet.$url === fullURL));
+                            });
+                            if (assetName) {
+                                clickHandler = `onclick="onProjectSelect(document.getElementById('projectAsset_${assetName}'), 'asset', gameSource.assets['${assetName}'])"`;
+                            }
+                        } else if (resource.prop === 'sourceStatements') {
+                            // For code files, use the script URL directly
+                            clickHandler = `onclick="onProjectSelect(document.getElementById('ScriptItem_${fullURL}'), 'script', '${fullURL}')"`;
+                        }
+                        
+                        const fileNameCell = clickHandler ? 
+                            `<a style="cursor:pointer" ${clickHandler}>${fileName}</a>` : 
+                            fileName;
+                        
                         const dimensionsCell = isSprite ? `<td style="text-align:center">${resourceStats.spriteSizeByURL[entry[0]] || ''}</td>` : '';
-                        s += `<tr><td>${fileName}</td>${dimensionsCell}<td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=0.5em></td></tr>\n`;
+                        s += `<tr><td>${fileNameCell}</td>${dimensionsCell}<td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=0.5em></td></tr>\n`;
                     }
                     s += '</table>';
                 }

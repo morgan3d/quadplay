@@ -31,7 +31,7 @@ def grant_new_abilities():
                 player.has_ability[name] = true
 
                 // Skip saving when debugging intermission
-                if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP: return
+                if DEBUG.INTERMISSION or DEBUG.EARN_XP: return
             
                 // Save new abilities
                 save_local("has_ability", player.has_ability)

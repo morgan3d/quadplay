@@ -3762,12 +3762,12 @@ frame
 
 
 ````````````````````````````````````````````````````` none big
-x⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ yᵃ ᵝ ⁱ ʲ ᵏ ⁿ ᵘ ˣ ʸ ᶻ 
+x⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ yᵃ ᵝ ⁱ ʲ ᵏ ⁿ ᵘ ˣ ʸ ᶻ ᵈ ᵉ ʰ ᵐ ᵒ ʳ ˢ ᵗ
 `````````````````````````````````````````````````````
 [Superscripts. These are legal math in code and can be used in strings.]
 
 ````````````````````````````````````````````````````` none big
-₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
+x ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
 `````````````````````````````````````````````````````
 [Subscript symbols, usable only in strings]
 
@@ -3817,8 +3817,7 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 are available via the `prompt` property of `gamepad_array[]` elements]
 
 
-Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
-not as code. These are present specfically to support ordinals such as
+Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` support ordinals such as
 "1ˢᵗ, 2ⁿᵈ, 3ʳᵈ, 4ᵗʰ, 1ᵉʳ, 1ʳᵉ, 2ᵉ, 2ᵈ, 2ᵈᵉ, 1ᵒ, 1ᵃ, …" in
 various languages.
 
@@ -3829,7 +3828,7 @@ and Xbox controllers. The `ⓧ` character is drawn to ambiguously
 represent the "X"/cross buttons on PlayStation, Xbox, and Nintendo
 controllers. Note that the preferred way of generating button prompts
 is using the `gamepad.prompt` object with the string `replace()`
-function, rather than hardcoding.
+function, rather than hardcoding these characters into a game.
 
 
 Version Control
