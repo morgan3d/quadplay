@@ -1732,7 +1732,7 @@ table.coord td.arrow { line-height: 80%; font-size: 120%; color: #555}
                                                          `set_transform()`, `reset_transform()`, `compose_transform()`,
                                                         `get_transform()`       </td></tr>
 
-<tr class="space"><td colspan=4>  Camera Space (cs)        </td><td>_Used by_: `touch`, `joy`, `gamepad_array[]`, `text_width()`  </td></tr>
+<tr class="space"><td colspan=4>  Camera Space (cs)        </td><td>_Used by_: `joy`, `gamepad_array[]`  </td></tr>
 
 <tr><td>`transform_ws_to_cs()`</td>
     <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
@@ -1741,7 +1741,7 @@ table.coord td.arrow { line-height: 80%; font-size: 120%; color: #555}
                                                         <td>_Controlled by_: `set_camera()`, `reset_camera()`, `get_camera()`</td></tr>
 
 
-<tr class="space"><td colspan=4>  World Space (ws)      </td><td>_Used by_: `draw_sprite()`, `draw_line()`, `draw_map()`, `draw_entity()`,
+<tr class="space"><td colspan=4>  World Space (ws)      </td><td>_Used by_: `touch`, `draw_sprite()`, `draw_line()`, `draw_map()`, `draw_entity()`,
                                                                  `draw_text()`, `draw_point()`, `ray_intersect()`, `overlaps()`, etc.</td></tr>
 
 <tr><td>`transform_es_to_ws()`</td>
@@ -1769,6 +1769,16 @@ To simplify common game programming tasks and avoid certain kinds of mistakes,
 quadplay has some differences from traditional graphics systems under coordinate
 system transformations:
 
+- Drawing commands and pointer input are both in world space. This
+  means that the values of `touch` fields changes based on the camera and transform 
+  at the time that they are read.
+
+- Gamepad input is in camera space, so the d-pad axes can be flipped but not rotated or scaled.
+  This means that the values of `gamepad_array[]` d-pad values changes based on 
+  the transform at the time that they are read. 
+
+- Clipping region commands are in screen space (which also means they cannot be rotated)
+
 - Angles are always measured counter-clockwise, and routines automatically 
   change their angle direction to compensate. Use `rotation_sign()` to
   determine the current direction when using `sin()` and `cos()` to convert
@@ -1783,11 +1793,6 @@ system transformations:
   fonts available at different sizes (such as deja) if you want text at different sizes to
   correspond to zooming.
 
-- `touch`, `gamepad_array[]`, and `joy` `xy` values match the current screen-to-camera space
-  transformation from `set_transform` at the time that they are read. This is mostly
-  so that controls and event coordinates will match drawing coordinates when the
-  axis is flipped or the screen origin changed.
-  
 - Every `entity` contains both a transformation to its parent (`entity.pos_in_parent`, `entity.angle_in_parent`, `entity.scale_in_parent`, `entity.z_in_parent`)
   and a transformation directly to world space (`entity.pos`, `entity.angle`, `entity.scale`, `entity.z`).
   Storing the direct transformation improves performance and simplifies many common operations.

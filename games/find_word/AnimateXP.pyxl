@@ -7,151 +7,109 @@ let prev_level
 let new_xp
 let xp_audio
 
-/* For notifications */
-let bonus
+/* {text, xp} objects shown sequentially to explain the XP awards  */
+let xp_array
 
+let scroll_offset
+
+def draw_xp_table()
+& preserving_transform:
+    const rect_height = SCREEN_SIZE.y - ANIMATE_XP.BAR_SECTION_HEIGHT
     
-def notify_badge_bonus()
-& if bonus.badge_xp > 0:
+    set_clip(xy(0, 0), xy(SCREEN_SIZE.x, rect_height))
+    set_transform(xy(½ SCREEN_SIZE.x - 100, scroll_offset))
     
-    const title_array = []
-    for badge in player_competitor.badges:
-        // Convert the badge back into a title
-        let title = replace(find(BADGE_TABLE, badge), "_", " ")
-        if not contains(title, "word"):
-            title += " word"
+    const τ = clamp((mode_frames - ANIMATE_XP.TIMING.PRE_FRAMES) / ANIMATE_XP.TIMING.TABLE_FRAMES, 0%, 100%)
+    
+    let y = 0
+    for i < τ * size(xp_array):
+        const row = xp_array[i]
         
-        push(title_array, uppercase(title))
+        // xp == 0 if this is a header row
+        if i > 0: 
+            y += if i == size(xp_array) - 1 then 20 else (if row.xp then 13 else 16)
 
-    notify_xp_bonus(
-        bonus.badge_xp,
-        "winning " + join(title_array, ", ", ", and ", " and ") + " in a " + size(competitor_array) + "-player match!")
+        if i == size(xp_array) - 1:
+            // Final row
+            draw_line(xy(0, y - 5), xy(200, y - 5), TABLE_ALT_ROW_COLOR)
+        
+        draw_text({
+            text: row.text,
+            font: row.font default leaderboard_font,
+            color: row.color,
+            x_align: "left",
+            y_align: "top",
+            wrap_width: 200,
+            pos: xy(if row.xp or row.font then 16 else 0, y)})
+            
+        if row.xp: 
+            draw_text({
+                text: "+" + format_number(row.xp, "commas") + " XP" default "", 
+                font: leaderboard_font, 
+                color: row.color,
+                x_align: "right", 
+                y_align: "top",
+                pos: xy(180, y)})
 
-
-
-def notify_word_bonus()
-& if bonus.word_xp > 0:
-    assert(bonus.unique_word_list ≠ ∅)
+    scroll_offset = rect_height - (y + 10)
     
-    let decoded = []
-    for word in bonus.unique_word_list:
-        push(decoded, q_decode(word))
+
+
+def draw_xp_bar()
+& preserving_transform:
+
+    // Animation time between 0% and 100% for the bar
+    const τ = clamp((mode_frames - ANIMATE_XP.TIMING.PRE_FRAMES - ANIMATE_XP.TIMING.TABLE_FRAMES - ANIMATE_XP.TIMING.POST_TABLE_FRAMES - ANIMATE_XP.TIMING.MID_FRAMES) / ANIMATE_XP.TIMING.BAR_FRAMES, 0%, 100%)
     
-    const text = (if size(bonus.unique_word_list) ≤ 7
-        then join(decoded, ", ", ", and ", " and ")
-        else ("" + size(bonus.unique_word_list) + " words including " + join(slice(decoded, 0, 6), ", ", ", and ")))
-
-    notify_xp_bonus(
-        bonus.word_xp,
-        "discovering " + text + "!")        
-
-
-todo("** Build a table of XP computation")
-/*
-  ### points                   +### XP
-  
-  Badges
-     Longest word              +### XP
-     Highest score             +### XP
-     
-  Discovered words
-     FOOD                      +### XP
-
-  First game today             +### XP
-*/
-
-enter
-────────────────────────────────────────────────────────────────────────
-
-last_level_displayed = prev_level
-set_background(#000)
-
-
-prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
-prev_level = player.avatar.level
-
-bonus = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
-
-// Avoid recomputing every frame during the XP animation
-new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
-
-// Update level based on the new total XP, as this is part of the 
-// avatar computed at load and not part of the stats. Do this now 
-// because we're about to save stats
-player.avatar.level = xp_to_level(new_xp)
-
-// Update the net vocabulary. Vocabulary was originally computed on load of stats
-// so is not updated by stats_update.
-array_to_set(bonus.unique_word_list, 1, player.vocabulary)
-
-// Save the updated stats. Unlocked abilities are stored as part
-// of the ability notification process.
-if not DEBUG.INTERMISSION and not DEBUG.ANIMATE_XP:
-    stats_save(player.stats)
+    // Currently-displayed XP
+    const xp = round(lerp(prev_xp, new_xp, τ))
     
-notify_badge_bonus()
-notify_word_bonus()
-
-
-frame
-────────────────────────────────────────────────────────────────────────
-
+    // Currently-displayed level
+    const level = xp_to_level(xp)
     
-// Animation time between 0% and 100%
-const τ = clamp((mode_frames - ANIMATE_XP.PRE_FRAMES) / ANIMATE_XP.FRAMES, 0%, 100%)
-
-// Currently-displayed XP
-const xp = round(lerp(prev_xp, new_xp, τ))
-
-// Currently-displayed level
-const level = xp_to_level(xp)
-
-// Lower bound for xp bar
-const xp_lo = level_to_xp(level)
-
-// Upper bound for xp bar
-const xp_hi = level_to_xp(level + 1)
-
-// Progress bar value
-const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
-
-// Play the glissando sound
-if mode_frames == ANIMATE_XP.PRE_FRAMES - 2 and player.score > 0:
-    xp_audio = play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
-
-if mode_frames > 1 and (last_level_displayed ≠ level):
-    // Level up
-    play_sound(level_up_sound)
+    // Lower bound for xp bar
+    const xp_lo = level_to_xp(level)
     
-    // Give the abilities after the sound has finished
-    delay(grant_new_abilities, 30)
-
-last_level_displayed = level
-
-const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0)
-
-preserving_transform:
-    set_transform(½ SCREEN_SIZE)
+    // Upper bound for xp bar
+    const xp_hi = level_to_xp(level + 1)
     
-    // Flash and turn pink on level up
+    // Progress bar value
+    const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
+    
+    // Play the glissando sound
+    if mode_frames == ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.TABLE_FRAMES + ANIMATE_XP.POST_TABLE_FRAMES + ANIMATE_XP.MID_FRAMES - 2 and player.score > 0:
+        xp_audio = play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
+    
+    if mode_frames > 1 and (last_level_displayed ≠ level):
+        // Level up
+        play_sound(level_up_sound)
+        
+        // Give the abilities after the sound has finished
+        delay(grant_new_abilities, 30)
+    
+    last_level_displayed = level
+    
+    const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0)
+    
+    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ ANIMATE_XP.BAR_SECTION_HEIGHT + 10))
+        
+    draw_sprite({sprite: player.avatar.sprite, pos: xy(-16, -20), scale: 200%})
+    draw_text({text: player.avatar.name, pos: xy(8, -24), font: score_font, x_align: "left", color: #FFF})
+    // Flash and turn pink on level change
     draw_text({
         color:   if flash then HIGHLIGHT_COLOR else #FFF,
         outline: if flash then #FFF else ∅,
         font:    leaderboard_font,
         text:    "Level " + level,
-        pos:     xy(0, -26)})
-        
-    avatar_draw_large(player.avatar, xy(0, 0), false, #FFF)
+        x_align: "left",
+        pos:     xy(8, -9)})
 
+    // Don't draw the bar at first
+    if mode_frames < ANIMATE_XP.TIMING.PRE_FRAMES + ANIMATE_XP.TIMING.TABLE_FRAMES + ANIMATE_XP.TIMING.POST_TABLE_FRAMES: return
+    
     // XP bar outline
-    const xp_rect = {corner: xy(-100, 50), size: xy(200, 10)}
-    
-    draw_text({font: history_font,
-        color: #FFF,
-        text: "New XP Earned +" + (new_xp - prev_xp),
-        pos: xy(0, xp_rect.corner.y - 5),
-        color: #FFF})
-    
+    const xp_rect = {corner: xy(-100, 0), size: xy(200, 10)}
+        
     draw_corner_rect(xp_rect.corner + xy(0, 1), xp_rect.size)
     
     // Progress bar
@@ -170,6 +128,98 @@ preserving_transform:
         pos: xp_rect.corner + ½ xp_rect.size + xy(17, 2)})
         
     draw_corner_rect(xp_rect.corner, xp_rect.size, ∅, #FFF)
+    
+
+    
+enter
+────────────────────────────────────────────────────────────────────────
+set_background(#000)
+scroll_offset = 0
+
+prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+prev_level = player.avatar.level
+last_level_displayed = prev_level
+
+const discovered_word_list = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
+
+// Compute the XP awards
+xp_array = [
+    {text: "Score", header: true, color: #FFF}, 
+    {text: format_number(player_competitor.score, "commas") + " Points", xp: ⌈player_competitor.score * XP.VALUE.point⌉, color: TABLE_ALT_ROW_COLOR}]
+
+
+if size(discovered_word_list):
+    push(xp_array, {text: "Discovered Words", color: #FFF})
+    
+    // To keep the length of this list managable, we group 
+    // words of the same length.
+    const words_by_tile_length = make_array(17, [], clone)
+    for word in discovered_word_list:
+        push(words_by_tile_length[size(word)], word)
+
+    for word_list at num_tiles in words_by_tile_length:
+        if size(word_list):
+            push(xp_array, {
+                text: "" + size(word_list) + " × " + num_tiles + "-tile Words",
+                xp: (num_tiles - 2) * XP.VALUE.unique_word_per_tile,
+                color: TABLE_ALT_ROW_COLOR})
+                
+            todo("need q-decode")
+            push(xp_array, {
+                text: join(word_list, ", "),
+                font: history_font,
+                color: TABLE_ALT_ROW_COLOR})
+        
+if player_competitor.badges:
+    push(xp_array, {text: "Badges (" + size(competitor_array) + "-Player Match)", color: #FFF})
+
+    const badge_xp = XP.VALUE.badge_per_competitor * min(size(competitor_array) - 1, 10)
+
+    // There isn't an explicit badge for winning the match
+    if player_competitor == competitor_array[0]:
+        push(xp_array, {text: "Highest score", xp: badge_xp, color: TABLE_ALT_ROW_COLOR})
+        
+    for badge in player_competitor.badges:
+        // Convert the badge back into text
+        const text = replace(find(BADGE_TABLE, badge), "_", " ")
+        push(xp_array, {text: capitalize(text + (if contains(text, "word") then "" else " word")), xp: badge_xp, color: TABLE_ALT_ROW_COLOR})
+
+
+todo("Give XP for rare words")
+
+todo("Give XP for first game of day")
+
+for row in xp_array:
+    player.stats[today_date_string()].xp += row.xp default 0
+
+// Avoid recomputing every frame during the XP animation
+new_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
+
+// Summary row
+push(xp_array, {text: "Match Total", xp: new_xp - prev_xp, color: HIGHLIGHT_COLOR})
+    
+
+// Update level based on the new total XP, as this is part of the 
+// avatar computed at load and not part of the stats. Do this now 
+// because we're about to save stats
+player.avatar.level = xp_to_level(new_xp)
+
+// Update the net vocabulary. Vocabulary was originally computed on load of stats
+// so is not updated by stats_update.
+array_to_set(discovered_word_list, 1, player.vocabulary)
+
+// Save the updated stats. Unlocked abilities are stored as part
+// of the ability notification process.
+if not DEBUG.INTERMISSION and not DEBUG.ANIMATE_XP:
+    stats_save(player.stats)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_xp_table()
+draw_xp_bar()
+
 
 if frame_utc_now ≥ end_time - 1.5:
     const pos = SCREEN_SIZE - xy(24, 18)
@@ -178,3 +228,4 @@ if frame_utc_now ≥ end_time - 1.5:
 
 if frame_utc_now ≥ end_time:
     set_mode(GenerateBoard) because "Timer"
+    

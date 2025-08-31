@@ -88,7 +88,7 @@
         "remix_available_sound": "quad://sounds/good-03.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json"
     },
-    "version": "0.411",
+    "version": "0.412",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -129,17 +129,38 @@
         "ANIMATE_XP": {
             "type": "object",
             "value": {
-                "PRE_FRAMES": {
+                "BAR_SECTION_HEIGHT": {
                     "type": "number",
-                    "value": "80"
+                    "value": 65
                 },
-                "FRAMES": {
-                    "type": "number",
-                    "value": 100
-                },
-                "POST_FRAMES": {
-                    "type": "number",
-                    "value": "100"
+                "TIMING": {
+                    "type": "object",
+                    "value": {
+                        "PRE_FRAMES": {
+                            "type": "number",
+                            "value": "45"
+                        },
+                        "TABLE_FRAMES": {
+                            "type": "number",
+                            "value": "360"
+                        },
+                        "POST_TABLE_FRAMES": {
+                            "type": "number",
+                            "value": "120"
+                        },
+                        "MID_FRAMES": {
+                            "type": "number",
+                            "value": "60"
+                        },
+                        "BAR_FRAMES": {
+                            "type": "number",
+                            "value": 120
+                        },
+                        "POST_FRAMES": {
+                            "type": "number",
+                            "value": "90"
+                        }
+                    }
                 }
             }
         },
@@ -157,9 +178,10 @@
                             "type": "number",
                             "value": "7"
                         },
-                        "unique_word": {
+                        "unique_word_per_tile": {
+                            "description": "The first two letters don't count",
                             "type": "number",
-                            "value": "8"
+                            "value": "2"
                         }
                     }
                 },
@@ -304,12 +326,12 @@
             "value": {
                 "CONNECT_TIME_SECONDS": {
                     "type": "number",
-                    "value": 10,
+                    "value": "12",
                     "description": "Time in seconds to connect into the network before the game ends, so that everyone is exchange word lists on game end."
                 },
                 "CONNECT_MAX_DELAY_SECONDS": {
                     "type": "number",
-                    "value": "4",
+                    "value": "6",
                     "description": "Within the NETWORK_CONNECT_TIME window, what is the maximum time to randomly delay so that all nodes aren't competing to connect at exactly the same moment."
                 }
             }

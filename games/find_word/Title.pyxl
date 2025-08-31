@@ -202,9 +202,11 @@ if player.has_achievement["Change Avatar"]:
     
 if player.has_achievement["Play Solo Match"]:
     update_button(pos - xy(slide, -30), "Global", GLOBAL_GAME)
-    if not intro and not player.has_achievement["Play Global Match"]:
-        draw_tutorial(pos + xy(0, 35), "Join a global match", 90°)
-
+    if not intro:
+        if not player.has_achievement["Play Global Match"]:
+            draw_tutorial(pos + xy(0, 35), "Join a global match", 90°)
+        else if not player.has_achievement["Play Second Global Match"]:
+            draw_tutorial(pos + xy(0, 35), "Keep playing Global\nto unlock features", 90°)
 
 // Logo
 local:

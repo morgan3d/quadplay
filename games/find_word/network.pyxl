@@ -26,6 +26,7 @@ def maybe_connect_to_network():
 
     // Create the conduit when it is time for this player to connect 
     if not conduit and frame_utc_now > my_connect_time:
+        debug_print("Connecting to network")
         conduit = make_conduit()
 
 

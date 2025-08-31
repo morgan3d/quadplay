@@ -111,18 +111,19 @@ def _board_string_visit_subpaths_helper(board_string, index, used_mask, word, vi
         
 
 
-/* Return true if `word` can be found in `board_string`. See also `board_find_unencoded_word()`*/
+/* Return true if `word` can be found in `board_string`.
+   See also `board_find_unencoded_word()`*/
 def board_string_validate_word(board_string, word):
     let found = false
-    
+        
     def visit(prefix):
-        if found or not starts_with(word, prefix):
-            // Stop all other recursion once we've found the word on some
-            // other path, or determined that this prefix cannot lead to
-            // this word
+        if found or word[last_key(prefix)] ≠ last_value(prefix):
+            // Prune the search. Stop all other recursion once we've
+            // found the word on some other path, or determined that
+            // this prefix cannot lead to this word
             return true
         else if word == prefix:
-            // We found the word
+            // We found the word exactly
             found = true
             return true
     
@@ -442,3 +443,4 @@ def make_random_board_string(seed_base, permute_number default 0):
         
     if DEBUG.BOARD_SEARCH: debug_print(board_string)
     return {board_string: board_string, vowels: vowels}
+

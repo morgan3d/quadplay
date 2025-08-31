@@ -29,6 +29,14 @@ def draw_arc(pos, radius, start, stop, color):
         draw_line(prev, curr, color)
         prev = curr
         
+        
+        
+def capitalize(str):
+    const a = split(str, " ")
+    for i < size(a):
+        a[i] = uppercase(a[i][0]) + slice(a[i], 1)
+    return join(a, " ")
+    
 
 
 def draw_outlined_sprite(args, outline_color default #000):    

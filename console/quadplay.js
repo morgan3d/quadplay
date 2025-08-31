@@ -2961,6 +2961,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$updateInput        = updateInput;
         QRuntime.$resetTouchInput    = resetTouchInput;
         QRuntime.$systemPrint        = $systemPrint;
+        QRuntime.$outputAppend       = $outputAppend;
         QRuntime.$parseHexColor      = parseHexColor;
         QRuntime.$Physics            = Matter;
         QRuntime.$updateHostCodeCopyRuntimeDialogVisiblity = updateHostCodeCopyRuntimeDialogVisiblity;
@@ -3106,10 +3107,8 @@ function reloadRuntime(oncomplete) {
             get: function () {
                 if (mouse.movement_x || (mouse.screen_x !== mouse.screen_x_prev) ||
                     mouse.movement_y || (mouse.screen_y !== mouse.screen_y_prev)) {
-                    return {
-                        x: (mouse.screen_x - QRuntime.$offsetX) / QRuntime.$scaleX,
-                        y: (mouse.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY
-                    };
+                    const ss = {x: mouse.screen_x, y: mouse.screen_y};
+                    return QRuntime.transform_ss_to_ws(ss);
                 } else {
                     return undefined;
                 }
@@ -3175,42 +3174,60 @@ function reloadRuntime(oncomplete) {
         // Intentional error property to avoid typos
         Object.defineProperty(QRuntime.touch, 'a_pressed', {get: function () { throw 'No touch.a_pressed property exists. Use touch.pressed_a'; }});
         Object.defineProperty(QRuntime.touch, 'a_released', {get: function () { throw 'No touch.a_released property exists. Use touch.released_a'; }});
-        Object.defineProperty(QRuntime.touch, 'xy', xyGetter);
-        Object.defineProperty(QRuntime.touch, 'dxy', dxyGetter);
+        Object.defineProperty(QRuntime.touch, 'xy', {
+            enumerable: true,
+            get: function () {
+                return QRuntime.transform_ss_to_ws(this.screen_xy);
+            }
+        });
+    
+        Object.defineProperty(QRuntime.touch, 'dxy', {
+            enumerable: true,
+            get: function () {
+                // Transform both ends of the vector and then subtract
+                const delta  = QRuntime.transform_ss_to_ws(this.screen_dxy);
+                const origin = QRuntime.transform_ss_to_ws({x: 0, y: 0});
+
+                return {
+                    x: delta.x - origin.x,
+                    y: delta.y - origin.y
+                };
+            }
+        });
         Object.defineProperty(QRuntime.touch, 'x', {
             enumerable: true,
             get: function () {
-                return (this.screen_x - QRuntime.$offsetX) / QRuntime.$scaleX;
+                return this.xy.x;
             }
         });
         Object.defineProperty(QRuntime.touch, 'y', {
             enumerable: true,
             get: function () {
-                return (this.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY;
+                return this.xy.y;
             }
         });
         Object.defineProperty(QRuntime.touch, 'dx', {
             enumerable: true,
             get: function () {
-                return this.screen_dx / QRuntime.$scaleX;
+                return this.dxy.x;
             }
         });
         Object.defineProperty(QRuntime.touch, 'dy', {
             enumerable: true,
             get: function () {
-                return this.screen_dy / QRuntime.$scaleY;
+                return this.dxy.y;
             }
         });
         Object.defineProperty(QRuntime.touch, 'screen_xy', {
             enumerable: true,
             get: function () {
-                return {x: this.screen_x, y: this.screen_y}
+                return {x: this.screen_x, y: this.screen_y};
             }
         });
         Object.defineProperty(QRuntime.touch, 'screen_dxy', {
             enumerable: true,
             get: function () {
-                return {x: this.screen_dx, y: this.screen_dy}
+                return {x: this.screen_dx, y: this.screen_dy};
             }
         });
         Object.defineProperty(QRuntime.touch, 'hover', hoverGetter);

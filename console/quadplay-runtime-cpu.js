@@ -10515,7 +10515,8 @@ function set_mode(mode, ...args) {
     $previousGraphicsCommandList = [];
 
     if (mode.$name[0] !== '$') {
-        $systemPrint('Entering mode ' + mode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : '') + ' @ game_frames = ' + game_frames);
+        $systemPrint('');
+        $outputAppend('Enter ' + mode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : '') + ' @ game_frames=' + game_frames, $lastBecause.location);
     }
     
     // Run the enter callback on the new mode

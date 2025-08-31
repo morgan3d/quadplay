@@ -377,6 +377,9 @@ draw_most_words_award.skip = 0
 
 // End time of the post-game sequence INCLUDING the AnimateXP mode
 end_time = next_global_game_utc_start_time()
+if DEBUG.ANIMATE_XP:
+    end_time = frame_utc_now + ANIMATE_XP_SECONDS + 1
+    
 intermission_end_time = end_time - ANIMATE_XP_SECONDS
 
     

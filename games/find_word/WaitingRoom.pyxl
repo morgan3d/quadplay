@@ -13,7 +13,7 @@ assert(in_waiting_room == true)
 // End right when the next game starts so that this player can join
 end_time = prev_global_game_utc_start_time() + GLOBAL_PERIOD
 
-assert((end_time - frame_utc_now - 2 < INTERMISSION.SECONDS + GLOBAL_GAME.JOIN_MIN_REMAINING_TIME) or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP, 
+assert((end_time - frame_utc_now - 2 < INTERMISSION.SECONDS + ANIMATE_XP_SECONDS + GLOBAL_GAME.JOIN_MIN_REMAINING_TIME) or DEBUG.INTERMISSION or DEBUG.ANIMATE_XP, 
     "WaitingRoom time should not exceed intermission plus join min time. " +
     "end_time = " + end_time + ", frame_utc_now = " + frame_utc_now + ", " + (end_time - frame_utc_now - 2) + " >= " + (INTERMISSION.SECONDS + GLOBAL_GAME.JOIN_MIN_REMAINING_TIME))
 

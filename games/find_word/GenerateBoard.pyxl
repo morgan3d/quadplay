@@ -20,11 +20,11 @@ draw_text({
     pos: ½ SCREEN_SIZE})
 
 if mode_frames > 3:
-    const board_string = if DEBUG.BOO then "GHOS BOOT FEAR HALE" else (if not player.has_achievement["Play Solo Match"] then TUTORIAL.FIRST_TIME_BOARD else ∅)
+    const board_string = if DEBUG.BOO or DEBUG.INTERMISSION then "GHOS BOOT FEAR HALE" else (if not player.has_achievement["Play Solo Match"] then TUTORIAL.FIRST_TIME_BOARD else ∅)
     player_reset_match(player, game_type, board_string)
     
-    if DEBUG.INTERMISSION:
-        for i < 35:
+    if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP:
+        for i < 20:
             const word = random_value(player.board.word_list)
             if not player.already_found[word]:
                 player_add_to_history(player, word, score_word(word))

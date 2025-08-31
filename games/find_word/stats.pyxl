@@ -267,7 +267,7 @@ def today_date_string(update default false):
 /* 
     Update the player's stats and level given the results in 
     competitor from a global match. Does not save.
-    
+
     Returns a list of new unique words and the XP for badges and words.
 */
 def stats_update(stats, competitor, num_competitors, joined_late):
@@ -318,13 +318,6 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     if competitor == most_words_winner:
         ++stats_entry.badge_count.most_words
  
-    // XP for score
-    stats_entry.xp += ⌈competitor.score * XP.VALUE.point⌉
-    
-    // XP for badges
-    const badge_xp = if player.has_ability["Badge XP"] then (XP.VALUE.badge_per_competitor * min(num_competitors - 1, 10) * size(competitor.badges)) else 0
-    stats_entry.xp += badge_xp
-
     // Accumulate the words previously found by this player
     const previously_found = array_to_set([…stats.lifetime.word_list, …stats_entry.word_list], 1)
     
@@ -336,11 +329,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
                 push(stats_entry.word_list, word)
                 push(unique, word)
     
-    
-    const word_xp = if player.has_ability["Discovery XP"] then size(unique) * XP.VALUE.unique_word else 0
-    stats_entry.xp += word_xp
-    
-    return {unique_word_list: unique, badge_xp: badge_xp, word_xp: word_xp}
+    return unique
     
     
 

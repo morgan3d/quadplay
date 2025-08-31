@@ -40,7 +40,7 @@ if player.score > player.stats[today_date_string()].high_score and player.stats[
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if mode_frames == (if DEBUG.INTERMISSION then 0 else 60):
+if mode_frames == (if DEBUG.INTERMISSION or DEBUG.ANIMATE_XP then 0 else 60):
     // Make some bots to fill out the competitor list if offline or
     // there are too few players. Do this after almost a second so that
     // other players could come in first
@@ -53,6 +53,16 @@ const τ = min((frame_utc_now - start_time) / GATHER_SECONDS, 100%)
 update_network()
 
 set_background(GLOBAL_GAME.BACKGROUND_COLOR)
+
+todo("Remove network debugging statement")
+draw_text({
+    text: 
+        get_conduit_online_status() + ", " +
+        (if conduit then conduit.status else ∅),
+    font: history_font,
+    color: #CCC,
+    pos: xy(½ SCREEN_SIZE.x, 2),
+    y_align: "top"})
 
 draw_text({
     text: "Gathering Global Scores…",

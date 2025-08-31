@@ -20,7 +20,7 @@ const player = make_player()
 
 // When debugging, do not make a reset player at a reasonable level re-do basic achievements
 if DEBUG.FORCE_LEVEL > 3:
-    for achievement in ["Change Avatar", "Check Stats", "Use Remix", "Rotate Board", "Freestyle Word", "Exit Freestyle", "Play Solo Match", "Play Global Match"]:
+    for achievement in ["Change Avatar", "Check Stats", "Use Remix", "Rotate Board", "Freestyle Word", "Exit Freestyle", "Play Solo Match", "Play Global Match", "Play Second Global Match"]:
         player_achieve(player, achievement)
 
 let resolution_hook
@@ -32,7 +32,9 @@ let notification_hook
 let joined_late
 
 
-const ANIMATE_XP_SECONDS = (ANIMATE_XP.PRE_FRAMES + ANIMATE_XP.FRAMES + ANIMATE_XP.POST_FRAMES) / 60
+let ANIMATE_XP_SECONDS = 0
+for frames at stage in ANIMATE_XP.TIMING:
+    ANIMATE_XP_SECONDS += frames / 60
 
 /* Global games are synchronized to this clock in seconds, hitting
    this period exactly relative to UTC Unix 0 time */
