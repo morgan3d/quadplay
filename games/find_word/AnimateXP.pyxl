@@ -155,7 +155,7 @@ if size(discovered_word_list):
     // words of the same length.
     const words_by_tile_length = make_array(17, [], clone)
     for word in discovered_word_list:
-        push(words_by_tile_length[size(word)], word)
+        push(words_by_tile_length[size(word)], q_decode(word))
 
     for word_list at num_tiles in words_by_tile_length:
         if size(word_list):
