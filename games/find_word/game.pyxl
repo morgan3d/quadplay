@@ -26,15 +26,13 @@ if DEBUG.FORCE_LEVEL > 3:
     for achievement in ["Change Avatar", "Check Stats", "Use Remix", "Rotate Board", "Freestyle Word", "Exit Freestyle", "Play Solo Match", "Play Global Match", "Play Second Global Match"]:
         player_achieve(player, achievement)
 
-let resolution_hook
-let time_hook
-let input_hook
-let notification_hook
-
 /* Set by `Play.enter`. Used to track games that should not affect stats */
 let joined_late
 
+/* Particle system shared across all modes, managed by a hook */
+const particle_array = []
 
+/* Accumulated total time for this mode */
 let EARN_XP_SECONDS = 0
 for frames at stage in EARN_XP.TIMING:
     EARN_XP_SECONDS += frames / 60
@@ -127,25 +125,24 @@ def enquote_if(freestyle, text):
 
     
 def set_hooks():
-    if not notification_hook:
-        notification_hook = add_frame_hook(update_notifications, ∅, ∞, "all")
-    
-    if not input_hook:
-        input_hook = add_frame_hook(detect_input, ∅, ∞, "all")
-    
-    if not time_hook:
-        time_hook = add_frame_hook(_update_frame_utc_now, ∅, ∞, "all")
+    if set_hooks.done: return
+    set_hooks.done = true
         
-    if not resolution_hook:
-        // Fill the screen even at non-quadplay aspect ratios
-        // for a good mobile experience. See also `DEBUG.PORTRAIT`
-        device_control("set_mouse_cursor", "pointer")
-        
-        if DEBUG.PORTRAIT:
-            device_control("enable_feature", "custom_screen_size")
-            set_screen_size(xy(224, 412))
-        else:
-            resolution_hook = continuously_set_screen_size_to_window("smaller", 224)
+    // Fill the screen even at non-quadplay aspect ratios
+    // for a good mobile experience. See also `DEBUG.PORTRAIT`
+    device_control("set_mouse_cursor", "pointer")
+    
+    for func in [update_notifications, detect_input, _update_frame_utc_now, particles_update_and_draw]: 
+        add_frame_hook(func, ∅, ∞, "all", if func == particles_update_and_draw then particle_array else ∅)
+
+    ///////////////////////////////
+    // Resolution hook special case
+    
+    if DEBUG.PORTRAIT:
+        device_control("enable_feature", "custom_screen_size")
+        set_screen_size(xy(224, 412))
+    else:
+        continuously_set_screen_size_to_window("smaller", 224)
 
 
 

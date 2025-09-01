@@ -7,6 +7,7 @@
     "scripts": [
         "quad://scripts/screen_lib.pyxl",
         "quad://scripts/cursor_lib.pyxl",
+        "quad://scripts/particle_lib.pyxl",
         "notify_lib.pyxl",
         "util.pyxl",
         "dictionary.pyxl",
@@ -89,7 +90,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.433",
+    "version": "0.434",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
