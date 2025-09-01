@@ -30,8 +30,8 @@ def draw_row(y, caption, lifetime, today, color default alternating_color(), tod
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
     const x_left   = x - ½ WIDTH + 6
-    const x_center = x + (if today ≠ "N/A" then 30 else 63)
-    const x_right  = x + ½ WIDTH - 5
+    const x_center = x + (if today ≠ "N/A" then 29 else 62)
+    const x_right  = x + ½ WIDTH - 9
     
     if caption: draw_text({…args, text: caption, pos: xy(x_left, y)})
     

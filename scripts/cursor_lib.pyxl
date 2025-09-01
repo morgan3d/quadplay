@@ -329,7 +329,7 @@ def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change
     
     // Motion conservation per frame after touch drag ends.
     // 0% = none, 100% = infinite
-    const DRAG_INERTIA = 92%
+    const DRAG_INERTIA = 93%
     const VEL_THRESHOLD = 0.1
     
     const max_scroll = max(content_size - screen_scroll_rect.size, xy(0, 0))
