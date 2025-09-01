@@ -216,7 +216,7 @@ def draw_leaderboard()
         
         // Highlight
         const highlight_color = if friend then lerp(competitor.avatar.color, #333, 75%) else (if me then competitor.avatar.color else ∅)
-        draw_corner_rect(pos - xy(0, 9), xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH, 18), highlight_color, ∅, ∅, -1)
+        draw_corner_rect(pos - xy(0, 9), xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH, 18), highlight_color, ∅, ∅, -3)
 
         const text_args = {
             font: leaderboard_font,
