@@ -76,7 +76,8 @@ for i < ⌊max(N, 10) τ⌋:
         
         if competitor_is_friend(competitor) or competitor == player_competitor:
             // Background
-            draw_rect(pos - xy(0, 5), xy(20, 34), competitor.avatar.color)
+            draw_rect(pos - xy(0, 5), xy(20, 34), competitor.avatar.color, ∅, -2)
+            
             // Drop shadow
             avatar_draw({avatar: competitor.avatar, sprite: sprite, pos: pos + xy(0, 1), override_color: #000})
             

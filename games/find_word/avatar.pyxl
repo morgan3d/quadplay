@@ -57,8 +57,8 @@ def avatar_draw(args):
     // Aura effect    
     if args.avatar.level ≥ ABILITY_TABLE.Aura.level:
         const pulse = 20% oscillate(mode_frames / 45, 0, 1)
-        draw_sprite({…args, sprite: sprite, override_color: #FFF, scale: (115% + ½ pulse) * (args.scale default 100%), opacity: 50%, z: (args.z default 0) - 1})
-        draw_sprite({…args, sprite: sprite, override_color: #FF0, scale: (140% + pulse) * (args.scale default 100%), opacity: 20%, z: (args.z default 0) - 1})
+        draw_sprite({…args, sprite: sprite, override_color: #FFF, scale: (115% + ½ pulse) * (args.scale default 100%), opacity: 50%, z: (args.z default 0) - ε})
+        draw_sprite({…args, sprite: sprite, override_color: #FF0, scale: (140% + pulse) * (args.scale default 100%), opacity: 20%, z: (args.z default 0) - ε})
         todo("Particles for aura")
         
     draw_sprite({…args, sprite: sprite})

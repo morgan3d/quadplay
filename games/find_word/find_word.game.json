@@ -89,7 +89,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.430",
+    "version": "0.431",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
