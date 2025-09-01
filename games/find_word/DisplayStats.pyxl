@@ -1,7 +1,5 @@
 DisplayStats
 ════════════════════════════════════════════════════════════════════════
-todo("New ability unlock for per day stats, and show days")
-
 // Stable size independent of aspect ratio
 const WIDTH = min(SCREEN_SIZE.x, SCREEN_SIZE.y)
 
@@ -143,7 +141,7 @@ def draw_content():
         {ability: "Points/Match Stat",  title: "Points/Match",          format: "0",        field: "points",      per: "matches"},
         // This stat is misleading because when the player first unlocks freestyle they have played a lot of matches.
         // However, that makes it easy to get a new personal best every day, so we compute it this way as motivation.
-        {ability: "Freestyle Points/Match Stat",  title: "Freestyle Pts/Match",    format: "0",  field: "freestyle_points", per: "matches"},
+        {ability: "Freestyle Points/Match Stat",  title: "Freestyle Pts/Match",    format: "0",  field: "freestyle_points", per: "freestyle_matches"},
         {ability: "XP/Match Stat",      title: "XP/Match",              format: "commas",   field: "points",     per: "matches"},
         
         {ability: "Days Played Stat",   title: "Days Played",           format: "commas",   field: "days",       per: 1},
@@ -245,7 +243,7 @@ frame
 if landscape(): draw_background_words()
 draw_rect(½ SCREEN_SIZE, xy(WIDTH + 10, SCREEN_SIZE.y), #0009)
 
-draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 22, 15), scale: 200%})
+avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 22, 15), scale: 200%})
 
 local:
     const x = ½ SCREEN_SIZE.x - ½ WIDTH + 50

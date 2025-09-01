@@ -142,8 +142,8 @@ def draw_award_background(rect, field, color)
 
 def draw_most_words_award(winner)
 & if size(winner.word_list):
-    todo("** Show more words")
-    todo("** Generalize to most rare words")
+    todo("Show more words")
+    todo("Generalize to most rare words")
 
     maybe_play_award_sound(winner)
     ++draw_most_words_award.frames
@@ -229,7 +229,7 @@ def draw_leaderboard()
                 pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.AVATAR_X - 14, 0),
                 text: "♥"})
                 
-        draw_sprite(idle_animate_avatar(competitor.avatar.sprite.x_flipped, alt), pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.AVATAR_X, 0))
+        avatar_draw({avatar: competitor.avatar, sprite: idle_animate_avatar(competitor.avatar.sprite.x_flipped, alt), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.AVATAR_X, 0)})
         
         draw_text({…text_args,
             text: competitor.avatar.level,
@@ -237,9 +237,10 @@ def draw_leaderboard()
             x_align: "right",
             pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.LEVEL_X, 1),
             color: if me then #FFF else competitor.avatar.color})
-            
+                        
         draw_text({…text_args,
             text: competitor.avatar.name,
+            outline: if competitor.avatar.level ≥ ABILITY_TABLE.Aura.level then #888 * oscillate(mode_frames / 75, 0, 1) else ∅,
             pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.NAME_X, 0),
             color: if me then #FFF else competitor.avatar.color})
         

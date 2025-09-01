@@ -88,7 +88,8 @@ preserving_transform:
         if ⌊mode_frames / 30⌋ mod 2:
             sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
     
-        draw_sprite({
+        avatar_draw({
+            avatar: player.avatar,
             sprite: sprite.x_flipped,
             scale: 300%,
             pos: xy(x, -4)})

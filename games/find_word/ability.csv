@@ -36,4 +36,6 @@ Wild,30,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
 See VIL Always,40,SILENT
-Remix × 5,45,"New power: Use Remix 5× per match",ability_icon.remix
+Remix × 5,48,"New power: Use Remix 5× per match",ability_icon.remix
+Aura,50,"Give lower-level players bonus XP based on your score",icon_sprite.aura
+Remix × 6,68,"New power: Use Remix 6× per match",ability_icon.remix

@@ -9,7 +9,7 @@ let prev_xp
 let prev_level
 let new_xp
 
-/* {text, xp, color} objects shown sequentially to explain the XP awards  */
+/* {text, xp, color, avatar} objects shown sequentially to explain the XP awards  */
 let xp_array
 
 let scroll_offset
@@ -49,7 +49,10 @@ def draw_xp_table()
                 x_align: "right", 
                 y_align: "top",
                 pos: xy(180, y)})
-                
+        
+        if row.avatar:
+            avatar_draw({avatar: row.avatar, pos: xy(22, y + 5)})
+            
         y += draw_text({
             text: row.text,
             font: row.font default leaderboard_font,
@@ -57,7 +60,7 @@ def draw_xp_table()
             x_align: "left",
             y_align: "top",
             wrap_width: 145,
-            pos: xy(if row.xp or row.font then 16 else 0, y)}).height
+            pos: xy(if row.xp or row.font then (if row.avatar then 34 else 16) else 0, y)}).height
             
     scroll_offset = min(0, rect_height - y)
     
@@ -100,7 +103,7 @@ def draw_xp_bar()
     
     const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0) and mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES + EARN_XP.TIMING.BAR_FRAMES + ½ EARN_XP.TIMING.POST_FRAMES
     
-    draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(-20, 16), scale: 200%})
+    avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(-20, 16), scale: 200%})
     draw_text({text: player.avatar.name, pos: xy(10, 10), font: score_font, x_align: "left", color: #FFF})
 
     // Flash and turn pink on level change
@@ -111,9 +114,6 @@ def draw_xp_bar()
         text:    "Level " + level,
         x_align: "left",
         pos:     xy(10, 22)})
-
-    // Don't draw the bar at first
-    //if mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES: return
 
     draw_corner_rect(EARN_XP.xp_rect.corner + xy(0, 1), EARN_XP.xp_rect.size)
     
@@ -154,6 +154,33 @@ xp_array = [
     {text: format_number(player_competitor.score, "commas") + " Points", xp: ⌈player_competitor.score * XP.VALUE.point⌉, color: TABLE_ALT_ROW_COLOR}]
 
 
+// Presence bonuses
+const affinity_array = []
+
+// Don't receive any bonus if we have aura ourselves
+if not player.has_ability["Aura"]:
+    for competitor in competitor_array:
+        if not competitor.evil and competitor.avatar.level ≥ ABILITY_TABLE.Aura.level and competitor.score > 0:
+            push(affinity_array, {
+                text: trim_spaces(competitor.avatar.name) + "'s Aura",
+                avatar: competitor.avatar,
+                color: competitor.avatar.color,
+                xp: max(5, ⌈XP.VALUE.aura_point * competitor.score⌉)})
+
+for competitor in competitor_array:
+    if (competitor.avatar.id == BOT.MOO.ID or competitor.avatar.id == BOT.CAF.ID) and player.has_ability["Friend of Moo"]:
+        push(affinity_array, {
+            text: competitor.avatar.name + "'s Affection",
+            avatar: competitor.avatar,
+            color: competitor.avatar.color,
+            xp: XP.VALUE.cow_affection})
+
+if size(affinity_array):
+    push(xp_array,
+        {text: "Affinity", header: true, color: #FFF},
+        …affinity_array)
+
+
 if size(discovered_word_list) and player.has_ability["Discovery XP"]:
     push(xp_array, {text: "Discovered Words", color: #FFF})
     
@@ -165,12 +192,12 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
 
     for word_list at num_tiles in words_by_tile_length:
         if size(word_list):
-            push(xp_array, {
-                text: "" + size(word_list) + " × " + num_tiles + "-tile Words",
-                xp: (num_tiles - 2) * XP.VALUE.unique_word_per_tile,
-                color: TABLE_ALT_ROW_COLOR})
-                
-            push(xp_array, {
+            push(xp_array,
+            {
+                text: "" + size(word_list) + " × " + num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
+                xp: size(word_list) * (num_tiles - 2) * XP.VALUE.unique_word_per_tile,
+                color: TABLE_ALT_ROW_COLOR}, 
+            {
                 text: join(word_list, ", "),
                 font: history_font,
                 color: TABLE_ALT_ROW_COLOR})
@@ -188,7 +215,7 @@ if player_competitor.badges and player.has_ability["Award XP"]:
     for badge in player_competitor.badges:
         // Convert the badge back into text
         const text = replace(find(BADGE_TABLE, badge), "_", " ")
-        push(xp_array, {text: capitalize(text + (if contains(text, "word") then "" else " word")), xp: badge_xp, color: TABLE_ALT_ROW_COLOR})
+        push(xp_array, {text: badge + " " + capitalize(text + (if contains(text, "word") then "" else " word")), xp: badge_xp, color: TABLE_ALT_ROW_COLOR})
 
 
 // Only give streak awards for games where the player

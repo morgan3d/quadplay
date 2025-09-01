@@ -4,7 +4,6 @@
    on which avatars can be used. */
 const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 9
 
-    
 def avatar_save(avatar):
     // Other properties are recomputed on load
     save_local("avatar", {
@@ -44,7 +43,28 @@ def avatar_compute_color(sprite):
 
 
         
+/* Draws an avatar sprite with the specified arguments. The args object should contain
+   an `avatar` field and any arguments accepted by draw_sprite() such as `pos`, `scale`, 
+   `opacity`, `z`, `override_color`, etc. If `sprite` is provided in args, it will 
+   override the avatar's default sprite. */
+def avatar_draw(args):
+    const sprite = args.sprite default args.avatar.sprite
+
+    // Aura effect    
+    if args.avatar.level ≥ ABILITY_TABLE.Aura.level:
+        const pulse = 20% oscillate(mode_frames / 45, 0, 1)
+        draw_sprite({…args, sprite: sprite, override_color: #FFF, scale: (115% + ½ pulse) * (args.scale default 100%), opacity: 50%, z: (args.z default 0) - 1})
+        draw_sprite({…args, sprite: sprite, override_color: #FF0, scale: (140% + pulse) * (args.scale default 100%), opacity: 20%, z: (args.z default 0) - 1})
+        todo("Particles for aura")
+    
+    todo("Make avatars always idle-alive")
+    
+    draw_sprite({…args, sprite: sprite})
+
+
+
 def avatar_draw_large(avatar, pos, background default true, color, shadow default #000, spin default false):
+    todo("Unify avatar_draw_large and avatar_draw")
     
     draw_text({
         font: score_font,

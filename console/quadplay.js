@@ -4529,8 +4529,9 @@ function onInactive() {
     }
 }
 
+    
+function onActivatePage() {
 
-window.addEventListener('focus', function() {
     // Reset the bloom state; it might have disabled
     // while defocused due to browser throttling.
     allow_bloom = true;
@@ -4556,7 +4557,12 @@ window.addEventListener('focus', function() {
             loadGameAndConfigureUI(window.gameURL, null, true);
         }
     }
-}, false);
+}
+
+window.addEventListener('focus', onActivatePage, false);
+
+// Chromium memory saver/sleeping tabs seem to get 'resume' instead of 'focus'
+document.addEventListener('resume', onActivatePage, false);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

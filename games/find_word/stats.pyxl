@@ -31,6 +31,9 @@ def make_empty_stats_entry():
         points: 0,
         
         freestyle_points: 0,
+        
+        // Needed for normalizing freestyle correctly
+        freestyle_matches: 0,
 
         matches: 0,
         
@@ -228,7 +231,7 @@ def stats_merge_previous_days(stats)
         for field in ["best_score", "most_words"]:
             lifetime[field] = max(lifetime[field], day[field])
         
-        for field in ["words", "points", "matches", "xp", "days", "freestyle_points"]:
+        for field in ["words", "points", "matches", "freestyle_matches", "xp", "days", "freestyle_points"]:
             lifetime[field] += day[field]
             
         push(lifetime.word_list, …day.word_list)
@@ -293,9 +296,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
             stats_entry[field + "_text"]   = competitor[field + "_text"] 
     
     stats_entry.best_score = max(competitor.score, stats_entry.best_score)
-    
-    stats_entry.freestyle_points += competitor.freestyle_points
-    
+        
     const N = size(competitor.word_list) + size(competitor.freestyle_word_list)
     if N > stats_entry.most_words:
         stats_entry.most_words = N
@@ -303,7 +304,15 @@ def stats_update(stats, competitor, num_competitors, joined_late):
     if not joined_late:
         stats_entry.words += N
         stats_entry.points += competitor.score
-        ++stats_entry.matches
+        stats_entry.freestyle_points += competitor.freestyle_points
+                
+        if competitor.score:
+            // Don't count if they didn't score
+            ++stats_entry.matches
+        
+        if competitor.freestyle_points:
+            // Don't count if they didn't score
+            ++stats_entry.freestyle_matches
     
     todo("Abstract the award system to allow iteration")
     if competitor == competitor_array[0]:

@@ -33,6 +33,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 appears_human: descriptor.appears_human default false,
                 id: "BOT_" + descriptor.name},
             score: 0,
+            evil: descriptor.evil,
             best_wild_word_points: 0,
             best_wild_word_text: "",            
             word_list: [],
@@ -194,12 +195,14 @@ def insert_bots(competitor_array, target_count, max_bots):
     if player.has_ability["See Mz. Kiwi"]:
         maybe_add_bot_competitor(BOT.MZK.descriptor)
     
-
     // Add random bots based on time of day
     let c = 0
     while size(competitor_array) < target_count and BOT_DESCRIPTOR_ARRAY[c]:
         maybe_add_bot_competitor(BOT_DESCRIPTOR_ARRAY[c])
         ++c
+    
+    if DEBUG.AURA:
+        maybe_add_bot_competitor(BOT.aura_test_bot.descriptor)
 
 
 

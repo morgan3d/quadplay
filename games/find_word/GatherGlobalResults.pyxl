@@ -78,13 +78,13 @@ for i < ⌊max(N, 10) τ⌋:
             // Background
             draw_rect(pos - xy(0, 5), xy(20, 34), competitor.avatar.color)
             // Drop shadow
-            draw_sprite({sprite: sprite, pos: pos + xy(0, 1), override_color: #000})
+            avatar_draw({avatar: competitor.avatar, sprite: sprite, pos: pos + xy(0, 1), override_color: #000})
             
             // Heart
             if competitor ≠ player_competitor:
                 draw_text({pos: pos - xy(0, 14), text: "♥", color: #FFF, shadow: #000, font: leaderboard_font})
                             
-        draw_sprite(sprite, pos)
+        avatar_draw({avatar: competitor.avatar, sprite: sprite, pos: pos})
 
 if frame_utc_now ≥ end_time:
     set_mode(Intermission) because "Timer"

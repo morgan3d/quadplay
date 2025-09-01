@@ -86,9 +86,10 @@
         "vil_00_sound": "vil-00.sound.json",
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json",
-        "remix_recommended_sound": "quad://sounds/good-03.sound.json"
+        "remix_recommended_sound": "quad://sounds/good-03.sound.json",
+        "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.427",
+    "version": "0.428",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -97,7 +98,7 @@
     "high_scores": true,
     "dual_dpad": false,
     "midi_sysex": false,
-    "description": "Uncover words hidden in the grid in a world-wide real-time competition.",
+    "description": "Uncover hidden words in a world-wide real-time vocabulary roguelike.",
     "constants": {
         "DEC_TO_HEX": {
             "type": "string",
@@ -176,11 +177,11 @@
                         },
                         "TABLE_FRAMES": {
                             "type": "number",
-                            "value": "420"
+                            "value": "440"
                         },
                         "POST_TABLE_FRAMES": {
                             "type": "number",
-                            "value": "240"
+                            "value": "220"
                         },
                         "MID_FRAMES": {
                             "type": "number",
@@ -204,6 +205,14 @@
                 "VALUE": {
                     "type": "object",
                     "value": {
+                        "aura_point": {
+                            "type": "number",
+                            "value": 0.03
+                        },
+                        "cow_affection": {
+                            "type": "number",
+                            "value": 8
+                        },
                         "point": {
                             "type": "number",
                             "value": 0.4
@@ -1151,7 +1160,7 @@
                                 },
                                 "ROW_SPACING": {
                                     "type": "number",
-                                    "value": 16
+                                    "value": "17"
                                 },
                                 "NAME_X": {
                                     "type": "number",
@@ -1279,7 +1288,32 @@
                                 "name": "MzK",
                                 "sprite": "avatar_sprite[16][28]",
                                 "base_ability": 0.5,
+                                "evil": false,
                                 "short_word_preference": 0.8,
+                                "first_hour": 0,
+                                "last_hour": 23
+                            }
+                        }
+                    }
+                },
+                "aura_test_bot": {
+                    "description": "Test bot added when DEBUG.AURA = true",
+                    "type": "object",
+                    "value": {
+                        "ID": {
+                            "type": "string",
+                            "value": "BOT_GOD"
+                        },
+                        "descriptor": {
+                            "type": "raw",
+                            "description": "Argument to `make_bot_competitor`",
+                            "value": {
+                                "name": "GOD",
+                                "sprite": "avatar_sprite[0][0]",
+                                "base_ability": 0.7,
+                                "evil": false,
+                                "level": 99,
+                                "short_word_preference": 0.7,
                                 "first_hour": 0,
                                 "last_hour": 23
                             }
@@ -1301,6 +1335,7 @@
                                 "name": "Boo",
                                 "sprite": "avatar_sprite[45][12]",
                                 "base_ability": 0.16,
+                                "evil": false,
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
                                 "last_hour": 23,
@@ -1553,6 +1588,7 @@
                             "type": "raw",
                             "value": {
                                 "name": "VIL",
+                                "evil": true,
                                 "sprite": "avatar_sprite[25][20]",
                                 "base_ability": 0.42,
                                 "short_word_preference": 0.05,
@@ -1580,6 +1616,7 @@
                                 "name": "Moo",
                                 "sprite": "avatar_sprite[34][22]",
                                 "base_ability": 0.1,
+                                "evil": false,
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
                                 "last_hour": 23,
@@ -1906,6 +1943,7 @@
                             "value": {
                                 "name": "caf",
                                 "sprite": "avatar_sprite[33][22]",
+                                "evil": false,
                                 "base_ability": 0,
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
@@ -1935,6 +1973,10 @@
                     "value": false
                 },
                 "INTERMISSION": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "AURA": {
                     "type": "boolean",
                     "value": false
                 },
