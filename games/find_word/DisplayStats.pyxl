@@ -145,7 +145,7 @@ def draw_content():
         {ability: "XP/Match Stat",      title: "XP/Match",              format: "commas",   field: "points",     per: "matches"},
         
         {ability: "Days Played Stat",   title: "Days Played",           format: "commas",   field: "days",       per: 1},
-        {ability: "Matches/Day Stat",   title: "Matches/Day",           format: "0.0",      field: "matches",    per: "days"},
+        {ability: "Matches/Day Stat",   title: "Matches/Day",           format: "0",        field: "matches",    per: "days"},
         {ability: "XP/Day Stat",        title: "XP/Day",                format: "commas",   field: "xp",         per: "days"}]
 
     for ability, title, format, per, field in row in per_row_array

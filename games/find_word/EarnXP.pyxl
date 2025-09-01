@@ -168,7 +168,7 @@ if not player.has_ability["Aura"]:
                 xp: max(5, ⌈XP.VALUE.aura_point * competitor.score⌉)})
 
 for competitor in competitor_array:
-    if (competitor.avatar.id == BOT.MOO.ID or competitor.avatar.id == BOT.CAF.ID) and player.has_ability["Friend of Moo"]:
+    if competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"]:
         push(affinity_array, {
             text: competitor.avatar.name + "'s Affection",
             avatar: competitor.avatar,
