@@ -62,7 +62,7 @@ def draw_xp_table()
     scroll_offset = min(0, rect_height - y)
     
 
-
+todo("Match design of the stats view for the avatar")
 def draw_xp_bar()
 & preserving_transform:
     set_transform(xy(½ SCREEN_SIZE.x, 0))
