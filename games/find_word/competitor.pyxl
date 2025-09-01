@@ -86,7 +86,8 @@ def competitor_analyze(competitor_array):
         // Censor names by slicing off the 2nd letter, if inappropriate,
         // and replacing common letter substitutions to prevent casual
         // looks-like thwarting
-        if offensive[lowercase(replace(competitor.avatar.name, LOOKS_LIKE))] or sensitive[lowercase(competitor.avatar.name)]:
+        const looks_like = lowercase(replace(competitor.avatar.name, LOOKS_LIKE))
+        if offensive[looks_like] or sensitive[looks_like]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
 
         competitor.best_freestyle_word_points = 0

@@ -48,17 +48,19 @@ def avatar_compute_color(sprite):
    `opacity`, `z`, `override_color`, etc. If `sprite` is provided in args, it will 
    override the avatar's default sprite. */
 def avatar_draw(args):
-    const sprite = args.sprite default args.avatar.sprite
+    let sprite = args.sprite default args.avatar.sprite
 
+    // Idle animation for avatar
+    if ⌊mode_frames / 30⌋ mod 2:
+        sprite = sprite_transfer_orientation(sprite, sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1])
+        
     // Aura effect    
     if args.avatar.level ≥ ABILITY_TABLE.Aura.level:
         const pulse = 20% oscillate(mode_frames / 45, 0, 1)
         draw_sprite({…args, sprite: sprite, override_color: #FFF, scale: (115% + ½ pulse) * (args.scale default 100%), opacity: 50%, z: (args.z default 0) - 1})
         draw_sprite({…args, sprite: sprite, override_color: #FF0, scale: (140% + pulse) * (args.scale default 100%), opacity: 20%, z: (args.z default 0) - 1})
         todo("Particles for aura")
-    
-    todo("Make avatars always idle-alive")
-    
+        
     draw_sprite({…args, sprite: sprite})
 
 
@@ -125,14 +127,6 @@ def avatar_next_sprite(sprite, dir default +1):
 def avatar_next_name_letter(letter, dir default +1):
     const i = loop(find(AVATAR.NAME_ALPHABET, letter) + dir, size(AVATAR.NAME_ALPHABET))
     return AVATAR.NAME_ALPHABET[i]
-    
-
-
-def idle_animate_avatar(sprite, alt):
-    return (
-        if alt
-        then sprite_transfer_orientation(sprite, sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1])
-        else sprite)
 
     
     

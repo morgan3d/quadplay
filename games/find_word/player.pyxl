@@ -258,8 +258,7 @@ def player_draw_score(player, board_pos, time_left)
                 z: TILE.LETTER_Z})
     else if not in_waiting_room:
         // Gamepad prompts go in this space, so only draw the avatar in mouse/touch mode
-        const sprite = idle_animate_avatar(player.avatar.sprite, loop(time_left) < ½)
-        avatar_draw({avatar: player.avatar, sprite: if size(player.history.list) mod 2 then sprite else sprite.x_flipped, pos: score_pos - xy(width + 10, 1)})
+        avatar_draw({avatar: player.avatar, sprite: if size(player.history.list) mod 2 then ∅ else player.avatar.sprite.x_flipped, pos: score_pos - xy(width + 10, 1)})
       
         
 
