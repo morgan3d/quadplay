@@ -149,11 +149,11 @@ def player_selection_change_callback(player)
         
         // Update the auto button's list. Do this after player_add_to_history
         // so that the full word isn't found again
-        if player.has_ability["Scry Remixes"]:
+        if player.has_ability["Scry Remixes"] and not in_waiting_room:
             const previously_available = size(player.remix_list)
             player.remix_list = find_short_words_from_selection()            
             if player.remix_uses_left and size(player.remix_list) > 5 and not previously_available:
-                delay(play_sound, 5, {sound: remix_available_sound, volume: min(70% + 10% size(player.remix_list), 170%)})
+                delay(play_sound, 5, {sound: remix_recommended_sound, volume: min(70% + 10% size(player.remix_list), 170%)})
 
         return true
 

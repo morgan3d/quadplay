@@ -29,9 +29,9 @@ def alternating_color():
 def draw_row(y, caption, lifetime, today, color default alternating_color(), today_color default color, today_suffix default ∅):
     const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
     const x = ½ SCREEN_SIZE.x
-    const x_left   = x - ½ WIDTH + 12
-    const x_center = x + (if today ≠ "N/A" then 36 else 70)
-    const x_right  = x + ½ WIDTH - 10
+    const x_left   = x - ½ WIDTH + 6
+    const x_center = x + (if today ≠ "N/A" then 30 else 63)
+    const x_right  = x + ½ WIDTH - 5
     
     if caption: draw_text({…args, text: caption, pos: xy(x_left, y)})
     
@@ -113,8 +113,8 @@ def draw_content():
                 if better then "↑" else ∅)
 
     const most_row_array = [
-        {ability: "Most Words Stat", title: "Most Words/Match", format: "0",        field: "most_words"},
-        {ability: "High Score Stat", title: "Highest Score",    format: "commas",   field: "best_score"}]
+        {ability: "Most Words Stat", title: "Most Words", format: "0",        field: "most_words"},
+        {ability: "High Score Stat", title: "High Score", format: "commas",   field: "best_score"}]
 
     for ability, title, format, field in row in most_row_array:
         if player.has_ability[ability]:
@@ -124,10 +124,9 @@ def draw_content():
     if player.has_ability["Award Stat"]:
         for title at i in ["Highest Score", "Best Word", "Best Rare", "Longest", "Most Words"]:
             const field = lowercase(replace(title, " ", "_"))
-            y += draw_row(y, title + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"))
+            y += draw_row(y, replace(title, "Highest", "High") + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"))
     
     y += 10
-
     const total_row_array = [
         {ability: ∅,                        title: "XP",                field: "xp",        func: pass_through},
         {ability: "Total Words Stat",       title: "Total Words",       field: "words",     func: pass_through},
@@ -139,11 +138,10 @@ def draw_content():
 
     y += 10
     const per_row_array = [
-        // Computing matches/
         {ability: "Total Matches Stat", title: "Matches Played",        format: "commas",   field: "matches",     per: 1},
         {ability: "Words/Match Stat",   title: "Words/Match",           format: "0.0",      field: "words",       per: "matches"},
         {ability: "Points/Match Stat",  title: "Points/Match",          format: "0",        field: "points",      per: "matches"},
-        // This is misleading because when the player first unlocks freestyle they have played a lot of matches.
+        // This stat is misleading because when the player first unlocks freestyle they have played a lot of matches.
         // However, that makes it easy to get a new personal best every day, so we compute it this way as motivation.
         {ability: "Freestyle Points/Match Stat",  title: "Freestyle Pts/Match",    format: "0",  field: "freestyle_points", per: "matches"},
         {ability: "XP/Match Stat",      title: "XP/Match",              format: "commas",   field: "points",     per: "matches"},
@@ -152,9 +150,6 @@ def draw_content():
         {ability: "Matches/Day Stat",   title: "Matches/Day",           format: "0.0",      field: "matches",    per: "days"},
         {ability: "XP/Day Stat",        title: "XP/Day",                format: "commas",   field: "xp",         per: "days"}]
 
-
-    todo("XP/Match formatted with period, should have commas")
-        
     for ability, title, format, per, field in row in per_row_array
     & if player.has_ability[ability]:
         if title == "Days Played": y += 10
@@ -189,7 +184,7 @@ def draw_content():
 
         if not player.has_ability[name]:
             // We're done with abilities, having shown one more
-            // than required
+            // than earned as a preview
             break
 
     if player.has_ability["Discovered Words Stat"]:
@@ -201,7 +196,7 @@ def draw_content():
                 outline: #000,
                 font: history_font,
                 text: text,
-                wrap_width: WIDTH - 20,
+                wrap_width: WIDTH - 10,
                 markup: true,
                 y_align: "top",
                 x_align: "left"}).height + 20
@@ -247,8 +242,8 @@ for array in text_array:
 
 frame
 ────────────────────────────────────────────────────────────────────────
-draw_background_words()
-draw_rect(½ SCREEN_SIZE, xy(WIDTH, SCREEN_SIZE.y), #0009)
+if landscape(): draw_background_words()
+draw_rect(½ SCREEN_SIZE, xy(WIDTH + 10, SCREEN_SIZE.y), #0009)
 
 draw_sprite({sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 22, 15), scale: 200%})
 
