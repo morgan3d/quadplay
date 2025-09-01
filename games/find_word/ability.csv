@@ -18,6 +18,7 @@ Points/Match Stat,11,Average Points per Match is now available in Stats!,stats_s
 Total Words Stat,14,Total Words count is now available in Stats!,stats_sprite[0][0]
 Freestyle,15,New ability: Use Freestyle to make one unordered sequence per match,ability_icon.freestyle
 Total Matches Stat,16,Total Matches count is now available in Stats!,stats_sprite[0][0]
+XP/Day Stat,17,"You can now track XP per match and trends in Stats!",stats_sprite[0][0]
 Scry Remixes,18,"See the number of previously discovered short words using the tiles of your last word",ability_icon.remix
 Award XP,19,You now gain an XP bonus for every match award you win!,stats_sprite[0][0]
 Scry Word Count,20,You can now see the total number of possible words while playing!,shapes.eye
@@ -27,8 +28,11 @@ Award Stat,22,"Awards won is now tracked in Stats!",stats_sprite[0][0]
 Freestyle Points/Match Stat,24,"Freestyle points per match are now tracked in stats!",stats_sprite[0][0]
 Remix × 2,25,"New power: Use Remix 2× per match",ability_icon.remix
 See VIL Frequently,25,SILENT,
+Days Played Stat,27,"You can now track days played in Stats!",stats_sprite[0][0]
 Remix × 3,28,"New power: Use Remix 3× per match",ability_icon.remix
+Matches/Day Stat,29,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]
 See VIL More Frequently,30,SILENT,
+XP/Day Stat,30,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,32,"New power: Use Remix 4× per match",ability_icon.remix
 Wild,37,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 See VIL Always,40,SILENT
