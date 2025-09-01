@@ -241,19 +241,20 @@ if not DEBUG.INTERMISSION and not DEBUG.EARN_XP:
 frame
 ────────────────────────────────────────────────────────────────────────
 
-todo("Remove network debugging code")
-preserving_transform:
-    set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 16))
-    draw_rect(xy(0, 10), xy(224, 15), #B0FA, ∅, ∅, 100)
-    draw_text({
-        text: "Test: " + debug_network_status,
-        font: leaderboard_font,
-        color: #CCC,
-        outline: #000,
-        shadow: #000,
-        pos: xy(0, 5),
-        y_align: "top",
-        z: 101})
+if DEBUG_NETWORK_ON_SCREEN:
+    preserving_transform:
+        todo("Remove network debugging code")
+        set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 16))
+        draw_rect(xy(0, 10), xy(224, 15), #B0FA, ∅, ∅, 100)
+        draw_text({
+            text: "Test: " + debug_network_status,
+            font: leaderboard_font,
+            color: #CCC,
+            outline: #000,
+            shadow: #000,
+            pos: xy(0, 5),
+            y_align: "top",
+            z: 101})
 
 
 draw_xp_table()

@@ -329,7 +329,7 @@ def update_intermission_countdown():
     draw_rect(autostart_rect.pos - xy(0, 5), autostart_rect.size - 9, #000, #FFF)
     
     if touch.pressed_a and overlaps(touch.xy, autostart_rect):
-        play_sound(tile_select_sound)
+        play_sound(select_tile_sound)
         update_intermission_countdown.ready = not update_intermission_countdown.ready
         save_local("autostart", update_intermission_countdown.ready)
         

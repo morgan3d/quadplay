@@ -8333,10 +8333,10 @@ function format_number(n, fmt) {
         break;
     case 'commas':
     case ',':
-        s = n.toLocaleString('en');
+        s = $Math.round(n).toLocaleString('en');
         break;
     case 'spaces':
-        s = n.toLocaleString('fr');
+        s = $Math.round(n).toLocaleString('fr');
         break;
     case 'binary':
         s ='0b' + n.toString(2);

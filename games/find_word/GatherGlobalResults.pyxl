@@ -92,9 +92,10 @@ if frame_utc_now ≥ end_time:
     
 leave
 ────────────────────────────────────────────────────────────────────────
-if DEBUG.OFFLINE:
-    debug_network_status = "DEBUG.OFFLINE"
-else:
-    debug_network_status = get_conduit_online_status() + ", " + (if conduit then conduit.status else "∅")
+if DEBUG_NETWORK_ON_SCREEN:
+    if DEBUG.OFFLINE:
+        debug_network_status = "DEBUG.OFFLINE"
+    else:
+        debug_network_status = get_conduit_online_status() + ", " + (if conduit then conduit.status else "∅")
 
 competitor_analyze(competitor_array)

@@ -2251,6 +2251,12 @@ if (useIDE) {
     // https://ajaxorg.github.io/ace-api-docs/interfaces/ace.Ace.EditorOptions.html
     aceEditor.setOptions({
         showPrintMargin: false,
+        useSoftTabs: true,
+        tabSize: 4,
+        fixedWidthGutter: true,
+        navigateWithinSoftTabs: true,
+        cursorStyle: 'smooth',
+        vScrollBarAlwaysVisible: true,
         displayIndentGuides: true}); // true is the default
     
     // Save when losing focus

@@ -596,11 +596,14 @@ function createCodeEditorSession(url, bodyText, assetName) {
 
         fileType: url.replace(/^.+\.([A-Za-z0-9]+)$/, '$1')
     };
-    
-    session.setUseSoftTabs(true);
-    session.setTabSize(4);
-    session.setUseWrapMode(false);
-    session.setUseWorker(false);
+
+    session.setOptions({
+        useSoftTabs: true,
+        tabSize: 4,
+        navigateWithinSoftTabs: true,
+        wrap: false,
+        useWorker: false
+    })
 
     if (url.endsWith('.yaml')) {
         session.setMode('ace/mode/yaml');

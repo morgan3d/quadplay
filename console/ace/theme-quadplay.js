@@ -2,6 +2,7 @@ define("ace/theme/quadplay",["require","exports","module","ace/lib/dom"], functi
 
 exports.isDark = true;
 exports.cssClass = "ace-quadplay";
+
 exports.cssText = ".ace-quadplay .ace_gutter {\
 background: #302b2b;\
 color: #DEDEDE\
@@ -114,12 +115,15 @@ color: #93d884\
 color: #798aee\
 }\
 .ace-quadplay .ace_indent-guide:nth-child(3n+1) {\
+    margin-right: -1px;\
     border-right: rgba(255, 255, 255, 8%) 1px dotted;\
 }\
 .ace-quadplay .ace_indent-guide:nth-child(3n+2) {\
+    margin-right: -1px;\
     border-right: rgba(20, 255, 255, 10%) 1px dotted;\
 }\
 .ace-quadplay .ace_indent-guide:nth-child(3n+0) {\
+    margin-right: -1px;\
     border-right: rgba(255, 55, 200, 17%) 1px dotted;\
 }";
 
