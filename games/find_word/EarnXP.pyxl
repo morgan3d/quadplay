@@ -67,7 +67,7 @@ def draw_xp_table()
         y += draw_text({
             text: "Your Aura Helped",
             font: leaderboard_font,
-            color: row.color,
+            color: #FFF,
             x_align: "center",
             y_align: "top",
             wrap_width: 145,
