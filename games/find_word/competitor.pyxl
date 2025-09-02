@@ -116,6 +116,11 @@ def competitor_analyze(competitor_array):
     // Count at which a word is rare
     const rare_threshold = max(1, ⌊⅙ size(competitor_array)⌋)
 
+    if not competitor.rare_word_list:
+        todo("Remove")
+        competitor.rare_word_list = []
+        play_sound(vil_00_sound)
+
     // Find the best rare word for each competitor
     for competitor in competitor_array:
         competitor.best_rare_points = 0
