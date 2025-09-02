@@ -17,7 +17,7 @@ let scroll_offset
 def draw_xp_table()
 & preserving_transform:
     // -16 is for the debugging stuff at the bottom
-    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT - 16
+    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT - (if DEBUG_NETWORK_ON_SCREEN then 16 else 0)
     
     set_clip(xy(0, EARN_XP.BAR_SECTION_HEIGHT), xy(SCREEN_SIZE.x, rect_height))
     set_transform(xy(½ SCREEN_SIZE.x - 100, scroll_offset + EARN_XP.BAR_SECTION_HEIGHT))
@@ -168,7 +168,7 @@ if not player.has_ability["Aura"]:
                 text: trim_spaces(competitor.avatar.name) + "'s Aura",
                 avatar: competitor.avatar,
                 color: competitor.avatar.color,
-                xp: max(5, ⌈XP.VALUE.aura_point * competitor.score⌉)})
+                xp: max(5, ⌈(if competitor.avatar.level ≥ ABILITY_TABLE["Enhanced Aura"].level then XP.VALUE.enhanced_aura_point else XP.VALUE.aura_point) * competitor.score⌉)})
 
 for competitor in competitor_array:
     if competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"]:

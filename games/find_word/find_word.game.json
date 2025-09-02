@@ -90,7 +90,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.435",
+    "version": "0.437",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -209,6 +209,10 @@
                         "aura_point": {
                             "type": "number",
                             "value": 0.03
+                        },
+                        "enhanced_aura_point": {
+                            "type": "number",
+                            "value": 0.05
                         },
                         "caf_affection": {
                             "type": "number",
@@ -1965,7 +1969,7 @@
         },
         "DEBUG_NETWORK_ON_SCREEN": {
             "type": "boolean",
-            "value": true
+            "value": false
         },
         "DEBUG": {
             "type": "object",
