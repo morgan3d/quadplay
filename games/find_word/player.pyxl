@@ -168,12 +168,21 @@ def player_add_to_free(player, word, points):
 /* Returns the color. Updates the score. Does not verify that the word has
    not been found previously. `word` is Q-encoded */ 
 def player_add_to_history(player, word, points):
-    if player_free_contains(player, word):
+    const i = find(player.history.free, {word: word}, ∅, "word")
+    
+    if i ≠ ∅:
         // This word was made in free mode unnecessarily. Steal it
         // so that it is locked in if they later change the free row
-        todo("Animate moving from free list to regular history")
-        remove_values(player.history.free, {word: word}, "word")
-    
+
+        const entry = player.history.free[i]
+        // At the time when this function is called, the board transform is set.
+        // We want the history transform, which happens to be (0,0) for both layouts
+        const ws_pos = transform_ss_to_ws(entry.pos)
+        for j < 20 size(word):
+            particles_spawn(particle_array, ws_pos + xy(j / 3, 0), 0.4 random_on_circle() * xy(size(word), 1), entry.color, 1, 10)
+            
+        remove_key(player.history.free, i)
+        
     player.already_found[word] = true
     player.score += points
     return history_add(player.history, "list", word, points)

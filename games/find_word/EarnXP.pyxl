@@ -61,10 +61,27 @@ def draw_xp_table()
             y_align: "top",
             wrap_width: 145,
             pos: xy(if row.xp or row.font then (if row.avatar then 34 else 16) else 0, y)}).height
+    
+    // Show who your aura helped
+    if player.has_ability["Aura"] and player.score > 0:  
+        y += draw_text({
+            text: "Your Aura Helped",
+            font: leaderboard_font,
+            color: row.color,
+            x_align: "center",
+            y_align: "top",
+            wrap_width: 145,
+            pos: xy(½ SCREEN_SIZE.x, y)}).height + 20
             
-            
-    todo("Show who your aura helped")
-
+        let x = 30
+        for competitor in competitor_array:
+            if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0:
+                avatar_draw({avatar: competitor.avatar, pos: xy(x, y - 8)})
+                x += 24
+                if x > SCREEN_SIZE.x - 30:
+                    y += 24
+                    x = 30
+        
     scroll_offset = min(0, rect_height - y)
     
 
@@ -161,7 +178,7 @@ xp_array = [
 const affinity_array = []
 
 // Don't receive any bonus if we have aura ourselves
-if not player.has_ability["Aura"]:
+if not player.has_ability["Aura"] and player.score > 0:
     for competitor in competitor_array:
         if not competitor.evil and competitor.avatar.level ≥ ABILITY_TABLE.Aura.level and competitor.score > 0:
             push(affinity_array, {
@@ -171,7 +188,7 @@ if not player.has_ability["Aura"]:
                 xp: max(5, ⌈(if competitor.avatar.level ≥ ABILITY_TABLE["Enhanced Aura"].level then XP.VALUE.enhanced_aura_point else XP.VALUE.aura_point) * competitor.score⌉)})
 
 for competitor in competitor_array:
-    if competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"]:
+    if competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"] and player.score > 0:
         push(affinity_array, {
             text: competitor.avatar.name + "'s Affection",
             avatar: competitor.avatar,

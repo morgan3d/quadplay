@@ -8,7 +8,7 @@ def make_history():
         list: [],
         
         /* 
-          `[{text, word, points}, …]`. Recomputed by `update_free_row_list()`
+          `[{text, word, points, color, …}, …]`. Recomputed by `update_free_row_list()`
           in the `freePhase` mode.
             
          `size(last_value().word)` is the number of tiles used in a word.
