@@ -41,6 +41,37 @@ const award_winner = {
     most_rare_words: ∅}
 
 
+
+def make_competitor():
+    return {
+        // Set on construction
+        avatar: ∅,
+        score: 0,
+        freestyle_points: 0,
+        word_list: [],
+        freestyle_word_list: [],
+        
+        // Evil characters do not give or receive aura
+        evil: false,
+
+        // Computed by analyze
+        best_word_points: 0,
+
+        best_freestyle_word_points: 0,
+        best_freestyle_word_text: "",
+
+        best_wild_word_points: 0,
+        best_wild_word_text: "",
+
+        best_rare_points: 0,
+        best_rare_text: "",
+
+        rare_word_list: [],
+        
+        badges: ""}
+    
+    
+
 /* Are they a friend of the player_competitor */
 def competitor_is_friend(competitor):
     todo("Remove when we have a friending UI")
@@ -56,13 +87,11 @@ def competitor_is_friend(competitor):
 /* Convert the local player into a competitor */
 def make_player_competitor():
     const competitor = {
+        …make_competitor(),
         avatar: player.avatar,
         score: player.score,
         best_wild_word_points: player.wild_word_points,
-        best_wild_word_text: player.wild_word_text,
-        word_list: [],
-        rare_word_list: [],
-        freestyle_word_list: []}
+        best_wild_word_text: player.wild_word_text}
 
     for list in [
         [player.history.list, competitor.word_list],
@@ -81,20 +110,13 @@ def competitor_analyze(competitor_array):
     const count = {}
     
     // Compute everyone's best results
-    for competitor in competitor_array:
-        competitor.badges = ""
-        
+    for competitor in competitor_array:        
         // Censor names by slicing off the 2nd letter, if inappropriate,
         // and replacing common letter substitutions to prevent casual
         // looks-like thwarting
         const looks_like = lowercase(replace(competitor.avatar.name, LOOKS_LIKE))
         if offensive[looks_like] or sensitive[looks_like]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
-
-        competitor.best_freestyle_word_points = 0
-        competitor.best_freestyle_word_text = ""
-        competitor.freestyle_points = 0
-        competitor.best_word_points = 0
         
         for prefix in ["", "freestyle_"]:
             for word, points in entry in competitor[prefix + "word_list"]:
@@ -118,9 +140,6 @@ def competitor_analyze(competitor_array):
 
     // Find the best rare word for each competitor
     for competitor in competitor_array:
-        todo("** Move this initialization out to a common make_competitor()")
-        competitor.best_rare_points = 0
-        competitor.best_rare_text = ""
     
         if not competitor.rare_word_list:
             todo("Remove")
@@ -158,7 +177,6 @@ def competitor_assign_awards(competitor_array):
     for field in keys(award_winner):
         award_winner[field] = competitor_array[0]
     
-    
     for competitor in competitor_array:
         if competitor.best_word_points > award_winner.best_word.best_word_points:
             award_winner.best_word = competitor
@@ -175,6 +193,7 @@ def competitor_assign_awards(competitor_array):
         if size(competitor.rare_word_list) > size(award_winner.most_rare_words.rare_word_list):
             award_winner.most_rare_words = competitor
 
+    todo("Make data driven")
     // Now loop again and give badges, including for ties:
     for competitor in competitor_array:
         // Put in the same order as the award INTERMISSION.STAGEs

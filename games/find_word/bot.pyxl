@@ -25,6 +25,8 @@ def insert_bots(competitor_array, target_count, max_bots):
 
         const bot_rng = make_random(descriptor.name + match_shift)
         const competitor = {
+            …make_competitor(),
+            
             avatar: {
                 // Bots face left
                 sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
@@ -32,13 +34,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 bot: true,
                 appears_human: descriptor.appears_human default false,
                 id: "BOT_" + descriptor.name},
-            score: 0,
-            evil: descriptor.evil,
-            best_wild_word_points: 0,
-            best_wild_word_text: "",            
-            word_list: [],
-            rare_word_list: [],
-            freestyle_word_list: []}
+            evil: descriptor.evil}
     
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
         competitor.avatar.level = descriptor.level default clamp(⌈140 descriptor.base_ability^(1.3)⌉, 1, 40)
