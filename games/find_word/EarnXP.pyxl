@@ -60,7 +60,7 @@ def draw_xp_table()
             x_align: "left",
             y_align: "top",
             wrap_width: 145,
-            pos: xy(if row.xp or row.font then (if row.avatar then 34 else 16) else 0, y)}).height
+            pos: xy(if row.avatar then 34 else (if row.xp or row.font then 16 else 0), y)}).height
             
     scroll_offset = min(0, rect_height - y)
     
@@ -141,6 +141,7 @@ enter
 set_background(#000)
 scroll_offset = 0
 
+todo("These header properties are ignored")
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 last_level_displayed = prev_level
@@ -187,6 +188,7 @@ if player.has_ability["Aura"] and player.score > 0:
         
     for competitor in competitor_array:
         if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0:
+            // TODO: why is the alignment broken?
             push(aura_array, {avatar: competitor.avatar, text: competitor.avatar.name, color: TABLE_ALT_ROW_COLOR})
 
     if size(aura_array):
