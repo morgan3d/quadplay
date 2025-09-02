@@ -8,7 +8,6 @@
         badges
         freestyle_points
    
-        num_rare
         longest_text
         longest_freestyle_text
         best_word_points
@@ -21,6 +20,7 @@
         best_rare_text
         word_list
         freestyle_word_list
+        rare_word_list
         score
     }```
    
@@ -32,13 +32,13 @@ const competitor_array = []
 
 let player_competitor
 
-todo("Add most rare award")
-
-// Competitors winning each award
-let best_word_winner
-let best_rare_winner
-let longest_winner
-let most_words_winner
+/* Competitors winning each award */
+const award_winner = {
+    best_word: ∅,
+    best_rare: ∅,
+    longest: ∅,
+    most_words: ∅,
+    most_rare_words: ∅}
 
 
 /* Are they a friend of the player_competitor */
@@ -61,6 +61,7 @@ def make_player_competitor():
         best_wild_word_points: player.wild_word_points,
         best_wild_word_text: player.wild_word_text,
         word_list: [],
+        rare_word_list: [],
         freestyle_word_list: []}
 
     for list in [
@@ -117,15 +118,13 @@ def competitor_analyze(competitor_array):
 
     // Find the best rare word for each competitor
     for competitor in competitor_array:
-    
-        competitor.num_rare = 0
         competitor.best_rare_points = 0
         competitor.best_rare_text = ""
     
         for word, points in entry in competitor.word_list:
             if count[word] ≤ rare_threshold:
                 // This word has appeared very few times
-                ++competitor.num_rare
+                push(competitor.rare_word_list, entry)
                 
                 if points > competitor.best_rare_points:
                     competitor.best_rare_points = points
@@ -150,36 +149,40 @@ def competitor_assign_awards(competitor_array):
     
     // Find the winner in each category. Ties are broken
     // by total score by running in order after that sort
-    best_word_winner  = competitor_array[0]
-    best_rare_winner  = competitor_array[0]
-    longest_winner    = competitor_array[0]
-    most_words_winner = competitor_array[0]
+    for field in keys(award_winner):
+        award_winner[field] = competitor_array[0]
+    
     
     for competitor in competitor_array:
-        if competitor.best_word_points > best_word_winner.best_word_points:
-            best_word_winner = competitor
+        if competitor.best_word_points > award_winner.best_word.best_word_points:
+            award_winner.best_word = competitor
             
-        if competitor.best_rare_points > best_rare_winner.best_rare_points:
-            best_rare_winner = competitor
+        if competitor.best_rare_points > award_winner.best_rare.best_rare_points:
+            award_winner.best_rare = competitor
 
-        if size(competitor.longest_text) > size(longest_winner.longest_text):
-            longest_winner = competitor
+        if size(competitor.longest_text) > size(award_winner.longest.longest_text):
+            award_winner.longest= competitor
             
-        if size(competitor.word_list) + size(competitor.freestyle_word_list) > size(most_words_winner.word_list) + size(most_words_winner.freestyle_word_list):
-            most_words_winner = competitor
+        if size(competitor.word_list) + size(competitor.freestyle_word_list) > size(award_winner.most_words.word_list) + size(award_winner.most_words.freestyle_word_list):
+            award_winner.most_words = competitor
+            
+        if size(competitor.rare_word_list) > size(award_winner.most_rare_words.rare_word_list):
+            award_winner.most_rare_words = competitor
 
     // Now loop again and give badges, including for ties:
     for competitor in competitor_array:
         // Put in the same order as the award INTERMISSION.STAGEs
-        if competitor.best_word_points == best_word_winner.best_word_points:
+        if competitor.best_word_points == award_winner.best_word.best_word_points:
             competitor.badges += BADGE_TABLE.best_word
         
-        if competitor.best_rare_points == best_rare_winner.best_rare_points:
+        if competitor.best_rare_points == award_winner.best_rare.best_rare_points:
             competitor.badges += BADGE_TABLE.best_rare
 
-        if size(competitor.longest_text) == size(longest_winner.longest_text):
+        if size(competitor.longest_text) == size(award_winner.longest.longest_text):
             competitor.badges += BADGE_TABLE.longest
 
-        if size(competitor.word_list) == size(most_words_winner.word_list):
+        if size(competitor.word_list) == size(award_winner.most_words.word_list):
             competitor.badges += BADGE_TABLE.most_words
     
+        if size(competitor.rare_word_list) == size(award_winner.most_rare_words.rare_word_list):
+            competitor.badges += BADGE_TABLE.most_rare_words

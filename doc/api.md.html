@@ -324,7 +324,7 @@ String
 
 `capitalized(string)`
 : Returns a new string with the first letter of each word capitalized. Existing capital
-  letters are unchanged.
+  letters are unchanged. See also `titlecase()`, `lowercase()`, `uppercase()`
 
 `contains(string, substring)`
 : Returns `true` if `substring` appears at least once in `string`
@@ -451,6 +451,9 @@ String
 : Returns a decompressed version of the string. The compression ratio varies with content.
   Expect between 2x and 10x reduction in length for typical text or word lists.
   Recognizes strings that lack the compression header and returns them unchanged.
+
+`titlecase(string)`
+: Same as `capitalized(lowercase(string))`.
 
 `trim_spaces(string)`
 : Returns a new string that is the original with whitespace removed

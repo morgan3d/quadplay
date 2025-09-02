@@ -37,6 +37,7 @@ def insert_bots(competitor_array, target_count, max_bots):
             best_wild_word_points: 0,
             best_wild_word_text: "",            
             word_list: [],
+            rare_word_list: [],
             freestyle_word_list: []}
     
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)

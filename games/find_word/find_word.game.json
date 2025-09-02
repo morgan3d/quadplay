@@ -90,7 +90,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.445",
+    "version": "0.446",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -553,7 +553,7 @@
         "BADGE_TABLE": {
             "type": "object",
             "value": {
-                "most_rare": {
+                "most_rare_words": {
                     "type": "string",
                     "value": "★"
                 },
@@ -1120,14 +1120,19 @@
                             "type": "number",
                             "value": 4
                         },
-                        "LONGEST": {
+                        "MOST_RARE_WORDS": {
                             "type": "number",
                             "value": 5
+                        },
+                        "LONGEST": {
+                            "type": "number",
+                            "value": 6
                         }
                     },
                     "description": "Constants for intermission awards stages"
                 },
                 "MOST_WORDS_AWARD_FRAMES_PER_WORD": {
+                    "description": "Applies to both most_rare and most_words awards",
                     "type": "number",
                     "value": "38",
                     "min": 1,

@@ -142,7 +142,7 @@ set_hooks()
 easter_egg = if player.avatar.level > 20 and ξ < 8% then 2 else (if player.avatar.level > 15 and ξ < 10% then 1 else 0)
 
 if not easter_egg and player.stats.lifetime.xp > 2000 and ξ < 1.5%:
-    notify(shapes.lightning, "Please Backup", "FWAN is in beta and could crash!\n\nUse the gear button to export a save game as a backup.")
+    notify(shapes.gear, "Please Backup", "FWAN is in beta and could crash!\n\nUse the gear button to export a save game as a backup.")
 
 
 // Initialize the fake board

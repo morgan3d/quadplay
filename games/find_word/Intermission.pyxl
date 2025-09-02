@@ -40,16 +40,19 @@ def draw_awards()
         draw_award_summary()
    
     else if stage == INTERMISSION.STAGE.BEST_WORD:
-        draw_word_award("Best Word", best_word_winner)
+        draw_word_award("Best Word", award_winner.best_word)
    
     else if stage == INTERMISSION.STAGE.LONGEST:
-        draw_word_award("Longest", longest_winner)
+        draw_word_award("Longest", award_winner.longest)
         
     else if stage == INTERMISSION.STAGE.BEST_RARE:
-        draw_word_award("Best Rare", best_rare_winner)
+        draw_word_award("Best Rare", award_winner.best_rare)
+
+    else if stage == INTERMISSION.STAGE.MOST_RARE_WORDS:
+        draw_most_words_award("Most Rare Words", award_winner.most_rare_words)
     
     else if stage == INTERMISSION.STAGE.MOST_WORDS:
-        draw_most_words_award(most_words_winner)
+        draw_most_words_award("Most Words", award_winner.most_words)
 
 
 
@@ -80,7 +83,7 @@ def draw_award_summary():
     draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 2) + xy(105, 12), x_align: "right", markup: true})
 
     draw_text({…args, text: "Rare Words", pos: xy(49, 26)})
-    draw_text({…args, text: player_competitor.num_rare, pos: xy(135, 26), x_align: "right"})
+    draw_text({…args, text: size(player_competitor.rare_list), pos: xy(135, 26), x_align: "right"})
 
     // draw_text({…args, text: "Longest", pos: xy(x, 24)})
     // draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
@@ -108,17 +111,13 @@ def maybe_play_award_sound(winner):
 /* Used for best_word, longest, The title is used to compute the field */
 def draw_word_award(title, winner):
  
-    const field = replace(lowercase(title), {" ": "_"})
+    const field = replace(lowercase(title), " ", "_")
     const text = winner[field + "_text"]
 
     if text:
         maybe_play_award_sound(winner)
         
-        draw_award_background({corner: xy(0, 12), size: xy(69, 37)}, field, winner.avatar.color)
-    
-        draw_text({font: history_font, text: title + "!", color: player.board.selection_color, shadow: #000, pos: xy(35, 7), z: 2})
-        
-        avatar_draw_large(winner.avatar, xy(35, 31), false, ∅, ∅, true)
+        draw_award_background(field, winner.avatar, title)
         
         if winner == player_competitor or not offensive[lowercase(text)]:
             board_select_word(player.board, text)
@@ -126,37 +125,39 @@ def draw_word_award(title, winner):
     
 
 
-def draw_award_background(rect, field, color)
+def draw_award_background(field, avatar, title)
 & preserving_transform:
+    draw_text({text: title, font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000, x_align: "left", pos: xy(0, 7), z: 2})
     
+    // This will be within the clipped region, but is drawn first to avoid clipping the name
+    avatar_draw_large(avatar, xy(20, 31), false, ∅, ∅, true)
+    
+    set_clip(transform_cs_to_ss(xy(0, 12)), xy(39, 37))
     let badge_background = BADGE_TABLE[field]
-    for i < 4:
+    for i < 3:
         badge_background += badge_background
     for i < 3:
         badge_background += "\n" + badge_background
-    
-    set_clip(transform_cs_to_ss(rect.corner), rect.size)
-    draw_text({font: leaderboard_font, color: 90% color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
+    draw_text({font: leaderboard_font, color: 90% avatar.color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
 
 
 
-def draw_most_words_award(winner)
+/* 'kind' = "rare" or "rare_word" */
+def draw_most_words_award(title, winner)
 & if size(winner.word_list):
-    todo("Show more words")
-    todo("Generalize to most rare words")
+    todo("Show the words in the middle")
 
     maybe_play_award_sound(winner)
     ++draw_most_words_award.frames
     player.board.selection_color = HIGHLIGHT_COLOR
 
-    draw_text({font: history_font, text: "Most Words: " + size(winner.word_list), color: player.board.selection_color, shadow: #000, pos: xy(35, 7), z: 2})
-    draw_award_background({corner: xy(0, 12), size: xy(69, 37)}, "most_words", winner.avatar.color)
-    avatar_draw_large(winner.avatar, xy(35, 31), false, player.board.selection_color, ∅, true)
+    const list = winner[lowercase(replace(slice(title, size("Most "), last_key(title)), " ", "_")) + "_list"]
+    draw_award_background(lowercase(replace(title, " ", "_")), winner.avatar, title + ": " + size(list))
 
     let word
     // Find a non-offensive word, but give up after four tries instead of locking up
     for i < 4:
-        word = array_value(winner.word_list, (draw_most_words_award.frames / INTERMISSION.MOST_WORDS_AWARD_FRAMES_PER_WORD) + draw_most_words_award.skip, "loop").word
+        word = array_value(list, (draw_most_words_award.frames / INTERMISSION.MOST_WORDS_AWARD_FRAMES_PER_WORD) + draw_most_words_award.skip, "loop").word
         if winner ≠ player_competitor and offensive[lowercase(q_decode(word))]:
             // Skip over this word
             ++draw_most_words_award.skip
@@ -377,11 +378,6 @@ played_vil_sound = false
 stage = 0
 prev_stage = stage
 first_frame_this_stage = 0
-// Used to animate which word is being shown
-draw_most_words_award.frames = 0
-
-// Used to skip over offensive words
-draw_most_words_award.skip = 0
 
 // End time of the post-game sequence INCLUDING the EarnXP mode
 end_time = next_global_game_utc_start_time()
@@ -405,13 +401,19 @@ if not notifications_pending():
     // Cycle through awards, giving equal time to each. Don't advance
     // while notifications are appearing
     stage = min(⌊size(INTERMISSION.STAGE) * mode_frames / (60 INTERMISSION.SECONDS)⌋, size(INTERMISSION.STAGE) - 1)
-        
+    
     if stage == INTERMISSION.STAGE.MOST_WORDS2:
-        // This is 2x as long
+        // This stage only is 2x as long
         --stage
         
     if prev_stage ≠ stage:
         first_frame_this_stage = mode_frames
+        
+        // Used to animate which word is being shown
+        draw_most_words_award.frames = 0
+        
+        // Used to skip over offensive words
+        draw_most_words_award.skip = 0
 
 
 // Separator bars

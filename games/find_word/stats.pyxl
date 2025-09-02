@@ -7,6 +7,7 @@ def make_empty_stats_entry():
             best_word: 0,
             highest_score: 0,
             most_words: 0,
+            most_rare_words: 0
         },
 
         longest_text: "",
@@ -320,7 +321,8 @@ def stats_update(stats, competitor, num_competitors, joined_late):
         [best_word_winner,    "best_word"],
         [best_rare_winner,    "best_rare"],
         [longest_winner,      "longest"],
-        [most_words_winner,   "most_words"]]:
+        [most_words_winner,   "most_words"],
+        [most_rare_words_winner, "most_rare_words"]]:
         if competitor == pair[0]:
             ++stats_entry.badge_count[pair[1]]        
  
