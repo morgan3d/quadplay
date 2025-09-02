@@ -10,14 +10,17 @@ def button_repeat(button_frames):
           (MAX(button_frames - BUTTON_REPEAT.DELAY, 0) mod BUTTON_REPEAT.PERIOD) == 1)
 
 
+
 /* For sorting on size(A) */
 def size_comparator(A, B):
     return size(A) - size(B)
 
 
+
 /* Returns str with str[index] replaced with `replacement` */
 def letter_replaced(str, index, replacement):
     return slice(str, 0, index) + replacement + slice(str, index + 1)
+
 
     
 def draw_arc(pos, radius, start, stop, color):

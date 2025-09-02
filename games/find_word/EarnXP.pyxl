@@ -1,8 +1,5 @@
 EarnXP
 ════════════════════════════════════════════════════════════════════════
-
-todo("Tweak colors on XP bar to separate new vs previous")
-
 let last_xp_row_displayed
 let last_level_displayed
 let prev_xp
@@ -56,11 +53,11 @@ def draw_xp_table()
         y += draw_text({
             text: row.text,
             font: row.font default leaderboard_font,
-            color: row.color,
+            color: row.color default #FFF,
             x_align: "left",
             y_align: "top",
             wrap_width: 145,
-            pos: xy(if row.avatar then 34 else (if row.xp or row.font then 16 else 0), y)}).height
+            pos: xy(if row.avatar then 34 else (if row.header then 0 else 16), y)}).height
             
     scroll_offset = min(0, rect_height - y)
     
@@ -115,9 +112,10 @@ def draw_xp_bar()
         x_align: "left",
         pos:     xy(10, 22)})
 
+    // Progress bar
+    todo("Tweak colors on XP bar to separate new vs previous")
     draw_corner_rect(EARN_XP.xp_rect.corner + xy(0, 1), EARN_XP.xp_rect.size)
     
-    // Progress bar
     draw_corner_rect(
         EARN_XP.xp_rect.corner + 1,
         xy(α * (EARN_XP.xp_rect.size.x - 2), EARN_XP.xp_rect.size.y - 2), 
@@ -141,7 +139,6 @@ enter
 set_background(#000)
 scroll_offset = 0
 
-todo("These header properties are ignored")
 prev_xp = player.stats.lifetime.xp + player.stats[today_date_string()].xp
 prev_level = player.avatar.level
 last_level_displayed = prev_level
@@ -151,7 +148,7 @@ const discovered_word_list = stats_update(player.stats, player_competitor, size(
 
 // Compute the XP awards
 xp_array = [
-    {text: "Score", header: true, color: #FFF}, 
+    {text: "Score", header: true}, 
     {text: format_number(player_competitor.score, "commas") + " Points", xp: ⌈player_competitor.score * XP.VALUE.point⌉, color: TABLE_ALT_ROW_COLOR}]
 
 
@@ -178,7 +175,7 @@ for competitor in competitor_array:
 
 if size(affinity_array):
     push(xp_array,
-        {text: "Affinity", header: true, color: #FFF},
+        {text: "Affinity", header: true},
         …affinity_array)
 
 
@@ -192,12 +189,12 @@ if player.has_ability["Aura"] and player.score > 0:
             push(aura_array, {avatar: competitor.avatar, text: competitor.avatar.name, color: TABLE_ALT_ROW_COLOR})
 
     if size(aura_array):
-        push(xp_array, {text: "Your Aura Helped", header: true, color: #FFF}, …aura_array)
+        push(xp_array, {text: "Your Aura Helped", header: true}, …aura_array)
 
 
 // Your words
 if size(discovered_word_list) and player.has_ability["Discovery XP"]:
-    push(xp_array, {text: "Discovered Words", color: #FFF})
+    push(xp_array, {text: "Discovered Words", header: true})
     
     // To keep the length of this list managable, we group 
     // words of the same length.
@@ -219,7 +216,7 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
         
         
 if player_competitor.badges and player.has_ability["Award XP"]:
-    push(xp_array, {text: "Awards (" + size(competitor_array) + "-Player Match)", color: #FFF})
+    push(xp_array, {text: "Awards (" + size(competitor_array) + "-Player Match)", header: true})
 
     const badge_xp = XP.VALUE.badge_per_competitor * min(size(competitor_array) - 1, 10)
 
@@ -250,7 +247,7 @@ if player.score > 0 and not joined_late:
     
     if size(streak):
         push(xp_array, 
-            {text: "Streak", color: #FFF},
+            {text: "Streak", header: true},
             …streak)
         
 todo("Give XP for rare words")

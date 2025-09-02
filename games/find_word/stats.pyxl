@@ -313,22 +313,16 @@ def stats_update(stats, competitor, num_competitors, joined_late):
         if competitor.freestyle_points:
             // Don't count if they didn't score
             ++stats_entry.freestyle_matches
-    
-    todo("Abstract the award system to allow iteration")
-    if competitor == competitor_array[0]:
-        ++stats_entry.badge_count.highest_score
-        
-    if competitor == best_word_winner:
-        ++stats_entry.badge_count.best_word
-    
-    if competitor == best_rare_winner:
-        ++stats_entry.badge_count.best_rare
 
-    if competitor == longest_winner:
-        ++stats_entry.badge_count.longest
-        
-    if competitor == most_words_winner:
-        ++stats_entry.badge_count.most_words
+    // Update badge tracking    
+    for pair in [
+        [competitor_array[0], "highest_score"],
+        [best_word_winner,    "best_word"],
+        [best_rare_winner,    "best_rare"],
+        [longest_winner,      "longest"],
+        [most_words_winner,   "most_words"]]:
+        if competitor == pair[0]:
+            ++stats_entry.badge_count[pair[1]]        
  
     // Accumulate the words previously found by this player
     const previously_found = array_to_set([…stats.lifetime.word_list, …stats_entry.word_list], 1)

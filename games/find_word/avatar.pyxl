@@ -63,15 +63,13 @@ def avatar_draw(args):
         
         if ξ > 20% and args.avatar.level ≥ ABILITY_TABLE["Enhanced Aura"].level:
             const dir = random_on_circle()
-            particles_spawn(particle_array, args.pos + 6 dir, random(0.1, 0.15) * dir, args.avatar.color, aura_z - ε, 45)
+            particles_spawn(particle_array, args.pos + 6 dir * (args.scale default 100%), random(0.1, 0.15) * dir, args.avatar.color, aura_z - ε, 45)
         
     draw_sprite({…args, sprite: sprite})
 
 
 
-def avatar_draw_large(avatar, pos, background default true, color, shadow default #000, spin default false):
-    todo("Unify avatar_draw_large and avatar_draw")
-    
+def avatar_draw_large(avatar, pos, background default true, color, shadow default #000, spin default false):    
     draw_text({
         font: score_font,
         text: trim_spaces(avatar.name),
@@ -80,17 +78,11 @@ def avatar_draw_large(avatar, pos, background default true, color, shadow defaul
         pos: pos + xy(0, 27),
         z: 5})
 
-    let sprite = avatar.sprite
-    
-    if ⌊(game_frames + 15) / 30⌋ mod 2:
-        sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
-        sprite = sprite_transfer_orientation(avatar.sprite, sprite)
-        if spin: sprite = sprite.x_flipped
-
-    draw_outlined_sprite({
-        sprite: sprite.x_flipped, 
-        scale: 200%, 
+    avatar_draw({
+        avatar: avatar,
+        sprite: if spin and (⌊(game_frames + 15) / 30⌋ mod 2) then avatar.sprite.x_flipped else ∅,
         pos: pos + xy(0, -1),
+        scale: 200%,
         z: 5})
 
 

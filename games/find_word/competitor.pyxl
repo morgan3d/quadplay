@@ -32,7 +32,6 @@ const competitor_array = []
 
 let player_competitor
 
-todo("Include freestyle words in word count in the same way as shown in stats, otherwise it is confusing")
 todo("Add most rare award")
 
 // Competitors winning each award
@@ -166,7 +165,7 @@ def competitor_assign_awards(competitor_array):
         if size(competitor.longest_text) > size(longest_winner.longest_text):
             longest_winner = competitor
             
-        if size(competitor.word_list) > size(most_words_winner.word_list):
+        if size(competitor.word_list) + size(competitor.freestyle_word_list) > size(most_words_winner.word_list) + size(most_words_winner.freestyle_word_list):
             most_words_winner = competitor
 
     // Now loop again and give badges, including for ties:
