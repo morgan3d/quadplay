@@ -187,12 +187,13 @@ if player.has_ability["Aura"] and player.score > 0:
         
     for competitor in competitor_array:
         if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0:
-            push(aura_array, {avatar: competitor.avatar, text: competitor.avatar.name, color: TABLE_ALT_ROW_COLOR})          
+            push(aura_array, {avatar: competitor.avatar, text: competitor.avatar.name, color: TABLE_ALT_ROW_COLOR})
 
     if size(aura_array):
-        push({text: "Your Aura Helped", header: true, color: #FFF}, …aura_array)
+        push(xp_array, {text: "Your Aura Helped", header: true, color: #FFF}, …aura_array)
 
 
+// Your words
 if size(discovered_word_list) and player.has_ability["Discovery XP"]:
     push(xp_array, {text: "Discovered Words", color: #FFF})
     
