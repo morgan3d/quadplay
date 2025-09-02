@@ -32,6 +32,7 @@ const competitor_array = []
 
 let player_competitor
 
+todo("Include freestyle words in word count in the same way as shown in stats, otherwise it is confusing")
 todo("Add most rare award")
 
 // Competitors winning each award

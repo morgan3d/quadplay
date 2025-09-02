@@ -62,6 +62,9 @@ def draw_xp_table()
             wrap_width: 145,
             pos: xy(if row.xp or row.font then (if row.avatar then 34 else 16) else 0, y)}).height
             
+            
+    todo("Show who your aura helped")
+
     scroll_offset = min(0, rect_height - y)
     
 
@@ -173,7 +176,7 @@ for competitor in competitor_array:
             text: competitor.avatar.name + "'s Affection",
             avatar: competitor.avatar,
             color: competitor.avatar.color,
-            xp: XP.VALUE.cow_affection})
+            xp: XP.VALUE.caf_affection})
 
 if size(affinity_array):
     push(xp_array,
