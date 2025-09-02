@@ -61,27 +61,7 @@ def draw_xp_table()
             y_align: "top",
             wrap_width: 145,
             pos: xy(if row.xp or row.font then (if row.avatar then 34 else 16) else 0, y)}).height
-    
-    // Show who your aura helped
-    if player.has_ability["Aura"] and player.score > 0:  
-        y += draw_text({
-            text: "Your Aura Helped",
-            font: leaderboard_font,
-            color: #FFF,
-            x_align: "center",
-            y_align: "top",
-            wrap_width: 145,
-            pos: xy(½ SCREEN_SIZE.x, y)}).height + 20
             
-        let x = 30
-        for competitor in competitor_array:
-            if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0:
-                avatar_draw({avatar: competitor.avatar, pos: xy(x, y - 8)})
-                x += 24
-                if x > SCREEN_SIZE.x - 30:
-                    y += 24
-                    x = 30
-        
     scroll_offset = min(0, rect_height - y)
     
 
@@ -199,6 +179,18 @@ if size(affinity_array):
     push(xp_array,
         {text: "Affinity", header: true, color: #FFF},
         …affinity_array)
+
+
+// Show who your aura helped
+if player.has_ability["Aura"] and player.score > 0:  
+    const aura_array = []
+        
+    for competitor in competitor_array:
+        if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0:
+            push(aura_array, {avatar: competitor.avatar, text: competitor.avatar.name, color: TABLE_ALT_ROW_COLOR})          
+
+    if size(aura_array):
+        push({text: "Your Aura Helped", header: true, color: #FFF}, …aura_array)
 
 
 if size(discovered_word_list) and player.has_ability["Discovery XP"]:
