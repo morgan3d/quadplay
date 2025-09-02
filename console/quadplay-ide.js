@@ -572,7 +572,9 @@ function createProjectWindow(gameSource) {
     let s = '';
     {
         const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
+        s += `<div style="position: relative;">`;
         s += `<b title="${gameSource.extendedJSON.title} (${gameSource.jsonURL})" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${badge}">${gameSource.extendedJSON.title}</b>`;
+        s += `</div>`;
     }
 
     s += '<div style="border-left: 1px solid #ccc; margin-left: 4px; padding-top: 5px; padding-bottom: 9px; margin-bottom: -7px"><div style="margin:0; margin-left: -2px; padding:0">';
@@ -706,13 +708,30 @@ function createProjectWindow(gameSource) {
         versionControl += `<div id="versionControl" style="visibility: hidden"><button style="width: 100%" title="Sync your local files with the git server" onclick="runPendingSaveCallbacksImmediately(); setTimeout(onGitSync);">Sync Git</button></div>`;
     }
     
+    const pin = generateToggleButtonHTML('<img src="icons/ui-pin.png" width="16" height="16" style="margin-top:-2px">', 'position: absolute; right: -1px; top: 0px; margin: 0; padding: 0; width:20px; height:20px; transform: scale(75%); z-index: 20', 'Pin project pane', 'projectPin', 'onProjectPinToggle(this)');
+
     // Build the project list for the IDE
-    const projectElement = document.getElementById('project');
+    const projectElement = document.getElementById('projectPane');
 
     // Hide the scrollbars
-    projectElement.innerHTML = `<div class="hideScrollBars" style="top: 0px; bottom: 40px; position: absolute; ${versionControl !== '' ? 'bottom: 40px' : ''}">` + s + '</div>' + versionControl;
+    projectElement.innerHTML = `<div class="hideScrollBars" style="top: 0px; bottom: 40px; position: absolute; ${versionControl !== '' ? 'bottom: 40px' : ''}">` + s + '</div>' + versionControl + pin;
+
+    // Update to the stored state
+    const button = document.getElementById('projectPinButton');
+    button.checked = localStorage.getItem('projectPinButtonEnabled') == 'true';
+    onProjectPinToggle(document.getElementById('projectPinButton'));
 }
 
+
+/** Called by the project pin toggle button */
+function onProjectPinToggle(button) {
+    if (button.checked) {
+        document.body.classList.add('projectPinned');
+    } else {
+        document.body.classList.remove('projectPinned');
+    }
+    localStorage.setItem('projectPinButtonEnabled', '' + button.checked);
+}
 
 
 function onUpdateClick(installedVersionText, latestVersionText) {

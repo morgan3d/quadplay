@@ -317,12 +317,12 @@ def stats_update(stats, competitor, num_competitors, joined_late):
 
     // Update badge tracking    
     for pair in [
-        [competitor_array[0], "highest_score"],
-        [best_word_winner,    "best_word"],
-        [best_rare_winner,    "best_rare"],
-        [longest_winner,      "longest"],
-        [most_words_winner,   "most_words"],
-        [most_rare_words_winner, "most_rare_words"]]:
+        [competitor_array[0],           "highest_score"],
+        [award_winner.best_word,        "best_word"],
+        [award_winner.best_rare,        "best_rare"],
+        [award_winner.longest,          "longest"],
+        [award_winner.most_words,       "most_words"],
+        [award_winner.most_rare_words,  "most_rare_words"]]:
         if competitor == pair[0]:
             ++stats_entry.badge_count[pair[1]]        
  

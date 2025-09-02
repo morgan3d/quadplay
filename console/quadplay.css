@@ -159,7 +159,7 @@ body {
     overscroll-behavior-x: none;
 
     font-family: Helvetica, Arial;
-    font-size: 13px;
+    font-size: 14px;
     margin: 0;
     background: #331c2a;
     color:      #999;
@@ -834,56 +834,14 @@ div.disabled span.label, div.disabled:active span.label {
 #editorPane {
     overflow:         hidden;
     position:         absolute;
-    left:             196px;
     top:              0px;
+
+    /* Default for IDEUI, overridden for other layouts */
     right:            412px;
     bottom:           0px;
-}
 
-.project, .WideIDEUI .project:hover {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 195px;
-    bottom: 0px;
-    font-size: 14px;
-    /* Scroll bars are provided by the child, and hidden by fixed sizing*/
-    overflow: hidden;
-    /* Prevent breaking between bullet and text when inheritted */
-    white-space: nowrap;
-    padding-left: 0px;
-}
-
-/** Wide IDE shows the project view on large screens */
-@media screen and (max-device-width: 3600px) {
-    .WideIDEUI #editorPane {
-        /* Reserve space for the rollout */
-        left: 5px;    
-    }
-    
-    /* Drop shadow when rolled out */
-    .WideIDEUI .project:hover {
-        box-shadow:
-        0px 0px 1px #000,
-        0px 3px 10px rgba(0,0,0,55%)
-    }
-
-    /* Look like a bar when not rolled out */
-    .WideIDEUI .project:not(:hover) {
-        width: 5px;
-        background: #888;
-        cursor: ew-resize;
-    }
-
-    /* Hide the contents when not rolled out */
-    .WideIDEUI .project:not(:hover) .hideScrollBars {
-        visibility: hidden;
-    }
-
-    /* Hide when the project pane is collapsed */
-    .WideIDEUI .project:not(:hover) #versionControl {
-        visibility: hidden;
-    }
+    /* Reserve space for the rollout */
+    left: 5px;
 }
 
 
@@ -892,9 +850,59 @@ div.disabled span.label, div.disabled:active span.label {
     right: 769px;
 }
 
-
 .EditorUI #editorPane, .GhostUI #editorPane {
     right: 0px;
+}
+
+
+#projectPane {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 195px;
+    bottom: 0px;
+    font-size: 14px;
+    /* Scroll bars are provided by the child, and hidden by fixed sizing */
+    overflow: hidden;
+    /* Prevent breaking between bullet and text when inherited */
+    white-space: nowrap;
+    padding-left: 0px;
+
+    /* Slide in and out  on transitions */
+    transition: 0.2s;
+    transition-timing-function: width ease-in-out;
+
+    /* Rise over the rest of the IDE when rolling out*/
+    z-index: 11;
+}
+
+/* Rollout pinned */
+body.projectPinned #editorPane {
+    left:             196px;
+}
+
+/* Drop shadow when rolled out */
+body:not(.projectPinned) #projectPane:hover {
+    box-shadow:
+    1px 0px 1px #000,
+    10px 0px 10px rgba(0,0,0,55%)
+}
+
+/* In ghost mode, need to override this */
+body:not(.projectPinned) .GhostUI #projectPane:hover {
+    mix-blend-mode: none;
+}
+
+/* Look like a bar when not rolled out */
+body:not(.projectPinned) #projectPane:not(:hover) {
+    width: 5px;
+    background: #888;
+    cursor: ew-resize;
+}
+
+/* Hide the contents when not rolled out */
+body:not(.projectPinned) #projectPane:not(:hover) * {
+    visibility: hidden;
 }
 
 
@@ -954,6 +962,7 @@ code, .code {
     /* Menlo has better exponents than Monaco*/
     font-family: 'Menlo', 'Monaco', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
+
 
 
 /**************************************************/
@@ -1135,44 +1144,33 @@ code, .code {
     height: 100%;
 }
 
-/* Animate transitions of the project panel in WideIDE mode */
-.WideIDEUI .project {
-    /* Slide in and out */
-    transition: 0.2s;
-    transition-timing-function: width ease-in-out;
-
-    /* Rise over the rest of the IDE when in wide mode */
-    z-index: 11;
-}
 
 
-.project li {
+#projectPane li {
     /* Make selections actually span the content */
     min-width: 190px;
     display: block;
 }
 
 /** Used for selecting objects */
-.project .selectedProjectElement {
+#projectPane .selectedProjectElement {
     background: var(--theme-color, #0af);
     color:#fff;
-
-/*    background: rgb(50,120,200);*/
     display:inline-block;
     min-width:200px;
 }
 
-.project ul {
+#projectPane ul {
     margin-top: 2px;
     padding-left: 13px;
     list-style: none;
 }
 
-.project li {
+#projectPane li {
     padding-left: 7px;
 }
 
-.project li:before {
+#projectPane li:before {
     content: '';
     /* Second background image is the cloud/lock modifier*/
     background-size: 8px 8px, 10px 10px;
@@ -1195,216 +1193,216 @@ code, .code {
   color: #789;
 }
 
-.project .scripts li:before {
+#projectPane .scripts li:before {
     background-image: none, url('icons/project-icon-code.png');
 }
-.project .scripts li.remote:before {
+#projectPane .scripts li.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-code.png');
 }
-.project .scripts li.builtin:before {
+#projectPane .scripts li.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-code.png');
 }
 
 
-.project .modes li:before {
+#projectPane .modes li:before {
     background-image: none, url('icons/project-icon-mode.png');
 }
-.project .modes li.remote:before {
+#projectPane .modes li.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-mode.png');
 }
-.project .modes li.builtin:before {
+#projectPane .modes li.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-mode.png');
 }
 
-.project .docs li:before {
+#projectPane .docs li:before {
     background-image: none, url('icons/project-icon-doc.png');
 }
-.project .docs li.remote:before {
+#projectPane .docs li.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-doc.png');
 }
-.project .docs li.builtin:before {
+#projectPane .docs li.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-doc.png');
 }
 
-.project li.sprite:before {
+#projectPane li.sprite:before {
     background-image: none, url('icons/project-icon-sprite.png');
 }
-.project li.sprite.remote:before {
+#projectPane li.sprite.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-sprite.png');
 }
-.project li.sprite.builtin:before {
+#projectPane li.sprite.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-sprite.png');
 }
 
-.project li.map:before {
+#projectPane li.map:before {
     background-image: none, url('icons/project-icon-map.png');
 }
-.project li.map.remote:before {
+#projectPane li.map.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-map.png');
 }
-.project li.map.builtin:before {
+#projectPane li.map.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-map.png');
 }
 
-.project li.data:before {
+#projectPane li.data:before {
     background-image: none, url('icons/project-icon-data.png');
 }
-.project li.data.remote:before {
+#projectPane li.data.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-data.png');
 }
-.project li.data.builtin:before {
+#projectPane li.data.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-data.png');
 }
 
 
-.project li.distribution:before {
+#projectPane li.distribution:before {
     background-image: none, url('icons/project-icon-distribution.png');
 }
-.project li.distribution.remote:before {
+#projectPane li.distribution.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-distribution.png');
 }
-.project li.distribution.builtin:before {
+#projectPane li.distribution.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-distribution.png');
 }
 
 
-.project li.table:before {
+#projectPane li.table:before {
     background-image: none, url('icons/project-icon-table.png');
 }
-.project li.table.remote:before {
+#projectPane li.table.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-table.png');
 }
-.project li.table.builtin:before {
+#projectPane li.table.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-table.png');
 }
 
 
-.project li.font:before {
+#projectPane li.font:before {
     background-image: none, url('icons/project-icon-font.png');
 }
-.project li.font.remote:before {
+#projectPane li.font.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-font.png');
 }
-.project li.font.builtin:before {
+#projectPane li.font.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-font.png');
 }
 
-.project li.sound:before {
+#projectPane li.sound:before {
     background-image: none, url('icons/project-icon-sound.png');
 }
-.project li.sound.remote:before {
+#projectPane li.sound.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-sound.png');
 }
-.project li.sound.builtin:before {
+#projectPane li.sound.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-sound.png');
 }
 
 
 
-.project .constants li.number:before {
+#projectPane .constants li.number:before {
     background-image: none, url('icons/project-icon-number.png');
 }
-.project .constants li.number.remote:before {
+#projectPane .constants li.number.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-number.png');
 }
-.project .constants li.number.builtin:before {
+#projectPane .constants li.number.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-number.png');
 }
 
 
 
-.project .constants li.string:before {
+#projectPane .constants li.string:before {
     background-image: none, url('icons/project-icon-string.png');
 }
-.project .constants li.string.remote:before {
+#projectPane .constants li.string.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-string.png');
 }
-.project .constants li.string.builtin:before {
+#projectPane .constants li.string.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-string.png');
 }
 
-.project .constants li.boolean:before {
+#projectPane .constants li.boolean:before {
     background-image: none, url('icons/project-icon-boolean.png');
 }
-.project .constants li.boolean.remote:before {
+#projectPane .constants li.boolean.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-boolean.png');
 }
-.project .constants li.boolean.builtin:before {
+#projectPane .constants li.boolean.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-boolean.png');
 }
 
-.project .constants li.array:before {
+#projectPane .constants li.array:before {
     background-image: none, url('icons/project-icon-array.png');
 }
-.project .constants li.array.remote:before {
+#projectPane .constants li.array.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-array.png');
 }
-.project .constants li.array.builtin:before {
+#projectPane .constants li.array.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-array.png');
 }
 
-.project .constants li.nil:before {
+#projectPane .constants li.nil:before {
     background-image: none, url('icons/project-icon-nil.png');
 }
-.project .constants li.nil.remote:before {
+#projectPane .constants li.nil.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-nil.png');
 }
-.project .constants li.nil.builtin:before {
+#projectPane .constants li.nil.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-nil.png');
 }
 
-.project .constants li.color:before {
+#projectPane .constants li.color:before {
     background-image: none, url('icons/project-icon-color.png');
 }
-.project .constants li.color.remote:before {
+#projectPane .constants li.color.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-color.png');
 }
-.project .constants li.color.builtin:before {
+#projectPane .constants li.color.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-color.png');
 }
 
-.project .constants li.vec2D:before {
+#projectPane .constants li.vec2D:before {
     background-image: none, url('icons/project-icon-2D.png');
 }
-.project .constants li.vec2D.remote:before {
+#projectPane .constants li.vec2D.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-2D.png');
 }
-.project .constants li.vec2D.builtin:before {
+#projectPane .constants li.vec2D.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-2D.png');
 }
 
-.project .constants li.vec3D:before {
+#projectPane .constants li.vec3D:before {
     background-image: none, url('icons/project-icon-3D.png');
 }
-.project .constants li.vec3D.remote:before {
+#projectPane .constants li.vec3D.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-3D.png');
 }
-.project .constants li.vec3D.builtin:before {
+#projectPane .constants li.vec3D.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-3D.png');
 }
 
-.project .constants li.object:before {
+#projectPane .constants li.object:before {
     background-image: none, url('icons/project-icon-object.png');
 }
-.project .constants li.object.remote:before {
+#projectPane .constants li.object.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-object.png');
 }
-.project .constants li.object.builtin:before {
+#projectPane .constants li.object.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-object.png');
 }
 
-.project .constants li.reference:before {
+#projectPane .constants li.reference:before {
     background-image: none, url('icons/project-icon-reference.png');
 }
-.project .constants li.reference.remote:before {
+#projectPane .constants li.reference.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-reference.png');
 }
-.project .constants li.reference.builtin:before {
+#projectPane .constants li.reference.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-reference.png');
 }
 
 /* New menu */
-.project li.new:before {
+#projectPane li.new:before {
     content: '✜';
     background-image: none;
     position: relative;
@@ -1412,7 +1410,7 @@ code, .code {
     top: 0px;
 }
 
-.project li.import:before {
+#projectPane li.import:before {
     content: '⇲';
     font-weight: 900;
     background-image: none;
@@ -1421,7 +1419,7 @@ code, .code {
     top: 0px;
 }
 
-.project li.new, .project li.import {
+#projectPane li.new, #projectPane li.import {
     margin-top: 2px;
     margin-left: -2px;
     color: #888;
@@ -1588,8 +1586,8 @@ hr {
 
 .GhostUI .ide {
     text-shadow: rgba(0,0,0,100%) 0px 2px 6px, rgba(0,0,0,100%) 0px 0px 3px;
-    mix-blend-mode: screen;
     color: #fff;
+    mix-blend-mode: screen;
 }
 
 /* Avoid text shadow in ghost mode */
@@ -2069,10 +2067,6 @@ svg.modeGraph .highlight.node > .border {
 
 /***************************************************************************/
 
-#debugWatchDisplayPane td {
-    border: solid 1px #888;
-    padding-left: 5px;
-}
 
 
 /** Wide IDE is 1.5x instead of 2x on smaller screens */
@@ -2091,6 +2085,13 @@ svg.modeGraph .highlight.node > .border {
         top: 386px;
     }
 }
+
+
+#debugWatchDisplayPane td {
+    border: solid 1px #888;
+    padding-left: 5px;
+}
+
 
 button.license {
     font-size: 85%;

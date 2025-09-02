@@ -49,9 +49,9 @@
          document.write(`<div id="${id}Container" class="button ${disabled ? 'disabled' : ''}" ${attribs || ''}><label><input type="radio" name="${groupID}" id="${id}" onclick="event.stopPropagation(); if (event.target.enabled !== false) { onRadio('${id}'); } else { event.target.checked = false; }" autocomplete="off" value="1" ${selected ? 'checked' : ''}${disabled ? ' disabled' : ''}><span class="label">${labelHTML}</span></label></div>`);
       }
 
-      function makeToggle(labelHTML, style, title, id) {
+      function generateToggleButtonHTML(labelHTML, style, title, id, onclick) {
          id = id || title.toLowerCase();
-         document.write(`<div class="button" title="${title}" style="${style || ''}" onmousedown="event.stopPropagation()"><label><input id="${id}Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">${labelHTML}</span></label></div>`);
+         return `<div class="button" title="${title}" style="${style || ''}" onmousedown="event.stopPropagation()"><label><input id="${id}Button" autocomplete="off" type="checkbox" onclick="${onclick || 'onToggle(this)'}"><span class="label">${labelHTML}</span></label></div>`;
       }
 
     // When embedded into a binary app, Safari changes its userAgent string.
@@ -367,7 +367,7 @@
     </div>
 
     <div id="realBody" style="position: absolute; top: 24px; left: 0px; right: 1px; bottom: 16px">
-    <div class="project ide unselectable idePart" id="project"> </div>
+    <div class="ide unselectable idePart" id="projectPane"> </div>
 
     <div id="emulatorPane" class="ide idePart"> </div>
 

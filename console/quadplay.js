@@ -2528,6 +2528,7 @@ function onToggle(button) {
 }
 
 
+
 /** Called by the ui mode frame radio buttons */
 function onRadio(id) {
     // Controls
@@ -2560,6 +2561,12 @@ function onRadio(id) {
         setUIMode('Editor');
     } else if ((id === 'ghostUIButton') && (uiMode !== 'Ghost')) {
         setUIMode('Ghost');
+        // Ghost mode doesn't work well without the rollout pinned
+        localStorage.setItem('projectPinButtonEnabled', true);
+        document.body.classList.add('projectPinned');
+        if (document.getElementById('projectPinButton')) {
+            document.getElementById('projectPinButton').checked = true;
+        }
     }
 
     saveIDEState();
@@ -4674,6 +4681,13 @@ if (! localStorage.getItem('autoplayOnLoad')) {
     // Default to true
     localStorage.setItem('autoplayOnLoad', 'true')
 }
+
+if (! localStorage.getItem('projectPinButtonEnabled')) {
+    // Default to true
+    localStorage.setItem('projectPinButtonEnabled', 'true')
+}
+
+
 
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
