@@ -904,7 +904,7 @@
             "value": {
                 "JOIN_MIN_REMAINING_TIME": {
                     "type": "number",
-                    "value": "18",
+                    "value": "15",
                     "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
                     "min": 0,
                     "max": 120,
@@ -913,7 +913,7 @@
                 },
                 "PLAY_SECONDS": {
                     "type": "number",
-                    "value": "131",
+                    "value": "132",
                     "min": 45,
                     "max": 480,
                     "format": "0",
@@ -2146,7 +2146,7 @@
         },
         "GRACE_SECONDS": {
             "type": "number",
-            "value": "0.6",
+            "value": "0.75",
             "description": "Time to allow input while hiding the screen for Play and Freestyle modes.",
             "min": 0,
             "max": 2,
