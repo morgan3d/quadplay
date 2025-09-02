@@ -19,7 +19,10 @@ def insert_bots(competitor_array, target_count, max_bots):
     // Shift everybody's ability by this amount
     const match_shift = make_random(player.board.seed)(-10%, 0%)
     
-    /* If vocabulary is specified, the bot is limited to that vocabulary (except for Moo) */
+    /* If vocabulary is specified, the bot is limited to that vocabulary 
+       (except for Moo).
+       
+       Returns the competitor. */
     def maybe_add_bot_competitor(descriptor):
         assert(descriptor and descriptor.sprite and descriptor.name)
 
@@ -51,7 +54,8 @@ def insert_bots(competitor_array, target_count, max_bots):
         
             // Wraparound hours case
             (descriptor.last_hour ≤ descriptor.first_hour and
-            hour > descriptor.last_hour and hour < descriptor.first_hour)):
+             hour > descriptor.last_hour and
+             hour < descriptor.first_hour)):
                 
             if DEBUG.BOTS: debug_print("Bot " + descriptor.name + " is not available now")
             return
@@ -162,7 +166,7 @@ def insert_bots(competitor_array, target_count, max_bots):
                 competitor.score += points
 
         // Only add bots if they found a word
-        if descriptor.allow_zero_score or size(competitor.word_list):
+        if descriptor.allow_zero_score or size(competitor.word_list) or descriptor == BOT.VIL.descriptor:
             return push(competitor_array, competitor)
         else if DEBUG.BOT:
             debug_print("  left because they couldn't find words")

@@ -1,32 +1,9 @@
 /* Information about other players online (or virtual ones) used by Intermission */
 
 /* 
-   ```
-   {
-        avatar
-        text
-        badges
-        freestyle_points
-   
-        longest_text
-        longest_freestyle_text
-        best_word_points
-        best_word_text
-        best_wild_word_points
-        best_wild_word_text
-        best_freestyle_word_points
-        best_freestyle_word_text
-        best_rare_points
-        best_rare_text
-        word_list
-        freestyle_word_list
-        rare_word_list
-        score
-    }```
-   
-   
-   `word_list` is Q-encoded. `text` values are Q-decoded.
-   
+ 
+   See `make_competitor()` 
+      
    */
 const competitor_array = []
 
@@ -41,10 +18,11 @@ const award_winner = {
     most_rare_words: ∅}
 
 
-
+/*    `word_list` is Q-encoded. `text` values are Q-decoded. */
 def make_competitor():
     return {
-        // Set on construction
+        /////////////////////////////////////////////////
+        // Properties that are immediately overridden on on construction
         avatar: ∅,
         score: 0,
         freestyle_points: 0,
@@ -54,6 +32,7 @@ def make_competitor():
         // Evil characters do not give or receive aura
         evil: false,
 
+        /////////////////////////////////////////////////
         // Computed by analyze
         best_word_points: 0,
 
@@ -109,8 +88,17 @@ def competitor_analyze(competitor_array):
     // identifying rare words
     const count = {}
     
+    const empty_template = make_competitor()
+    
     // Compute everyone's best results
-    for competitor in competitor_array:        
+    for competitor in competitor_array:
+        // Competitor data coming in over the network may be from clients that
+        // are using an old version and so are missing some fields. Upgrade
+        // those.
+        for value at field in empty_template:
+            if competitor[field] == ∅:
+                competitor[field] = clone(value)
+        
         // Censor names by slicing off the 2nd letter, if inappropriate,
         // and replacing common letter substitutions to prevent casual
         // looks-like thwarting
@@ -139,15 +127,7 @@ def competitor_analyze(competitor_array):
     const rare_threshold = max(1, ⌊⅙ size(competitor_array)⌋)
 
     // Find the best rare word for each competitor
-    for competitor in competitor_array:
-    
-        /*
-        if not competitor.rare_word_list:
-            todo("Remove")
-            competitor.rare_word_list = []
-            play_sound(vil_00_sound)
-        */
-          
+    for competitor in competitor_array:          
         for word, points in entry in competitor.word_list:
             if count[word] ≤ rare_threshold:
                 // This word has appeared very few times

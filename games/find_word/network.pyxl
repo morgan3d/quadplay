@@ -49,7 +49,9 @@ def share_results_with_network(player_competitor):
     
 
 /* Handle incoming network messages. The only messages sent by this
-   game are exchanging competitors. */
+   game are exchanging competitors. `competitor_analyze()` updates
+   these before processing them to ensure that mismatched versions
+   of the game do not crash each other by missing newer properties. */
 def _message_handler(message, node_netid, conduit):
     push(competitor_array, message)
     

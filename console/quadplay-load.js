@@ -2174,7 +2174,7 @@ function addCodeToSourceStats(code, scriptURL) {
     code = code.replace(/(debug_watch|debug_print|todo|assert) *\(.*\n/g, '\n');
 
     // Remove any block of the form IF DEBUG.*: ...
-    code = code.replace(/(\n\s*)if DEBUG([^\b\s]|[\.\[\]\(\)])*:(\1\s[^\n]*)*/gi, '');
+    code = code.replace(/(\n\s*)(else\s+)?if DEBUG([^\b\s]|[\.\[\]\(\)\"])*:(\1\s[^\n]*)*/gi, '');
 
     // Remove blank lines
     code = code.replace(/(^|\n)\s*(\n|$)/g, '\n');
