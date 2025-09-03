@@ -118,7 +118,6 @@
 
        Other related elements of interest are:
 
-       - emulatorPane: Container for the emulator view in IDE mode. Handles layout and styling of the game display area.
        - emulator: Main game display container with virtual controls. Contains screen canvases and handles input focus via emulatorKeyboardInput.
 
        - waitDialog: Modal dialog for blocking user interaction during async operations. Used by showWaitDialog() and hideWaitDialog() functions in support of other GUIs.
@@ -188,7 +187,6 @@
       <div><a onclick="exportSaveGame()">Export Save Game</a></div>
       <input type="file" id="saveGameFileInput" accept=".savegame" onchange="importSaveGame(event)" style="display: none;">
       </div>
-      <div><a href="https://discord.gg/V4QrJhn2fp">quadplay✜ Discord <small>↗</small></a></div>
       <div id="arcadeKeyboardMenuSection">
       <hr>
       <label><input name="keyboardType" id="NormalKeyboardRadio" type="radio" title="Normal quadplay keyboard mapping for P1 and P2" onclick="event.stopPropagation() || setKeyboardMappingMode('Normal')" autocomplete="off" checked="1">Normal Keyboard</label>
@@ -226,7 +224,9 @@
       <!--
       <div><a onclick="enterKioskMode()">Enter Kiosk Mode</a></div>
     -->
-      <script>if (! useIDE) { writeCloseOption(); }</script>
+      <hr>
+    <div><a href="https://discord.gg/V4QrJhn2fp">quadplay✜ Discord <small>↗</small></a></div>
+    <script>if (! useIDE) { writeCloseOption(); }</script>
 
     </div>
 
@@ -369,8 +369,6 @@
     <div id="realBody" style="position: absolute; top: 24px; left: 0px; right: 1px; bottom: 16px">
     <div class="ide unselectable idePart" id="projectPane"> </div>
 
-    <div id="emulatorPane" class="ide idePart"> </div>
-
     <div id="editorPane" class="ide idePart">
       <div id="modeEditor" style="position:absolute; top:0px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; right: 0; bottom: 0; overflow: scroll; padding: 10px; visibility:hidden"></div>
@@ -415,8 +413,8 @@
           </div>
         </div>
 
-        <div id="codeEditorDivider" onmousedown="onCodeEditorDividerDragStart()">
-          <div style="width:20px; border-top: 1px solid #302b2b; border-bottom: 1px solid #302b2b; height: 1px; margin-top: 2px; margin-left: auto; margin-right: auto"></div>
+        <div id="codeEditorDivider" onmousedown="onCodeEditorDividerDragStart(event)" class="horizontalDivider">
+          <div class="horizontalThumb"></div>
         </div>
         
         <div id="codeToolbar" class="toolbar">
@@ -438,6 +436,10 @@
 
         <div id="ace"> </div>
       </div>  <!-- codePlusFrame -->
+    </div>
+
+    <div id="emulatorBottomDivider" class="horizontalDivider">
+      <div class="horizontalThumb"></div>
     </div>
 
     <tabbox id="debugger">

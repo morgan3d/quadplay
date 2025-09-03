@@ -56,7 +56,8 @@ make assumptions about `SCREEN_SIZE` being constant after initialization.
 : same as the `set_screen_size()` argument
 
 `other_max`
-: the dimension other than `axis` can be no larger than this value
+: The dimension other than `axis` can be no larger than this value.
+  Not necessary when `axis = larger`
 
 
 The return value is the hook, so that you can cancel it later

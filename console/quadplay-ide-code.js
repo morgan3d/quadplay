@@ -1441,10 +1441,15 @@ function onImportDocListSelect(target) {
 /**********************************************************************/
 
 let codeEditorDividerInDrag = false;
+let codeEditorDividerDragOffset = 0;
 
-function onCodeEditorDividerDragStart() {
+function onCodeEditorDividerDragStart(event) {
     codeEditorDividerInDrag = true;
     document.getElementById('codePlusFrame').classList.add('resizing');
+    
+    // Store the offset from the top of the divider to where the user clicked
+    const dividerRect = document.getElementById('codeEditorDivider').getBoundingClientRect();
+    codeEditorDividerDragOffset = event.clientY - dividerRect.top;
 }
 
 
@@ -1471,11 +1476,12 @@ function setCodeEditorDividerFromLocalStorage() {
 
 function onCodeEditorDividerDrag(event) {
     if (codeEditorDividerInDrag) {
-	const codePlusFrame = document.getElementById('codePlusFrame');
-        const topHeight = Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - 26 - 24));
-	codePlusFrame.style.gridTemplateRows = `${topHeight}px auto auto 1fr`;
+	    const codePlusFrame = document.getElementById('codePlusFrame');
+        const codePlusFrameRect = codePlusFrame.getBoundingClientRect();
+        const topHeight = Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - codePlusFrameRect.top - codeEditorDividerDragOffset));
+	    codePlusFrame.style.gridTemplateRows = `${topHeight}px auto auto 1fr`;
         localStorage.setItem('codeDividerTop', Math.round(topHeight));
-	event.preventDefault();
+	    event.preventDefault();
         
         // Do not resize the aceEditor while dragging most of the time--it is slow. Wait until onCodeEditorDividerDragEnd()
         if (Math.random() < 0.07) {

@@ -23,14 +23,15 @@ of [<quadplay/>](manual.md.html).
   - Sprite sheet dimensions now shown in the resource display of the debugger
   - Resource display now links back to the asseet consuming those resources
   - Code editor now inserts spaces instead of tabs
-  - Fixed cursor horizontal misalignment in long code lines
+- Bug fixes:
+  - `format_number(n, "commas")` now rounds before formatting
+  - Added workaround for quadplay hot-reloading when Chrome Memory Saver/Edge Sleeping Tabs is enabled in the browser 
+  - Fixed IDE cursor horizontal misalignment in long code lines
   - Statement resource counter now correctly processes single-line control flow
     as multiple statements
   - Statement resource counter now correctly ignores leading and trailing blank lines
     in files
-- Bug fixes:
-  - `format_number(n, "commas")` now rounds before formatting
-  - Added workaround for quadplay hot-reloading when Chrome Memory Saver/Edge Sleeping Tabs is enabled in the browser 
+  - Fixed vertical offset on pane resizing in the IDE
 
 2025 August 29
 ===================================

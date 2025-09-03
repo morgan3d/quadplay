@@ -1,4 +1,9 @@
 /* By Morgan McGuire @CasualEffects http://casual-effects.com GPL 3.0 License*/
+
+:root {
+    --divider-thickness: 7px;
+}
+
 /* Remove mobile pinch-to-zoom and input delays (should be redundant with
    the viewport device-width meta property).
    https://developers.google.com/web/updates/2013/12/300ms-tap-delay-gone-away */
@@ -683,7 +688,6 @@ div.debugOverride.disabled {
     display:          inline-block;
     margin-right:     1px;
     margin-left:      3px;
-    margin-top: -1px;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select:  none;
@@ -735,7 +739,6 @@ div.debugOverride.disabled {
 .button:active span.label, .button input:checked + span.label, .runtimeDialog div:active {
     background-color: rgb(64,150,238);
     background: linear-gradient(to bottom, var(--theme-gradient-0, rgba(64,150,238,1)) 0%, var(--theme-gradient-1, rgba(96,171,248,1)) 56%, var(--theme-gradient-2, rgba(122,188,255,1)) 100%);
-/*    background: linear-gradient(to bottom, rgba(64,150,238,1) 0%,rgba(96,171,248,1) 56%,rgba(122,188,255,1) 100%);*/
     color:            #fff;
     box-shadow:       0px 1px 2px 0px rgba(0, 0, 0, 0.25);
     border:           1px solid #666;
@@ -895,7 +898,8 @@ body:not(.projectPinned) .GhostUI #projectPane:hover {
 
 /* Look like a bar when not rolled out */
 body:not(.projectPinned) #projectPane:not(:hover) {
-    width: 5px;
+    /* Subtract 2px to account for 1px border on each side from .ide class */
+    width: calc(var(--divider-thickness) - 2px);
     background: #888;
     cursor: ew-resize;
 }
@@ -976,7 +980,7 @@ code, .code {
     visibility: hidden;
     display: grid;
     grid-template-areas: 'editorContentFrame' 'codeEditorDivider' 'codeToolbar' 'codeEditor';
-    grid-template-rows: 7fr 7px 23px 3fr;
+    grid-template-rows: 7fr var(--divider-thickness) 23px 3fr;
     grid-template-columns: 100%;
     /* Needed for Safari grid layout */
     height: 100%;
@@ -994,12 +998,42 @@ code, .code {
     width: 100%; height: 100%;
 }
 
-#codeEditorDivider {
+.horizontalDivider {
     grid-area: codeEditorDivider;
     background-color: #888;
     cursor: ns-resize;
-    height: 7px;
+    height: var(--divider-thickness);
     z-index: 1;
+}
+
+.horizontalDivider
+.horizontalThumb {
+    width: 20px;
+    border-top: 1px solid #302b2b;
+    border-bottom: 1px solid #302b2b;
+    height: 1px;
+    margin-top: 2px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#emulatorBottomDivider {
+    position: absolute;
+    top: 258px;
+    right: 0px;
+    width: 412px;
+    background-color: #888;
+    cursor: ns-resize;
+    height: var(--divider-thickness);
+    z-index: 1;
+}
+
+/* Hide emulator bottom divider when debugger is not shown */
+.WindowedUI #emulatorBottomDivider,
+.MaximalUI #emulatorBottomDivider,
+.EmulatorUI #emulatorBottomDivider,
+.EditorUI #emulatorBottomDivider{
+    display: none;
 }
 
 
@@ -1074,6 +1108,15 @@ code, .code {
     width: 771px;
 }
 
+.WideIDEUI #emulatorBottomDivider {
+    top: 485px;
+    width: 771px;
+}
+
+.IDEUI #emulatorBottomDivider {
+    width: 412px;
+}
+
 /* Hide the debugger in emulator modes and full screen editor */
 .MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger, .GhostUI #debugger {
     visibility: hidden;
@@ -1085,6 +1128,13 @@ code, .code {
     right: 0px;
     width: unset;
     border-left: none;
+}
+
+.TestUI #emulatorBottomDivider {
+    left: 0px;
+    right: 0px;
+    width: 100%;
+    top: 258px;
 }
 
 .unselectable {
@@ -1101,6 +1151,12 @@ code, .code {
     .TestUI #debugger {
         left: 50%;
         text-wrap: nowrap;
+    }
+
+    .TestUI #emulatorBottomDivider {
+        left: 0px;
+        right: 0px;
+        width: 100%;
     }
 
     /* Hide the project view */
@@ -1452,7 +1508,7 @@ code, .code {
 }
 
 
-.emulator, div#emulatorPane {
+.emulator {
     position:         absolute;
     right:            0px;
     top:              25px;
@@ -1461,11 +1517,12 @@ code, .code {
     margin-top: -1px;
     padding: 1px 1px 3px 1px;
     overflow: hidden;
+    border:none;
     background: #331c2a;
 }
 
 body.IDE #right-side-toolbar {
-    top: -1px; 
+    top: 0px; 
 }
 
 body:not(.IDE) #right-side-toolbar {
@@ -1477,7 +1534,7 @@ body:not(.IDE) #right-side-toolbar {
     background: #000;
 } 
 
-.GhostUI .emulator, .GhostUI div#emulatorPane, .MaximalUI .emulator, .MaximalUI div#emulatorPane {
+.GhostUI .emulator, .MaximalUI .emulator {
     padding: 0px;
     margin-top: 0px;
 }
@@ -1495,20 +1552,8 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     display: none;
 }
 
-#emulatorPane {
-    background: #331c2a;
-    border-left: 1px solid #888;
-    border-right: none;
-    border-top: none;
-}
 
-.GhostUI #emulatorPane {
-    background: none;
-    border: none;
-    padding: 0px;
-}
-
-.WideIDEUI .emulator, .WideIDEUI div#emulatorPane {
+.WideIDEUI .emulator {
     width: 769px;
     height: 486px;
 }
@@ -1517,7 +1562,7 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     left: -5px;
 }
 
-.EditorUI div.emulator, .EditorUI div#emulatorPane, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #introControlsScreen, .EditorUI .screenBorder canvas {
+.EditorUI div.emulator, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #introControlsScreen, .EditorUI .screenBorder canvas {
     visibility: hidden !important;
 }
 
@@ -2075,7 +2120,7 @@ svg.modeGraph .highlight.node > .border {
         right: 578px;
     }
 
-    .WideIDEUI .emulator, .WideIDEUI div#emulatorPane {
+    .WideIDEUI .emulator {
         width: 576px;
         height: 380px;
     }
@@ -2083,6 +2128,11 @@ svg.modeGraph .highlight.node > .border {
     .WideIDEUI #debugger {
         width: 578px;
         top: 386px;
+    }
+
+    .WideIDEUI #emulatorBottomDivider {
+        width: 578px;
+        top: 379px;
     }
 }
 
