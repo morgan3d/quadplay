@@ -8294,6 +8294,10 @@ function uppercase(s) {
     return s.toUpperCase();
 }
 
+function titlecase(s) {
+    return lowercase(s).replaceAll(/(^|[ 0-9.,#$%\^&*!\?@;:`~+=\-'"<>\]\[()/\\|_\n])./g, function (x) { return x.toUpperCase(); })
+}
+
 
 function capitalized(s) {
     return s.replaceAll(/(^|[ 0-9.,#$%\^&*!\?@;:`~+=\-'"<>\]\[()/\\|_\n])./g, function (x) { return x.toUpperCase(); })
