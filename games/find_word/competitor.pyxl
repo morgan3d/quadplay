@@ -152,11 +152,11 @@ def competitor_analyze(competitor_array):
    by score. */
 def competitor_assign_awards(competitor_array):
     const award_array = [
-        {field: "best_word_points", field2: ∅, award: "best_word",         measure: pass_through},
-        {field: "best_rare_points", field2: ∅, award: "best_rare",         measure: pass_through},
-        {field: "longest_text",     field2: ∅, award: "longest",           measure: size},
-        {field: "word_list",        field2: "freestyle_word_list", award: "most_words",        measure: size},
-        {field: "rare_word_list",   field2: ∅, award: "most_rare_words",   measure: size}]
+        {field: "best_word_points", award: "best_word",         measure: pass_through, field2: ∅},
+        {field: "best_rare_points", award: "best_rare",         measure: pass_through, field2: ∅},
+        {field: "longest_text",     award: "longest",           measure: size,         field2: ∅},
+        {field: "word_list",        award: "most_words",        measure: size,         field2: "freestyle_word_list"},
+        {field: "rare_word_list",   award: "most_rare_words",   measure: size,         field2: ∅}]
         
     // Rank all competitors by score, so that ties are resolved in favor of the 
     // higher scoring player
@@ -174,7 +174,7 @@ def competitor_assign_awards(competitor_array):
             
     // Now loop again and give badges, including for ties:
     for competitor in competitor_array:
-        for field, award, measure in entry in award_array:
+        for field, field2, award, measure in entry in award_array:
             if measure(competitor[field]) + (if field2 then measure(competitor[field2]) else 0) == measure(award_winner[award][field]) + (if field2 then measure(award_winner[award][field2]) else 0):
                 competitor.badges += BADGE_TABLE[award]
         
