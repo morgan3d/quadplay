@@ -164,8 +164,8 @@ def competitor_assign_awards(competitor_array):
     
     // Find the winner in each category. Ties are broken
     // by total score by running in order after that sort
-    for field in keys(award_winner):
-        award_winner[field] = competitor_array[0]
+    for award in keys(award_winner):
+        award_winner[award] = competitor_array[0]
     
     for competitor in competitor_array:
         for field, field2, award, measure in entry in award_array:
