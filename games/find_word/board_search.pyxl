@@ -429,7 +429,7 @@ def make_random_board_string(seed_base, permute_number default 0):
                 fast_remove_value(letter_bag, letter)
 
             board_string += letter
-            vowels += dictionary.VOWEL[letter] default 0         
+            vowels += DICTIONARY.VOWEL[letter] default 0         
     
     if permute_number:
         board_string = shuffled(board_string, make_random(permute_number))

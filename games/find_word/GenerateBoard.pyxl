@@ -39,4 +39,3 @@ if mode_frames > 3:
     else:
         set_mode(Play)
     
-
