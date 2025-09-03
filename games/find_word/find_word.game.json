@@ -947,6 +947,12 @@
                     "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
                     "description": "The alphabet as a lowercase string."
                 },
+                   "VOWEL" : {
+        "type": "object",
+        "description": "Maps vowels to the number 1 (must be 1, not true for the counting logic). Intentionally exclude Y, as this is mostly used for verifying there are enough vowels to make good words",
+        "value": {"A": {"type": "number", "value": 1}, "E":{"type": "number", "value": 1}, "I":{"type": "number", "value": 1}, "O":{"type": "number", "value": 1}, "U":{"type": "number", "value": 1}}
+        }
+, 
                 "EXTRA": {
                     "type": "raw",
                     "description": "Words to add to the dictionary even though they violate some technical rule, such as capitalization. Must be pre-Q-encoded",

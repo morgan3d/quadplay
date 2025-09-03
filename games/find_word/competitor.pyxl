@@ -114,7 +114,7 @@ def competitor_analyze(competitor_array):
                 
                 if points > competitor["best_" + prefix + "word_points"]:
                     competitor["best_" + prefix + "word_points"] = points
-                    competitor["best_" + prefix + "word_text"]= text
+                    competitor["best_" + prefix + "word_text"] = text
                     
                 if size(text) > size(competitor["longest_" + prefix + "text"]):
                     competitor["longest_" + prefix + "text"] = text
@@ -151,7 +151,15 @@ def competitor_analyze(competitor_array):
    and assigns the `competitor.badges` strings. Sorts the competitors
    by score. */
 def competitor_assign_awards(competitor_array):
-    // Rank all competitors by score
+    const award_array = [
+        {field: "best_word_points", field2: ∅, award: "best_word",         measure: pass_through},
+        {field: "best_rare_points", field2: ∅, award: "best_rare",         measure: pass_through},
+        {field: "longest_text",     field2: ∅, award: "longest",           measure: size},
+        {field: "word_list",        field2: "freestyle_word_list", award: "most_words",        measure: size},
+        {field: "rare_word_list",   field2: ∅, award: "most_rare_words",   measure: size}]
+        
+    // Rank all competitors by score, so that ties are resolved in favor of the 
+    // higher scoring player
     sort(competitor_array, "score", true)
     
     // Find the winner in each category. Ties are broken
@@ -160,36 +168,13 @@ def competitor_assign_awards(competitor_array):
         award_winner[field] = competitor_array[0]
     
     for competitor in competitor_array:
-        if competitor.best_word_points > award_winner.best_word.best_word_points:
-            award_winner.best_word = competitor
+        for field, field2, award, measure in entry in award_array:
+            if measure(competitor[field]) + (if field2 then measure(competitor[field2]) else 0) > measure(award_winner[award][field]) + (if field2 then measure(award_winner[award][field2]) else 0):
+                award_winner[award] = competitor
             
-        if competitor.best_rare_points > award_winner.best_rare.best_rare_points:
-            award_winner.best_rare = competitor
-
-        if size(competitor.longest_text) > size(award_winner.longest.longest_text):
-            award_winner.longest= competitor
-            
-        if size(competitor.word_list) + size(competitor.freestyle_word_list) > size(award_winner.most_words.word_list) + size(award_winner.most_words.freestyle_word_list):
-            award_winner.most_words = competitor
-            
-        if size(competitor.rare_word_list) > size(award_winner.most_rare_words.rare_word_list):
-            award_winner.most_rare_words = competitor
-
-    todo("Make data driven")
     // Now loop again and give badges, including for ties:
     for competitor in competitor_array:
-        // Put in the same order as the award INTERMISSION.STAGEs
-        if competitor.best_word_points == award_winner.best_word.best_word_points:
-            competitor.badges += BADGE_TABLE.best_word
+        for field, award, measure in entry in award_array:
+            if measure(competitor[field]) + (if field2 then measure(competitor[field2]) else 0) == measure(award_winner[award][field]) + (if field2 then measure(award_winner[award][field2]) else 0):
+                competitor.badges += BADGE_TABLE[award]
         
-        if competitor.best_rare_points == award_winner.best_rare.best_rare_points:
-            competitor.badges += BADGE_TABLE.best_rare
-
-        if size(competitor.longest_text) == size(award_winner.longest.longest_text):
-            competitor.badges += BADGE_TABLE.longest
-
-        if size(competitor.word_list) == size(award_winner.most_words.word_list):
-            competitor.badges += BADGE_TABLE.most_words
-    
-        if size(competitor.rare_word_list) == size(award_winner.most_rare_words.rare_word_list):
-            competitor.badges += BADGE_TABLE.most_rare_words

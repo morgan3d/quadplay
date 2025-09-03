@@ -25,13 +25,18 @@ def alternating_color():
  - `today_color` Color of the today value
 */
 def draw_row(y, caption, lifetime, today, color default alternating_color(), today_color default color, today_suffix default ∅):
-    const args = {font: leaderboard_font, color: color, outline: #000, x_align: "left"}
-    const x = ½ SCREEN_SIZE.x
-    const x_left   = x - ½ WIDTH + 6
-    const x_center = x + (if today ≠ "N/A" then 29 else 62)
-    const x_right  = x + ½ WIDTH - 9
+    const args = {
+        font: leaderboard_font,
+        color: color,
+        outline: #000,
+        x_align: "left"}
     
-    if caption: draw_text({…args, text: caption, pos: xy(x_left, y)})
+    const x_left   = ½ SCREEN_SIZE.x - ½ WIDTH + 6
+    const x_center = ½ SCREEN_SIZE.x + (if today ≠ "N/A" then 29 else 62)
+    const x_right  = ½ SCREEN_SIZE.x + ½ WIDTH - 9
+    
+    if caption:
+        draw_text({…args, text: caption, pos: xy(x_left, y)})
     
     if today_suffix:
         draw_text({…args,
@@ -39,9 +44,14 @@ def draw_row(y, caption, lifetime, today, color default alternating_color(), tod
             text: today_suffix,
             color: today_color})
     
-    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free") or ends_with(caption, "Wild")): args.font = history_font
+    // Change font for word display
+    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free") or ends_with(caption, "Wild")):
+        args.font = history_font
+        
     draw_text({…args, x_align: "right", text: lifetime, pos: xy(x_center, y)})
-    if today and today ≠ "N/A": draw_text({…args, x_align: "right", text: today, pos: xy(x_right, y), color: today_color})
+    
+    if today and today ≠ "N/A":
+        draw_text({…args, x_align: "right", text: today, pos: xy(x_right, y), color: today_color})
 
     return 13
 

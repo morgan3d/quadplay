@@ -2152,6 +2152,9 @@ function addCodeToSourceStats(code, scriptURL) {
     }
     code = lineArray.join('\n');
 
+    // TODO: split single-line block statements. This should be related to how
+    // mutlti line literals are compacted
+
     // Remove section headers
     const sectionRegex = /(?:^|\n).*\n[-─—━⎯=═⚌]{5,}[ \t]*\n/gm;
     code = code.replace(sectionRegex, '\n');
@@ -2176,9 +2179,23 @@ function addCodeToSourceStats(code, scriptURL) {
     // Remove any block of the form IF DEBUG.*: ...
     code = code.replace(/(\n\s*)(else\s+)?if DEBUG([^\b\s]|[\.\[\]\(\)\"])*:(\1\s[^\n]*)*/gi, '');
 
+    // Remove bracketed expressions, so that any colons remaining must be statement enders
+    let len;
+    do {
+        len = code.length;
+        code = code.replace(/\([^)]*\)|\[[^\]]*\]|{[^}]*}/g, '');
+    } while (code.length !== len);
+
+    // Ensure that single-line control flow is broken into multiple lines
+    code = code.replace(/(.*:)(\s*[^\s])/g, '$1\n$2');
+
     // Remove blank lines
     code = code.replace(/(^|\n)\s*(\n|$)/g, '\n');
 
+    // Remove blank first and last lines
+    code = code.replace(/^\s*\n|\n\s*$/g, '');
+
+    console.log('"', code, '"');
     // Track used APIs
     for (const api of ['save_local', 'load_local', 'midi_send_raw']) {
         if (code.match(new RegExp('\\b' +api + '\\('))) {
