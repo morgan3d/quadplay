@@ -15,7 +15,6 @@ def go_to_stats():
     push_mode(DisplayStats, update_stats_done_button) because "Button"
 
 
-titlecase("hi")
 
 def go_to_avatar():
     push_mode(AvatarEditor) because "Selected avatar"
