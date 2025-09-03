@@ -2195,7 +2195,6 @@ function addCodeToSourceStats(code, scriptURL) {
     // Remove blank first and last lines
     code = code.replace(/^\s*\n|\n\s*$/g, '');
 
-    console.log('"', code, '"');
     // Track used APIs
     for (const api of ['save_local', 'load_local', 'midi_send_raw']) {
         if (code.match(new RegExp('\\b' +api + '\\('))) {
