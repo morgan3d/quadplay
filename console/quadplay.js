@@ -948,7 +948,7 @@ function onResize() {
     
     // Ensure dividers don't go off-screen when window is resized shorter
     const realBody = document.getElementById('realBody');
-    if (realBody) {
+    if (realBody && useIDE) {
         const maxDividerTop = realBody.clientHeight - document.getElementById('error').offsetHeight + 9;
         
         // Check emulator bottom divider
