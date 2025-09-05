@@ -745,7 +745,8 @@ function computeSnappedIntegerScaling(availableWidth, availableHeight) {
     const widthScale = availableWidth / SCREEN_WIDTH;
     const heightScale = availableHeight / SCREEN_HEIGHT;
     const rawScale = Math.min(widthScale, heightScale);
-    
+
+    console.log(rawScale);
     // Skip integer scaling if in IDE mode and integerScalingEnabled is false
     if (useIDE && ! document.getElementById('integerScalingEnabled').checked) {
         return rawScale;
@@ -756,11 +757,11 @@ function computeSnappedIntegerScaling(availableWidth, availableHeight) {
     if (rawScale < 1) {
         // For scales < 1, round to nearest integer fraction (1/2, 1/3, 1/4). Enforce a minimum 1/4 size
         return Math.max(1/4, 1 / Math.ceil(1 / rawScale));
-    } else if (rawScale < 2) {
-        // 1x and 2x are shown exactly
+    } else if (rawScale < 1.6) {
+        // TODO: Temporary workaround for FWAN on mobile
         return Math.max(1, Math.floor(rawScale));
     } else {
-        // For scale >= 2, use exact scaling to fill screens better
+        // For large scales, use exact scaling to fill screens better
         return rawScale;
     }
 }

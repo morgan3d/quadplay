@@ -138,11 +138,7 @@ def set_hooks():
     ///////////////////////////////
     // Resolution hook special case
     
-    if DEBUG.PORTRAIT:
-        device_control("enable_feature", "custom_screen_size")
-        set_screen_size(xy(224, 412))
-    else:
-        continuously_set_screen_size_to_window("smaller", 224)
+    continuously_set_screen_size_to_window("smaller", 224)
 
 
 

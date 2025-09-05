@@ -83,15 +83,9 @@ preserving_transform:
                 player.avatar.sprite = avatar_next_sprite(player.avatar.sprite, s)
                 player.avatar.color = avatar_compute_color(player.avatar.sprite)
         
-        // Sprite  
-        let sprite = player.avatar.sprite
-        if ⌊mode_frames / 30⌋ mod 2:
-            sprite = sprite.spritesheet[sprite.tile_index.x][sprite.tile_index.y + 1]
-    
         avatar_draw({
             avatar: player.avatar,
-            sprite: sprite.x_flipped,
-            scale: 300%,
+            scale: 300% xy(-1, 1),
             pos: xy(x, -4)})
             
     // Letters   
