@@ -1442,22 +1442,145 @@ function onImportDocListSelect(target) {
 
 let codeEditorDividerInDrag = false;
 let codeEditorDividerDragOffset = 0;
+let emulatorBottomDividerInDrag = false;
+let emulatorBottomDividerDragOffset = 0;
 
 function onCodeEditorDividerDragStart(event) {
     codeEditorDividerInDrag = true;
     document.getElementById('codePlusFrame').classList.add('resizing');
     
+    const divider = document.getElementById('codeEditorDivider');
+    
     // Store the offset from the top of the divider to where the user clicked
-    const dividerRect = document.getElementById('codeEditorDivider').getBoundingClientRect();
+    const dividerRect = divider.getBoundingClientRect();
     codeEditorDividerDragOffset = event.clientY - dividerRect.top;
+    
+    // Capture pointer events on the divider element
+    divider.setPointerCapture(event.pointerId);
+    
+    event.preventDefault();
 }
 
 
-function onCodeEditorDividerDragEnd() {
+function onCodeEditorDividerDragEnd(event) {
     if (codeEditorDividerInDrag) {
         codeEditorDividerInDrag = false;	
         document.getElementById('codePlusFrame').classList.remove('resizing');
+        
+        const divider = document.getElementById('codeEditorDivider');
+        
+        // Release pointer capture
+        if (event && event.pointerId) {
+            divider.releasePointerCapture(event.pointerId);
+        }
+        
         aceEditor.resize();
+    }
+}
+
+
+function onEmulatorBottomDividerDragStart(event) {
+    emulatorBottomDividerInDrag = true;
+    
+    const divider = document.getElementById('emulatorBottomDivider');
+    
+    // Store the offset from the top of the divider to where the user clicked
+    const dividerRect = divider.getBoundingClientRect();
+    emulatorBottomDividerDragOffset = event.clientY - dividerRect.top;
+    
+    // Capture pointer events on the divider element
+    divider.setPointerCapture(event.pointerId);
+    
+    event.preventDefault();
+}
+
+
+function onEmulatorBottomDividerDragEnd(event) {
+    if (emulatorBottomDividerInDrag) {
+        emulatorBottomDividerInDrag = false;
+        
+        const divider = document.getElementById('emulatorBottomDivider');
+        
+        // Release pointer capture
+        if (event && event.pointerId) {
+            divider.releasePointerCapture(event.pointerId);
+        }
+    }
+}
+
+
+// Update layout based on emulator bottom divider position
+function updateEmulatorBottomDividerLayout(dividerTop) {
+    const divider = document.getElementById('emulatorBottomDivider');
+    const debuggerPane = document.getElementById('debuggerPane');
+    const emulator = document.getElementById('emulator');
+    const realBody = document.getElementById('realBody');
+    
+    if (divider) {
+        divider.style.top = `${dividerTop}px`;
+    }
+    
+    if (debuggerPane) {
+        debuggerPane.style.top = `calc(${dividerTop}px + var(--divider-thickness))`;
+    }
+    
+    // Update emulator bottom to align with top of divider
+    if ((uiMode === 'IDE' || uiMode === 'WideIDE' || uiMode === 'Test' || uiMode === 'Editor') && emulator && realBody) {
+        const realBodyRect = realBody.getBoundingClientRect();
+        const emulatorRect = emulator.getBoundingClientRect();
+        const emulatorTop = emulatorRect.top - realBodyRect.top;
+        
+        // Get the computed style to account for borders and padding. These are nonzero in some cases
+        const emulatorStyle = getComputedStyle(emulator);
+        const borderTop = parseInt(emulatorStyle.borderTopWidth) || 0;
+        const borderBottom = parseInt(emulatorStyle.borderBottomWidth) || 0;
+        const paddingTop = parseInt(emulatorStyle.paddingTop) || 0;
+        const paddingBottom = parseInt(emulatorStyle.paddingBottom) || 0;
+        
+        // Calculate available height accounting for borders and padding
+        // dividerTop is relative to realBody, so use it directly
+        const availableHeight = dividerTop - emulatorTop - borderTop - borderBottom - paddingTop - paddingBottom;
+        
+        emulator.style.height = `${Math.round(availableHeight)}px`;
+        emulator.style.maxHeight = 'none';
+        emulator.style.overflow = 'hidden';
+    } else if ((uiMode === 'Emulator' || uiMode === 'Ghost' || uiMode === 'Maximal' || uiMode === 'Windowed') && emulator) {
+        // These modes should fill from header to bottom using CSS positioning
+        emulator.style.position = 'absolute';
+        emulator.style.top = `${document.getElementById('header').offsetHeight}px`;
+        emulator.style.bottom = '0px';
+        emulator.style.height = '';
+        emulator.style.maxHeight = 'none';
+        emulator.style.overflow = 'hidden';
+    }
+    
+    // In Test mode, also update editorPane to match debuggerPane position
+    if (uiMode === 'Test') {
+        const editorPane = document.getElementById('editorPane');
+        if (editorPane) {
+            editorPane.style.top = `calc(${dividerTop}px + var(--divider-thickness))`;
+        }
+    }
+    
+    // Call onResize to update screenBorder scaling when emulator size changes
+    onResize();
+}
+
+function onEmulatorBottomDividerDrag(event) {
+    if (emulatorBottomDividerInDrag) {
+        const realBody = document.getElementById('realBody');
+        const realBodyRect = realBody.getBoundingClientRect();
+        
+        // Constrain the position to stay within realBody bounds
+        const minTop = 0; 
+        const dividerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--divider-thickness'));
+        const maxTop = realBody.clientHeight - dividerHeight; 
+        const newTop = Math.min(maxTop, Math.max(minTop, event.clientY - realBodyRect.top - emulatorBottomDividerDragOffset));
+        
+        updateEmulatorBottomDividerLayout(newTop);
+        
+        event.preventDefault();
+        event.stopPropagation();
     }
 }
 

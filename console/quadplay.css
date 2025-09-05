@@ -2,6 +2,8 @@
 
 :root {
     --divider-thickness: 7px;
+    --wide-ide-emulator-width: 770px;
+    --wide-ide-emulator-height: 454px;
 }
 
 /* Remove mobile pinch-to-zoom and input delays (should be redundant with
@@ -850,7 +852,7 @@ div.disabled span.label, div.disabled:active span.label {
 
 .WideIDEUI #editorPane {
     /* Sized for large screens */
-    right: 769px;
+    right: calc(var(--wide-ide-emulator-width) - 1px);
 }
 
 .EditorUI #editorPane, .GhostUI #editorPane {
@@ -1019,18 +1021,18 @@ code, .code {
 
 #emulatorBottomDivider {
     position: absolute;
-    top: 258px;
-    right: 0px;
+    top: 265px;
+    right: -1px;
     width: 412px;
     background-color: #888;
     cursor: ns-resize;
     height: var(--divider-thickness);
-    z-index: 1;
 }
 
 /* Hide emulator bottom divider when debugger is not shown */
 .WindowedUI #emulatorBottomDivider,
 .MaximalUI #emulatorBottomDivider,
+.GhostUI #emulatorBottomDivider,
 .EmulatorUI #emulatorBottomDivider,
 .EditorUI #emulatorBottomDivider{
     display: none;
@@ -1083,9 +1085,9 @@ code, .code {
 
 /**************************************************/
 
-#debugger {
+#debuggerPane {
     position: absolute;
-    top:      265px;
+    top:      272px;
     right:    0px;
     width:    412px;
     bottom:   0px;
@@ -1095,7 +1097,7 @@ code, .code {
 }
 
 
-#debugger > label {
+#debuggerPane > label {
     font-family: quadplay;
     font-size: 13px;
     min-width: 50px;
@@ -1103,27 +1105,27 @@ code, .code {
     padding-right: 2px;
 }
 
-.WideIDEUI #debugger {
-    top: 492px;
-    width: 771px;
+.WideIDEUI #debuggerPane {
+    top: calc(var(--wide-ide-emulator-height) + var(--divider-thickness) + 40px);
+    width: calc(var(--wide-ide-emulator-width) + 1px);
 }
 
 .WideIDEUI #emulatorBottomDivider {
-    top: 485px;
-    width: 771px;
+    top: calc(var(--wide-ide-emulator-height) + 33px);
+    width: calc(var(--wide-ide-emulator-width) + 1px);
 }
 
 .IDEUI #emulatorBottomDivider {
     width: 412px;
 }
 
-/* Hide the debugger in emulator modes and full screen editor */
-.MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger, .GhostUI #debugger {
+/* Hide the debuggerPane in emulator modes and full screen editor */
+.MaximalUI #debuggerPane, .EmulatorUI #debuggerPane, .EditorUI #debuggerPane, .GhostUI #debuggerPane {
     visibility: hidden;
     display: none;
 }
 
-.TestUI #debugger {
+.TestUI #debuggerPane {
     left: 0px;
     right: 0px;
     width: unset;
@@ -1134,7 +1136,7 @@ code, .code {
     left: 0px;
     right: 0px;
     width: 100%;
-    top: 258px;
+    top: 265px;
 }
 
 .unselectable {
@@ -1148,7 +1150,7 @@ code, .code {
    layout to also show the constant editor. */
 @media screen and (min-width: 640px) {
 
-    .TestUI #debugger {
+    .TestUI #debuggerPane {
         left: 50%;
         text-wrap: nowrap;
     }
@@ -1168,6 +1170,7 @@ code, .code {
         display: unset;
         visibility: visible;
         left: 0px;
+        top: 272px;
         right: 50%;
         z-index: 12;
     }
@@ -1554,8 +1557,8 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
 
 
 .WideIDEUI .emulator {
-    width: 769px;
-    height: 486px;
+    width: var(--wide-ide-emulator-width);
+    height: var(--wide-ide-emulator-height);
 }
 
 .WideIDEUI #screenBorder {
@@ -1964,7 +1967,7 @@ tabbox pane {
     padding: 20px 10px 0px;
     bottom: 0px;
     top: 26px;
-    right: 0px;
+    right: -1px;
     left: -1px;
 }
 
@@ -2112,29 +2115,6 @@ svg.modeGraph .highlight.node > .border {
 
 /***************************************************************************/
 
-
-
-/** Wide IDE is 1.5x instead of 2x on smaller screens */
-@media screen and (max-device-width: 1600px) {
-    .WideIDEUI #editorPane {
-        right: 578px;
-    }
-
-    .WideIDEUI .emulator {
-        width: 576px;
-        height: 380px;
-    }
-
-    .WideIDEUI #debugger {
-        width: 578px;
-        top: 386px;
-    }
-
-    .WideIDEUI #emulatorBottomDivider {
-        width: 578px;
-        top: 379px;
-    }
-}
 
 
 #debugWatchDisplayPane td {

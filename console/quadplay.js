@@ -255,6 +255,14 @@ function debugOptionClick(event) {
 }
 
 
+function onIntegerScalingClick(event) {
+    const element = event.target;
+    event.stopPropagation();
+    localStorage.setItem('integerScalingEnabled', '' + element.checked);
+    onResize();
+}
+
+
 let codeEditorFontSize = 14;
 function setCodeEditorFontSize(f) {
     codeEditorFontSize = Math.max(6, Math.min(32, f));
@@ -641,7 +649,45 @@ function setUIMode(d, noFullscreen) {
         d = 'Emulator';
     }
 
+    const previousUIMode = uiMode;
     uiMode = d;
+    
+    // Reset divider positions when UI mode actually changes
+    if (previousUIMode !== uiMode) {
+        const emulatorBottomDivider = document.getElementById('emulatorBottomDivider');
+        const debuggerPane = document.getElementById('debuggerPane');
+        const editorPane = document.getElementById('editorPane');
+        const emulator = document.getElementById('emulator');
+        
+        if (emulatorBottomDivider) {
+            emulatorBottomDivider.style.top = '';
+        }
+        if (debuggerPane) {
+            debuggerPane.style.top = '';
+        }
+        if (editorPane) {
+            editorPane.style.top = '';
+        }
+        if (emulator) {
+            emulator.style.maxHeight = '';
+            emulator.style.overflow = '';
+        }
+        
+        let dividerTop = 256; // Ghost, Test, Editor
+        // Initialize emulator size for IDE modes using CSS default position
+        if (uiMode !== 'Emulator' && uiMode !== 'Maximal' && uiMode !== 'Windowed') {
+            // Use CSS default divider positions based on UI mode
+            if (uiMode === 'WideIDE' || uiMode === 'IDE') {
+                // Calculate divider position based on CSS variable height + offset
+                const emulatorHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--wide-ide-emulator-height'));
+                const headerHeight = document.getElementById('header').offsetHeight;
+                dividerTop = emulatorHeight + 33 - headerHeight; // Subtract header since dividerTop is relative to realBody
+            }
+        } else {
+            dividerTop = parseInt(emulatorBottomDivider.style.top);
+        }
+        updateEmulatorBottomDividerLayout(dividerTop);
+    }
     const body = document.getElementsByTagName('body')[0];
 
     if (! uiModeTable[uiMode]) {
@@ -692,6 +738,79 @@ function setUIMode(d, noFullscreen) {
     }
 }
 
+
+/* Compute snapped integer scaling from available dimensions */
+function computeSnappedIntegerScaling(availableWidth, availableHeight) {
+    // Find largest screen size that fits within available rectangle
+    const widthScale = availableWidth / SCREEN_WIDTH;
+    const heightScale = availableHeight / SCREEN_HEIGHT;
+    const rawScale = Math.min(widthScale, heightScale);
+    
+    // Skip integer scaling if in IDE mode and integerScalingEnabled is false
+    if (useIDE && ! document.getElementById('integerScalingEnabled').checked) {
+        return rawScale;
+    }
+    
+    // Apply integer scaling logic between 1/4x and 3x sizes, and clamp
+    // to no smaller than 1/4
+    if (rawScale < 1) {
+        // For scales < 1, round to nearest integer fraction (1/2, 1/3, 1/4). Enforce a minimum 1/4 size
+        return Math.max(1/4, 1 / Math.ceil(1 / rawScale));
+    } else if (rawScale <= 3) {
+        return Math.max(1, Math.floor(rawScale));
+    } else {
+        // For scale > 3, use exact scaling to fill screens better
+        return rawScale;
+    }
+}
+
+function getAvailableEmulatorScreenSize() {
+    const emulatorDiv = document.getElementById('emulator');
+    let availableWidth = emulatorDiv.clientWidth;
+    let availableHeight = emulatorDiv.clientHeight;
+    
+    switch (uiMode) {
+    case 'Editor':
+        // No visible game screen in this case, so persist the current screen size.
+        const screenBorder = document.getElementById('screenBorder');
+        availableWidth = screenBorder.clientWidth;
+        availableHeight = screenBorder.clientHeight;
+        break;
+        
+    case 'Emulator':
+        {
+            // Compute smaller bounding area constrained by on-screen controls
+            const gbMode = window.matchMedia('(orientation: portrait)').matches;
+            if (gbMode) {
+                // In portrait mode, calculate control space from KeyQbutton position
+                const keyQButton = document.getElementById('KeyQbutton');
+                const keyQButtonRect = keyQButton.getBoundingClientRect();
+                const emulatorRect = emulatorDiv.getBoundingClientRect();
+                availableHeight = keyQButtonRect.top - emulatorRect.top;
+            } else {
+                // In landscape mode, calculate control space from minimalButtons position
+                const minimalButtons = document.getElementById('minimalButtons');
+                const minimalButtonsRect = minimalButtons.getBoundingClientRect();
+                const emulatorRect = emulatorDiv.getBoundingClientRect();
+                const controlMargin = emulatorRect.right - minimalButtonsRect.left;
+                availableWidth -= 2 * controlMargin;
+            }
+        }
+        break;
+        
+    case 'WideIDE':
+    case 'IDE':
+    case 'Ghost':
+    case 'Maximal':
+    case 'Windowed':
+    case 'Test':
+        // Use full emulator div bounds
+        break;
+    }
+    
+    return {x: availableWidth, y: availableHeight};
+}
+
 /* Choose the most appropriate layout for the aspect ratio and scaling factor. */
 function onResize() {
     const body         = document.getElementsByTagName('body')[0];
@@ -719,98 +838,44 @@ function onResize() {
 
     const editorPane = document.getElementById('editorPane');
     if (uiMode !== 'Test') {
-        // Undo the setting from Test mode
-        editorPane.style.top = '0px';
+        // Undo the setting from Test mode only
+        if (editorPane.style.top && editorPane.style.top !== '0px') {
+            editorPane.style.top = '0px';
+        }
     }
     
     switch (uiMode) {
     case 'Editor':
-        document.getElementById('debugger').removeAttribute('style');
-        background.removeAttribute('style');
-        break;
-        
-    case 'WideIDE':
-        scale = window.screen.width <= 1600 ? 1.5 : 2.0;
-        // Fall through to IDE case
-        
-    case 'IDE':
-        // Revert to defaults. This has to be done during resize
-        // instead of setUIMode() to have any effect.
-        screenBorder.removeAttribute('style');
-        document.getElementById('debugger').removeAttribute('style');
-        if (SCREEN_WIDTH <= (384 >> 1) && SCREEN_HEIGHT <= (224 >> 1)) {
-            // Half-resolution games run with pixel doubling
-            scale *= 2;
-        } else if (SCREEN_WIDTH === 640 && SCREEN_HEIGHT === 360) {
-            if (scale === 1.0 || scale === 2.0) {
-                scale *= 0.5;
-            } else {
-                // This fits at a slightly larger size, although it
-                // loses any semblance of integer scaling
-                scale *= 0.50 * 0.90 / 0.75;
-            }
-        } else if (SCREEN_WIDTH > 384 || SCREEN_HEIGHT > 224) {
-            // Greater than normal resolution runs at half scale
-            scale *= 0.5;
-        }
-
-        let zoom = setScreenBorderScale(screenBorder, scale);
-
-        if (hasBrowserScaleBug) {
-            if (uiMode === 'WideIDE') {
-                screenBorder.style.left = (-5 / zoom) + 'px';
-            } else {
-                screenBorder.style.left = (8 / zoom) + 'px';
-            }
-            screenBorder.style.top = (18 / zoom) + 'px';
-        } else {
-            screenBorder.style.transformOrigin = 'left top';
-        }
         background.removeAttribute('style');
         break;
         
     case 'Emulator':
         {
-            // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
-            if (gbMode) {
-                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, windowWidth / SCREEN_WIDTH));
-            } else {
-                scale = Math.max(0, Math.min((window.innerHeight) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
-            }
+            const availableSize = getAvailableEmulatorScreenSize();
+            const scale = computeSnappedIntegerScaling(availableSize.x, availableSize.y);
             
-            // Round to nearest even multiple of the actual pixel size for small emulator screens to
-            // keep per-pixel accuracy. Disable this if the physical screen is not very large, 
-            // e.g., on a phone, where limiting scaling to integers would make it ridiculously small with large margins
-            if ((window.screen.width > 500 && window.screen.height > 500) &&
-                (scale * window.devicePixelRatio <= 2.5) && 
-                (scale * window.devicePixelRatio > 1)) {
-                scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
-            }
-
-            // Amount to shift vertically to center the screen
+            const zoom = setScreenBorderScale(screenBorder, scale);
+            
+            // Center horizontally within the full emulator width
+            const emulatorDiv = document.getElementById('emulator');
+            const fullEmulatorWidth = emulatorDiv.clientWidth;
+            screenBorder.style.left = Math.round((fullEmulatorWidth / zoom - screenBorder.offsetWidth) / 2) + 'px';
+            
+            // Center vertically and handle background sizing
             let delta = 0;
             if (! gbMode) {
-                // Resize the background to bound the screen more tightly.
-                // Only resize vertically because the controls need to
-                // stay near the edges of the screen horizontally to make
-                // them reachable on mobile. In gbMode, the emulator fills
-                // the screen and this is not needed.
+                // Resize the background to bound the screen more tightly
                 const MIN_LANDSCAPE_HEIGHT = 300;
                 const height = Math.min(windowHeight - 27, Math.max(MIN_LANDSCAPE_HEIGHT, Math.round(SCREEN_HEIGHT * scale + 19)));
                 delta = Math.ceil(height / 2);
                 background.style.top = Math.round((windowHeight - height) / 2 - 17) + 'px';
                 background.style.height = height + 'px';
-            }
-
-            const zoom = setScreenBorderScale(screenBorder, scale);
-            
-            screenBorder.style.left = Math.round((windowWidth / zoom - screenBorder.offsetWidth - 1 / zoom) / 2) + 'px';
-            if (gbMode) {
-                screenBorder.style.transformOrigin = 'center top';
-                screenBorder.style.top = (15 / zoom) + 'px';
-            } else {
+                
                 screenBorder.style.transformOrigin = 'center';
                 screenBorder.style.top = (Math.round(Math.max(0, -delta / zoom) + (windowHeight / zoom - screenBorder.offsetHeight - 34 / zoom) / 2)) + 'px';
+            } else {
+                screenBorder.style.transformOrigin = 'center top';
+                screenBorder.style.top = (15 / zoom) + 'px';
             }
 
             // Show the controls
@@ -818,40 +883,42 @@ function onResize() {
             break;
         }
 
+    case 'WideIDE':
+    case 'IDE':
     case 'Ghost':
     case 'Maximal':
     case 'Windowed':
     case 'Test':
         {
-            // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
-            const isKiosk = getQueryString('kiosk') === '1';
-            const headerBar = isKiosk ? 0 : 24;
-            scale = Math.max(0, Math.min((windowHeight - headerBar) / SCREEN_HEIGHT, windowWidth / SCREEN_WIDTH));
-            
-            if ((scale * window.devicePixelRatio <= 2) && (scale * window.devicePixelRatio > 1)) {
-                // Round to nearest even multiple of the actual pixel size for small screens to
-                // keep per-pixel accuracy
-                scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
-            }
-
+            const availableSize = getAvailableEmulatorScreenSize();
+            const scale = computeSnappedIntegerScaling(availableSize.x, availableSize.y);
             const zoom = setScreenBorderScale(screenBorder, scale);
-            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom) / (2 * zoom)) + 'px';
+            
+            // Center the screen horizontally for all modes
+            screenBorder.style.left = Math.round((availableSize.x / zoom - screenBorder.offsetWidth) / 2) + 'px';            
+            screenBorder.style.transformOrigin = 'center';
 
-            if (uiMode === 'Test') {
+            // Handle vertical positioning and transform origin based on UI mode
+            if (uiMode === 'IDE' || uiMode === 'WideIDE') {
+                // IDE modes: center vertically (don't remove style attribute as it contains the transform)
+                screenBorder.style.top = Math.round((availableSize.y / zoom - screenBorder.offsetHeight) / 2) + 'px';
+                background.removeAttribute('style');
+            } else if (uiMode === 'Test') {
                 // Show the constants
                 onProjectSelect(undefined, 'constant', undefined);
-                screenBorder.style.top = '0px';
-                const S = (PRIVATE_VIEW && ! isGuesting && ! showPrivateViewsEnabled) ? 2 : 1;
-
-                // Put the top of the debugger at the bottom of the emulator
-                const top = Math.round(S * scale * screenBorder.offsetHeight) + 'px';
-                document.getElementById('debugger').style.top = top;
-                editorPane.style.top = top;
+                screenBorder.style.top = Math.round((availableSize.y / zoom - screenBorder.offsetHeight) / 2) + 'px';
                 
-                screenBorder.style.transformOrigin = 'center top';
+                // Put the top of the editor to match debuggerPane position (only if not manually positioned)
+                if (editorPane.style.top && editorPane.style.top.startsWith('calc(')) {
+                    // Don't override manual drag positioning
+                } else {
+                    // Match the debuggerPane position from CSS
+                    editorPane.style.top = '';
+                }
             } else {
-                // Fall through from non-Test UIs                
-                screenBorder.style.transformOrigin = 'center';
+                // Ghost, Maximal, Windowed modes: center vertically
+                const isKiosk = getQueryString('kiosk') === '1';
+                const headerBar = isKiosk ? 0 : document.getElementById('header').offsetHeight;
                 screenBorder.style.top = Math.round((windowHeight - screenBorder.offsetHeight * zoom - headerBar - 2) / (2 * zoom)) + 'px';
             }
         }
@@ -870,7 +937,7 @@ function onResize() {
         screenBorder.style.borderWidth  = Math.ceil(5 * hostCrop / scale) + 'px';
     }
     screenBorder.style.boxShadow = `${1/scale}px ${2/scale}px ${2/scale}px 0px rgba(255,255,255,0.16), ${-1.5/scale}px {-2/scale}px ${2/scale}px 0px rgba(0,0,0,0.19)`;
-
+   
     if (emulatorMode === 'stop') {
         // Work around a Chromium bug where resizing will fill
         // the canvas with random compositing framebuffer data
@@ -878,10 +945,48 @@ function onResize() {
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
+    
+    // Ensure dividers don't go off-screen when window is resized shorter
+    const realBody = document.getElementById('realBody');
+    if (realBody) {
+        const maxDividerTop = realBody.clientHeight - document.getElementById('error').offsetHeight + 9;
+        
+        // Check emulator bottom divider
+        const emulatorBottomDivider = document.getElementById('emulatorBottomDivider');
+        if (emulatorBottomDivider && emulatorBottomDivider.style.top) {
+            const currentTop = parseInt(emulatorBottomDivider.style.top);
+            if (currentTop > maxDividerTop) {
+                updateEmulatorBottomDividerLayout(maxDividerTop);
+            }
+        }
+        
+        // Check code editor divider - use same coordinate system as emulator divider
+        const codeEditorDivider = document.getElementById('codeEditorDivider');
+        const codePlusFrame = document.getElementById('codePlusFrame');
+        if (codeEditorDivider && codePlusFrame) {
+            const codePlusFrameRect = codePlusFrame.getBoundingClientRect();
+            const realBodyRect = realBody.getBoundingClientRect();
+            const dividerRect = codeEditorDivider.getBoundingClientRect();
+            
+            // Convert divider position to realBody coordinate system
+            const dividerTopInRealBody = dividerRect.top - realBodyRect.top;
+            
+            if (dividerTopInRealBody > maxDividerTop) {
+                // Calculate how much to reduce the top height to bring divider above status bar
+                const currentTopHeight = parseInt(codePlusFrame.style.gridTemplateRows?.split('px')[0] || '0');
+                const reduction = dividerTopInRealBody - maxDividerTop;
+                const newTopHeight = Math.max(0, currentTopHeight - reduction);
+                codePlusFrame.style.gridTemplateRows = `${newTopHeight}px auto auto 1fr`;
+                localStorage.setItem('codeDividerTop', Math.round(newTopHeight));
+            }
+        }
+    }
 }
 
 
-/* Returns the net zoom factor */
+/* Returns the net zoom factor, factoring in the PRIVATE_VIEW consideration 
+   that may cause the rendered screen to be twice as large in each dimension 
+   as the viewable screen. */
 function setScreenBorderScale(screenBorder, scale) {
     const showPrivateViewsEnabled = document.getElementById('showPrivateViewsEnabled').checked;
 
@@ -2313,12 +2418,13 @@ function saveIDEState() {
         'codeEditorFontSize': '' + codeEditorFontSize,
         'autoplayOnLoad': document.getElementById('autoplayOnLoad').checked,
         'onScreenHUDEnabled': document.getElementById('onScreenHUDEnabled').checked,
-        'keyboardMappingMode': keyboardMappingMode
+        'keyboardMappingMode': keyboardMappingMode,
+        'integerScalingEnabled': document.getElementById('integerScalingEnabled').checked        
     };
 
     // Find the selected debugger tab
     {
-        const array = document.getElementById('debugger').children;
+        const array = document.getElementById('debuggerPane').children;
         for (let i = 0; i < array.length; ++i) {
             if (array[i].tagName === 'INPUT' && array[i].checked) {
                 options.activeDebuggerTab = array[i].id;
@@ -2549,6 +2655,12 @@ function onRadio(id) {
         setUIMode('Emulator');
     } else if ((id === 'testUIButton') && (uiMode !== 'Test')) {
         setUIMode('Test');
+        // Test mode works better with the rollout unpinned
+        localStorage.setItem('projectPinButtonEnabled', false);
+        document.body.classList.remove('projectPinned');
+        if (document.getElementById('projectPinButton')) {
+            document.getElementById('projectPinButton').checked = false;
+        }
     } else if ((id === 'IDEUIButton') && (uiMode !== 'IDE')) {
         setUIMode('IDE');
     } else if ((id === 'wideIDEUIButton') && (uiMode !== 'WideIDE')) {
@@ -4637,54 +4749,35 @@ function onConfirmButtonClick(ok) {
 // Default to true
 backgroundPauseEnabled = (localStorage.getItem('backgroundPauseEnabled') !== 'false');
 
-if (! localStorage.getItem('debugPrintEnabled')) {
-    // Default to true
-    localStorage.setItem('debugPrintEnabled', 'true')
-}
-
-if (! localStorage.getItem('prettyPrintEnabled')) {
-    // Default to true
-    localStorage.setItem('prettyPrintEnabled', 'true')
-}
-
-if (! localStorage.getItem('assertEnabled')) {
-    // Default to true
-    localStorage.setItem('assertEnabled', 'true')
-}
-
-if (! localStorage.getItem('todoEnabled')) {
-    // Default to false
-    localStorage.setItem('todoEnabled', 'false')
-}
-
-if (! localStorage.getItem('automathEnabled')) {
-    // Default to true
-    localStorage.setItem('automathEnabled', 'true')
-}
-
-if (localStorage.getItem('restartOnFocusEnabled') === null) {
-    // Default to false
-    localStorage.setItem('restartOnFocusEnabled', 'false')
-}
-
-if (localStorage.getItem('onScreenHUDEnabled') === null) {
-    // Default to false
-    localStorage.setItem('onScreenHUDEnabled', 'false')
-}
-
-if (! localStorage.getItem('debugWatchEnabled')) {
-    // Default to true
-    localStorage.setItem('debugWatchEnabled', 'true')
-}
-
-if (! localStorage.getItem('autoplayOnLoad')) {
-    // Default to true
-    localStorage.setItem('autoplayOnLoad', 'true')
-}
-
-if (! localStorage.getItem('projectPinButtonEnabled')) {
-    // Default to true
-    localStorage.setItem('projectPinButtonEnabled', 'true')
+for (const option of [
+    { name: 'showPhysicsEnabled', defaultValueString: 'false' },
+    { name: 'showPrivateViewsEnabled', defaultValueString: 'false' },
+    { name: 'showEntityBoundsEnabled', defaultValueString: 'false' },
+    { name: 'assertEnabled', defaultValueString: 'true', isDOMElement: true },
+    { name: 'todoEnabled', defaultValueString: 'false', isDOMElement: true },
+    { name: 'automathEnabled', defaultValueString: 'true', isDOMElement: true },
+    { name: 'prettyPrintEnabled', defaultValueString: 'true', isDOMElement: true },
+    { name: 'debugPrintEnabled', defaultValueString: 'true', isDOMElement: true },
+    { name: 'debugWatchEnabled', defaultValueString: 'true', isDOMElement: true },
+    { name: 'restartOnFocusEnabled', defaultValueString: 'false', isDOMElement: true },
+    { name: 'autoplayOnLoad', defaultValueString: 'true', isDOMElement: true },
+    { name: 'onScreenHUDEnabled', defaultValueString: 'false', isDOMElement: true },
+    { name: 'printTouchEnabled', defaultValueString: 'false' },
+    { name: 'integerScalingEnabled', defaultValueString: 'true', isDOMElement: true },
+    { name: 'projectPinButtonEnabled', defaultValueString: 'true' }]) {
+    
+    if (option.isDOMElement) {
+        const element = document.getElementById(option.name);
+        if (element) {
+            console.dir(option.name);
+            console.dir(localStorage.getItem(option.name));
+            element.checked = JSON.parse(localStorage.getItem(option.name) ?? option.defaultValueString);
+        } else {
+            console.error(option.name + " HTML element not found");
+        }
+    } else if (localStorage.getItem(option.name) === null) {
+        localStorage.setItem(option.name, option.defaultValueString);
+    }
 }
 
 
@@ -4693,18 +4786,6 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
 
 setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 
-{
-    const optionNames = ['showPhysicsEnabled', 'showPrivateViewsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'prettyPrintEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];
-    for (let i = 0; i < optionNames.length; ++i) {
-        const name = optionNames[i];
-        const value = JSON.parse(localStorage.getItem(name) || 'false');
-        const element = document.getElementById(name);
-        if (! element) {
-            console.error(name + " not found");
-        }
-        element.checked = value;
-    }
-}
 
 
 

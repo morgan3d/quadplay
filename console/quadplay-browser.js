@@ -343,67 +343,6 @@ function device_control(cmd) {
             const emulator_bounds = emulator_screen.getBoundingClientRect();
             const toolbar_height = Math.ceil(document.getElementById('header').getBoundingClientRect().height);
 
-            // This is the size of the "OS window", but the "OS window" when running in the IDE is 
-            // the emulator window. 
-            let window_size;
-
-            switch (uiMode) {
-            case 'Editor': // Full-screen editor. 
-                // There is no visible game screen in this case, so treat as if it was the normal IDE
-            case 'IDE': // Normal emulator + code pane + project pane
-            case 'WideIDE': // Wide emulator + code pane
-            {
-                // The available window is the emulator minus some framing
-                const emulator = document.getElementById('emulator');
-                const screenBorder = document.getElementById('screenBorder');
-                const rect = emulator.getBoundingClientRect();
-
-                const border = parseInt(window.getComputedStyle(screenBorder).borderWidth);
-                const padTop = screenBorder.offsetTop + border;
-                // All other sides
-                const pad = screenBorder.offsetLeft + border;
-                
-                window_size = Object.freeze({
-                    x: rect.width - 2 * pad,
-                    y: rect.height - pad - padTop});
-                break;
-            }
-
-            case 'Emulator': // The touch screen emulator
-            {
-                // The available window is the emulator minus a lot of framing
-                const emulator = document.getElementById('emulator');
-                const screenBorder = document.getElementById('screenBorder');
-                const rect = emulator.getBoundingClientRect();
-
-                const border = parseInt(window.getComputedStyle(screenBorder).borderWidth);
-                const padRight = document.getElementById('minimalDPad').getBoundingClientRect().right + border;
-
-                window_size = Object.freeze({
-                    x: Math.floor(document.getElementById('KeyVbutton').getBoundingClientRect().left) - border - padRight,
-                    // Take off some pixels for the shaded border of the emulator case
-                    y: rect.height - 2 * border - 90});
-                break;
-            }
-            
-            case 'Test': // Emulator on top of the debugger
-            {
-                // This case is arbitrary. Report to quadplay that it gets vertically half of
-                // the screen by default, even though the aspect ratio may give it more
-                window_size = Object.freeze({x: window.innerWidth, y: Math.floor(window.innerHeight - toolbar_height) / 2});
-                break;
-            }
-
-            case 'Windowed': // Fill the window
-            case 'Maximal': // Fill the screen
-            case 'Ghost': // Code behind a translucent 'Editor' ui mode
-                // Fall through to using the whole window
-            default:
-                // The true browser window
-                window_size = Object.freeze({x: window.innerWidth, y: window.innerHeight - toolbar_height});
-            }
-
-
             return Object.freeze({
                 // Largest in OS-defined HiDPI pixels the largest the emulator
                 // could be with fullscreen if not showing the mobile touch gamepad controls. 
@@ -415,7 +354,7 @@ function device_control(cmd) {
                 // if not showing the mobile touch gamepad controls, as constrained by the browser
                 // window or an iframe if embedded. This is the window client rect minus the quadplay
                 // toolbar size.
-                window_size: window_size,
+                window_size: getAvailableEmulatorScreenSize(),
                 
                 // The emulator's current screen in OS-defined HiDPI pixels.
                 quadplay_size: Object.freeze({x: Math.floor(emulator_bounds.width), y: Math.floor(emulator_bounds.height)}),
