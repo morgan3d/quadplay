@@ -653,7 +653,7 @@ function setUIMode(d, noFullscreen) {
     uiMode = d;
     
     // Reset divider positions when UI mode actually changes
-    if (previousUIMode !== uiMode) {
+    if (previousUIMode !== uiMode && useIDE) {
         const emulatorBottomDivider = document.getElementById('emulatorBottomDivider');
         const debuggerPane = document.getElementById('debuggerPane');
         const editorPane = document.getElementById('editorPane');
