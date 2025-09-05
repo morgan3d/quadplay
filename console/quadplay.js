@@ -746,7 +746,6 @@ function computeSnappedIntegerScaling(availableWidth, availableHeight) {
     const heightScale = availableHeight / SCREEN_HEIGHT;
     const rawScale = Math.min(widthScale, heightScale);
 
-    console.log(rawScale);
     // Skip integer scaling if in IDE mode and integerScalingEnabled is false
     if (useIDE && ! document.getElementById('integerScalingEnabled').checked) {
         return rawScale;
