@@ -756,10 +756,10 @@ function computeSnappedIntegerScaling(availableWidth, availableHeight) {
     if (rawScale < 1) {
         // For scales < 1, round to nearest integer fraction (1/2, 1/3, 1/4). Enforce a minimum 1/4 size
         return Math.max(1/4, 1 / Math.ceil(1 / rawScale));
-    } else if (rawScale <= 3) {
+    } else if (rawScale <= 2.5) {
         return Math.max(1, Math.floor(rawScale));
     } else {
-        // For scale > 3, use exact scaling to fill screens better
+        // For scale > 2.5, use exact scaling to fill screens better
         return rawScale;
     }
 }
