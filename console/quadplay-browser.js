@@ -1014,13 +1014,13 @@ function $systemPrint(m, style) {
 
 // Allows HTML. location may be undefined
 function $outputAppend(m, location, linkAll) {
-    if (m !== '' && m !== undefined) {
+    if (m !== '' && m !== undefined && useIDE) {
         // Uncomment to debug mystery output. Also
         // use your browser debugger to 'pause on caught exceptions'
         // console.trace();
         
         // Remove tags and then restore HTML entities
-        console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+        // console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
 
         if (outputDisplayPane.childNodes.length > MAX_DEBUG_OUTPUT_LENGTH) {
             // Remove a lot, so that we amortize the cost of manipulating the DOM
