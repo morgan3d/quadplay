@@ -2025,11 +2025,6 @@
                     "type": "boolean",
                     "value": false
                 },
-                "PORTRAIT": {
-                    "type": "boolean",
-                    "value": false,
-                    "description": "Debug override this to true to force a mobile-device-like aspect ratio in the IDE"
-                },
                 "HISTORY": {
                     "type": "boolean",
                     "value": false

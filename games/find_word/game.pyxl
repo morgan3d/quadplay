@@ -138,7 +138,7 @@ def set_hooks():
     ///////////////////////////////
     // Resolution hook special case
     
-    continuously_set_screen_size_to_window("smaller", 224)
+    continuously_set_screen_size_to_window("smaller", 224, 800)
 
 
 

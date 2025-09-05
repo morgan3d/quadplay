@@ -1027,6 +1027,7 @@ code, .code {
     background-color: #888;
     cursor: ns-resize;
     height: var(--divider-thickness);
+    z-index: 6;
 }
 
 /* Hide emulator bottom divider when debugger is not shown */
