@@ -1023,7 +1023,7 @@ code, .code {
     position: absolute;
     top: 265px;
     right: -1px;
-    width: 412px;
+    width: 413px;
     background-color: #888;
     cursor: ns-resize;
     height: var(--divider-thickness);
@@ -1112,11 +1112,11 @@ code, .code {
 
 .WideIDEUI #emulatorBottomDivider {
     top: calc(var(--wide-ide-emulator-height) + 33px);
-    width: calc(var(--wide-ide-emulator-width) + 1px);
+    width: calc(var(--wide-ide-emulator-width) + 2px);
 }
 
 .IDEUI #emulatorBottomDivider {
-    width: 412px;
+    width: 413px;
 }
 
 /* Hide the debuggerPane in emulator modes and full screen editor */

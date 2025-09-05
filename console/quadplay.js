@@ -4769,8 +4769,6 @@ for (const option of [
     if (option.isDOMElement) {
         const element = document.getElementById(option.name);
         if (element) {
-            console.dir(option.name);
-            console.dir(localStorage.getItem(option.name));
             element.checked = JSON.parse(localStorage.getItem(option.name) ?? option.defaultValueString);
         } else {
             console.error(option.name + " HTML element not found");
