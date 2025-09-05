@@ -105,6 +105,8 @@ conduitNetwork.init = function init(node_netid) {
     conduitNetwork.game_uuid = ' '  + ((gameURL.startsWith('quad://')) ? location.href : '') + gameURL;
     conduitNetwork.peer = new Peer(netid_to_peerid(node_netid));
     
+    conduitNetwork.log('game_uuid =', conduitNetwork.game_uuid);
+    
     // Set status to pending while awaiting connection to signaling server
     conduitNetwork.status = 'pending';
     

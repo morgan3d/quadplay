@@ -1020,7 +1020,7 @@ function $outputAppend(m, location, linkAll) {
         // console.trace();
         
         // Remove tags and then restore HTML entities
-        // console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+        console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
 
         if (outputDisplayPane.childNodes.length > MAX_DEBUG_OUTPUT_LENGTH) {
             // Remove a lot, so that we amortize the cost of manipulating the DOM
