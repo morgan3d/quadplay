@@ -1168,7 +1168,7 @@
                 },
                 "SECONDS": {
                     "type": "number",
-                    "value": "20",
+                    "value": "18",
                     "description": "Time between global games. The total game period is INTERMISSION.SECONDS + 60 GLOBAL_GAME_TIME_MINUTES exactly",
                     "min": 1,
                     "max": 240,
