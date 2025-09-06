@@ -6,6 +6,9 @@ let prev_xp
 let prev_level
 let new_xp
 
+todo("Show next unlock")
+todo("Keep showing timer")
+
 /* {text, xp, color, avatar} objects shown sequentially to explain the XP awards  */
 let xp_array
 

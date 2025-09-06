@@ -26,7 +26,7 @@ let leaderboard_scroll
 let intermission_end_time
 
 
-/* Draw and animate Awards (Summary, Longest, Best Word, Best rare, High Score, Most Words) */
+/* Draw and animate awards in stages */
 def draw_awards()
 & preserving_transform:
     set_transform(
@@ -36,23 +36,49 @@ def draw_awards()
     if stage ≠ prev_stage and mode_frames > 10:
         play_sound({sound: word_sound, pan: xy(0, 0)})
 
-    if stage == INTERMISSION.STAGE.SUMMARY:
-        draw_award_summary()
-   
-    else if stage == INTERMISSION.STAGE.BEST_WORD:
-        draw_word_award("Best Word", award_winner.best_word)
-   
-    else if stage == INTERMISSION.STAGE.LONGEST:
-        draw_word_award("Longest", award_winner.longest)
-        
-    else if stage == INTERMISSION.STAGE.BEST_RARE:
-        draw_word_award("Best Rare", award_winner.best_rare)
+    // Find the appropriate function for the stage
+    for field in ["SUMMARY", "BEST_WORD", "MOST_WORDS", "LONGEST", "BEST_RARE", "MOST_RARE_WORDS"]:
+        if stage == INTERMISSION.STAGE[field]:
+            const func = (
+                if field == "SUMMARY" then draw_award_summary 
+                else (if last_value(field) == "S" then draw_most_words_award 
+                else draw_word_award))
+                
+            func(titlecase(replace(field, "_", " ")), lowercase(field))
+                
 
-    else if stage == INTERMISSION.STAGE.MOST_RARE_WORDS:
-        draw_most_words_award("Most Rare Words", award_winner.most_rare_words)
+
+
+/* Special sounds for player, Moo, VIL, and caf winning awards */
+def maybe_play_award_sound(winner):
+    if stage == prev_stage: return
     
-    else if stage == INTERMISSION.STAGE.MOST_WORDS:
-        draw_most_words_award("Most Words", award_winner.most_words)
+    if winner.avatar.id == player_competitor.avatar.id:
+        play_sound(award_sound)
+    else if winner.avatar.id == BOT.MOO.ID:
+        play_sound(moo_00_sound)
+    else if winner.avatar.id == BOT.CAF.ID:
+        play_sound({sound: moo_01_sound, playback_rate: 200%})
+    else if winner.avatar.id == BOT.VIL.ID and not played_vil_sound:
+        played_vil_sound = true
+        play_sound({sound: vil_00_sound, time: max(random(-1, 1), 0), pitch: random(90%, 150%)})
+
+
+
+def draw_award_background(field, avatar, title)
+& preserving_transform:
+    draw_text({text: title, font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000, x_align: "left", pos: xy(1, 7), z: 2})
+    
+    // This will be within the clipped region, but is drawn first to avoid clipping the name
+    avatar_draw_large(avatar, xy(20, 31), false, ∅, ∅, true)
+    
+    set_clip(transform_cs_to_ss(xy(0, 12)), xy(39, 37))
+    let badge_background = BADGE_TABLE[field]
+    for i < 3:
+        badge_background += badge_background
+    for i < 3:
+        badge_background += "\n" + badge_background
+    draw_text({font: leaderboard_font, color: 90% avatar.color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
 
 
 
@@ -82,87 +108,59 @@ def draw_award_summary():
     // Score
     draw_text({ …args, text: format_number(player.score, "commas") + " {font:leaderboard_font pts}", font: score_font, pos: xy(28, 2) + xy(105, 12), x_align: "right", markup: true})
 
-    draw_text({…args, text: "Rare Words", pos: xy(49, 26)})
-    draw_text({…args, text: size(player_competitor.rare_list), pos: xy(135, 26), x_align: "right"})
+    for pair at i in [
+        ["Words", size(player_competitor.word_list) + size(player_competitor.freestyle_word_list)], 
+        ["Rare Words", size(player_competitor.rare_list)],
+        ["Awards", player_competitor.badges or "None"],
+        ["Rank", "" + player_competitor.rank + "/" + size(competitor_array)]]:
+                
+        draw_text({…args, text: pair[0], pos: xy(64, 26 + 10i)})
+        draw_text({…args, text: pair[1], pos: xy(142, 26 + 10i), x_align: "right"})
 
     // draw_text({…args, text: "Longest", pos: xy(x, 24)})
     // draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
 
-    board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 27, 26))
+    board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 27, 33))
     
-
-
-/* Special sounds for player, Moo, VIL, and caf winning awards */
-def maybe_play_award_sound(winner):
-    if stage == prev_stage: return
-    
-    if winner.avatar.id == player_competitor.avatar.id:
-        play_sound(award_sound)
-    else if winner.avatar.id == BOT.MOO.ID:
-        play_sound(moo_00_sound)
-    else if winner.avatar.id == BOT.CAF.ID:
-        play_sound({sound: moo_01_sound, playback_rate: 200%})
-    else if winner.avatar.id == BOT.VIL.ID and not played_vil_sound:
-        played_vil_sound = true
-        play_sound({sound: vil_00_sound, time: max(random(-1, 1), 0), pitch: random(90%, 150%)})
-
 
 
 /* Used for best_word, longest, The title is used to compute the field */
-def draw_word_award(title, winner):
- 
-    const field = replace(lowercase(title), " ", "_")
-    const text = winner[field + "_text"]
+def draw_word_award(title, field):
+    const text = award_winner[field][field + "_text"]
 
     if text:
-        maybe_play_award_sound(winner)
+        maybe_play_award_sound(award_winner[field])
         
-        draw_award_background(field, winner.avatar, title)
+        draw_award_background(field, award_winner[field].avatar, title)
         
-        if winner == player_competitor or not offensive[lowercase(text)]:
+        if award_winner[field] == player_competitor or not offensive[lowercase(text)]:
             board_select_word(player.board, text)
             board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
     
 
 
-def draw_award_background(field, avatar, title)
-& preserving_transform:
-    draw_text({text: title, font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000, x_align: "left", pos: xy(0, 7), z: 2})
-    
-    // This will be within the clipped region, but is drawn first to avoid clipping the name
-    avatar_draw_large(avatar, xy(20, 31), false, ∅, ∅, true)
-    
-    set_clip(transform_cs_to_ss(xy(0, 12)), xy(39, 37))
-    let badge_background = BADGE_TABLE[field]
-    for i < 3:
-        badge_background += badge_background
-    for i < 3:
-        badge_background += "\n" + badge_background
-    draw_text({font: leaderboard_font, color: 90% avatar.color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
-
-
-
 /* 'kind' = "rare" or "rare_word" */
-def draw_most_words_award(title, winner)
-& if size(winner.word_list):
+def draw_most_words_award(title, field):
     todo("Show the words in the middle")
 
-    maybe_play_award_sound(winner)
+    maybe_play_award_sound(award_winner[field])
     ++draw_most_words_award.frames
     player.board.selection_color = HIGHLIGHT_COLOR
 
-    const list = winner[lowercase(replace(slice(title, size("Most "), last_key(title)), " ", "_")) + "_list"]
-    draw_award_background(lowercase(replace(title, " ", "_")), winner.avatar, title + ": " + size(list))
+    const list = award_winner[field][slice(field, size("most_"), last_key(title)) + "_list"]
+    if not size(list): return
+
+    draw_award_background(field, award_winner[field].avatar, title + ": " + size(list))
 
     let word
     // Find a non-offensive word, but give up after four tries instead of locking up
     for i < 4:
         word = array_value(list, (draw_most_words_award.frames / INTERMISSION.MOST_WORDS_AWARD_FRAMES_PER_WORD) + draw_most_words_award.skip, "loop").word
-        if winner ≠ player_competitor and offensive[lowercase(q_decode(word))]:
+        if award_winner[field] ≠ player_competitor and offensive[lowercase(q_decode(word))]:
             // Skip over this word
             ++draw_most_words_award.skip
             
-    if winner == player_competitor or not offensive[lowercase(q_decode(word))]:
+    if award_winner[field] == player_competitor or not offensive[lowercase(q_decode(word))]:
         board_select_word(player.board, word)
         board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
 

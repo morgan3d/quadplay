@@ -167,7 +167,8 @@ def competitor_assign_awards(competitor_array):
     for award in keys(award_winner):
         award_winner[award] = competitor_array[0]
     
-    for competitor in competitor_array:
+    for competitor at i in competitor_array:
+        competitor.rank = i + 1
         for field, field2, award, measure in entry in award_array:
             if measure(competitor[field]) + (if field2 then measure(competitor[field2]) else 0) > measure(award_winner[award][field]) + (if field2 then measure(award_winner[award][field2]) else 0):
                 award_winner[award] = competitor

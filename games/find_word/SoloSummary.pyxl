@@ -11,18 +11,16 @@ let selection_index = 0
 
 const STATS_BUTTON_INDEX = 1
 
-def update_button():
-    const pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
-    const size = xy(150, 17)
-    draw_rect(pos - xy(0, 1), size, #0F0, #FFF)
+def update_button(rect):
+    draw_rect(rect.pos - xy(0, 1), rect.size, #0F0, #FFF)
     draw_text({
         font: score_font,
         text: "Done",
         outline: #090,
-        pos: pos,
+        pos: rect.pos,
         color: #FFF})
         
-    if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, {pos: pos, size: size}))) and mode_frames > 15:
+    if (any_button_press(gamepad_array[0]) or (touch.pressed_a and overlaps(touch.xy, rect))) and mode_frames > 15:
         set_mode(Title) because "Button"
     
 
@@ -31,7 +29,7 @@ enter
 shown_array = []
 unfound_word_array = []
 for word in player.board.word_list:
-    // Do not use player.already_found
+    // Do not use anything in player.already_found
     if not offensive[lowercase(word)] and not player.already_found[q_encode(word)]:
         push(unfound_word_array, word)
 
@@ -87,10 +85,12 @@ local:
     for i < size(shown_array) - 1:
         draw_text({pos: pos + xy(0, 32 + 9i), color: #B7A, text: shown_array[i], font: history_font})
 
-update_button()
+update_button({
+    pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10),
+    size: xy(150, 17)})
 
 if player.has_ability["Stats Tracker"]:
-    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 * xy(2, 2), shape: "disk"}
+    const region = {pos: xy(16, SCREEN_SIZE.y - 10), size: 10 xy(2, 2), shape: "disk"}
     if touch.hover:
         selection_index = if overlaps(touch.hover, region) then STATS_BUTTON_INDEX else 0
     else if player.using_gamepad:
