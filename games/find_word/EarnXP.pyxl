@@ -7,7 +7,6 @@ let prev_level
 let new_xp
 
 todo("Show next unlock")
-todo("Keep showing timer")
 
 /* {text, xp, color, avatar} objects shown sequentially to explain the XP awards  */
 let xp_array
@@ -90,8 +89,8 @@ def draw_xp_bar()
     
 def draw_xp_table()
 & preserving_transform:
-    // -16 is for the debugging stuff at the bottom
-    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT - (if DEBUG_NETWORK_ON_SCREEN then 16 else 0)
+    // -20 is for the timer bar
+    const rect_height = SCREEN_SIZE.y - EARN_XP.BAR_SECTION_HEIGHT - 20
     
     set_clip(xy(0, EARN_XP.BAR_SECTION_HEIGHT), xy(SCREEN_SIZE.x, rect_height))
     set_transform(xy(½ SCREEN_SIZE.x - 100, scroll_offset + EARN_XP.BAR_SECTION_HEIGHT))
@@ -140,6 +139,22 @@ def draw_xp_table()
     
 
 
+def draw_timer():
+    const time_left = max(end_time - frame_utc_now, 0)
+    const β = clamp(time_left / EARN_XP_SECONDS, 0%, 100%)
+
+    // Progress bar. This is larger than it was on the intermission screen,
+    // so we need to scale the remainder over EARN_XP_SECONDS
+    draw_corner_rect(xy(0, SCREEN_SIZE.y - 20), xy(SCREEN_SIZE.x, 20), #000, #FFF)
+    draw_corner_rect(xy(0, SCREEN_SIZE.y - 20) + 1, xy(SCREEN_SIZE.x - 2 - 34 β, 18), #0F0)
+    
+    draw_text({
+        font: score_font,
+        text: "New match in " + format_number(time_left, "timer"),
+        outline: #0009,
+        pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 9),
+        color: #FFF}) 
+        
     
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -302,7 +317,7 @@ if DEBUG_NETWORK_ON_SCREEN:
 
 draw_xp_table()
 draw_xp_bar()
-
+draw_timer()
 
 if frame_utc_now ≥ end_time - 1.75:
     const pos = xy(SCREEN_SIZE.x - 24, 12)

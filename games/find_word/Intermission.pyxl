@@ -285,11 +285,10 @@ def draw_leaderboard()
 
 def update_intermission_countdown():
     const time_left = if DEBUG.EARN_XP then 0 else (if DEBUG.INTERMISSION then 21 else max(intermission_end_time - frame_utc_now, 0))
-    const timer_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
     const α = clamp(100% - time_left / INTERMISSION.SECONDS, 0%, 100%)
     
     const countdown_rect = {
-        corner: xy(34, timer_pos.y - 10),
+        corner: xy(34, SCREEN_SIZE.y - 20),
         size: xy(SCREEN_SIZE.x - 68, 20)}
     
     // Separator bar
@@ -324,9 +323,9 @@ def update_intermission_countdown():
     // the level up animation counts against their play time
     draw_text({
         font: score_font,
-        text: if α < 100% then ("New match in " + format_number(time_left + EARN_XP_SECONDS, "timer")) else "New match now!",
+        text: "New match in " + format_number(time_left + EARN_XP_SECONDS, "timer"),
         outline: #0009,
-        pos: timer_pos + xy(0, 1),
+        pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 9),
         color: #FFF})
 
     // Check box
