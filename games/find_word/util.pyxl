@@ -72,5 +72,4 @@ def array_to_set(array, value default true, set default {}, filter):
             set[element] = value
             
     return set
-    
-
+ 

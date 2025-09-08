@@ -1,6 +1,7 @@
 {
     "type": "table",
     "set_table": true,
+    "parse_as_strings": true,
     "url": "english_all.csv.zip",
     "license": "Public Domain/CC0",
     "description": "Words in the English language (including common ones in British, US, Canadian, etc. dialects), as typically accepted by word games."

@@ -2645,8 +2645,11 @@ function transposeGrid(src) {
  Based on https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
  via https://stackoverflow.com/questions/1293147/javascript-code-to-parse-csv-data
  via https://gist.github.com/Jezternz/c8e9fafc2c114e079829974e3764db75
+
+ If parse_as_strings is true, then does no type conversion and parses everything
+ as a string.
 */
-function parseCSV(strData, trim) {
+function parseCSV(strData, trim, parse_as_strings) {
     console.assert(! (strData instanceof Promise));
     console.assert(strData);
 
@@ -2670,75 +2673,78 @@ function parseCSV(strData, trim) {
     for (let i = 0; i < data.length; ++i) { max = Math.max(max, data[i].length); }
 
     // Look for quadplay special patterns and normalize array lengths
-    for (let r = 0; r < data.length; ++r) {
-        const array = data[r];
-        
-        for (let c = 0; c < array.length; ++c) {
-            let val = array[c];
+    if (! parse_as_strings) {
+        for (let r = 0; r < data.length; ++r) {
+            const array = data[r];
             
-            // Handle Excel/Google Sheets string formatting: ="..." -> string content
-            if (val && (typeof val === 'string') && /^=".*"$/.test(val)) {
-                array[c] = val.slice(2, -1); // Remove =" and trailing "
-                continue;
-            }
-            
-            const v = /^ *[-+]?[0-9]*\.?[0-9]*([eE][-+]?\d+)?(%|deg)? *$/.test(val) ? parseFloat(val) : NaN;
-            if (! isNaN(v)) {
-                array[c] = v;
-                val = val.trim();
-                if (val.endsWith('%')) {
-                    array[c] /= 100;
-                } else if (val.endsWith('deg')) {
-                    array[c] *= Math.PI / 180;
-                }
-            } else if (val && (typeof val === 'string') && (val.length > 0)) {
-                // May be a special string
-                if (trim) {
-                    val = array[c] = array[c].trim();
-                }
-
-                switch (val) {
-                case 'infinity': case '+infinity':
-                    array[c] = Infinity;
-                    break;
-                    
-                case '-infinity':
-                    array[c] = -Infinity;
-                    break;
-                    
-                case 'nil': case 'null':
-                    array[c] = undefined;
-                    break;
-                    
-                case 'NaN': case 'nan':
-                    array[c] = NaN;
-                    break;
-                    
-                case 'TRUE': case 'true':
-                    array[c] = true;
-                    break;
-                    
-                case 'FALSE': case 'false':
-                    array[c] = false;
-                    break;
+            for (let c = 0; c < array.length; ++c) {
+                let val = array[c];
                 
-                default:
-                    if (/^[\$¥€£§][+\-0-9\.e]+$/.test(val)) {
-                        array[c] = parseFloat(val.substring(1));
-                    }                       
-                } // switch
-            } // nonempty string
-        } // for each column
+                // Handle Excel/Google Sheets string formatting: ="..." -> string content
+                if (val && (typeof val === 'string') && /^=".*"$/.test(val)) {
+                    array[c] = val.slice(2, -1); // Remove =" and trailing "
+                    continue;
+                }
+                
+                const v = /^ *[-+]?[0-9]*\.?[0-9]*([eE][-+]?\d+)?(%|deg)? *$/.test(val) ? parseFloat(val) : NaN;
+                if (! isNaN(v)) {
+                    array[c] = v;
+                    val = val.trim();
+                    if (val.endsWith('%')) {
+                        array[c] /= 100;
+                    } else if (val.endsWith('deg')) {
+                        array[c] *= Math.PI / 180;
+                    }
+                } else if (val && (typeof val === 'string') && (val.length > 0)) {
+                    // May be a special string
+                    if (trim) {
+                        val = array[c] = array[c].trim();
+                    }
+
+                    switch (val) {
+                    case 'infinity': case '+infinity':
+                        array[c] = Infinity;
+                        break;
+                        
+                    case '-infinity':
+                        array[c] = -Infinity;
+                        break;
+                        
+                    case 'nil': case 'null':
+                        array[c] = undefined;
+                        break;
+                        
+                    case 'NaN': case 'nan':
+                        array[c] = NaN;
+                        break;
+                        
+                    case 'TRUE': case 'true':
+                        array[c] = true;
+                        break;
+                        
+                    case 'FALSE': case 'false':
+                        array[c] = false;
+                        break;
+                    
+                    default:
+                        if (/^[\$¥€£§][+\-0-9\.e]+$/.test(val)) {
+                            array[c] = parseFloat(val.substring(1));
+                        }                       
+                    } // switch
+                } // nonempty string
+            } // for each column
         
-        if (array.length < max) {
-            const old = array.length;
-            array.length = max;
-            array.fill(old, max, '');
+            if (array.length < max) {
+                const old = array.length;
+                array.length = max;
+                array.fill(old, max, '');
+            }
         }
     }
 
     return data;
 }
+
 
 /** Used by both constants and assets to load and parse a CSV file.
     Stores the result into outputObject[outputField] and then 
@@ -2760,7 +2766,7 @@ function loadCSV(csvURL, definition, outputObject, outputField, callback) {
             console.assert(! (csv instanceof Promise));
 
             // Parse cells
-            let grid = parseCSV(csv, definition.trim !== false);
+            let grid = parseCSV(csv, definition.trim !== false, definition.parse_as_strings);
 
             // By parseCSV returns row-major data and tables in quadplay
             // default to column major, so transpose the CSV parse

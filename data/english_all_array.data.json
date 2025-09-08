@@ -1,5 +1,6 @@
 {
     "type": "array",
+    "parse_as_strings": true,
     "url": "english_all.csv.zip",
     "license": "Public Domain/CC0",
     "description": "All words in the English language, as typically accepted by word games."

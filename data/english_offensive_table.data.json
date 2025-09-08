@@ -1,6 +1,7 @@
 {
     "type": "table",
     "url": "english_offensive.csv.zip",
+    "parse_as_strings": true,
     "set_table": true,
     "license": "Public Domain/CC0",
     "description": "List of words that a game designer might prevent from being presented to a player in a game (such as in scrabble) because they are considered scatalogical, sexual, insults, or ethnically or gender offensive by different groups. Similar to what make a movie PG-13 or higher rated, but with no drug, violence, or alcohol terms. See also english-sensitive"

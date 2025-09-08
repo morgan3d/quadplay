@@ -67,7 +67,6 @@ for value at field in dictionary:
 
 const sensitive = {…sensitive_source, …DICTIONARY.SENSITIVE_EXTRA}
 
-
 // Check to make sure we did the preprocessing correctly
 assert(dictionary.all["COLOR"])
 assert(dictionary.all["COLORS"])
@@ -75,7 +74,9 @@ assert(dictionary.all["COLOUR"])
 assert(not dictionary.all["colors"])
 assert(not dictionary.all["QUEST"])
 assert(dictionary.all["QEST"])
-
+assert(dictionary.all["BEST"])
+assert(dictionary.all["TRUE"])
+assert(dictionary.all["FALSE"])
 
 /* Array of all of the words in `dictionary.all` */
 const dictionary_array = {all: keys(dictionary.all), common: keys(dictionary.common)}

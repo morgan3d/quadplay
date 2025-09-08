@@ -11,6 +11,7 @@
 /* The group conduit for exchanging scores. Only used in `game_type` = `GLOBAL_GAME` */
 let conduit = ∅
 
+todo("network can get stuck in pending, nil state")
 
 /* Called from `update_player()` and `Freestyle.frame` */
 def maybe_connect_to_network():

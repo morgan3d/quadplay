@@ -2007,6 +2007,7 @@ a separate CSV file for the data has additional properties:
   "ignore_first_column": false, // Optional, default to false. Removes the source 1st column if true
   "row_type": "array",          // Optional, default "object"
   "ignore_first_row": false,    // Optional, default to false. Removes the source 1st row if true
+  "parse_as_strings": false,    // Optional, default to false. Every value including numbers, booleans, etc. parses literally as a string instead of its inferred type
   "url": "somefile.csv",        // Must use a "url" property, not "value". Must be a csv file.
   "trim": true,                 // If true, trim extra whitespace. Default is true
   "set_table": false            // Only for "type":"table". If true, flatten the table as if an array, and then use the values in the array as keys of a new table that map to true

@@ -1,6 +1,7 @@
 {
     "type": "table",
     "url": "english_sensitive.csv.zip",
+    "parse_as_strings": true,
     "set_table": true,
     "license": "Public Domain/CC0",
     "description": "List of words that a game designer might accept in a game (such as in scrabble) but that they may not want to be someone's first impression of the game or be actively suggested by the game or generated for a guessing game (such as wordle). Includes words in the English language that may be particularly embarrasing, triggering, or sensitive for different groups."
