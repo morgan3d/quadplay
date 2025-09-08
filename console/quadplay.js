@@ -4763,7 +4763,7 @@ for (const option of [
     { name: 'restartOnFocusEnabled', defaultValueString: 'false', isDOMElement: true },
     { name: 'autoplayOnLoad', defaultValueString: 'true', isDOMElement: true },
     { name: 'onScreenHUDEnabled', defaultValueString: 'false', isDOMElement: true },
-    { name: 'printTouchEnabled', defaultValueString: 'false' },
+    { name: 'printTouchEnabled', defaultValueString: 'false', isDOMElement: true },
     { name: 'integerScalingEnabled', defaultValueString: 'true', isDOMElement: true },
     { name: 'projectPinButtonEnabled', defaultValueString: 'true' }]) {
     
