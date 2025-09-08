@@ -54,7 +54,7 @@ def draw_xp_bar()
     const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0) and mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES + EARN_XP.TIMING.BAR_FRAMES + ½ EARN_XP.TIMING.POST_FRAMES
     
     avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(-20, 16), scale: 200%, z: 5})
-    draw_text({text: player.avatar.name, pos: xy(10, 10), font: score_font, x_align: "left", color: #FFF})
+    draw_text({text: player.avatar.name, pos: xy(8, 10), font: score_font, x_align: "left", color: #FFF})
 
     // Flash and turn pink on level change
     draw_text({
@@ -63,7 +63,7 @@ def draw_xp_bar()
         font:    leaderboard_font,
         text:    "Level " + level,
         x_align: "left",
-        pos:     xy(10, 22)})
+        pos:     xy(8, 22)})
 
     // Progress bar
     todo("Tweak colors on XP bar to separate new vs previous")
@@ -301,7 +301,6 @@ frame
 
 if DEBUG_NETWORK_ON_SCREEN:
     preserving_transform:
-        todo("Remove network debugging code")
         set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 16))
         draw_rect(xy(0, 10), xy(224, 15), #B0FA, ∅, ∅, 100)
         draw_text({

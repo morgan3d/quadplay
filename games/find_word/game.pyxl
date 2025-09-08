@@ -1,4 +1,20 @@
-/* Common code across modes. Mostly UI and timing. */
+/* Common code across modes. Mostly UI and timing. 
+
+
+Button| Action
+------|----------------------
+D-pad | Move selection
+  (a) |  Select
+  (b) |  Cancel selection
+  (d) |  Remix in Play mode, Wildcard in Freestyle
+  (c) |  Close message
+  (f) |  Activate rotate
+  (q) |  Enter/exit freestyle
+[Gamepad Button Mapping]
+
+*/
+
+todo("Make (c) close notifications")
 
 /* Set by Title. `SOLO_GAME` or `GLOBAL_GAME`. See also `in_waiting_room` */
 let game_type = SOLO_GAME
@@ -132,7 +148,7 @@ def set_hooks():
     // for a good mobile experience. See also `DEBUG.PORTRAIT`
     device_control("set_mouse_cursor", "pointer")
     
-    for func in [update_notifications, detect_input, _update_frame_utc_now, particles_update_and_draw]: 
+    for func in [update_notifications, detect_input, _update_frame_utc_now, particles_update_and_draw, npc_message_hook]: 
         add_frame_hook(func, ∅, ∞, "all", if func == particles_update_and_draw then particle_array else ∅)
 
     ///////////////////////////////
@@ -288,7 +304,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
             
         if (mode_frames > 10 and 
             ((touch.pressed_a and overlaps(touch.xy, region))
-            or joy.pressed_q)):
+            or joy["pressed_" + gamepad_button[1]])):
             activate_callback()
 
     return region
@@ -342,7 +358,7 @@ def handle_buttons(
                 "Wild",
                 "Wild",
                 if player.has_ability["Wild"] then ability_icon.wild else ABILITY_TABLE["Wild"].level,
-                if free_callback then "(c)" else ∅,
+                if free_callback then "(d)" else ∅,
                 wild_callback)
             
 

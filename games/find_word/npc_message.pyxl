@@ -1,0 +1,72 @@
+/* An npc_message is like a notification, but they are not queued and have
+   an auto-cancel condition.
+   
+   An "NPC" is a bot with a personality who presents as a fictional character,
+   vs. one impersonating a human to fill out the leaderboard. */
+
+
+/* Singleton */
+let _npc_message
+
+/* A higher importance message will clear a lower importance one. This allows 
+   multiple NPCs to try and comment without overriding anyone. */
+def set_npc_message(avatar, text, importance):
+    if not _npc_message or _npc_message.importance < importance:
+        _npc_message = {avatar: avatar, text: text, importance: importance}
+
+
+
+/* Call to erase the current message. */
+def clear_npc_message():
+    _npc_message = ∅
+
+
+
+/* Hook to render the npc message */
+def npc_message_hook()
+& if _npc_message
+& preserving_transform
+& with avatar, text in _npc_message:
+    
+    todo("Match history_rect") 
+    const history_rect = get_history_rect()
+    
+    set_transform(history_rect.corner, ∅, 50)
+    
+    todo("** store")
+    todo("** test")
+    
+    const rect = {corner: xy(0, 0), size: xy(history_rect.size.x, 24)}
+    
+    // Window
+    draw_corner_rect(rect.corner, rect.size, #FFF, #000)
+    draw_corner_rect(rect.corner, rect.size, #FFF, #000)
+    
+    // Avatar
+    avatar_draw({avatar: avatar, pos: xy(12, ½ rect.size.y), scale: xy(-1, 1)})
+    
+    // The message    
+    draw_text({
+        font: leaderboard_font, 
+        pos: xy(24, ½ rect.size.y),
+        text: "\"" + text + "\"",
+        wrap_width: rect.size.x - 42,
+        y_align: "center",
+        x_align: "left",
+        color: avatar.color})
+
+    // Close prompt
+    if player.using_gamepad:
+        draw_text({
+            font: leaderboard_font,
+            pos: rect.size - xy(5, 3),
+            text: joy.prompt["(c)"],
+            x_align: "right",
+            y_align: "bottom",
+            color: #333})
+        
+    if (touch.a and overlaps(touch.xy, rect)) or joy.pressed_c:
+        clear_npc_message()
+        todo("Animate closing the message")
+    
+    

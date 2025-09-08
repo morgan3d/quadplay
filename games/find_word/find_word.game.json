@@ -23,7 +23,8 @@
         "board_search.pyxl",
         "competitor.pyxl",
         "network.pyxl",
-        "bot.pyxl"
+        "bot.pyxl",
+        "npc_message.pyxl"
     ],
     "modes": [
         "Title",
@@ -90,7 +91,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.462",
+    "version": "0.463",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1322,7 +1323,7 @@
                             "description": "Argument to `make_bot_competitor`",
                             "value": {
                                 "name": "MzK",
-                                "sprite": "avatar_sprite[16][28]",
+                                "sprite": "avatar_sprite[15][28]",
                                 "base_ability": 0.5,
                                 "evil": false,
                                 "short_word_preference": 0.8,
@@ -2000,7 +2001,7 @@
         },
         "DEBUG_NETWORK_ON_SCREEN": {
             "type": "boolean",
-            "value": false
+            "value": true
         },
         "DEBUG": {
             "type": "object",
@@ -2043,6 +2044,10 @@
                     "value": false
                 },
                 "VIL": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "MZK": {
                     "type": "boolean",
                     "value": false
                 },

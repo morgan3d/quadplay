@@ -10,11 +10,11 @@ A11,avatar_sprite[24][18],2%,92%,21,10,all,false,false,false
 RLL,avatar_sprite[33][24],21%,21%,15,2,all,false,true,false
 CJ,avatar_sprite[12][12],3%,92%,16,5,common,false,false,false
 Bob,avatar_sprite[28][26],10%,62%,0,7,common,false,false,false
-TTT,avatar_sprite[39][16],2%,92%,2,9,common,false,false,false
-HCD,avatar_sprite[39][6],2%,92%,12,20,common,false,false,false
+TTT,avatar_sprite[39][16],2%,92%,4,12,common,false,false,false
+HCD,avatar_sprite[39][6],2%,92%,12,18,common,false,false,false
 LEW,avatar_sprite[39][2],30%,45%,11,15,common,false,true,false
 jr,avatar_sprite[9][18],3%,89%,18,6,common,false,false,false
-FLA,avatar_sprite[9][16],2%,92%,1,7,common,true,true,false
-Lou,avatar_sprite[8][18],7%,71%,6,12,common,false,false,false
-RON,avatar_sprite[8][16],3%,86%,4,18,common,false,false,false
-CPU,avatar_sprite[21][2],8%,92%,12,1,all,false,false,false
+FLA,avatar_sprite[9][16],2%,92%,9,14,common,true,true,false
+Lou,avatar_sprite[8][18],7%,71%,13,21,common,false,false,false
+RON,avatar_sprite[8][16],3%,86%,5,18,common,false,false,false
+CPV,avatar_sprite[21][2],8%,92%,12,1,all,false,false,false
