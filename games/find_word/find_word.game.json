@@ -91,7 +91,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.465",
+    "version": "0.466",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -2001,7 +2001,7 @@
         },
         "DEBUG_NETWORK_ON_SCREEN": {
             "type": "boolean",
-            "value": true
+            "value": false
         },
         "DEBUG": {
             "type": "object",
@@ -2183,6 +2183,14 @@
             "max": 2,
             "format": "0.0",
             "quantum": 0.1
+        },
+        "ABILITY_BUTTON_RADIUS": {
+            "type": "number",
+            "value": "14",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "find_word",

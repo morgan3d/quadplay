@@ -6,8 +6,6 @@ let prev_xp
 let prev_level
 let new_xp
 
-todo("Show next unlock")
-
 /* {text, xp, color, avatar} objects shown sequentially to explain the XP awards  */
 let xp_array
 
@@ -166,7 +164,7 @@ prev_level = player.avatar.level
 last_level_displayed = prev_level
 last_xp_row_displayed = 0
 
-const discovered_word_list = stats_update(player.stats, player_competitor, size(competitor_array), joined_late)
+const discovered_word_list = stats_update(player.stats, player_competitor, size(competitor_array), player.joined_late)
 
 // Compute the XP awards
 xp_array = [
@@ -254,7 +252,7 @@ if player_competitor.badges and player.has_ability["Award XP"]:
 // Only give streak awards for games where the player
 // actually earned points, otherwise it could have been
 // running unmonitored in the background
-if player.score > 0 and not joined_late:
+if player.score > 0 and not player.joined_late:
     const streak = []
     
     if player.stats[today_date_string()].matches == 1:

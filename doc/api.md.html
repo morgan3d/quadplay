@@ -224,13 +224,14 @@ Array
 : Remove the first element from the array and return it, or `∅` if the array is empty. O(n) expected amortized time.
 
 `push(array, x, ...)`
-: Append `x` and any other arguments to the array and then return the last argument. O(1) expected
+: Append `x` and any other arguments to the end of the array preserving the order
+  that they appear in the arguments and then return the last argument. O(1) expected
   amortized time for a single argument and O(_m_) for _m_ arguments. This is
   the only mutation permitted while iterating over an array via `for value in array`
   or `iterate(array, callback)`.
 
 `push_front(array, x, ...)`
-: Insert `x` and any other arguments onto the array, preserving the order
+: Insert `x` and any other arguments onto the front of the array, preserving the order
   that they appear in the arguments and then return the first. O(_n_) expected
   amortized time for a single argument and O(_m_) for _m_ arguments and
   array of length _n_.

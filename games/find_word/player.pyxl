@@ -60,6 +60,9 @@ def make_player():
         // Used for display.
         history: make_history(),
         
+        // Set by `Play.enter`. Used to track games that should not affect stats
+        joined_late: false,
+        
         wild_tile: make_tile(WILDCARD_CHARACTER),
 
         // Needed for stats tracking

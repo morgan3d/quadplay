@@ -4747,13 +4747,12 @@ function onConfirmButtonClick(ok) {
 
 // Load state
 
-// Default to true
 backgroundPauseEnabled = (localStorage.getItem('backgroundPauseEnabled') !== 'false');
 
 for (const option of [
-    { name: 'showPhysicsEnabled', defaultValueString: 'false' },
-    { name: 'showPrivateViewsEnabled', defaultValueString: 'false' },
-    { name: 'showEntityBoundsEnabled', defaultValueString: 'false' },
+    { name: 'showPhysicsEnabled', defaultValueString: 'false', isDOMElement: true  },
+    { name: 'showPrivateViewsEnabled', defaultValueString: 'false', isDOMElement: true },
+    { name: 'showEntityBoundsEnabled', defaultValueString: 'false', isDOMElement: true },
     { name: 'assertEnabled', defaultValueString: 'true', isDOMElement: true },
     { name: 'todoEnabled', defaultValueString: 'false', isDOMElement: true },
     { name: 'automathEnabled', defaultValueString: 'true', isDOMElement: true },

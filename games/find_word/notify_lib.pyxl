@@ -15,6 +15,7 @@ eventually becoming a library independent of the game.
 // The notification at the front of the queue is currently displayed
 const _notification_queue = []
 
+/* Override these global options to configure the library */
 const NOTIFY = {
     BACKGROUND_COLOR: #EEE,
     TITLE_FONT:       score_font,
@@ -24,6 +25,9 @@ const NOTIFY = {
     // These count against duration_seconds
     ENTER_DURATION_SECONDS:   0.17,
     EXIT_DURATION_SECONDS:    0.17,
+    
+    // If not ∅, 
+    CLOSE_BUTTON: "c",
 
     Z: 110,
     
@@ -114,17 +118,17 @@ def update_notifications()
                     x_align: "left",
                     y_align: "center"})
                     
-                if player.using_gamepad:
+                if player.using_gamepad and NOTIFY.CLOSE_BUTTON:
                     draw_text({
                         pos: rect.pos + ½ rect.size - 4,
-                        text: joy.prompt["(b)"],
+                        text: joy.prompt["(" + NOTIFY.CLOSE_BUTTON + ")"],
                         x_align: "right",
                         y_align: "bottom",
                         color: #666})                        
 
         // Only allow cancel during the full size window to ensure
         // the player didn't click mistakenly
-        const cancel = (α == 100%) and (joy.pressed_b or (touch.pressed_a and overlaps(rect, touch.xy)))
+        const cancel = (α == 100%) and ((NOTIFY.CLOSE_BUTTON and joy["pressed_" + NOTIFY.CLOSE_BUTTON]) or (touch.pressed_a and overlaps(rect, touch.xy)))
         
         if (relative_time > duration_seconds + delay_after_seconds) or cancel:
             // Done! remove

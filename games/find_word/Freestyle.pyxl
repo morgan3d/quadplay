@@ -66,6 +66,7 @@ def player_free_selection_change_callback(player):
         then color_for_points(max_points) 
         else TILE.CENTER_SELECTED_COLOR)
 
+
 todo("Handle sensitive wild words that the player didn't explicitly enter")
 
 /* Creates animation going from the selection to the last word in the free list */
@@ -150,7 +151,7 @@ def remove_tile_at_index(index):
     // Remove from the player.free_row
     remove_values(player.free_row, tile)
    
-    play_sound({sound:select_tile_sound, volume:150%, pitch:40%})
+    play_sound({sound: select_tile_sound, volume: 150%, pitch: 40%})
 
     // Update selection
     selection_color = player_free_selection_change_callback(player, player.free_row)
@@ -165,7 +166,6 @@ def draw_free_row(board_pos)
     set_transform(∅, ∅, 2)
     
     const [board_grid_size, board_tile_size, board_gutter] = get_freestyle_board_dims()
-    const board_width = board_grid_size.x + ¼ board_tile_size.x
     
     let history_rect = get_history_rect()
         
@@ -202,6 +202,8 @@ def draw_free_row(board_pos)
     
     let free_rect
     if landscape():
+        const board_width = board_grid_size.x + ¼ board_tile_size.x
+
         // Landscape: free over board
         free_rect = {
             corner: board_pos - xy(½ board_width, ½ board_width + tile_size.y + 14),
@@ -218,14 +220,13 @@ def draw_free_row(board_pos)
         draw_rect(free_rect.corner + ½ free_rect.size, free_rect.size + 2i, if i == 0 then player.background_color else ∅, selection_color)
         
     // Draw tiles in the word
-    const start_x = free_rect.corner.x + ⌈½ tile_spacing⌉ + 2
-    const tile_y = free_rect.corner.y + ⌊½ free_rect.size.y⌋
+    const start = free_rect.corner + xy(⌈½ tile_spacing⌉ + 2, ⌊½ free_rect.size.y⌋)
 
     let i = 0
     let removed_already = false
     while i < size(player.free_row):
         const tile = player.free_row[i]
-        tile.pos = xy(start_x + i * tile_spacing, tile_y)
+        tile.pos = start + xy(i * tile_spacing, 0)
         
         tile.selected = i < selection_length
         tile_draw(tile, tile.pos, false, 0°, selection_color, tile_size, true)
@@ -240,13 +241,13 @@ def draw_free_row(board_pos)
             ++i
             
     for size(player.free_row) ≤ i < tile_slots:
-        draw_rect(xy(start_x + i * tile_spacing, tile_y), tile_size - 2, TILE.HOLE_COLOR)
+        draw_rect(start + xy(i * tile_spacing, 0), tile_size - 2, TILE.HOLE_COLOR)
                 
     // Draw the connectors between letters if it is a word. Intentionally
     // do not draw the selected-but-not-a-word line, as it makes them not 
     // look like tiles any more
     if selection_length > 1:
-        draw_line(xy(start_x, tile_y), xy(start_x + (selection_length - 1) * tile_spacing, tile_y), selection_color, TILE.CENTER_Z, ¼ tile_size.y)
+        draw_line(start, start + xy((selection_length - 1) * tile_spacing, 0), selection_color, TILE.CENTER_Z, ¼ tile_size.y)
 
     return history_rect
     
@@ -255,14 +256,10 @@ def draw_free_row(board_pos)
 /* Returns `[grid_size, tile_size, gutter]` for the
    Freestyle board, which is shrunk in landscape mode. */    
 def get_freestyle_board_dims():
-    let tile_size = xy(TILE.EXTENT, TILE.EXTENT)
-    
-    if landscape():
-        // Make the board smaller to make room for the free row.
-        // The player may not notice as we blacked the screen
-        // between rounds
-        tile_size = ⌊85% tile_size⌋
-        
+    // Make the board smaller to make room for the free row.
+    // The player may not notice as we blacked the screen
+    // between rounds
+    const tile_size = if landscape() then ⌊85% tile_size⌋ else xy(TILE.EXTENT, TILE.EXTENT)
     const gutter = ⌊tile_size.x / 8.8⌋
     const grid_size = xy(COLS, ROWS) * tile_size + xy(COLS - 1, ROWS - 1) * gutter
 
@@ -277,7 +274,6 @@ def draw_freestyle_board(pos)
     // the board in a special way to make it smaller and have missing tiles
 
     const [grid_size, tile_size, gutter] = get_freestyle_board_dims()
-    const center_size = tile_size - gutter
     
     set_transform(pos)
         
@@ -300,7 +296,7 @@ def draw_freestyle_board(pos)
             tile.pos = transform_ws_to_ss(tile_pos)
             
             // Touch selection for adding tiles to word
-            const tile_center = {pos: tile_pos, shape: "disk", size: center_size}
+            const tile_center = {pos: tile_pos, shape: "disk", size: tile_size - gutter}
             if mode_frames > 5 and touch.a and overlaps(tile_center, touch.xy) and not tile.used:
                 add_tile_to_word(tile)
             

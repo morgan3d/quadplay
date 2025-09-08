@@ -14,8 +14,6 @@ D-pad | Move selection
 
 */
 
-todo("Make (c) close notifications")
-
 /* Set by Title. `SOLO_GAME` or `GLOBAL_GAME`. See also `in_waiting_room` */
 let game_type = SOLO_GAME
 
@@ -42,8 +40,6 @@ if DEBUG.FORCE_LEVEL > 3:
     for achievement in ["Change Avatar", "Check Stats", "Use Remix", "Rotate Board", "Freestyle Word", "Exit Freestyle", "Play Solo Match", "Play Global Match", "Play Second Global Match"]:
         player_achieve(player, achievement)
 
-/* Set by `Play.enter`. Used to track games that should not affect stats */
-let joined_late
 
 /* Particle system shared across all modes, managed by a hook */
 const particle_array = []
@@ -80,10 +76,12 @@ def draw_background_words():
             z: -2})
     
 
+
 /* Updated once per frame by a frame hook. This ensures that there are no 
    race conditions within a frame because the time can only change 
    between frames */
 let frame_utc_now = utc_now()
+
 
 
 /* Time at which the last global game already started
@@ -110,7 +108,7 @@ def _update_frame_utc_now():
 
 /* Hook that automaticaly switches the detected input mechanism */
 def detect_input():
-    if player.gamepad.pressed_a or player.gamepad.pressed_q or player.gamepad.pressed_b or player.gamepad.xx or player.gamepad.yy:
+    if player.gamepad.pressed_a or player.gamepad.pressed_b or player.gamepad.pressed_c or player.gamepad.pressed_d or player.gamepad.pressed_f or player.gamepad.xx or player.gamepad.yy:
         player.using_gamepad = true
     else if touch.dx or touch.dy or touch.pressed_a or touch.hover:
         // Used touch screen or mouse
@@ -140,8 +138,8 @@ def enquote_if(freestyle, text):
 
 
     
-def set_hooks():
-    if set_hooks.done: return
+def set_hooks()
+& if not set_hooks.done:
     set_hooks.done = true
         
     // Fill the screen even at non-quadplay aspect ratios
@@ -190,9 +188,8 @@ def draw_timer(board_pos):
     // Also remove the grace time from the displayed time.
     time_left -= 3/60 + GRACE_SECONDS
     
-    const pos = board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16)
     draw_text({
-        pos: pos,
+        pos: board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16),
         font: score_font,
         text: format_number(max(time_left, 0), "timer"),
         color: if in_waiting_room then #0F0 else #FFF,
@@ -237,11 +234,10 @@ def draw_round_selection(pos, radius):
    
    Returns the button region. */
 def handle_ability_button(index, name, caption, sprite, gamepad_button, activate_callback):
-    const radius = 14
     const region = {
         // In portrait mode, bring the buttons in from the edges more to avoid the browser's reload button on Safari
-        pos: xy(radius + (if landscape() then (index + 0.25) * ⅓ (SCREEN_SIZE.x - 210) else ¼ (index + ¾) * SCREEN_SIZE.x), SCREEN_SIZE.y - radius - 1),
-        size: radius * xy(2, 2),
+        pos: xy(ABILITY_BUTTON_RADIUS + (if landscape() then (index + 0.25) * ⅓ (SCREEN_SIZE.x - 210) else ¼ (index + ¾) * SCREEN_SIZE.x), SCREEN_SIZE.y - ABILITY_BUTTON_RADIUS - 1),
+        size: ABILITY_BUTTON_RADIUS * xy(2, 2),
         shape: "disk"}
             
     const enabled = activate_callback
@@ -263,17 +259,17 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
         text: if type(sprite) == "number" then "Level " + sprite else caption})
 
     if type(sprite) ≠ "object":
-        draw_disk(region.pos, radius, ∅, DISABLED_ABILITY_COLOR)
+        draw_disk(region.pos, ABILITY_BUTTON_RADIUS, ∅, DISABLED_ABILITY_COLOR)
         draw_sprite({sprite: shapes.lock, pos: region.pos, scale: 75%, opacity: DISABLED_ABILITY_COLOR.a})
         return
         
     if not selected:
         // NOT selected
-        draw_disk(region.pos, if name == "Wild" then radius - 2 else radius, if sprite then (if enabled then TILE.CENTER_COLOR else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
+        draw_disk(region.pos, if name == "Wild" then ABILITY_BUTTON_RADIUS - 2 else ABILITY_BUTTON_RADIUS, if sprite then (if enabled then TILE.CENTER_COLOR else DISABLED_ABILITY_COLOR) else ∅, if not sprite then DISABLED_ABILITY_COLOR else ∅)
         
     if name == "Wild":
         // Make it look like a tile
-        draw_rect(region.pos, radius * xy(2, 2), if enabled then TILE.COLOR else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
+        draw_rect(region.pos, ABILITY_BUTTON_RADIUS * xy(2, 2), if enabled then TILE.COLOR else ∅, if enabled then ∅ else DISABLED_ABILITY_COLOR, ∅, -1)
     
     draw_sprite({sprite: sprite, pos: region.pos, opacity: (if enabled then 100% else 125% DISABLED_ABILITY_COLOR.a)})
     
@@ -291,7 +287,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
     if enabled:
         if player.using_gamepad:
             draw_text({
-                pos: region.pos + xy(80% radius, 70% radius), 
+                pos: region.pos + xy(80% ABILITY_BUTTON_RADIUS, 70% ABILITY_BUTTON_RADIUS), 
                 color: #fff,
                 outline: #000,
                 font: score_font,
@@ -300,7 +296,7 @@ def handle_ability_button(index, name, caption, sprite, gamepad_button, activate
                 text: joy.prompt[gamepad_button]})
             
         if selected:
-            draw_round_selection(region.pos, radius)
+            draw_round_selection(region.pos, ABILITY_BUTTON_RADIUS)
             
         if (mode_frames > 10 and 
             ((touch.pressed_a and overlaps(touch.xy, region))
@@ -393,6 +389,7 @@ def handle_buttons(
 def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
     const bounce = ⌊mode_frames / 30⌋ mod 2
 
+    // Set defaults based on angle
     if angle == 0°:
         text_x_align = text_x_align default "right"        
     else if angle == 90°:
@@ -439,7 +436,8 @@ def draw_tutorial(pos, text, angle default 270°, text_x_align, text_y_align):
    strings, so that "Qu" is the single character "Q".
    
    Note that you might expect a general purpose version of
-   this to operate the other way, with wildcards in `prefix`.
+   this to operate the other way, with wildcards in `prefix`--that
+   isn't what this does.
    
    Relatively slow. */
 def wildcard_starts_with(pattern, prefix):

@@ -34,10 +34,12 @@ enter
 ────────────────────────────────────────────────────────────────────────
 assert(not in_waiting_room)
 
+// Create bots at the start of the match so that they can interact
+remove_all(competitor_array)
+insert_bots(competitor_array, 4)
 
 //todo("Remove")
 //set_npc_message(player.avatar, "Hello world!", 1)
-
 
 play_sound(start_sound)
 
@@ -57,7 +59,7 @@ set_background(game_type.BACKGROUND_COLOR)
 
 // Started more than 10s late, do not affect
 // ratio stats
-joined_late = (frame_utc_now > start_time + 10)
+player.joined_late = (frame_utc_now > start_time + 10)
 
 board_deselect_all(player.board, player)
 
@@ -96,7 +98,7 @@ if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.EARN_XP:
 
 leave
 ────────────────────────────────────────────────────────────────────────
-// If any remixes left, auto force use them
+// If any remixes left, automatically use one
 if player.has_achievement["Use Remix"] and player.remix_uses_left and size(player.remix_list):
     execute_remix()
 

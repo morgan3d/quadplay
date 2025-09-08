@@ -67,18 +67,23 @@ def maybe_play_award_sound(winner):
 
 def draw_award_background(field, avatar, title)
 & preserving_transform:
-    draw_text({text: title, font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000, x_align: "left", pos: xy(1, 7), z: 2})
+    // Title
+    draw_text({text: title, font: leaderboard_font, color: HIGHLIGHT_COLOR, shadow: #000, x_align: "left", pos: xy(5, 7), z: 2})
     
-    // This will be within the clipped region, but is drawn first to avoid clipping the name
-    avatar_draw_large(avatar, xy(20, 31), false, ∅, ∅, true)
+    // This will be within the clipped region, but is drawn 
+    // first to avoid clipping the name
+    avatar_draw_large(avatar, xy(28, 32), false, ∅, ∅, true)
     
-    set_clip(transform_cs_to_ss(xy(0, 12)), xy(39, 37))
-    let badge_background = BADGE_TABLE[field]
-    for i < 3:
-        badge_background += badge_background
-    for i < 3:
-        badge_background += "\n" + badge_background
-    draw_text({font: leaderboard_font, color: 90% avatar.color, text: badge_background, pos: xy(0, -2), y_align: "top", x_align: "left"})
+    set_clip(transform_cs_to_ss(xy(4, 13)), xy(52, 36))
+
+    // Background
+    draw_text({
+        font: leaderboard_font,
+        color: 90% avatar.color,
+        text: replace("xxxxxxxxx\nxxxxxxxxx\nxxxxxxxxx\nxxxxxxxxx", "x", BADGE_TABLE[field]),
+        pos: xy(2, 9),
+        y_align: "top",
+        x_align: "left"})
 
 
 
@@ -96,7 +101,7 @@ def draw_award_summary():
         text:    "Level " + player.avatar.level,
         pos:     xy(21, 9)})
         
-    avatar_draw_large(player.avatar, xy(21, 30), false, #FFF, shadow)
+    avatar_draw_large(player.avatar, xy(25, 32), false, #FFF, shadow)
 
     const args = {
         font: history_font,
@@ -139,10 +144,7 @@ def draw_word_award(title, field):
     
 
 
-/* 'kind' = "rare" or "rare_word" */
 def draw_most_words_award(title, field):
-    todo("Show the words in the middle")
-
     maybe_play_award_sound(award_winner[field])
     ++draw_most_words_award.frames
     player.board.selection_color = HIGHLIGHT_COLOR
@@ -159,7 +161,17 @@ def draw_most_words_award(title, field):
         if award_winner[field] ≠ player_competitor and offensive[lowercase(q_decode(word))]:
             // Skip over this word
             ++draw_most_words_award.skip
-            
+
+    // List of words
+    for i < min(12, size(list)):
+        draw_text({
+            text: if i == 11 then "..." else censor(q_decode(list[i].word)),
+            font: history_font,
+            color: #888,
+            x_align: "left",
+            y_align: "top",
+            pos: xy(62 + 55 ⌊i / 6⌋, 9 (i mod 6) + 12)})
+    
     if award_winner[field] == player_competitor or not offensive[lowercase(q_decode(word))]:
         board_select_word(player.board, word)
         board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
