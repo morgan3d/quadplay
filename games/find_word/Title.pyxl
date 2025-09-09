@@ -100,7 +100,11 @@ def bounce_row(y, sound default select_tile_sound, color default TILE.CENTER_SEL
 
 
 def highlight_random_row():
-    bounce_row(random_integer(0, ROWS - 1), if easter_egg then moo_00_sound else word_sound, HIGHLIGHT_COLOR)
+    bounce_row(
+        random_integer(0, ROWS - 1), 
+        if easter_egg == 3 then vil_00_sound else
+        (if easter_egg then moo_00_sound else word_sound),
+        HIGHLIGHT_COLOR)
 
 
     
@@ -139,13 +143,16 @@ enter
 set_background(#000)
 set_hooks()
 
-easter_egg = if player.avatar.level > 20 and ξ < 8% then 2 else (if player.avatar.level > 15 and ξ < 10% then 1 else 0)
+easter_egg = (
+    if DEBUG.VIL or (player.avatar.level > ABILITY_TABLE["See VIL Always"].level and ξ < 4%) then 3 else
+    (if player.avatar.level > 20 and ξ < 8% then 2 else 
+    (if player.avatar.level > 15 and ξ < 10% then 1 else 0)))
 
 if not easter_egg and player.stats.lifetime.xp > 2000 and ξ < 1.5%:
     notify(shapes.gear, "Please Backup", "FWAN is in beta and could crash!\n\nUse the gear button to export a save game as a backup.")
 
 // Initialize the fake board
-player_reset_match(player, SOLO_GAME, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO"][easter_egg], true)
+player_reset_match(player, SOLO_GAME, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO", "VILL WINS ALLL NITE"][easter_egg], true)
 player.board.selection_color = TILE.CENTER_SELECTED_COLOR
 board_deselect_all(player.board, player)
 

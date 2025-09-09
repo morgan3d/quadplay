@@ -1,6 +1,5 @@
 Play
 ════════════════════════════════════════════════════════════════════════
-todo("** Implement MzK in-game help")
 
 def enter_freestyle():
     board_deselect_all(player.board, player)
@@ -38,8 +37,9 @@ assert(not in_waiting_room)
 remove_all(competitor_array)
 insert_bots(competitor_array, 4)
 
-//todo("Remove")
-//set_npc_message(player.avatar, "Hello world!", 1)
+if DEBUG.MZK:
+    todo("** Implement MzK in-game help")
+    set_npc_message(player.avatar, "Hello world!", 1)
 
 play_sound(start_sound)
 

@@ -2152,9 +2152,16 @@ function addCodeToSourceStats(code, scriptURL) {
     }
     code = lineArray.join('\n');
 
-    // TODO: split single-line block statements. This should be related to how
-    // mutlti line literals are compacted
-
+    // Track used APIs
+    for (const api of ['save_local', 'load_local', 'midi_send_raw']) {
+        if (code.match(new RegExp('\\b' +api + '\\('))) {
+            if (! resourceStats.usesAPI[api]) {
+                resourceStats.usesAPI[api] = [];
+            }
+            resourceStats.usesAPI[api].push(scriptURL);
+        }
+    }
+    
     // Remove section headers
     const sectionRegex = /(?:^|\n).*\n[-─—━⎯=═⚌]{5,}[ \t]*\n/gm;
     code = code.replace(sectionRegex, '\n');
@@ -2195,15 +2202,6 @@ function addCodeToSourceStats(code, scriptURL) {
     // Remove blank first and last lines
     code = code.replace(/^\s*\n|\n\s*$/g, '');
 
-    // Track used APIs
-    for (const api of ['save_local', 'load_local', 'midi_send_raw']) {
-        if (code.match(new RegExp('\\b' +api + '\\('))) {
-            if (! resourceStats.usesAPI[api]) {
-                resourceStats.usesAPI[api] = [];
-            }
-            resourceStats.usesAPI[api].push(scriptURL);
-        }
-    }
     const count = Math.max(1, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
 
     resourceStats.sourceStatementsByURL[scriptURL] = count;
