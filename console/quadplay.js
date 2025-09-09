@@ -4223,6 +4223,7 @@ function importSaveGame(event) {
                 }
                 
                 // Write to localStorage
+                console.log('Saving imported game state'); // TODO: Remove
                 localStorage.setItem('GAME_STATE_' + destMetadata.game_url, gameState);
                 
                 // Restart the game to force reload
