@@ -17,6 +17,8 @@ of [<quadplay/>](manual.md.html).
   - `particle_lib` particle systems are now explicitly in world space
   - `titlecase()`
   - CSV data files can now disable typed parsing using `"parse_as_strings"`
+  - Frame hooks specific to a mode are removed when that mode exits via `set_mode()` or `pop_mode()`,
+    including `delay()` frame hooks
 - IDE changes:
   - Moved debugger options from the Game menu to the Tools menu
   - The emulator view in the IDE can now be vertically resized to show more

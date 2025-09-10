@@ -178,7 +178,7 @@ const affinity_array = []
 // Don't receive any bonus if we have aura ourselves
 if not player.has_ability["Aura"] and player.score > 0:
     for competitor in competitor_array:
-        if not competitor.evil and competitor.avatar.level ≥ ABILITY_TABLE.Aura.level and competitor.score > 0:
+        if not competitor.enemy and competitor.avatar.level ≥ ABILITY_TABLE.Aura.level and competitor.score > 0:
             push(affinity_array, {
                 text: trim_spaces(competitor.avatar.name) + "'s Aura",
                 avatar: competitor.avatar,
@@ -204,7 +204,7 @@ if player.has_ability["Aura"] and player.score > 0:
     const aura_array = []
         
     for competitor in competitor_array:
-        if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0 and not competitor.evil:
+        if (not competitor.avatar.bot or competitor.avatar.appears_human) and competitor.avatar.level < ABILITY_TABLE.Aura.level and competitor.score > 0 and not competitor.enemy:
             push(aura_array, {avatar: competitor.avatar, text: competitor.avatar.name, color: TABLE_ALT_ROW_COLOR})
 
     if size(aura_array):

@@ -323,7 +323,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 };
 
                 xhr.onerror = function (error) {
-                    console.dir(xhr.statusText); // TODO: remove
+                    //console.dir(xhr.statusText);
                     operation.failureMessage = xhr.statusText;
                     failOperation();
                 };
@@ -332,7 +332,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                     try {
                         xhr.send();
                     } catch (error) {
-                        console.dir(error); // TODO: remove
+                        //console.dir(error);
                         operation.failureMessage = error.toString();
                         failOperation();
                     }

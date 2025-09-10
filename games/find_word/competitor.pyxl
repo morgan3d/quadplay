@@ -30,7 +30,7 @@ def make_competitor():
         freestyle_word_list: [],
         
         // Evil characters do not give or receive aura
-        evil: false,
+        enemy: false,
 
         /////////////////////////////////////////////////
         // Computed by analyze
@@ -47,7 +47,11 @@ def make_competitor():
 
         rare_word_list: [],
         
-        badges: ""}
+        badges: "",
+        
+        // Special properties for npc bots. These don't need to be transmitted,
+        // they are only used on the machine that generated them
+        npc: {}}
     
     
 

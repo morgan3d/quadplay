@@ -19,14 +19,17 @@
      in the IDE to export the final versions of your games to 
      be standalone.
      
-     Change all of the places that say "find word alll nite"
+     Change all of the places that say "FIND WORD ALLL NITE"
      and "find_word" in this file for the name of your game.
  -->
 <html lang="en" style="background:#000; border: none">
   <head>
+   
     <!-- Modify these for your game -->
     <meta property="og:title" content="FIND WORD ALLL NITE">
     <meta property="og:image" content="https://morgan3d.github.io/quadplay/games/find_word/label129.png">
+
+
     <script>
       // Replace this with your game's URL. This expression is hard-coded to compute the URL into the quadplay repo from
       // the quadplay repo or from itch.io
@@ -35,8 +38,11 @@
           'games/find_word' : 
           location.href.match(/([^/]+\/){1,2}(?=[^/]*$)/)[0]) + '&refresh=' + new Date().getTime();
     </script>
+    
+    <!-- Replace with your game's name -->
     <title>FIND WORD ALLL NITE</title>
-    <!-- Do not modify below here -->
+
+    <!--------------------------------------------- Do not modify below here -------------------------------------------------------->
 
     <link rel="icon" type="image/png" sizes="32x32" href="label32.png">
     <link rel="icon" type="image/png" sizes="64x64" href="label64.png">
@@ -51,6 +57,15 @@
     <iframe id="quadplayFrame" style="position: fixed; width: 100%; height: 100%; border: none"></iframe>
     <script>
       document.getElementById('quadplayFrame').src = game_url;
+ 
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || isUIWebView;
+      const crossDomain = location.hostname !== 'morgan3d.github.io';
+
+      if (isSafari && crossDomain) {
+         alert("Safari's privacy controls interfere with cross-domain save games, so you're being redirected to the quadplay home site to play the game.");
+         location = game_url;
+      }
+
     </script>
   </body>
 </html>

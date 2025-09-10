@@ -398,7 +398,7 @@ function remove_frame_hook(hook) {
 
 function remove_frame_hooks_by_mode(mode) {
     for (let i = 0; i < $frameHooks.length; ++i) {
-        if ($frameHooks[i].$mode === mode) {
+        if (($frameHooks[i].$mode === mode) && ($frameHooks[i].$mode !== undefined)) {
             $frameHooks[i] = $frameHooks[$frameHooks.length - 1];
             --i;
             --$frameHooks.length;
@@ -10005,7 +10005,6 @@ function load_local(key, default_value) {
 function save_local(key, value) {
     if (arguments.length === 0) {
         // Erase all storage
-        console.log('Erasing all game state'); // TODO: Remove
         $setLocalStorage('GAME_STATE_' + $gameURL, '{}');
         return;
     }
@@ -10050,7 +10049,6 @@ function save_local(key, value) {
     table.$modified_date = unparse(new Date().toUTCString(), 0);
 
     // Commit back
-    console.log('Saving game state'); // TODO: Remove
     $setLocalStorage('GAME_STATE_' + $gameURL, JSON.stringify(table));
 }
 
@@ -10457,6 +10455,9 @@ function pop_mode(...args) {
 
     // Run the leave callback on the current mode
     let old = $gameMode;
+    
+    // Remove frame hooks from the current mode before switching
+    remove_frame_hooks_by_mode(old);
     $prevMode = $prevModeStack.pop();
 
     // Pop the stacks
@@ -10501,6 +10502,10 @@ function set_mode(mode, ...args) {
 
     // Set up the new mode
     $prevMode = $gameMode;
+    
+    // Remove frame hooks from the current mode before switching
+    if ($prevMode) { remove_frame_hooks_by_mode($prevMode); }
+    
     $setGameMode(mode, $lastBecause.location?.url, $lastBecause.location?.line_number, $lastBecause);
 
     // Loop nesting is irrelvant, since we're about to leave

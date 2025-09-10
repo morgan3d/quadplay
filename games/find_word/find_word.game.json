@@ -91,7 +91,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.467",
+    "version": "0.469",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1325,7 +1325,12 @@
                                 "name": "MzK",
                                 "sprite": "avatar_sprite[15][28]",
                                 "base_ability": 0.5,
-                                "evil": false,
+                                "npc": {
+                                    "evil": false,
+                                    "importance": 0,
+                                    "expert_tile": "K",
+                                    "expert_prompt": "Think about "
+                                },
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
                                 "last_hour": 23
@@ -1348,7 +1353,6 @@
                                 "name": "G0D",
                                 "sprite": "avatar_sprite[0][0]",
                                 "base_ability": 0.7,
-                                "evil": false,
                                 "appears_human": true,
                                 "level": 99,
                                 "short_word_preference": 0.7,
@@ -1373,7 +1377,6 @@
                                 "name": "Boo",
                                 "sprite": "avatar_sprite[45][12]",
                                 "base_ability": 0.16,
-                                "evil": false,
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
                                 "last_hour": 23,
@@ -1626,7 +1629,10 @@
                             "type": "raw",
                             "value": {
                                 "name": "VIL",
-                                "evil": true,
+                                "npc": {
+                                    "evil": true,
+                                    "importance": 1
+                                },
                                 "sprite": "avatar_sprite[25][20]",
                                 "base_ability": 0.42,
                                 "short_word_preference": 0.05,
@@ -1653,8 +1659,12 @@
                             "value": {
                                 "name": "Moo",
                                 "sprite": "avatar_sprite[34][22]",
+                                "npc": {
+                                    "sound": "moo_00_sound",
+                                    "evil": false,
+                                    "importance": 0
+                                },
                                 "base_ability": 0.1,
-                                "evil": false,
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
                                 "last_hour": 23,
@@ -1981,7 +1991,10 @@
                             "value": {
                                 "name": "caf",
                                 "sprite": "avatar_sprite[33][22]",
-                                "evil": false,
+                                "npc": {
+                                    "evil": false,
+                                    "importance": 1
+                                },
                                 "base_ability": 0,
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
@@ -2187,6 +2200,14 @@
         "ABILITY_BUTTON_RADIUS": {
             "type": "number",
             "value": "14",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "NUM_BOTS": {
+            "type": "number",
+            "value": "4",
             "min": 0,
             "max": 128,
             "format": "0",

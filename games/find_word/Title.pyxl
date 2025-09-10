@@ -140,6 +140,7 @@ def update_stats_done_button():
 
 enter
 ────────────────────────────────────────────────────────────────────────
+
 set_background(#000)
 set_hooks()
 
@@ -234,7 +235,7 @@ local:
     else:
         draw_disk(region.pos, 20, rgba(player.avatar.color, 75%), 75% player.avatar.color)
         
-    avatar_draw_large({…player.avatar, sprite: player.avatar.sprite.x_flipped}, region.pos)
+    avatar_draw_large(player.avatar, region.pos)
     draw_text({text: "Level " + player.avatar.level, z: 102, pos: region.pos - xy(0, 26), color: player.avatar.color, outline: #0008, font: leaderboard_font})
     
 

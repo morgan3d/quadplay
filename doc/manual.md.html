@@ -2818,6 +2818,10 @@ def destroy(entity):
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Note that frame hooks created by `delay()`, `sequence()`, and `add_frame_hook()`
+are automatically removed when leaving their mode via `set_mode()` or `pop_mode()`.
+Only hooks that run in all modes are preserved across mode changes.
+
 Some API functions that use callbacks are `iterate()`, `delay()`,
 `sequence()`, `add_frame_hook()`, `set_pause_menu()`, `ray_intersect_map()`,
 and `physics_add_contact_callback()`.

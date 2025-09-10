@@ -4181,6 +4181,11 @@ in the desired order regardless of the order in which drawing executes.
   `set_mode()` inside of the `callback` then the frame counter remains
   and the same callback will execute when the mode returns unless it
   removes itself.
+  
+  Frame hooks created for a specific mode are automatically removed when
+  leaving that mode via `set_mode()` or `pop_mode()`. Frame hooks that
+  run in all modes (created with `run_in_mode` of `"all"`) are preserved
+  across mode changes.
 
   See also `sequence()` and `delay()` for common cases.
 
@@ -4188,7 +4193,8 @@ in the desired order regardless of the order in which drawing executes.
 : Same as `add_frame_hook(nil, callback, delay_frames, nil, data)`.
   It is often convenient to use a local function defined immediately
   before the `delay()` as the `callback`.
-  The delayed callback only runs in the current mode.
+  The delayed callback only runs in the current mode and is automatically
+  removed when leaving that mode via `set_mode()` or `pop_mode()`.
   Returns the new frame hook.
 
 `remove_frame_hook(hook)`

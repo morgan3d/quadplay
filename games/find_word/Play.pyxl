@@ -1,6 +1,7 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
+
 def enter_freestyle():
     board_deselect_all(player.board, player)
     push_mode(Freestyle) because "Button"
@@ -27,7 +28,10 @@ def execute_remix():
 def enter_rotate_mode():
     push_mode(Rotate) because "button"
     
-    
+
+def npc_suggestions():
+    iterate(competitor_array, npc_maybe_make_suggestion)
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -35,11 +39,7 @@ assert(not in_waiting_room)
 
 // Create bots at the start of the match so that they can interact
 remove_all(competitor_array)
-insert_bots(competitor_array, 4)
-
-if DEBUG.MZK:
-    todo("** Implement MzK in-game help")
-    set_npc_message(player.avatar, "Hello world!", 1)
+insert_bots(competitor_array, NUM_BOTS)
 
 play_sound(start_sound)
 
@@ -53,6 +53,9 @@ else:
     assert(game_type == GLOBAL_GAME)    
     start_time = prev_global_game_utc_start_time()
     end_time = start_time + GLOBAL_GAME.PLAY_SECONDS
+
+// Make NPC suggestions partway through the match
+delay(npc_suggestions, if DEBUG.MZK then 0 else max(0, round(⅓ (end_time - frame_utc_now) * 60)))
 
 
 set_background(game_type.BACKGROUND_COLOR)
