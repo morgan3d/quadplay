@@ -239,7 +239,7 @@ def npc_maybe_make_suggestion(bot)
     // has never spelled themselves. Recall that word lists
     // are sorted from best to worst.
     for j < size(bot.word_list):
-        const word = bot.word_list[size(bot) - j - 1].word
+        const word = bot.word_list[size(bot.word_list) - j - 1].word
         
         // Because a bot must get sub-strings of their expertise words en route to their word,
         // we should check to make sure this word is actually in their expertise
