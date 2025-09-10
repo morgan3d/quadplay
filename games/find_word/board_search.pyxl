@@ -244,19 +244,14 @@ def make_good_board_string(board_rng):
         if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because still bad after " + GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES + " shuffles ***") 
 
         seed_base = random_integer(0x0, 0x7FFFFFFF, board_rng)
-        
+                
         // Loop for shuffling
         for permute_number < GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES:
             
-            todo("Remove!!!")
-            while not board_string or not contains(board_string, "K"):
-                ++seed_base
-                const gen = make_random_board_string(seed_base, permute_number)
-                board_string = gen.board_string
-                
             const gen = make_random_board_string(seed_base, permute_number)
             board_string = gen.board_string
             seed = seed_base + "." + permute_number
+            
 
             if (tries == GENERATE_BOARD.CRITERIA.RETRIES - 1) and (permute_number == GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES - 1):
                 // Last try, so just give up and accept the board
@@ -436,6 +431,9 @@ def make_random_board_string(seed_base, permute_number default 0):
 
             board_string += letter
             vowels += DICTIONARY.VOWEL[letter] default 0         
+    
+    todo("Remove")
+    board_string = "K" + slice(board_string, 1)
     
     if permute_number:
         board_string = shuffled(board_string, make_random(permute_number))
