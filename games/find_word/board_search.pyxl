@@ -247,6 +247,13 @@ def make_good_board_string(board_rng):
         
         // Loop for shuffling
         for permute_number < GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES:
+            
+            todo("Remove!!!")
+            while not board_string or not contains(board_string, "K"):
+                ++seed_base
+                const gen = make_random_board_string(seed_base, permute_number)
+                board_string = gen.board_string
+                
             const gen = make_random_board_string(seed_base, permute_number)
             board_string = gen.board_string
             seed = seed_base + "." + permute_number
@@ -256,8 +263,7 @@ def make_good_board_string(board_rng):
                 if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted " + seed_base)
                 done = true
                 break
-            
-            
+                        
             // Between 4 and 7 vowels seems to be the sweet spot for a good 4x4 grid,
             // so re-roll if we fail on this
             if gen.vowels ≤ ROWS or gen.vowels ≥ 2 ROWS:
