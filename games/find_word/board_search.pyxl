@@ -431,9 +431,9 @@ def make_random_board_string(seed_base, permute_number default 0):
 
             board_string += letter
             vowels += DICTIONARY.VOWEL[letter] default 0         
-    
-    todo("Remove")
-    board_string = "K" + slice(board_string, 1)
+
+    if DEBUG.MZK:    
+        board_string = "K" + slice(board_string, 1)
     
     if permute_number:
         board_string = shuffled(board_string, make_random(permute_number))

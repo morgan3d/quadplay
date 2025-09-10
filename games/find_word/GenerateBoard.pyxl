@@ -28,9 +28,8 @@ draw_text({
 if mode_frames > 3:
     const board_string = (
         if DEBUG.BOO or DEBUG.INTERMISSION then "GHOS BOOT FEAR HALE" else 
-        (if DEBUG.MZK then "DEHS CKOT NOBS LERT" else
         (if not player.has_achievement["Play Solo Match"] then TUTORIAL.FIRST_TIME_BOARD 
-        else ∅)))
+        else ∅))
     player_reset_match(player, game_type, board_string)
     
     if DEBUG.INTERMISSION or DEBUG.EARN_XP:

@@ -17,6 +17,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
     // Shift everybody's ability by this amount
     const match_shift = make_random(player.board.seed)(-10%, 0%)
     
+    todo("For letter bots, accept anything matching the prompt pattern, even if it wasn't the intended word")
     /* If vocabulary is specified, the bot is limited to that vocabulary 
        (except for Moo).
        
