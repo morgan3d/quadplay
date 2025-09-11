@@ -412,9 +412,10 @@ if not notifications_pending():
     // while notifications are appearing
     stage = min(⌊size(INTERMISSION.STAGE) * mode_frames / (60 INTERMISSION.SECONDS)⌋, size(INTERMISSION.STAGE) - 1)
     
-    if stage == INTERMISSION.STAGE.MOST_WORDS2:
-        // This stage only is 2x as long
-        --stage
+    if stage == INTERMISSION.STAGE.MOST_WORDS2 or stage == INTERMISSION.STAGE.MOST_WORDS3:
+        stage = INTERMISSION.STAGE.MOST_WORDS
+    else if stage == INTERMISSION.STAGE.MOST_RARE_WORDS2:
+        stage = INTERMISSION.STAGE.MOST_RARE_WORDS
         
     if prev_stage ≠ stage:
         first_frame_this_stage = mode_frames

@@ -91,7 +91,7 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json"
     },
-    "version": "0.473",
+    "version": "0.474",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -244,12 +244,12 @@
                 },
                 "LEVEL_EXPONENT": {
                     "type": "number",
-                    "value": 0.7,
+                    "value": 0.6,
                     "description": "See `xp_to_level()`. Higher is easier to level up. Chosen to make Level 20 ~= 40k XP"
                 },
                 "LEVEL_DIVISOR": {
                     "type": "number",
-                    "value": 500,
+                    "value": 250,
                     "description": "See `xp_to_level()`"
                 }
             }
@@ -1143,17 +1143,25 @@
                             "type": "number",
                             "value": 3
                         },
-                        "BEST_RARE": {
+                        "MOST_WORDS3": {
                             "type": "number",
                             "value": 4
                         },
-                        "MOST_RARE_WORDS": {
+                        "BEST_RARE": {
                             "type": "number",
                             "value": 5
                         },
-                        "LONGEST": {
+                        "MOST_RARE_WORDS": {
                             "type": "number",
                             "value": 6
+                        },
+                        "MOST_RARE_WORDS2": {
+                            "type": "number",
+                            "value": 7
+                        },
+                        "LONGEST": {
+                            "type": "number",
+                            "value": 8
                         }
                     },
                     "description": "Constants for intermission awards stages"
@@ -1169,7 +1177,7 @@
                 },
                 "SECONDS": {
                     "type": "number",
-                    "value": "18",
+                    "value": "19",
                     "description": "Time between global games. The total game period is INTERMISSION.SECONDS + 60 GLOBAL_GAME_TIME_MINUTES exactly",
                     "min": 1,
                     "max": 240,

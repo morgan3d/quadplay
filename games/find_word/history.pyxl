@@ -72,7 +72,7 @@ def history_draw(history, pos, max_height):
             font: if emphasize then history_emphasis_font else history_font,
             x_align: "left",
             y_align: "top",
-            color: if show then (if flash then #fff else entry.color) else #0000,
+            color: if show then ((if flash then #fff else entry.color) * (if entry.rare then 190% else 100%)) else #0000,
             outline: if show then outline else #0000,
             z: emphasize,
             text: text})

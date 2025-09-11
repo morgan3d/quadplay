@@ -1,3 +1,8 @@
+todo("Q, J, Z, X bot")
+todo("Misspelling bot")
+todo("All words of length n point bonus")
+todo("Best possible word of length n point bonus and award")
+
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `player.board`. 
    

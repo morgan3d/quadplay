@@ -49,6 +49,8 @@ def avatar_compute_color(sprite):
    override the avatar's default sprite. */
 def avatar_draw(args):
     let sprite = args.sprite default args.avatar.sprite
+    
+    const scale = args.scale default 100%
 
     // Idle animation for avatar
     if ⌊mode_frames / 30⌋ mod 2:
@@ -58,12 +60,13 @@ def avatar_draw(args):
     if args.avatar.level ≥ ABILITY_TABLE.Aura.level and get_mode() ≠ Play and get_mode() ≠ Freestyle and get_mode() ≠ Rotate:
         const aura_z = (args.z default 0) - ε
         const pulse = 20% oscillate(mode_frames / 45, 0, 1)
-        draw_sprite({…args, sprite: sprite, override_color: #FFF, scale: (115% + ½ pulse) * (args.scale default 100%), opacity: 50%, z: aura_z})
-        draw_sprite({…args, sprite: sprite, override_color: #FF0, scale: (140% + pulse) * (args.scale default 100%), opacity: 20%, z: aura_z})
+        draw_sprite({…args, sprite: sprite, override_color: #FFF, scale: (115% + ½ pulse) * scale, opacity: 50%, z: aura_z})
+        draw_sprite({…args, sprite: sprite, override_color: #FF0, scale: (140% + pulse) * scale, opacity: 20%, z: aura_z})
         
-        if ξ > 20% and args.avatar.level ≥ ABILITY_TABLE["Enhanced Aura"].level:
-            const dir = random_on_circle()
-            particles_spawn(particle_array, args.pos + 6 dir * (args.scale default 100%), random(0.1, 0.15) * dir, args.avatar.color, aura_z - ε, 45)
+        if args.avatar.level ≥ ABILITY_TABLE["Enhanced Aura"].level:            
+            for i < 2:
+                const dir = random_on_circle()
+                particles_spawn(particle_array, args.pos + 6 dir * scale, random(0.08, 0.17) * dir, lerp(args.avatar.color, #FFF, ξ), aura_z - ε, 49 ‖scale‖)
         
     draw_sprite({…args, sprite: sprite})
 
