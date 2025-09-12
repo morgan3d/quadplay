@@ -1,0 +1,8 @@
+{
+    "url": "speech-bubble.png",
+    "license": "By SHMUEL 2025. Released into the public domain",
+    "sprite_size": {"x": 12, "y": 8},
+    "names": {
+        "center": {"x": 1, "y": 1}
+    }
+}
