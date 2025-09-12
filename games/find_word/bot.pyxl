@@ -21,7 +21,6 @@ def insert_bots(competitor_array, max_non_npc_bots):
     // Shift everybody's ability by this amount
     const match_shift = make_random(player.board.seed)(-10%, 0%)
     
-    todo("For letter bots, accept anything matching the prompt pattern, even if it wasn't the intended word")
     /* If vocabulary is specified, the bot is limited to that vocabulary 
        (except for Moo).
        
@@ -225,10 +224,14 @@ def insert_bots(competitor_array, max_non_npc_bots):
 
 
 
-/* Letter expert NPC's `auto_close_condition()` callback for `set_npc_message()` */
-def _word_found_by_player(word):
-    return player.already_found[word]
+/* Letter expert NPC's `auto_close_condition()` callback for `set_npc_message()`.
 
+   `args = {tile, hint}`*/
+def _hinted_word_found_by_player(args):
+    for word in keys(player.already_found):
+        if word_to_hint_text(word, args.tile) == args.hint:
+            return true
+    return false
 
 
 /* If the npc has a good in-game suggestion, make it with the npc's importance level.
@@ -249,18 +252,8 @@ def npc_maybe_make_suggestion(bot)
         // Because a bot must get sub-strings of their expertise words en route to their word,
         // we should check to make sure this word is actually in their expertise
         if size(word) ≥ 4 and (not npc.expert_tile or contains(word, npc.expert_tile)) and not player.vocabulary[word] and not player.already_found[word]:
-            
-            // Replace all letters except expertise_tile and the first with dots
-            
-            // Make a set for tile (not letter) -> q decode and mask. We decode in the
-            // mapping to get the right number of dots; we're going to then decode the non-
-            // dots again later
-            const decode_and_mask_set = array_to_set(replace(DICTIONARY.ALPHABET, npc.expert_tile, ""), "∙")
-            if npc.expert_tile ≠ "Q": decode_and_mask_set["Q"] = "∙∙"
-
-            // Give a hint of either the first or last letter and the expert tile's letters            
-            const text = q_decode(word[0] + replace(slice(word, 1, size(word) - (if word[0] == npc.expert_tile then 1 else 0)), decode_and_mask_set) + (if word[0] == npc.expert_tile then last_value(word) else ""))            
-            return set_npc_message(bot.avatar, npc.expert_prompt + text, npc.importance, npc.play_sound_args, ∅, _word_found_by_player, word, npc.play_sound_args)
+            const hint = word_to_hint_text(word, npc.expert_tile)
+            return set_npc_message(bot.avatar, npc.expert_prompt + hint, npc.importance, npc.play_sound_args, ∅, _hinted_word_found_by_player, {tile: npc.expert_tile, hint: hint}, npc.play_sound_args)
 
 
 

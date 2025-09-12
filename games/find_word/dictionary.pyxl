@@ -169,4 +169,21 @@ def censor(text):
 
 
 def hide_text(text):
-    return text[0] + slice("∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙", 0, size(text) - 1)
+    return text[0] + slice("∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙", 0, size(text) - 1)
+    
+
+    
+/* Convert a word into a partly-masked hint such as "SEIK" -> "S∙∙K". The result is q_decoded.
+    */
+def word_to_hint_text(word, tile):
+    let text = word_to_hint_text.cache[word + ", " + tile]
+    if not text:
+        const decode_and_mask_set = array_to_set(replace(DICTIONARY.ALPHABET, tile, ""), "∙")
+        if tile ≠ "Q": decode_and_mask_set["Q"] = "∙∙"
+        text = q_decode(word[0] + replace(slice(word, 1, size(word) - (if word[0] == tile then 1 else 0)), decode_and_mask_set) + (if word[0] == tile then last_value(word) else ""))
+        word_to_hint_text.cache[word + ", " + tile] = text
+
+    return text
+
+word_to_hint_text.cache = {}
+
