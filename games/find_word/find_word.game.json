@@ -90,9 +90,10 @@
         "wild_placement_sound": "quad://sounds/hit-12.sound.json",
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json",
-        "mzk_00_sound": "mzk-00.sound.json"
+        "mzk_00_sound": "mzk-00.sound.json",
+        "speech_bubble_sprite": "speech-bubble.sprite.json"
     },
-    "version": "0.475",
+    "version": "0.476",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1339,8 +1340,8 @@
                                     "evil": false,
                                     "importance": 0,
                                     "expert_tile": "K",
-                                    "expert_prompt": "Think about ",
-                                    "play_sound_args": "mzk_00_sound"
+                                    "expert_prompt": "Think ",
+                                    "sound": "mzk_00_sound"
                                 },
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
@@ -1642,7 +1643,8 @@
                                 "name": "VIL",
                                 "npc": {
                                     "evil": true,
-                                    "importance": 1
+                                    "importance": 1,
+                                    "sound": "vil_00_sound"
                                 },
                                 "sprite": "avatar_sprite[25][20]",
                                 "base_ability": 0.43,

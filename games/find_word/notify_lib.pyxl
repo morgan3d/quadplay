@@ -34,6 +34,7 @@ const NOTIFY = {
     SPRITE_WIDTH: 32,
     PADDING: 7}
     
+    
 def notify(sprite, title, description, begin_callback default ∅, callback_data default ∅, duration_seconds default 7):
     assert(begin_callback == ∅ or type(begin_callback) == "function")
     

@@ -251,10 +251,16 @@ def npc_maybe_make_suggestion(bot)
         if size(word) ≥ 4 and (not npc.expert_tile or contains(word, npc.expert_tile)) and not player.vocabulary[word] and not player.already_found[word]:
             
             // Replace all letters except expertise_tile and the first with dots
-            const text = q_decode(word[0] + replace(slice(word, 1), array_to_set(replace(DICTIONARY.ALPHABET, npc.expert_tile, ""), "∙")))
-                        
-            set_npc_message(bot.avatar, npc.expert_prompt + text, npc.importance, npc.play_sound_args, ∅, _word_found_by_player, word)
-            return
+            
+            // Make a set for tile (not letter) -> q decode and mask. We decode in the
+            // mapping to get the right number of dots; we're going to then decode the non-
+            // dots again later
+            const decode_and_mask_set = array_to_set(replace(DICTIONARY.ALPHABET, npc.expert_tile, ""), "∙")
+            if npc.expert_tile ≠ "Q": decode_and_mask_set["Q"] = "∙∙"
+
+            // Give a hint of either the first or last letter and the expert tile's letters            
+            const text = q_decode(word[0] + replace(slice(word, 1, size(word) - (if word[0] == npc.expert_tile then 1 else 0)), decode_and_mask_set) + (if word[0] == npc.expert_tile then last_value(word) else ""))            
+            return set_npc_message(bot.avatar, npc.expert_prompt + text, npc.importance, npc.play_sound_args, ∅, _word_found_by_player, word, npc.play_sound_args)
 
 
 

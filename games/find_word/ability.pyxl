@@ -1,4 +1,5 @@
-/* Manage player abilities. See also `ABILITY_TABLE` */
+/* Manage player abilities. Abilities include messages that appear on leveling up. See also `ABILITY_TABLE` */
+
 
 def ability_load():
     // Erase all abilities on force level. They will be immediately granted by grant_new_abilities
@@ -25,6 +26,8 @@ def grant_new_abilities():
     for ability at name in ABILITY_TABLE:
         if not contains(name, "TODO") and (not player.has_ability[name] and player.avatar.level ≥ ability.level):
             def grant_ability():
+
+                todo("Custom notification open sounds for NPCs")
                 if ability.description ≠ "SILENT":
                     play_sound({sound: award_sound, pitch: 150%})
                     
