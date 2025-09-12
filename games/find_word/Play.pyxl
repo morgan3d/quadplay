@@ -101,6 +101,8 @@ if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.EARN_XP:
 
 leave
 ────────────────────────────────────────────────────────────────────────
+clear_npc_message()
+
 // If any remixes left, automatically use one
 if player.has_achievement["Use Remix"] and player.remix_uses_left and size(player.remix_list):
     execute_remix()

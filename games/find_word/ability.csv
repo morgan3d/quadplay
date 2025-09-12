@@ -24,12 +24,12 @@ Award XP,19,You now gain an XP bonus for every match award you win!,stats_sprite
 Scry Word Count,20,You can now see the total number of possible words while playing!,shapes.eye
 See VIL,20,SILENT,
 Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.remix
-VIL,22,"I am Villipend. I yearn for a competitor of substance. As your play is a linguistic affront, I shall keep seeking.",avatar_sprite[25][20]
+VIL,22,"I am Vilipend. I yearn for a competitor of substance. As your play is a linguistic affront, I shall keep seeking.",avatar_sprite[25][20]
 Award Stat,23,"Awards won is now tracked in Stats!",stats_sprite[0][0]
 Freestyle Points/Match Stat,24,"Freestyle points per match are now tracked in stats!",stats_sprite[0][0]
-VIL Returns,24,"Your statistics shall record my eradicating the lexical affront of your paltry presence…and eviscerating miniscule bovine!",avatar_sprite[25][20]
+See VIL Frequently,24,SILENT,
+VIL Returns,24,"Your stats shall record my eradicating the lexical insult of your paltry presence…and eviscerating your miniscule bovine!",avatar_sprite[25][20]
 Remix × 2,25,"New power: Use Remix 2× per match",ability_icon.remix
-See VIL Frequently,25,SILENT,
 Days Played Stat,27,"You can now track days played in Stats!",stats_sprite[0][0]
 Remix × 3,28,"New power: Use Remix 3× per match",ability_icon.remix
 Matches/Day Stat,29,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]

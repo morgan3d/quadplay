@@ -380,7 +380,6 @@ selection_index = 0
 enter
 ────────────────────────────────────────────────────────────────────────
 set_background(#333)
-clear_npc_message()
 
 selection_index = 0
 leaderboard_scroll = make_scroll_tracker()

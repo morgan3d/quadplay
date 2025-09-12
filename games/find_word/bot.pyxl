@@ -1,6 +1,5 @@
 todo("Q, J, Z, X bot")
 todo("Misspelling bot")
-todo("All words of length n point bonus")
 todo("Best possible word of length n point bonus and award")
 
 /* Generate a stable set of bots with a range of abilities, and 
@@ -30,7 +29,6 @@ def insert_bots(competitor_array, max_non_npc_bots):
     def maybe_add_bot_competitor(descriptor):
         assert(descriptor and descriptor.sprite and descriptor.name)
 
-        const bot_rng = make_random(descriptor.name + match_shift)
         const competitor = {
             …make_competitor(),
             
@@ -57,6 +55,8 @@ def insert_bots(competitor_array, max_non_npc_bots):
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
         competitor.avatar.level = descriptor.level default clamp(⌈140 descriptor.base_ability^(1.3)⌉, 1, 40)
         
+        const bot_rng = make_random(descriptor.name + match_shift)
+
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
         const find_percentage = min(28%, bot_rng(3%^⅓, 30%^⅓)³ + descriptor.base_ability)
@@ -84,7 +84,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
         const word_set = {}
         
         // Add word and its substrings to word_set if not sensitive
-        def maybe_add_word(word, force):
+        def maybe_add_word(word, force default false):
             assert(word)
             if DEBUG.BOTS: debug_print("  considering " + word)
                         
@@ -131,6 +131,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
     
         def MzK_ai():       
             for word in player.board.word_list:
+                // Always add a few
                 if contains(word, "K"):
                     maybe_add_word(word, true)
                     
@@ -183,7 +184,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
         // Only add bots if they found a word
         if descriptor.allow_zero_score or size(competitor.word_list) or descriptor == BOT.VIL.descriptor:
             return push(competitor_array, competitor)
-        else if DEBUG.BOT:
+        else if DEBUG.BOTS:
             debug_print("  left because they couldn't find words")
 
     
@@ -239,8 +240,6 @@ def npc_maybe_make_suggestion(bot)
 & with npc in bot:
     if not npc.expert_tile: return
 
-    todo("Set MzK sound on her descriptor")
-    
     // Choose the worst 4 or higher letter word that the player
     // has never spelled themselves. Recall that word lists
     // are sorted from best to worst.

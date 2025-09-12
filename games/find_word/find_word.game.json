@@ -89,9 +89,10 @@
         "remix_sound": "quad://sounds/explode-12.sound.json",
         "wild_placement_sound": "quad://sounds/hit-12.sound.json",
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
-        "icon_sprite": "icon.sprite.json"
+        "icon_sprite": "icon.sprite.json",
+        "mzk_00_sound": "mzk-00.sound.json"
     },
-    "version": "0.474",
+    "version": "0.475",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1333,11 +1334,13 @@
                                 "name": "MzK",
                                 "sprite": "avatar_sprite[15][28]",
                                 "base_ability": 0.5,
+                                "dictionary": "all",
                                 "npc": {
                                     "evil": false,
                                     "importance": 0,
                                     "expert_tile": "K",
-                                    "expert_prompt": "Think about "
+                                    "expert_prompt": "Think about ",
+                                    "play_sound_args": "mzk_00_sound"
                                 },
                                 "short_word_preference": 0.8,
                                 "first_hour": 0,
@@ -1642,12 +1645,12 @@
                                     "importance": 1
                                 },
                                 "sprite": "avatar_sprite[25][20]",
-                                "base_ability": 0.42,
+                                "base_ability": 0.43,
                                 "short_word_preference": 0.05,
                                 "first_hour": 0,
                                 "last_hour": 23,
                                 "dictionary": "all",
-                                "level": 45
+                                "level": 65
                             }
                         }
                     }
