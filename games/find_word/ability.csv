@@ -42,3 +42,5 @@ Remix × 5,48,"New power: Use Remix 5× per match",ability_icon.remix
 Aura,50,"Give lower-level players bonus XP based on your score",icon_sprite.aura
 Remix × 6,68,"New power: Use Remix 6× per match",ability_icon.remix
 Enhanced Aura,70,"Your aura is now more powerful and gives lower-level players a greater XP bonus",icon_sprite.aura
+Remix × 8,75,"New power: Use Remix 10× per match",ability_icon.remix
+Remix × 10,80,"New power: Use Remix 10× per match",ability_icon.remix

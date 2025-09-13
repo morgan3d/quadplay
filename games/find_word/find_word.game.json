@@ -93,7 +93,7 @@
         "mzk_00_sound": "mzk-00.sound.json",
         "speech_bubble_sprite": "speech-bubble.sprite.json"
     },
-    "version": "0.484",
+    "version": "0.485",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1648,7 +1648,7 @@
                                 },
                                 "sprite": "avatar_sprite[25][20]",
                                 "base_ability": 0.42,
-                                "short_word_preference": 0.07,
+                                "short_word_preference": 0.08,
                                 "first_hour": 0,
                                 "last_hour": 23,
                                 "dictionary": "all",
