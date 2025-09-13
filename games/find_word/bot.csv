@@ -1,13 +1,13 @@
 name,sprite,base_ability,short_word_preference,first_hour,last_hour,dictionary,allow_zero_score,appears_human,evil
-THX,avatar_sprite[25][6],24%,16%,10,12,all,false,true,false
-THX,avatar_sprite[25][6],24%,16%,14,20,all,false,true,false
+THX,avatar_sprite[25][6],24%,27%,10,12,all,false,true,false
+THX,avatar_sprite[25][6],24%,20%,14,20,all,false,true,false
 o_o,avatar_sprite[20][14],12%,75%,17,7,common,true,false,false
 NT,avatar_sprite[17][6],8%,67%,8,12,common,false,false,false
 AMS,avatar_sprite[37][14],37%,32%,22,3,all,false,true,false
 I♥U,avatar_sprite[3][20],2%,92%,19,6,common,false,false,false
 jen,avatar_sprite[39][8],2%,85%,7,11,common,false,true,false
 A11,avatar_sprite[24][18],5%,70%,21,10,all,false,false,false
-RLL,avatar_sprite[33][24],21%,21%,15,2,all,false,false,false
+RLL,avatar_sprite[33][24],20%,40%,15,2,all,false,false,false
 CJ,avatar_sprite[12][12],9%,60%,16,5,common,false,false,false
 Bob,avatar_sprite[28][26],10%,70%,0,7,common,false,false,false
 TTT,avatar_sprite[39][16],2%,88%,4,12,common,false,false,false
