@@ -226,8 +226,8 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
             push(xp_array,
             {
                 text: "" + size(word_list) + " × " + num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
-                xp: size(word_list) * (num_tiles - 2) * XP.VALUE.unique_word_per_tile,
-                color: TABLE_ALT_ROW_COLOR}, 
+                xp: size(word_list) * (num_tiles - 2)² * XP.VALUE.unique_word_per_tile,
+                color: TABLE_ALT_ROW_COLOR},
             {
                 text: join(word_list, ", "),
                 font: history_font,

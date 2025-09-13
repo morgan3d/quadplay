@@ -114,12 +114,13 @@ def dictionary_search(pattern):
             
     return result
     
-    
+
+todo("Best possible word of length n point bonus and award")
 
 /* Computes the letter points and size multiplier. Assumes
    word is an all-uppercase string with only legal characters
    and is Q-encoded (Q appears without U) that came
-   from pattern. */
+   from `pattern`. */
 def score_word(word, pattern default word):
     if size(word) < DICTIONARY.MIN_WORD_LENGTH or not dictionary.all[word]:
         return 0
