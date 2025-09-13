@@ -167,7 +167,7 @@ def draw_content():
             title,
             format, 
             lifetime[field] / max(if per == 1 then 1 else lifetime[per], 1),
-            if per == "days" then ∅ else (today[field] / max(if per == 1 then 1 else today[per], 1)))
+            (today[field] / max(if per == 1 then 1 else today[per], 1)))
 
     y += draw_section_title(y, "Earned " + size(player.has_ability) + " Abilities")
 

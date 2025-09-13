@@ -28,19 +28,20 @@ VIL,22,"I am Vilipend. I yearn for a competitor of substance. As your play is a 
 Award Stat,23,"Awards won is now tracked in Stats!",stats_sprite[0][0]
 Freestyle Points/Match Stat,24,"Freestyle points per match are now tracked in stats!",stats_sprite[0][0]
 See VIL Frequently,24,SILENT,
-VIL Returns,24,"Your stats shall record my eradicating the lexical insult of your paltry presence…and eviscerating your miniscule bovine!",avatar_sprite[25][20]
+VIL Returns,24,"Welcome to the 24th level of my eradicating the your lexically insulting presence!",avatar_sprite[25][20]
 Remix × 2,25,"New power: Use Remix 2× per match",ability_icon.remix
-Days Played Stat,27,"You can now track days played in Stats!",stats_sprite[0][0]
-Remix × 3,28,"New power: Use Remix 3× per match",ability_icon.remix
-Matches/Day Stat,29,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]
-See VIL More Frequently,30,SILENT,
+Days Played Stat,26,"You can now track days played in Stats!",stats_sprite[0][0]
+Remix × 3,27,"New power: Use Remix 3× per match",ability_icon.remix
+Matches/Day Stat,28,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]
+See VIL More Frequently,29,SILENT,
+VIL Threatens,29,"I shall eviscerate your miniscule bovine and Australian fowl companions!",avatar_sprite[25][20]
 Wild,30,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
 See VIL Always,40,SILENT
 Remix × 5,48,"New power: Use Remix 5× per match",ability_icon.remix
 Aura,50,"Give lower-level players bonus XP based on your score",icon_sprite.aura
-Remix × 6,68,"New power: Use Remix 6× per match",ability_icon.remix
+Remix × 6,60,"New power: Use Remix 6× per match",ability_icon.remix
 Enhanced Aura,70,"Your aura is now more powerful and gives lower-level players a greater XP bonus",icon_sprite.aura
-Remix × 8,75,"New power: Use Remix 10× per match",ability_icon.remix
+Remix × 8,75,"New power: Use Remix 8× per match",ability_icon.remix
 Remix × 10,80,"New power: Use Remix 10× per match",ability_icon.remix
