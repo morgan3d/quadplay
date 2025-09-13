@@ -9,7 +9,7 @@ jen,avatar_sprite[39][8],2%,85%,7,11,common,false,true,false
 A11,avatar_sprite[24][18],5%,70%,21,10,all,false,false,false
 RLL,avatar_sprite[33][24],21%,21%,15,2,all,false,false,false
 CJ,avatar_sprite[12][12],9%,60%,16,5,common,false,false,false
-Bob,avatar_sprite[28][26],10%,62%,0,7,common,false,false,false
+Bob,avatar_sprite[28][26],10%,70%,0,7,common,false,false,false
 TTT,avatar_sprite[39][16],2%,88%,4,12,common,false,false,false
 HCD,avatar_sprite[39][6],4%,60%,12,18,common,false,false,false
 LEW,avatar_sprite[39][2],35%,45%,11,15,common,false,false,false

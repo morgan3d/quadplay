@@ -58,7 +58,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
 
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const find_percentage = min(32%, bot_rng(15%^⅓, 30%^⅓)³ + descriptor.base_ability)
+        const find_percentage = min(30%, bot_rng(15%^⅓, 30%^⅓)³ + descriptor.base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = descriptor.short_word_preference
         
@@ -129,7 +129,6 @@ def insert_bots(competitor_array, max_non_npc_bots):
                         return maybe_add_word(word, true)
     
         def MzK_ai():
-            debug_print(descriptor.base_ability, words_found, size(player.board.word_list))
             for word in player.board.word_list:
                 if contains(word, "K") and size(word_set) < words_found:
                     maybe_add_word(word, true)
