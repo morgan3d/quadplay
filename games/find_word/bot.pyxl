@@ -243,16 +243,20 @@ def npc_maybe_make_suggestion(bot)
     if not npc.expert_tile: return
 
     // Choose the worst 4 or higher letter word that the player
-    // has never spelled themselves. Recall that word lists
-    // are sorted from best to worst.
+    // has never spelled themselves. 
     for j < size(bot.word_list):
+        // Working backwards because word lists are sorted from best to worst.
         const word = bot.word_list[size(bot.word_list) - j - 1].word
         
         // Because a bot must get sub-strings of their expertise words en route to their word,
         // we should check to make sure this word is actually in their expertise
-        if size(word) ≥ 4 and (not npc.expert_tile or contains(word, npc.expert_tile)) and not player.vocabulary[word] and not player.already_found[word]:
+        if size(word) ≥ 4 and contains(word, npc.expert_tile) and not player.vocabulary[word] and not player.already_found[word]:
             const hint = word_to_hint_text(word, npc.expert_tile)
-            return set_npc_message(bot.avatar, npc.expert_prompt + hint, npc.importance, npc.play_sound_args, ∅, _hinted_word_found_by_player, {tile: npc.expert_tile, hint: hint}, npc.play_sound_args)
+            
+            // The player may have not found the word the bot is suggesting, but MAY have found a different
+            // word that matches the hint pattern. In that case, keep looking for a good hint
+            if not _hinted_word_found_by_player({tile: npc.expert_tile, hint: hint}):
+                return set_npc_message(bot.avatar, npc.expert_prompt + hint, npc.importance, npc.play_sound_args, ∅, _hinted_word_found_by_player, {tile: npc.expert_tile, hint: hint}, npc.play_sound_args)
 
 
 

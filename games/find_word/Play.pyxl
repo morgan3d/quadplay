@@ -25,12 +25,15 @@ def execute_remix():
     player.remix_list = ∅
     
     
+    
 def enter_rotate_mode():
     push_mode(Rotate) because "button"
     
 
+
 def npc_suggestions():
     iterate(competitor_array, npc_maybe_make_suggestion)
+
 
 
 enter
@@ -54,9 +57,9 @@ else:
     start_time = prev_global_game_utc_start_time()
     end_time = start_time + GLOBAL_GAME.PLAY_SECONDS
 
-// Make NPC suggestions partway through the match
+// Allow NPC suggestions at ⅓ and ⅔ of the way through the match
 for 1 ≤ i ≤ 2:
-    delay(npc_suggestions, if DEBUG.MZK then 0 else max(0, round(i * ⅓ (end_time - frame_utc_now) * 60)))
+    delay(npc_suggestions, max(0, round(i * (if DEBUG.MZK then 10% else ⅓) * (end_time - frame_utc_now) * 60)))
 
 
 set_background(game_type.BACKGROUND_COLOR)
