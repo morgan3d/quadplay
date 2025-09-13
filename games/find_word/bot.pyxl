@@ -128,10 +128,10 @@ def insert_bots(competitor_array, max_non_npc_bots):
                         // Add this word and exit (return value is ignored)
                         return maybe_add_word(word, true)
     
-        def MzK_ai():       
+        def MzK_ai():
+            debug_print(descriptor.base_ability, words_found, size(player.board.word_list))
             for word in player.board.word_list:
-                // Always add a few
-                if contains(word, "K"):
+                if contains(word, "K") and size(word_set) < words_found:
                     maybe_add_word(word, true)
                     
 
@@ -204,7 +204,6 @@ def insert_bots(competitor_array, max_non_npc_bots):
         // caf only shows up if Moo is also there
         if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
             maybe_add_bot_competitor(BOT.CAF.descriptor)
-
 
     if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
         // VIL also cheats and always gets extra points. This allows them

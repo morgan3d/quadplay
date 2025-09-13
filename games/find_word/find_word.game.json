@@ -1334,7 +1334,7 @@
                             "value": {
                                 "name": "MzK",
                                 "sprite": "avatar_sprite[15][28]",
-                                "base_ability": 0.5,
+                                "base_ability": 0.11,
                                 "dictionary": "all",
                                 "npc": {
                                     "evil": false,
@@ -2221,6 +2221,14 @@
         "NUM_BOTS": {
             "type": "number",
             "value": "4",
+            "min": 0,
+            "max": 128,
+            "format": "0",
+            "quantum": 1
+        },
+        "MIN_DIALOG_FRAMES": {
+            "type": "number",
+            "value": "45",
             "min": 0,
             "max": 128,
             "format": "0",

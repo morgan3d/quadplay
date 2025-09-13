@@ -55,7 +55,8 @@ else:
     end_time = start_time + GLOBAL_GAME.PLAY_SECONDS
 
 // Make NPC suggestions partway through the match
-delay(npc_suggestions, if DEBUG.MZK then 0 else max(0, round(⅓ (end_time - frame_utc_now) * 60)))
+for 1 ≤ i ≤ 2:
+    delay(npc_suggestions, if DEBUG.MZK then 0 else max(0, round(i * ⅓ (end_time - frame_utc_now) * 60)))
 
 
 set_background(game_type.BACKGROUND_COLOR)

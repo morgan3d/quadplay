@@ -89,9 +89,12 @@ def npc_message_hook()
             color: #333})
     
     const auto_close = auto_close_condition and auto_close_condition(data)
-    if ((touch.a and overlaps(touch.xy, rect)) or 
-        joy.pressed_c or 
+    if (((game_frames - open_game_frames ≥ MIN_DIALOG_FRAMES) and 
+         (touch.a and overlaps(touch.xy, rect)) or 
+         joy.pressed_c) or 
+         
         (game_frames - open_game_frames ≥ max_frames) or 
+        
         auto_close):
             
         if auto_close and _npc_message.auto_close_play_sound_args:
