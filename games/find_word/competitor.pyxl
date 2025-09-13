@@ -18,7 +18,7 @@ const award_winner = {
     most_rare_words: ∅}
 
 
-/*    `word_list` is Q-encoded. `text` values are Q-decoded. */
+/* `word_list` is Q-encoded. `text` values are Q-decoded. */
 def make_competitor():
     return {
         /////////////////////////////////////////////////

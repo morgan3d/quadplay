@@ -58,7 +58,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
 
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const find_percentage = min(28%, bot_rng(3%^⅓, 30%^⅓)³ + descriptor.base_ability)
+        const find_percentage = min(32%, bot_rng(15%^⅓, 30%^⅓)³ + descriptor.base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = descriptor.short_word_preference
         
@@ -92,7 +92,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
             // Players with higher base percentages also are better at long words.
             if (not word_set[word] and 
                 (force or
-                     bot_rng() ≤ (2.9 descriptor.base_ability + 23%) / pow(max(size(word) - 2, 1), 0.4 + 3 short_word_preference))):
+                     bot_rng() ≤ (3 descriptor.base_ability + 45%) / pow(max(size(word) - 2, 1), 15% + short_word_preference))):
 
                 // If a word is found, all substrings are found.
                 // Ensure that bots do not find sensitive words or
@@ -215,8 +215,10 @@ def insert_bots(competitor_array, max_non_npc_bots):
     maybe_add_bot_competitor(BOT.BOO.descriptor)
     
     if player.has_ability["See Mz. Kiwi"]:
-        maybe_add_bot_competitor(BOT.MZK.descriptor)
- 
+        const bot = maybe_add_bot_competitor(BOT.MZK.descriptor)
+        // Cheat her score down so that she isn't intimidating
+        if bot and bot.score > 250:
+            bot.score = round(lerp(bot.score, 250, 50%))
         
     if DEBUG.AURA:
         maybe_add_bot_competitor(BOT.aura_test_bot.descriptor)
