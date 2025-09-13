@@ -3519,17 +3519,16 @@ the order of values is legal, but discouraged because the iterator
 will touch each slot in order and will skip or duplicate values if they
 change slots. Writing to the current value is legal and frequently useful.
 
-If you would like to add or remove from the container, transform your code from
+If you would like to add or remove from the container, consider using the
+fast `iterate()` function that is designed for this. Or, transform your code from
 `for x in container:` to `for x in clone(container):`. Cloning is
-fairly fast in PyxlScript. Or, use the syntax
-`let i = 0; while i &lt; size(container): let x = container[i] ... ++i` and account for the
-index and size changes in your own iteration.
+fairly fast in PyxlScript.
 
 The Java/C++ equivalents of `for-in`-loop conditions are:
 
 <quadplay/>           | Java/C++
 ----------------------|------------------------
-`for x ∈ S`           | `for (x : S)`
+`for x in S`           | `for (const x : S)`
 
 
 ### `for-with` Loop
