@@ -154,7 +154,7 @@ def draw_content():
         {ability: "Freestyle Points/Match Stat",  title: "Freestyle Pts/Match",    format: "0",  field: "freestyle_points", per: "freestyle_matches"},
         {ability: "XP/Match Stat",      title: "XP/Match",              format: "commas",   field: "xp",          per: "matches"},
         
-        {ability: "Days Played Stat",   title: "Days Played",           format: "commas",   field: "days",        per: "days"},
+        {ability: "Days Played Stat",   title: "Days Played",           format: "commas",   field: "days",        per: 1},
         {ability: "Matches/Day Stat",   title: "Matches/Day",           format: "0",        field: "matches",     per: "days"},
         {ability: "XP/Day Stat",        title: "XP/Day",                format: "commas",   field: "xp",          per: "days"}]
 
