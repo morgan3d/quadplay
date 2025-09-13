@@ -93,7 +93,7 @@
         "mzk_00_sound": "mzk-00.sound.json",
         "speech_bubble_sprite": "speech-bubble.sprite.json"
     },
-    "version": "0.480",
+    "version": "0.481",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1334,7 +1334,7 @@
                             "value": {
                                 "name": "MzK",
                                 "sprite": "avatar_sprite[15][28]",
-                                "base_ability": 0.11,
+                                "base_ability": 0.3,
                                 "dictionary": "all",
                                 "npc": {
                                     "evil": false,
@@ -1388,8 +1388,8 @@
                             "value": {
                                 "name": "Boo",
                                 "sprite": "avatar_sprite[45][12]",
-                                "base_ability": 0.16,
-                                "short_word_preference": 0.8,
+                                "base_ability": 0.17,
+                                "short_word_preference": 0.6,
                                 "first_hour": 0,
                                 "last_hour": 23,
                                 "dictionary": "all",

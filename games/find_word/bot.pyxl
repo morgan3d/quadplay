@@ -58,7 +58,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
 
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
-        const find_percentage = min(30%, bot_rng(15%^⅓, 30%^⅓)³ + descriptor.base_ability)
+        const find_percentage = min(30%, bot_rng(12%^⅓, 30%^⅓)³ + descriptor.base_ability)
         const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = descriptor.short_word_preference
         
@@ -243,15 +243,17 @@ def npc_maybe_make_suggestion(bot)
 & with npc in bot:
     if not npc.expert_tile: return
 
-    // Choose the worst 4 or higher letter word that the player
-    // has never spelled themselves. 
+    // Choose the worst n or higher tile word that the player
+    // has never spelled themselves.
+    const n = random_integer(4, 6)
     for j < size(bot.word_list):
         // Working backwards because word lists are sorted from best to worst.
         const word = bot.word_list[size(bot.word_list) - j - 1].word
         
         // Because a bot must get sub-strings of their expertise words en route to their word,
-        // we should check to make sure this word is actually in their expertise
-        if size(word) ≥ 4 and contains(word, npc.expert_tile) and not player.vocabulary[word] and not player.already_found[word]:
+        // we must check to make sure this word is actually in their expertise. We also
+        // prefer words that the player has not themselves seen before, but not exclusively
+        if size(word) ≥ n and contains(word, npc.expert_tile) and (ξ < 50% or not player.vocabulary[word]) and not player.already_found[word]:
             const hint = word_to_hint_text(word, npc.expert_tile)
             
             // The player may have not found the word the bot is suggesting, but MAY have found a different
