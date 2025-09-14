@@ -94,7 +94,7 @@
         "speech_bubble_sprite": "speech-bubble.sprite.json",
         "caf_too_hard_sound": "caf-too-hard.sound.json"
     },
-    "version": "0.492",
+    "version": "0.493",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -228,7 +228,7 @@
                         },
                         "badge_per_competitor": {
                             "type": "number",
-                            "value": "7"
+                            "value": "5"
                         },
                         "first_match_today": {
                             "type": "number",
@@ -236,12 +236,12 @@
                         },
                         "decimatch_today": {
                             "type": "number",
-                            "value": "25"
+                            "value": "30"
                         },
                         "unique_word_per_tile": {
                             "description": "The first two letters don't count. The length will be squared.",
                             "type": "number",
-                            "value": "1.5"
+                            "value": "1.25"
                         }
                     }
                 },
