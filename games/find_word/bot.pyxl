@@ -204,10 +204,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
             maybe_add_bot_competitor(BOT.CAF.descriptor)
 
     if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
-        // VIL also cheats and always gets extra points. This allows them
-        // to be on top of the leaderboard and annoy the player without also winning
-        // every award every time (and thus being TOO annoying)
-        maybe_add_bot_competitor(BOT.VIL.descriptor).score += 125
+        maybe_add_bot_competitor(BOT.VIL.descriptor)
 
     // Boo arrives when at least one of their words is available
     maybe_add_bot_competitor(BOT.BOO.descriptor)
