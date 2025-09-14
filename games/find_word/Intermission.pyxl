@@ -238,7 +238,7 @@ def draw_leaderboard()
         if friend:
             draw_text({…text_args,
                 pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.AVATAR_X - 14, 0),
-                text: "♥"})
+                text: if competitor.avatar.bot and not competitor.avatar.appears_human then "♡" else "♥"})
                 
         avatar_draw({avatar: competitor.avatar, sprite: competitor.avatar.sprite.x_flipped, pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.AVATAR_X, 0), z: 10})
         

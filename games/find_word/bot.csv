@@ -1,6 +1,6 @@
 name,sprite,base_ability,short_word_preference,first_hour,last_hour,dictionary,allow_zero_score,appears_human,evil
-THX,avatar_sprite[25][6],24%,27%,10,12,all,false,true,false
-THX,avatar_sprite[25][6],24%,20%,14,20,all,false,true,false
+THX,avatar_sprite[25][6],24%,27%,10,12,all,false,false,false
+THX,avatar_sprite[25][6],24%,20%,14,20,all,false,false,false
 o_o,avatar_sprite[20][14],12%,75%,17,7,common,true,false,false
 NT,avatar_sprite[17][6],8%,67%,8,12,common,false,false,false
 AMS,avatar_sprite[37][14],37%,32%,22,3,all,false,false,false
@@ -12,7 +12,7 @@ CJ,avatar_sprite[12][12],9%,60%,16,5,common,false,false,false
 Bob,avatar_sprite[28][26],10%,70%,0,7,common,false,false,false
 TTT,avatar_sprite[39][16],2%,88%,4,12,common,false,false,false
 HCD,avatar_sprite[39][6],4%,60%,12,18,common,false,false,false
-LEW,avatar_sprite[39][2],35%,45%,11,15,common,false,false,false
+LEW,avatar_sprite[39][2],35%,45%,11,15,common,false,true,false
 jr,avatar_sprite[9][18],3%,89%,18,6,common,false,false,false
 FLA,avatar_sprite[9][12],2%,92%,9,14,common,false,false,false
 Nik,avatar_sprite[8][18],7%,71%,13,21,common,false,false,false
