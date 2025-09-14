@@ -94,7 +94,7 @@
         "speech_bubble_sprite": "speech-bubble.sprite.json",
         "caf_too_hard_sound": "caf-too-hard.sound.json"
     },
-    "version": "0.491",
+    "version": "0.492",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

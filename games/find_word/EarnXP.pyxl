@@ -226,7 +226,7 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
             const xp_per_word = ⌈(num_tiles - 2)² * XP.VALUE.unique_word_per_tile⌉
             push(xp_array,
             {
-                text: "" + size(word_list) + " × " + xp_per_word + " xp / " num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
+                text: "" + size(word_list) + " × " + xp_per_word + " xp / " + num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
                 xp: size(word_list) * xp_per_word,
                 xp_color: if xp_per_word > 50 then HIGHLIGHT_COLOR else ∅,
                 color: TABLE_ALT_ROW_COLOR},
