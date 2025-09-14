@@ -2,7 +2,7 @@
    spritesheet, the last few are unused, so we stop this 
    count early. Note that there are other restrictions
    on which avatars can be used. */
-const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 9
+const AVATAR_SPRITE_COUNT = avatar_sprite.size_in_sprites.x * ½ avatar_sprite.size_in_sprites.y - 8
 
 def avatar_save(avatar):
     // Other properties are recomputed on load

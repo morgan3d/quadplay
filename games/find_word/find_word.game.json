@@ -94,7 +94,7 @@
         "speech_bubble_sprite": "speech-bubble.sprite.json",
         "caf_too_hard_sound": "caf-too-hard.sound.json"
     },
-    "version": "0.488",
+    "version": "0.489",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -314,10 +314,22 @@
                     "value": [
                         {
                             "type": "xy",
-                            "description": "caf (Baby Moo)",
+                            "description": "caf",
                             "value": {
                                 "x": 33,
                                 "y": 22
+                            },
+                            "nudge": {
+                                "x": "+1",
+                                "y": -1
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "description": "MzK",
+                            "value": {
+                                "x": 38,
+                                "y": 28
                             },
                             "nudge": {
                                 "x": "+1",
@@ -338,34 +350,10 @@
                         },
                         {
                             "type": "xy",
-                            "description": "kit (Baby KAT)",
+                            "description": "VIL",
                             "value": {
-                                "x": 47,
-                                "y": 6
-                            },
-                            "nudge": {
-                                "x": "+1",
-                                "y": -1
-                            }
-                        },
-                        {
-                            "type": "xy",
-                            "description": "KAT",
-                            "value": {
-                                "x": 0,
-                                "y": 8
-                            },
-                            "nudge": {
-                                "x": "+1",
-                                "y": -1
-                            }
-                        },
-                        {
-                            "type": "xy",
-                            "description": "KAT doppleganger",
-                            "value": {
-                                "x": 1,
-                                "y": 8
+                                "x": 25,
+                                "y": 20
                             },
                             "nudge": {
                                 "x": "+1",
@@ -1334,7 +1322,7 @@
                             "description": "Argument to `make_bot_competitor`",
                             "value": {
                                 "name": "MzK",
-                                "sprite": "avatar_sprite[15][28]",
+                                "sprite": "avatar_sprite[38][28]",
                                 "base_ability": 0.3,
                                 "dictionary": "all",
                                 "npc": {
