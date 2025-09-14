@@ -127,10 +127,11 @@ def insert_bots(competitor_array, max_non_npc_bots):
                         // Add this word and exit (return value is ignored)
                         return maybe_add_word(word, true)
     
-        def MzK_ai():
+        def expert_npc_ai():
             for word in match.word_list:
-                if contains(word, competitor.npc.expert_tile) and size(word_set) < words_found:
-                    maybe_add_word(word, true)
+                for tile in competitor.npc.expert_tile:
+                    if contains(word, tile) and size(word_set) < words_found:
+                        maybe_add_word(word, true)
                     
 
         // Special case for bots with a vocabulary, who always find *all* of their words
@@ -143,9 +144,10 @@ def insert_bots(competitor_array, max_non_npc_bots):
             // Special case for caf, who sometimes finds a great word, finds all
             // three-letter cow words, and with a low probability finds a terrible word
             caf_ai()
-        else if descriptor == BOT.MZK.descriptor:
-            // Special case for MzK
-            MzK_ai()
+            
+        else if descriptor.npc and descriptor.npc.expert_tile:
+
+            expert_npc_ai()
             
         else if not descriptor.vocabulary or descriptor == BOT.MOO.descriptor:
             // Default AI + Moo's short words
@@ -209,11 +211,21 @@ def insert_bots(competitor_array, max_non_npc_bots):
     // Boo arrives when at least one of their words is available
     maybe_add_bot_competitor(BOT.BOO.descriptor)
     
-    if player.has_ability["See Mz. Kiwi"]:
-        const bot = maybe_add_bot_competitor(BOT.MZK.descriptor)
-        // Cheat her score down so that she isn't intimidating
-        if bot and bot.score > 250:
-            bot.score = round(lerp(bot.score, 250, 70%))
+    const expert_array = [
+        {
+            descriptor: BOT.MZK.descriptor,
+            ability: "See Mz. Kiwi"},
+        
+        {
+            descriptor: BOT.DRQ.descriptor,
+            ability: "See Dr. Quandary"}]
+        
+    for descriptor, ability in expert in expert_array:
+        if player.has_ability[ability]:
+            const bot = maybe_add_bot_competitor(descriptor)
+            // Cheat their scores down so that they aren't intimidating
+            if bot and bot.score > 250:
+                bot.score = round(lerp(bot.score, 200, 80%))
         
     if DEBUG.AURA:
         maybe_add_bot_competitor(BOT.aura_test_bot.descriptor)
@@ -236,26 +248,39 @@ def _hinted_word_found_by_player(args):
    Any bot with an "expert_tile" property will try to suggest from their vocabulary.
    */
 def npc_maybe_make_suggestion(bot)
+& if bot.npc.expert_tile
 & with npc in bot:
-    if not npc.expert_tile: return
 
-    // Choose the worst n or higher tile word that the player
-    // has never spelled themselves.
-    const n = random_integer(4, 6)
+    // Choose an 4+ tile word, prefering ones that the player
+    // has never spelled themselves. This encourages the player to
+    // learn and get the shorter words quickly so that the NPC will
+    // help them with longer ones
     for j < size(bot.word_list):
         // Working backwards because word lists are sorted from best to worst.
         const word = bot.word_list[size(bot.word_list) - j - 1].word
+ 
+        // Iterate through all tiles that this npc knows. If multiple ones hit,
+        // then they will prefer the earlier ones
+        for tile in npc.expert_tile:
         
-        // Because a bot must get sub-strings of their expertise words en route to their word,
-        // we must check to make sure this word is actually in their expertise. We also
-        // prefer words that the player has not themselves seen before, but not exclusively
-        if size(word) ≥ n and contains(word, npc.expert_tile) and (ξ < 50% or not player.vocabulary[word]) and not player.already_found[word]:
-            const hint = word_to_hint_text(word, npc.expert_tile)
-            
-            // The player may have not found the word the bot is suggesting, but MAY have found a different
-            // word that matches the hint pattern. In that case, keep looking for a good hint
-            if not _hinted_word_found_by_player({tile: npc.expert_tile, hint: hint}):
-                return set_npc_message(bot.avatar, npc.expert_prompt + hint, npc.importance, npc.play_sound_args, ∅, _hinted_word_found_by_player, {tile: npc.expert_tile, hint: hint}, npc.play_sound_args)
+            // Because a bot must get sub-strings of their expertise words en route to their word,
+            // we must check to make sure this word is actually in their expertise. We also
+            // prefer words that the player has not themselves seen before, but not exclusively
+            if size(word) ≥ 4 and contains(word, tile) and (ξ < 50% or not player.vocabulary[word]) and not player.already_found[word]:
+                const data = {tile: tile, hint: word_to_hint_text(word, tile)}
+                
+                // The player may have not found the word the bot is suggesting, but MAY have found a different
+                // word that matches the hint pattern. In that case, keep looking for a good hint
+                if not _hinted_word_found_by_player(data):
+                    return set_npc_message(
+                        bot.avatar, 
+                        npc.expert_prompt[tile] + data.hint, 
+                        npc.importance, 
+                        npc.play_sound_args, 
+                        ∅, 
+                        _hinted_word_found_by_player, 
+                        data,
+                        npc.play_sound_args)
 
 
 

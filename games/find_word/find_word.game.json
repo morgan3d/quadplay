@@ -92,9 +92,10 @@
         "icon_sprite": "icon.sprite.json",
         "mzk_00_sound": "mzk-00.sound.json",
         "speech_bubble_sprite": "speech-bubble.sprite.json",
-        "caf_too_hard_sound": "caf-too-hard.sound.json"
+        "caf_too_hard_sound": "caf-too-hard.sound.json",
+        "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.493",
+    "version": "0.494",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -330,6 +331,18 @@
                             "value": {
                                 "x": 38,
                                 "y": 28
+                            },
+                            "nudge": {
+                                "x": "+1",
+                                "y": -1
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "description": "DrQ",
+                            "value": {
+                                "x": 22,
+                                "y": 4
                             },
                             "nudge": {
                                 "x": "+1",
@@ -1327,12 +1340,49 @@
                                 "dictionary": "all",
                                 "npc": {
                                     "evil": false,
-                                    "importance": 0,
+                                    "importance": 4,
                                     "expert_tile": "K",
-                                    "expert_prompt": "Think ",
+                                    "expert_prompt": {
+                                        "K": "Think "
+                                    },
                                     "sound": "mzk_00_sound"
                                 },
-                                "short_word_preference": 0.8,
+                                "short_word_preference": 0.5,
+                                "first_hour": 0,
+                                "last_hour": 23
+                            }
+                        }
+                    }
+                },
+                "DRQ": {
+                    "description": "NPC that is good with using the letters Q, J, Z, X",
+                    "type": "object",
+                    "value": {
+                        "ID": {
+                            "type": "string",
+                            "value": "BOT_DrQ"
+                        },
+                        "descriptor": {
+                            "type": "raw",
+                            "description": "Argument to `make_bot_competitor`. Order of expert_tile indicates preference",
+                            "value": {
+                                "name": "DrQ",
+                                "sprite": "avatar_sprite[22][4]",
+                                "base_ability": 0.2,
+                                "dictionary": "all",
+                                "npc": {
+                                    "evil": false,
+                                    "importance": 5,
+                                    "expert_tile": "ZJQX",
+                                    "expert_prompt": {
+                                        "J": "Just ",
+                                        "Q": "Query ",
+                                        "X": "Examine ",
+                                        "Z": "Analyze "
+                                    },
+                                    "sound": "quandary_sound"
+                                },
+                                "short_word_preference": 0.3,
                                 "first_hour": 0,
                                 "last_hour": 23
                             }
@@ -2063,6 +2113,10 @@
                     "value": false
                 },
                 "MZK": {
+                    "type": "boolean",
+                    "value": false
+                },
+                "DRQ": {
                     "type": "boolean",
                     "value": false
                 },

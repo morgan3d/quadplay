@@ -434,6 +434,9 @@ def make_random_board_string(seed_base, permute_number default 0):
 
     if DEBUG.MZK:    
         board_string = "K" + slice(board_string, 1)
+
+    if DEBUG.DRQ:    
+        board_string = "Q" + slice(board_string, 1)
     
     if permute_number:
         board_string = shuffled(board_string, make_random(permute_number))

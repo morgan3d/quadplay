@@ -44,6 +44,11 @@ assert(not in_waiting_room)
 remove_all(competitor_array)
 insert_bots(competitor_array, NUM_BOTS)
 
+todo("** Bots generate impossible words")
+for competitor in competitor_array:
+    if competitor.avatar.name == "DrQ":
+        debug_print(competitor)
+
 play_sound(start_sound)
 
 last_countdown_sound_time = now()
@@ -58,8 +63,9 @@ else:
     end_time = start_time + GLOBAL_GAME.PLAY_SECONDS
 
 // Allow NPC suggestions at ⅓ and ⅔ of the way through the match
-for 1 ≤ i ≤ 2:
-    delay(npc_suggestions, max(0, round(i * (if DEBUG.MZK then 10% else ⅓) * (end_time - frame_utc_now) * 60)))
+if not in_waiting_room:
+    for 1 ≤ i ≤ 2:
+        delay(npc_suggestions, max(0, round(i * (if DEBUG.MZK or DEBUG.DRQ then 10% else ⅓) * (end_time - frame_utc_now) * 60)))
 
 
 set_background(game_type.BACKGROUND_COLOR)

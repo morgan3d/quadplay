@@ -4,14 +4,15 @@ See Moo,2,SILENT,
 Rotate,2,New power: Rotate the board for a new perspective,aux_icon.rotate
 Most Words Stat,3,Most Words per match is now available in Stats!,stats_sprite[0][0]
 Friend of Moo,4,"`Hi I'm Moo. Let's Be Friends!'",avatar_sprite[34][22].x_flipped
+See caf,4,SILENT,
 High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprite[0][0]
 Longest Word Stat,6,Your Longest Word is now available in Stats!,shapes.triangle.rotated_270
 Best Word Stat,7,Best Word is now available in Stats!,shapes.diamond
-See caf,7,SILENT,
 Friend of caf,8,`moo is my mom-cow! you be my pal??',avatar_sprite[33][22].x_flipped
-See Mz. Kiwi,8,SILENT,
+See Mz. Kiwi,6,SILENT,
 Discovered Words Stat,8,Discovered Words count is now available in Stats!,stats_sprite[0][0]
 Discovery XP,9,Get an XP bonus for every time you discover a new word!,notify_icon.xp
+See Dr. Quandary,9,SILENT,
 Words/Match Stat,10,Average Words per Match is now available in Stats!,stats_sprite[0][0]
 "Meet Mz. Kiwi",12,"`I know many quirky words with Ks, dear. Kindly let me be the your key to unlocking the knack for this tricky task.'",avatar_sprite[15][28]
 Points/Match Stat,13,Average Points per Match is now available in Stats!,stats_sprite[0][0]
@@ -24,19 +25,21 @@ Award XP,19,You now gain an XP bonus for every match award you win!,stats_sprite
 Scry Word Count,20,You can now see the total number of possible words while playing!,shapes.eye
 See VIL,20,SILENT,
 Remix,21,"New power: 1x per match, auto-find all discovered remixes of your last word",ability_icon.remix
-VIL,22,"I am Vilipend. I yearn for a competitor of substance. As your play is a linguistic affront, I shall keep seeking.",avatar_sprite[25][20]
+Meet VIL,22,"I am Vilipend. I yearn for a competitor of substance. As your play is a linguistic affront, I shall keep seeking.",avatar_sprite[25][20]
 Award Stat,23,"Awards won is now tracked in Stats!",stats_sprite[0][0]
 Freestyle Points/Match Stat,24,"Freestyle points per match are now tracked in stats!",stats_sprite[0][0]
 See VIL Frequently,24,SILENT,
-VIL Returns,24,"Welcome to the 24th level…of my eradicating your lexically insulting presence!",avatar_sprite[25][20]
+Vex VIL,24,"Welcome to the 24th level…of my eradicating your lexically insulting presence!",avatar_sprite[25][20]
 Remix × 2,25,"New power: Use Remix 2× per match",ability_icon.remix
 Days Played Stat,26,"You can now track days played in Stats!",stats_sprite[0][0]
 Remix × 3,27,"New power: Use Remix 3× per match",ability_icon.remix
 Matches/Day Stat,28,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]
-VIL Threatens,29,"I shall eviscerate the paltry vocabularies of your miniscule bovine and fowl companions!",avatar_sprite[25][20]
+Enemy of VIL,29,"I shall eviscerate the paltry vocabularies of your miniscule bovine and fowl companions!",avatar_sprite[25][20]
 Wild,30,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
+"Mz. Kiwi's Friend",40,"I know a keen keeper of knowledge you'll like…",avatar_sprite[15][28]
+Meet Dr. Quandary,40,"…Salutations, I'm Quandary! Justifiably quizzed, puzzled, and perplexed by J, Q, X, and Z? My quality expertise will expand your vocabulary in a jiffy.",avatar_sprite[22][4]
 Remix × 5,48,"New power: Use Remix 5× per match",ability_icon.remix
 See VIL More Frequently,49,SILENT,
 Aura,50,"Give lower-level players bonus XP based on your score",icon_sprite.aura

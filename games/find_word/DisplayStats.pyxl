@@ -173,7 +173,7 @@ def draw_content():
 
     // Assumes the entries are sorted by increasing level    
     for entry at name in ABILITY_TABLE
-    & if entry.description ≠ "SILENT":
+    & if entry.description ≠ "SILENT" and name ≠ "Mz. Kiwi's Friend":
         // Break before the "new ability at..." message
         if not player.has_ability[name]: y += 10
         
