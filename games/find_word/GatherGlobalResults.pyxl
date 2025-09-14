@@ -29,10 +29,12 @@ end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - EARN_XP_SE
 if DEBUG.INTERMISSION or DEBUG.EARN_XP:
     end_time = frame_utc_now
     
-todo("Test")
-if player.score > max(player.stats.lifetime.high_score, player.stats[today_date_string()].high_score) and player.stats.lifetime.matches > 20:
+// Only acknowledge high scores if the player has played enough ever / today
+if (player.score > max(player.stats.lifetime.best_score, player.stats[today_date_string()].best_score) and
+    player.stats.lifetime.matches ≥ 20):
     notify(∅, "Personal Best", "New ALL-TIME personal best score of " + format_number(player.score, "commas") + " points!")
-else if player.score > player.stats[today_date_string()].high_score and player.stats[today_date_string()].matches > 10:
+else if (player.score > player.stats[today_date_string()].best_score and
+    player.stats[today_date_string()].matches ≥ 8):
     notify(∅, "Daily Best", "New daily personal best score of " + format_number(player.score, "commas") + " points!")
 
 
