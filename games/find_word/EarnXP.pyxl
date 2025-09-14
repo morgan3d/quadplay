@@ -116,7 +116,7 @@ def draw_xp_table()
             draw_text({
                 text: "+" + format_number(row.xp, "commas") + " XP" default "", 
                 font: leaderboard_font, 
-                color: row.color,
+                color: row.xp_color default row.color,
                 x_align: "right", 
                 y_align: "top",
                 pos: xy(180, y)})
@@ -223,10 +223,12 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
 
     for word_list at num_tiles in words_by_tile_length:
         if size(word_list):
+            const xp_per_word = ⌈(num_tiles - 2)² * XP.VALUE.unique_word_per_tile⌉
             push(xp_array,
             {
-                text: "" + size(word_list) + " × " + num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
-                xp: size(word_list) * (num_tiles - 2)² * XP.VALUE.unique_word_per_tile,
+                text: "" + size(word_list) + " × " + xp_per_word + " xp / " num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
+                xp: size(word_list) * xp_per_word,
+                xp_color: if xp_per_word > 50 then HIGHLIGHT_COLOR else ∅,
                 color: TABLE_ALT_ROW_COLOR},
             {
                 text: join(word_list, ", "),

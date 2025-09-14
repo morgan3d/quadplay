@@ -241,7 +241,7 @@
                         "unique_word_per_tile": {
                             "description": "The first two letters don't count. The length will be squared.",
                             "type": "number",
-                            "value": "2"
+                            "value": "1.5"
                         }
                     }
                 },
