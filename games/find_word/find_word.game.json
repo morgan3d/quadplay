@@ -94,7 +94,7 @@
         "speech_bubble_sprite": "speech-bubble.sprite.json",
         "caf_too_hard_sound": "caf-too-hard.sound.json"
     },
-    "version": "0.490",
+    "version": "0.491",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1636,7 +1636,7 @@
                                     "sound": "vil_00_sound"
                                 },
                                 "sprite": "avatar_sprite[25][20]",
-                                "base_ability": 0.41,
+                                "base_ability": 0.4,
                                 "short_word_preference": 0.1,
                                 "first_hour": 0,
                                 "last_hour": 23,
