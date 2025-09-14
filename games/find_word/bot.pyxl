@@ -10,7 +10,7 @@ todo("Misspelling bot")
    
  */
 def insert_bots(competitor_array, max_non_npc_bots):
-    assert(size(player.board.word_set) == size(player.board.word_list) and size(player.board.word_list) > 0)
+    assert(size(match.word_set) == size(match.word_list) and size(match.word_list) > 0)
     if DEBUG.BOTS: debug_print("------------------------\ninsert_bots()")
     
     // Used for determining which players are active
@@ -18,7 +18,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
     const minute = utc_time().minute
     
     // Shift everybody's ability by this amount
-    const match_shift = make_random(player.board.seed)(-10%, 0%)
+    const match_shift = make_random(match.seed)(-10%, 0%)
     
     /* If vocabulary is specified, the bot is limited to that vocabulary 
        (except for Moo).
@@ -58,7 +58,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
         const find_percentage = min(30%, bot_rng(12%^⅓, 30%^⅓)³ + descriptor.base_ability)
-        const words_found = clamp(⌊size(player.board.word_list) * find_percentage⌋, 5, 55)
+        const words_found = clamp(⌊size(match.word_list) * find_percentage⌋, 5, 55)
         const short_word_preference = descriptor.short_word_preference
         
         // Is this particular competitor available right now?
@@ -99,7 +99,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 if DEBUG.BOTS: debug_print("  found " + word)
                 for 3 ≤ len ≤ size(word):
                     const subword = slice(word, 0, len)
-                    if player.board.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary default "common"][word]:
+                    if match.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary default "common"][word]:
                         word_set[subword] = 1
 
 
@@ -107,35 +107,35 @@ def insert_bots(competitor_array, max_non_npc_bots):
         def caf_ai():
             // Randomly choose a fantastic word 10% of the time
             if bot_rng() < 10% or DEBUG.CAF:
-                const word = player.board.word_list[random_integer(max(0, size(player.board.word_list) - 6), size(player.board.word_list) - 1, bot_rng)]
+                const word = match.word_list[random_integer(max(0, size(match.word_list) - 6), size(match.word_list) - 1, bot_rng)]
                 if word: maybe_add_word(word, true)
                     
             // Look for short cow words. These can't be sensitive
             for word in BOT.MOO.descriptor.vocabulary:
-                if size(word) ≤ 3 and player.board.word_set[word]:
+                if size(word) ≤ 3 and match.word_set[word]:
                     maybe_add_word(word, true)
         
             // Find all words with "CAF" as a substring, of any length
-            for word in player.board.word_list:
+            for word in match.word_list:
                 if contains(word, "CAF"):
                     maybe_add_word(word, true)
                     
             if size(word_set) == 0 and (bot_rng() < 50%):
                 // caf has no words. Try to find another word so that caf doesn't complain too often
-                for word in player.board.word_list:
+                for word in match.word_list:
                     if size(word) == 3:
                         // Add this word and exit (return value is ignored)
                         return maybe_add_word(word, true)
     
         def MzK_ai():
-            for word in player.board.word_list:
-                if contains(word, "K") and size(word_set) < words_found:
+            for word in match.word_list:
+                if contains(word, competitor.npc.expert_tile) and size(word_set) < words_found:
                     maybe_add_word(word, true)
                     
 
         // Special case for bots with a vocabulary, who always find *all* of their words
         for word in (descriptor.vocabulary default []):
-            if player.board.word_set[word]:
+            if match.word_set[word]:
                 maybe_add_word(word, true)
                     
         let tries = 0        
@@ -157,7 +157,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
             if DEBUG.BOTS: debug_print("  looking for short words")
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
                 ++tries
-                const word = random_value(player.board.word_list, bot_rng)
+                const word = random_value(match.word_list, bot_rng)
                 if size(word) ≤ short_word_length:
                     maybe_add_word(word)
     
@@ -167,7 +167,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 tries = 0
                 while size(word_set) < words_found and tries < 2 words_found:
                     ++tries
-                    maybe_add_word(random_value(player.board.word_list, bot_rng))
+                    maybe_add_word(random_value(match.word_list, bot_rng))
 
         // Convert the set of words into a word list
         for word in keys(word_set):

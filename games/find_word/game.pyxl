@@ -35,6 +35,25 @@ let in_waiting_room
 
 const player = make_player()
 
+/* Global match state - contains non-UI board data */
+const match = {
+    // Lower case q-decoded word and permutation number
+    // used to generate this board
+    seed: ∅,
+    
+    // Q-encoded. Identified by `board_search()`
+    word_list: [],
+    
+    // Q-encoded. Set version of word_list produced by `board_search()`
+    word_set: {},
+    
+    // Count of words in word_list
+    word_count: 0,
+    
+    // Raw board string used for generation. 16 characters, no spaces.
+    board_string: ∅
+}
+
 // When debugging, do not make a reset player at a reasonable level re-do basic achievements
 if DEBUG.FORCE_LEVEL > 3:
     for achievement in ["Change Avatar", "Check Stats", "Use Remix", "Rotate Board", "Freestyle Word", "Exit Freestyle", "Play Solo Match", "Play Global Match", "Play Second Global Match"]:

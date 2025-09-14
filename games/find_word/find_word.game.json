@@ -93,7 +93,7 @@
         "mzk_00_sound": "mzk-00.sound.json",
         "speech_bubble_sprite": "speech-bubble.sprite.json"
     },
-    "version": "0.486",
+    "version": "0.487",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

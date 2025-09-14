@@ -492,10 +492,10 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
                 player.board.tile[x][y].letter = board_space_string[x + y * (COLS + 1)]
         
         // Collapse out the spaces
-        player.board.seed = replace(board_space_string, " ", "")
-        player.board.word_list = if skip_word_search then [] else board_string_find_all_words(player.board.seed)
-        player.board.word_set = array_to_set(player.board.word_list)
-        player.board.word_count = size(player.board.word_list)
+        match.seed = replace(board_space_string, " ", "")
+        match.word_list = if skip_word_search then [] else board_string_find_all_words(match.seed)
+        match.word_set = array_to_set(match.word_list)
+        match.word_count = size(match.word_list)
     else:
         board_find_good(player.board, game_type)
     

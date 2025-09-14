@@ -1,3 +1,5 @@
+todo("Figure out how bots could make words from a board that doesn't exist--Mari bug")
+
 /* Routines for manipulating a game board of `ROWS` x `COLS` *tiles*.
    The board includes information about the current selection. 
    
@@ -11,10 +13,6 @@
 /* Create a new board. The board is not initialized. Use `board_reset()`. */
 def make_board():
     const board = {
-        // Lower case q-decoded word and permutation number
-        // used to generate this board
-        seed: ∅,
-        
         // The tiles
         tile: make_array(xy(COLS, ROWS), make_tile(), deep_clone),
                 
@@ -22,13 +20,7 @@ def make_board():
         selection: [],
         
         // Chosen based on the point value of the current word in _check
-        selection_color: TILE.CENTER_SELECTED_COLOR,
-        
-        // Q-encoded. Identified by `board_search()`
-        word_list: [],
-        
-        // Q-encoded. Set version of word_list produced by `board_search()`
-        word_set: {}}
+        selection_color: TILE.CENTER_SELECTED_COLOR}
     
     return board
     
@@ -51,12 +43,13 @@ def board_find_good(board, game_type):
 
     const {board_string, word_array, seed} = make_good_board_string(board_rng)
     
-    // Convert to board
-    board.word_list = word_array
-    board.word_set = array_to_set(word_array)
-    assert(size(board.word_set) == size(word_array))
-    board.word_count = size(word_array)
-    board.seed = seed
+    // Convert to match object
+    match.word_list = word_array
+    match.word_set = array_to_set(word_array)
+    assert(size(match.word_set) == size(word_array))
+    match.word_count = size(word_array)
+    match.seed = seed
+    match.board_string = board_string
     for x < COLS:
         for tile at y in board.tile[x]:
             tile.letter = board_string[x + y * COLS]

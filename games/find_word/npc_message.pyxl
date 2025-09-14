@@ -47,7 +47,7 @@ def npc_message_hook()
     const message_height = 30
     const history_rect = get_history_rect()
         
-    set_transform(history_rect.corner + xy(0, history_rect.size.y - message_height - 8), ∅, 50)
+    set_transform(history_rect.corner + ½ xy(0, history_rect.size.y - message_height - 8), ∅, 50)
     
     // Play the open sound once, erasing the property afterwards
     if _npc_message.play_sound_args:
@@ -105,6 +105,5 @@ def npc_message_hook()
         play_sound(_npc_message.auto_close_play_sound_args)
             
         clear_npc_message()
-        todo("Animate closing the message")
     
     

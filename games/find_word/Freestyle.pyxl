@@ -259,7 +259,7 @@ def get_freestyle_board_dims():
     // Make the board smaller to make room for the free row.
     // The player may not notice as we blacked the screen
     // between rounds
-    const tile_size = if landscape() then ⌊85% tile_size⌋ else xy(TILE.EXTENT, TILE.EXTENT)
+    const tile_size = ⌊(if landscape() then 85% else 100%) * xy(TILE.EXTENT, TILE.EXTENT)⌋
     const gutter = ⌊tile_size.x / 8.8⌋
     const grid_size = xy(COLS, ROWS) * tile_size + xy(COLS - 1, ROWS - 1) * gutter
 

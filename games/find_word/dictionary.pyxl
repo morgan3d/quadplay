@@ -125,8 +125,9 @@ def score_word(word, pattern default word):
     if size(word) < DICTIONARY.MIN_WORD_LENGTH or not dictionary.all[word]:
         return 0
             
-    // Length multiplier (# tiles, not letters)
-    const multiplier = min(5, size(word) - DICTIONARY.MIN_WORD_LENGTH + 1) + clamp(0.25 (size(word) - 7), 0, 2.25)
+    // Length multiplier (# non-wildcard tiles, not letters)
+    const num_tiles = size(replace(pattern, WILDCARD_CHARACTER, ""))
+    const multiplier = min(5, num_tiles - DICTIONARY.MIN_WORD_LENGTH + 1) + clamp(0.25 (num_tiles - 7), 0, 2.25)
 
     let score = 0
     for letter in slice(pattern, 0, size(word)):
