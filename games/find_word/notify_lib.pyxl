@@ -89,7 +89,7 @@ def update_notifications()
             // Shrink
             α = clamp((duration_seconds - relative_time) / NOTIFY.EXIT_DURATION_SECONDS, 0%, 100%)
 
-        const rect = {pos: xy(0, 0), size: α * xy(204, 80)}
+        const rect = {pos: xy(0, 0), size: α * xy(214, 80)}
         
         if α > 0%:
             // Drop shadow
@@ -111,7 +111,7 @@ def update_notifications()
         
                 draw_text({
                     text: "{font:" + NOTIFY.TITLE_FONT + " {color:" + unparse(NOTIFY.HIGHLIGHT_COLOR) + " " + notification.title + "}{br}}" + notification.description,
-                    pos: xy(-½ rect.size.x + NOTIFY.SPRITE_WIDTH + 2 NOTIFY.PADDING, -10),
+                    pos: xy(-½ rect.size.x + NOTIFY.SPRITE_WIDTH + 2 NOTIFY.PADDING, 0),
                     font: NOTIFY.DESCRIPTION_FONT,
                     color: #000,
                     markup: true,

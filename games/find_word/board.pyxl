@@ -1,4 +1,4 @@
-todo("Figure out how bots could make words from a board that doesn't exist--Mari bug")
+todo("** Figure out how bots could make words from a board that doesn't exist")
 
 /* Routines for manipulating a game board of `ROWS` x `COLS` *tiles*.
    The board includes information about the current selection. 

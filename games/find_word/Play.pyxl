@@ -44,11 +44,6 @@ assert(not in_waiting_room)
 remove_all(competitor_array)
 insert_bots(competitor_array, NUM_BOTS)
 
-todo("** Bots generate impossible words")
-for competitor in competitor_array:
-    if competitor.avatar.name == "DrQ":
-        debug_print(competitor)
-
 play_sound(start_sound)
 
 last_countdown_sound_time = now()

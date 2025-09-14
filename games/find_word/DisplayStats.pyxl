@@ -184,6 +184,13 @@ def draw_content():
         draw_disk(pos + xy(-17, 5), 7, #999)
         draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 10 / sprite.size.x})
         
+        if touch.pressed_a and overlaps(touch.xy, {pos: pos, size: xy(WIDTH, 20)}) and not size(_notification_queue):
+            notify(
+                if entry.sprite_name == "<default>" 
+                  then player.avatar.sprite.x_flipped 
+                  else evaluate_constant_expression(entry.sprite_name),
+                name, entry.description, ∅, ∅, 8)
+        
         // Text
         y += draw_text({
             pos: pos,
