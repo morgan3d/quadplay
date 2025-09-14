@@ -34,7 +34,7 @@ Days Played Stat,26,"You can now track days played in Stats!",stats_sprite[0][0]
 Remix × 3,27,"New power: Use Remix 3× per match",ability_icon.remix
 Matches/Day Stat,28,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]
 See VIL More Frequently,29,SILENT,
-VIL Threatens,29,"I shall eviscerate your miniscule bovine and Australian fowl companions!",avatar_sprite[25][20]
+VIL Threatens,29,"I shall eviscerate your miniscule bovine and fowl companions!",avatar_sprite[25][20]
 Wild,30,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
