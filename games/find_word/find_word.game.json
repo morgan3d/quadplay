@@ -91,9 +91,10 @@
         "remix_recommended_sound": "quad://sounds/good-03.sound.json",
         "icon_sprite": "icon.sprite.json",
         "mzk_00_sound": "mzk-00.sound.json",
-        "speech_bubble_sprite": "speech-bubble.sprite.json"
+        "speech_bubble_sprite": "speech-bubble.sprite.json",
+        "caf_too_hard_sound": "caf-too-hard.sound.json"
     },
-    "version": "0.487",
+    "version": "0.488",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

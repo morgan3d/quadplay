@@ -35,24 +35,27 @@ let in_waiting_room
 
 const player = make_player()
 
-/* Global match state - contains non-UI board data */
-const match = {
-    // Lower case q-decoded word and permutation number
-    // used to generate this board
-    seed: ∅,
+
+def make_match(seed, board_string, word_list):
+    return {
+        // Lower seed number and permutation number
+        // used to generate this board
+        seed: seed,
+        
+        // Q-encoded. Identified by `board_search()`
+        word_list: word_list,        
     
-    // Q-encoded. Identified by `board_search()`
-    word_list: [],
-    
-    // Q-encoded. Set version of word_list produced by `board_search()`
-    word_set: {},
-    
-    // Count of words in word_list
-    word_count: 0,
-    
-    // Raw board string used for generation. 16 characters, no spaces.
-    board_string: ∅
-}
+        // Q-encoded. Set version of word_list produced by `board_search()`
+        word_set: array_to_set(word_list),
+
+        // Raw board string used for generation. 16 characters, no spaces.
+        board_string: board_string}
+
+
+/* Global match state. No UI data. See also player.board for the GUI state
+   of the board. */
+let match = make_match(∅, ∅, []) 
+
 
 // When debugging, do not make a reset player at a reasonable level re-do basic achievements
 if DEBUG.FORCE_LEVEL > 3:

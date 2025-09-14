@@ -485,17 +485,17 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
         else (if player.has_ability["Remix × 2"] then 2
         else (if player.has_ability["Remix"] then 1 else 0))))))))
     
+    // Tutorial or debugging
     if board_space_string:   
         for y < ROWS:
             for x < COLS:
-                // COLS + 1 = there are spaces in the board_space_string
+                // COLS + 1 because there are spaces in the board_space_string
                 player.board.tile[x][y].letter = board_space_string[x + y * (COLS + 1)]
         
-        // Collapse out the spaces
+        // Collapse out the spaces and store that as the seed
         match.seed = replace(board_space_string, " ", "")
         match.word_list = if skip_word_search then [] else board_string_find_all_words(match.seed)
         match.word_set = array_to_set(match.word_list)
-        match.word_count = size(match.word_list)
     else:
         board_find_good(player.board, game_type)
     

@@ -39,17 +39,11 @@ def board_find_good(board, game_type):
             // to make it robust
             ⌊1 + (utc_now() + 10) / GLOBAL_PERIOD⌋)
     
-    const board_rng = make_random(rng_seed)
-
-    const {board_string, word_array, seed} = make_good_board_string(board_rng)
+    const {board_string, word_array, seed} = make_good_board_string(make_random(rng_seed))
     
     // Convert to match object
-    match.word_list = word_array
-    match.word_set = array_to_set(word_array)
-    assert(size(match.word_set) == size(word_array))
-    match.word_count = size(word_array)
-    match.seed = seed
-    match.board_string = board_string
+    match = make_match(seed, board_string, word_array)
+    
     for x < COLS:
         for tile at y in board.tile[x]:
             tile.letter = board_string[x + y * COLS]
