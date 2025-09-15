@@ -202,7 +202,7 @@ def draw_leaderboard()
     draw_text({…args, text: "Words", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.COUNT_X, 7)})
     
     if player.has_ability["Freestyle"]:
-        draw_text({…args, text: "Free", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 7)})
+        draw_text({…args, text: "Freestyle", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X + 18, 7)})
     draw_text({…args, text: "Best Word", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, 7)})
 
     // Content

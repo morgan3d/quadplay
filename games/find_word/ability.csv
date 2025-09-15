@@ -43,8 +43,8 @@ Meet Dr. Quandary,40,"Salutations, I'm Quandary! Justifiably perplexed and ajumb
 Remix × 5,48,"New power: Use Remix 5× per match",ability_icon.remix
 See VIL More Frequently,49,SILENT,
 Aura,50,"Give lower-level players bonus XP based on your score",icon_sprite.aura
-Remix × 6,60,"New power: Use Remix 6× per match",ability_icon.remix
-Enhanced Aura,70,"Your aura is now more powerful and gives lower-level players a greater XP bonus",icon_sprite.aura
-Remix × 8,75,"New power: Use Remix 8× per match",ability_icon.remix
-Remix × 10,80,"New power: Use Remix 10× per match",ability_icon.remix
-See VIL Always,80,SILENT
+Remix × 6,55,"New power: Use Remix 6× per match",ability_icon.remix
+Enhanced Aura,60,"Your aura is now more powerful and gives lower-level players a greater XP bonus",icon_sprite.aura
+See VIL Always,60,SILENT
+Remix × 8,65,"New power: Use Remix 8× per match",ability_icon.remix
+Remix × 10,70,"New power: Use Remix 10× per match",ability_icon.remix

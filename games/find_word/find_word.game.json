@@ -94,7 +94,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.509",
+    "version": "0.510",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -224,7 +224,7 @@
                         },
                         "point": {
                             "type": "number",
-                            "value": 0.38
+                            "value": 0.39
                         },
                         "badge_per_competitor": {
                             "type": "number",
@@ -245,7 +245,7 @@
                         },
                         "unique_word_length_exponent": {
                             "type": "number",
-                            "value": 1.8
+                            "value": 2.0
                         }
                     }
                 },
