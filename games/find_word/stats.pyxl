@@ -182,6 +182,8 @@ def stats_load():
             
             // Upgrade
             todo("Legacy upgrade: Remove after September")
+            if is_nan(day.freestyle_points):
+                day.freestyle_points = 0               
             if day.best_wild_word_points ≠ ∅:
                 day.best_freestyle_points = day.best_wild_word_points
                 remove_key(day, "best_wild_word_points")
@@ -318,14 +320,14 @@ def stats_update_from_competitor(stats, competitor, num_competitors, joined_late
     if not joined_late:
         stats_entry.words += N
         stats_entry.points += competitor.score
-        stats_entry.freestyle_points += competitor.freestyle_points
+        stats_entry.freestyle_points += competitor.best_freestyle_points
                 
         if competitor.score:
             // Don't count if they didn't score
             ++stats_entry.matches
         
         if competitor.best_freestyle_points:
-            // Don't count if they didn't score
+            // Don't count the match against normalization if they didn't score freestyle points
             ++stats_entry.freestyle_matches
 
     // Update badge tracking    
