@@ -16,9 +16,7 @@ def player_achieve(player, name, make_notification default false):
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */
 def make_player():
-    const stats = stats_load()
-    
-    todo("Rename the wild_word_* to freestyle_*")
+    const stats = stats_load()    
     
     return {
         // The tiles
@@ -81,10 +79,6 @@ def make_player():
         
         wild_tile: make_tile(WILDCARD_CHARACTER),
 
-        // Needed for stats tracking. 
-        wild_word_points: 0,
-        wild_word_text: "",
-        
         // Determined by most recent input method.
         // Show button prompts and cursor when using gamepad
         using_gamepad: false,
@@ -96,6 +90,18 @@ def make_player():
 
 def player_free_contains(player, word):
     return contains(player.history.free, {word: word}, "word")
+
+
+
+/* Return the word, maybe including a wildcard character, represented
+   by the player's current `free_row` tiles */
+def player_free_row_pattern(player):
+    let pattern = ""
+    
+    for tile at t in player.free_row:
+        pattern += tile.letter
+        
+    return pattern
 
 
 
@@ -382,7 +388,7 @@ def player_update(player, board_pos, angle default 0°, allow_selection default 
         
         player_deselect_all(player)    
 
-    player_update_board(player, board_pos, angle, allow_selection)
+    player_draw_board(player, board_pos, angle, allow_selection)
 
     const time_left = draw_timer(board_pos)
     player_draw_score(player, board_pos, time_left)
@@ -393,7 +399,7 @@ def player_update(player, board_pos, angle default 0°, allow_selection default 
 
 
 /* Compute the position of the center of the board based on the screen size */
-def get_board_pos():    
+def get_player_board_pos():    
     // Our board has some content at the top, so don't switch
     // to portrait until all of the UI will be visible
     if landscape():
@@ -420,7 +426,7 @@ def get_board_pos():
    : If true show and permit selection via touch/gamepad
      
 */
-def player_update_board(player, pos, angle, allow_selection)
+def player_draw_board(player, pos, angle, allow_selection)
 & preserving_transform
 & with gamepad, background_color in player:
     
@@ -512,8 +518,6 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
     player.wild_tile.used = false
-    player.wild_word_points = 0
-    player.wild_word_text = ""
     player.remix_list = ∅
     player.remix_uses_left = (
         if player.has_ability["Remix × 10"] then 10
@@ -647,7 +651,7 @@ def player_selected_word(player):
 
 
 /* Draw a mini version of the game board on the intermission modes. 
-   See also `player_update_board()` */
+   See also `player_draw_board()` */
 def player_draw_mini(player, pos)
 & preserving_transform:
     compose_transform(pos)

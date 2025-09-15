@@ -24,8 +24,10 @@ def make_empty_stats_entry():
         
         // See note in competitor.pyxl
         // Includes the wildcard
-        best_wild_word_text: "",
-        best_wild_word_points: 0,
+        //
+        // Was "best_wild_word_points/text"
+        best_freestyle_points: 0,
+        best_freestyle_text: "",
 
         best_score: 0,
 
@@ -137,9 +139,7 @@ def decompress_word_list(string):
         if ends_with(text, "$"):
             text = slice(text, 0, size(text) - 1)
             push(result, text + "S")
-        else if ends_with(text, "&") or ends_with(text, "§"):
-            // § is legacy support. Avoiding unicode characters
-            // increases our compression options
+        else if ends_with(text, "&"):
             text = slice(text, 0, size(text) - 1)
             push(result, text + "ES")
             
@@ -170,7 +170,7 @@ def stats_load():
         // Template for missing fields
         const empty = make_empty_stats_entry()
         
-        // Decode all entries
+        // Decode all entries (this includes date = "lifetime")
         for day at date in stats:
             day.xp = decode_xp(day.xp)
             day.word_list = decompress_word_list(day.word_list default "")
@@ -179,6 +179,14 @@ def stats_load():
             for v at k in empty:
                 day[k] = day[k] default deep_clone(v)
             
+            // Upgrade
+            todo("Legacy upgrade: Remove after September")
+            if day.best_wild_word_points ≠ ∅:
+                day.best_freestyle_points = day.best_wild_word_points
+                remove_key(day, "best_wild_word_points")
+            if day.best_wild_word_text ≠ ∅:
+                day.best_freestyle_text = day.best_wild_word_text
+                remove_key(day, "best_wild_word_text")
             /*            
             // Remove unused fields on old save files
             let valid = keys(empty)

@@ -228,8 +228,8 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
             push(xp_array,
             {
                 text: "" + size(word_list) + " × " + xp_per_word + " xp / " + 
-                    (if num_tiles > 4 then "{color: HIGHLIGHT_COLOR " else "") + num_tiles + (if num_tiles > 4 then "}" else "") + 
-                    "-tile Word" + 
+                    (if num_tiles > 4 then "{color: HIGHLIGHT_COLOR " else "") + num_tiles  + 
+                    "-tile" + (if num_tiles > 4 then "}" else "") + " Word" + 
                     (if size(word_list) > 1 then "s" else ""),
                 xp: size(word_list) * xp_per_word,
                 xp_color: if num_tiles > 4 then HIGHLIGHT_COLOR else ∅,

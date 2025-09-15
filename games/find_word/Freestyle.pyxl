@@ -2,22 +2,10 @@ Freestyle
 ════════════════════════════════════════════════════════════════════════
 let selection_color = TILE.CENTER_SELECTED_COLOR
 
-/* Return the word, maybe returning a wildcard character, represented
-   by the player's current `free_row` tiles */
-def free_row_pattern(player):
-    let pattern = ""
-    
-    for tile at t in player.free_row:
-        pattern += tile.letter
-        
-    return pattern
-
 
 
 /* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
-   See also `player_selection_change_callback()` for the `Play` mode.
-   
-   Also updates player.wild_word_text and player.wild_word_points */
+   See also `player_selection_change_callback()` for the `Play` mode. */
 def player_free_selection_change_callback(player):    
     // Clean up the list for any removals
     player_remove_destroyed_freestyle_words(player)
@@ -28,7 +16,7 @@ def player_free_selection_change_callback(player):
     let best_new_color = ∅
     
     // Find all words matching this sequence in the dictionary
-    const pattern = free_row_pattern(player)
+    const pattern = player_free_row_pattern(player)
     for word in dictionary_search(pattern):
         if player.already_found[word] or player_free_contains(player, word):
             // Show that we've already seen these just-completed words by 
@@ -47,15 +35,11 @@ def player_free_selection_change_callback(player):
         player_spawn_free_score_animation(player, best_new_word, best_new_color)
         play_points_sound(max_points)
         player_achieve(player, "Freestyle Word")
-    
-    player.wild_word_text = q_decode(pattern)
 
     // Choose the color based on the best selection
-    player.wild_word_points = 0
     max_points = 0
     for points in entry in player.history.free:
         max_points = max(max_points, points)
-        player.wild_word_points += points
     
     return (
         if max_points > 0 
@@ -105,7 +89,7 @@ def player_spawn_free_score_animation(player, word, color):
 
 /* Remove any previous entry of player.history.free that does not belong */
 def player_remove_destroyed_freestyle_words(player):
-    const pattern = free_row_pattern(player)
+    const pattern = player_free_row_pattern(player)
     
     def maybe_remove(entry):
         if not wildcard_starts_with(pattern, entry.word):
@@ -266,7 +250,7 @@ def get_freestyle_board_dims():
 /* Draw the board with used tiles shown as blank */
 def draw_freestyle_board(pos)
 & preserving_transform:
-    // Duplicates some `player_update_board()` code because it has to draw
+    // Duplicates some `player_draw_board()` code because it has to draw
     // the board in a special way to make it smaller and have missing tiles
 
     const [grid_size, tile_size, gutter] = get_freestyle_board_dims()
@@ -341,7 +325,7 @@ if player.using_gamepad:
     if target.x ≥ 0 and target.x < COLS and target.y ≥ 0 and target.y < ROWS:
         player.cursor_tile_index = target
 
-const board_pos = get_board_pos()
+const board_pos = get_player_board_pos()
 
 draw_timer(board_pos)
 player_draw_score(player, board_pos)

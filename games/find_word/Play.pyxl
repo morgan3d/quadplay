@@ -86,7 +86,7 @@ const time_left = end_time - frame_utc_now
 // Disallow rotation if the mode is about to end
 const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
 
-player_update(player, get_board_pos(), ∅, allow_rotate)
+player_update(player, get_player_board_pos(), ∅, allow_rotate)
 
 handle_buttons(
     ability_icon.freestyle, "Freestyle", enter_freestyle,

@@ -368,7 +368,7 @@ def handle_buttons(
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {
-            pos: get_board_pos() + xy(-4, -16) + xy(½, -½) get_player_board_pixel_size(), 
+            pos: get_player_board_pos() + xy(-4, -16) + xy(½, -½) get_player_board_pixel_size(), 
             size: 140% aux_sprite.size}
 
         if aux_callback and touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:

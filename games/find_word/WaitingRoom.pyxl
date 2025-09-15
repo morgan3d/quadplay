@@ -24,7 +24,7 @@ set_post_effects({color: #CFC, color_blend: "multiply"})
 frame
 ────────────────────────────────────────────────────────────────────────
 
-player_update(player, get_board_pos(), ∅, true)
+player_update(player, get_player_board_pos(), ∅, true)
 
 handle_buttons(
     ability_icon.freestyle, "Freestyle", ∅,

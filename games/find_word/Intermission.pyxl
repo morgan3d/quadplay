@@ -284,7 +284,7 @@ def draw_leaderboard()
             if freestyle_word then 
                 (if player.has_ability["Wild"] then
                     // Show the real pattern
-                    competitor.best_wild_word_text else
+                    competitor.best_freestyle_text else
                     // Show the best word resulting from the pattern
                     competitor.freestyle_word_list[0].word)
             else 

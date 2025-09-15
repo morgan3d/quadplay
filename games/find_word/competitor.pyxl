@@ -43,8 +43,9 @@ def make_competitor():
         // This is for the entire freestyle sequence, including
         // wildcard if available. It is poorly named for historical
         // reasons and current locked into the stats under this name
-        best_wild_word_points: 0,
-        best_wild_word_text: "",
+        
+        best_freestyle_points: 0,
+        best_freestyle_text: "",
 
         best_rare_points: 0,
         best_rare_text: "",
@@ -79,8 +80,7 @@ def make_player_competitor():
         …make_competitor(),
         avatar: player.avatar,
         score: player.score,
-        best_wild_word_points: player.wild_word_points,
-        best_wild_word_text: player.wild_word_text }
+        best_freestyle_text: q_decode(player_free_row_pattern(player))}
 
     for list in [
         [player.history.list, competitor.word_list],

@@ -17,7 +17,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 angle -= ROTATION_SPEED
 
-player_update(player, get_board_pos(), angle, false)
+player_update(player, get_player_board_pos(), angle, false)
 
 handle_buttons(
     ability_icon.freestyle, "Freestyle", ∅,

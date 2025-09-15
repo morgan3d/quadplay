@@ -196,7 +196,7 @@ draw_background_words()
 // Spin after the intro
 const θ = -0.2° max(0, mode_frames - INTRO_DURATION)
 const pos = ½ SCREEN_SIZE
-player_update_board(player, pos, θ, false)
+player_draw_board(player, pos, θ, false)
 draw_rect(pos, get_player_board_pixel_size() + 22, player.selection_color, ∅, θ, -1) 
 
 // How far to slide the buttons, 0 if the intro has been skipped

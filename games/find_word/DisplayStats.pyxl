@@ -108,7 +108,7 @@ def draw_content():
     const best_row_array = [
         {ability: "Best Word Stat", title: "Best Word", prefix: "best_word"},
         {ability: "Freestyle",      title: "Best Free Word", prefix: "best_freestyle_word"},
-        {ability: "Freestyle",      title: "Best Freestyle", prefix: "best_wild_word"}]
+        {ability: "Freestyle",      title: "Best Freestyle", prefix: "best_freestyle"}]
         
     for ability, title, prefix in row in best_row_array:
         if player.has_ability[ability]:

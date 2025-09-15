@@ -214,7 +214,7 @@ def history_update(history, history_rect)
 
 /* Gets the history rect in `Play` and `Freestyle` modes. */
 def get_history_rect():
-    const board_pos = get_board_pos()
+    const board_pos = get_player_board_pos()
     const board_size = get_player_board_pixel_size()
 
     if landscape():
