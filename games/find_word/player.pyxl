@@ -119,16 +119,16 @@ def player_free_contains(player, word):
     return contains(player.history.free, {word: word}, "word")
 
 
-/* For debugging 
+
 def player_board_to_string(player, line_suffix default ""):
     let s = ""
     for y < ROWS:
         for x < COLS:
-            s += board.tile[x][y].letter
+            s += player.tile[x][y].letter
         if y ≠ ROWS - 1:
             s += line_suffix
     return s
-    */
+   
     
 
 /* True if these xy() tile integer indices are adjacent */
