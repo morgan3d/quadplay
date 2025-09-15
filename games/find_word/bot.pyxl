@@ -55,7 +55,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
             }}
     
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
-        competitor.avatar.level = descriptor.level default clamp(⌈300 descriptor.base_ability^(1.2)⌉, 1, 50)
+        competitor.avatar.level = descriptor.level default clamp(⌈300 descriptor.base_ability^(1.2)⌉, 1, ABILITY_TABLE.Aura.level - 1)
         
         const bot_rng = make_random(descriptor.name + match_shift)
 

@@ -16,5 +16,5 @@ LEW,avatar_sprite[39][2],35%,45%,11,15,__XX__,common,false,true,false
 jr,avatar_sprite[9][18],3%,89%,18,6,XX_X_X,common,false,false,false
 FLA,avatar_sprite[9][12],2%,92%,9,14,X_XX_X,common,false,false,false
 Nik,avatar_sprite[8][18],7%,71%,13,21,XX_X_X,common,false,false,false
-RON,avatar_sprite[8][16],3%,86%,5,18,X_X_X_,common,false,false,false
-CPV,avatar_sprite[21][2],8%,92%,12,1,_X_X_X,all,false,false,false
+RON,avatar_sprite[8][16],4%,86%,5,18,X_X_X_,common,false,false,false
+CPU,avatar_sprite[21][2],8%,92%,12,1,_X_X_X,all,false,false,false
