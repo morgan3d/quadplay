@@ -19,33 +19,6 @@ def make_board(seed, board_string, word_list):
 
 
 
-/* Returns a selection array [xy(), …] that matches the word, or ∅ if the word 
-   does not appear in this board. The word is all caps and NOT Q-encoded */
-def board_find_unencoded_word(board, unencoded_word):
-    // Workaround bug
-    if not unencoded_word: return ∅
-
-    let path = ∅
-    const encoded = q_encode(unencoded_word)
-
-    def visit(word, index, base16_path):
-        if not starts_with(encoded, word):
-            return true
-        else if word == encoded:
-            path = []
-            // Convert the base36 path into an xy() path
-            for d in base16_path:
-                const i = HEX_TO_DEC[d]
-                push(path, xy(i mod COLS, ⌊i / COLS⌋))
-                
-            return true
-            
-    board_string_visit_subpaths(board_to_string(board), visit)
-    
-    return path
-
-
-
 /* Computes and returns all n-tile sequences that are possible on this board. 
    Used by the solver.
    

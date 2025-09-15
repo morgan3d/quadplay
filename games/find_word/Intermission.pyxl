@@ -458,4 +458,3 @@ update_intermission_countdown()
 leave
 ────────────────────────────────────────────────────────────────────────
 disconnect_from_network()
-

@@ -88,11 +88,38 @@ def make_player():
 
 
 
+/* Returns a selection array [xy(), …] that matches the word, or ∅ if the word 
+   does not appear in this board. The word is all caps and NOT Q-encoded */
+def player_find_unencoded_word(player, unencoded_word):
+    // Workaround bug
+    if not unencoded_word: return ∅
+
+    let path = ∅
+    const encoded = q_encode(unencoded_word)
+
+    def visit(word, index, base16_path):
+        if not starts_with(encoded, word):
+            return true
+        else if word == encoded:
+            path = []
+            // Convert the base36 path into an xy() path
+            for d in base16_path:
+                const i = HEX_TO_DEC[d]
+                push(path, xy(i mod COLS, ⌊i / COLS⌋))
+                
+            return true
+            
+    board_string_visit_subpaths(player_board_to_string(player), visit)
+    
+    return path
+
+
+
 def player_free_contains(player, word):
     return contains(player.history.free, {word: word}, "word")
 
 
-/* For debugging */
+/* For debugging 
 def player_board_to_string(player, line_suffix default ""):
     let s = ""
     for y < ROWS:
@@ -101,7 +128,7 @@ def player_board_to_string(player, line_suffix default ""):
         if y ≠ ROWS - 1:
             s += line_suffix
     return s
-    
+    */
     
 
 /* True if these xy() tile integer indices are adjacent */
