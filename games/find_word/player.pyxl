@@ -92,6 +92,30 @@ def player_free_contains(player, word):
     return contains(player.history.free, {word: word}, "word")
 
 
+/* For debugging */
+def player_board_to_string(player, line_suffix default ""):
+    let s = ""
+    for y < ROWS:
+        for x < COLS:
+            s += board.tile[x][y].letter
+        if y ≠ ROWS - 1:
+            s += line_suffix
+    return s
+    
+    
+
+/* True if these xy() tile integer indices are adjacent */
+def _adjacent(A, B):
+    return XY_DISTANCE(A, B) < 1.5
+    
+    
+
+/* Returns the center of the tile at index in pixels relative to the
+   grid upper left corner */
+def _index_to_pos(index):
+    return (index * (TILE.GUTTER * xy(min(index.x, 1), min(index.y, 1)) + TILE.EXTENT)
+           - ½ xy(COLS - 1, ROWS - 1) * (TILE.EXTENT + TILE.GUTTER))
+
 
 /* Return the word, maybe including a wildcard character, represented
    by the player's current `free_row` tiles */

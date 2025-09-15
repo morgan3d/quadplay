@@ -1,4 +1,6 @@
-todo("** Figure out how bots could make words from a board that doesn't exist")
+/* Functions that operate on 16-letter row-major `board_string` and the 
+   logic for finding a good `board` object */
+
 
 def make_board(seed, board_string, word_list):
     return {
@@ -42,35 +44,6 @@ def board_find_unencoded_word(board, unencoded_word):
     
     return path
 
-
-
-/* For debugging */
-def board_to_string(board, line_suffix default ""):
-    let s = ""
-    for y < ROWS:
-        for x < COLS:
-            s += board.tile[x][y].letter
-        if y ≠ ROWS - 1:
-            s += line_suffix
-    return s
-    
-    
-
-/* True if these xy() tile integer indices are adjacent */
-def _adjacent(A, B):
-    return XY_DISTANCE(A, B) < 1.5
-    
-    
-
-/* Returns the center of the tile at index in pixels relative to the
-   grid upper left corner */
-def _index_to_pos(index):
-    return (index * (TILE.GUTTER * xy(min(index.x, 1), min(index.y, 1)) + TILE.EXTENT)
-           - ½ xy(COLS - 1, ROWS - 1) * (TILE.EXTENT + TILE.GUTTER))
-
-
-/* Functions that operate on 16-letter row-major board strings and the 
-   logic for finding a good board */
 
 
 /* Computes and returns all n-tile sequences that are possible on this board. 
@@ -318,6 +291,7 @@ def make_good_board_string(board_rng):
         // Loop for shuffling
         for permute_number < GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES:
             
+            word_array = ∅ 
             const gen = make_random_board_string(seed_base, permute_number)
             board_string = gen.board_string
             seed = seed_base + "." + permute_number
@@ -373,7 +347,6 @@ def make_good_board_string(board_rng):
             
             const valuable_letters = keys(valuable_letter_table)
             valuable_letter_long_count = clone(valuable_letter_table)
-        
             
             // Iterate through words, rating them for each criterion
             short_word_count = 0
@@ -448,7 +421,11 @@ def make_good_board_string(board_rng):
         else:
             // Try again
             seed_base = ∅
-    
+
+    // Some paths above skip over generating the word array, so we have to fill it in here    
+    if not word_array:
+        word_array = board_string_find_all_words(board_string)
+
     sort(word_array, size_comparator)
     
     if DEBUG.BOARD_SEARCH:
@@ -474,7 +451,8 @@ def make_good_board_string(board_rng):
    This process is entirely deterministic based on
    the input. 
    
-   Returns the vowel count. */
+   Returns the `{board_string, vowels}`, where
+   `vowels` is a count of AEIOU. */
 def make_random_board_string(seed_base, permute_number default 0):
     const rnd = make_random(seed_base)
     
