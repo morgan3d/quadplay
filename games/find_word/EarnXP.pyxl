@@ -224,7 +224,7 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
 
     for word_list at num_tiles in words_by_tile_length:
         if size(word_list):
-            const xp_per_word = ⌈(num_tiles - 2)² * XP.VALUE.unique_word_per_tile⌉
+            const xp_per_word = ⌈(num_tiles - 2)^XP.VALUE.unique_word_length_exponent * XP.VALUE.unique_word_per_tile⌉
             push(xp_array,
             {
                 text: "" + size(word_list) + " × " + xp_per_word + " xp / " + 
@@ -296,7 +296,7 @@ array_to_set(discovered_word_list, 1, player.vocabulary)
 
 // Save the updated stats. Unlocked abilities are stored as part
 // of the ability notification process.
-if not DEBUG.INTERMISSION and not DEBUG.EARN_XP:
+if not DEBUG.EARN_XP:
     stats_save(player.stats)
 
 

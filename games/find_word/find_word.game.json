@@ -94,7 +94,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.507",
+    "version": "0.508",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -242,6 +242,10 @@
                             "description": "The first two letters don't count. The length will be squared.",
                             "type": "number",
                             "value": "1.25"
+                        },
+                        "unique_word_length_exponent": {
+                            "type": "number",
+                            "value": 1.8
                         }
                     }
                 },
