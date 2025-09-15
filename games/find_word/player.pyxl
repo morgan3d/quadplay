@@ -750,7 +750,7 @@ def player_select_word(player, word, color default HIGHLIGHT_COLOR):
     assert(word)
     // In the case of a word that is not findable (because it uses wild card tiles
     // for example), becomes []
-    const selection = board_find_unencoded_word(player, word)
+    const selection = player_find_unencoded_word(player, word)
     if not selection or q_decode(player_selected_word(player)) == word: return
 
     player_deselect_all(player)

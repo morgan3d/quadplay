@@ -128,7 +128,7 @@ def _board_string_visit_subpaths_helper(board_string, index, used_mask, word, vi
 
 
 /* Return true if `word` can be found in `board_string`.
-   See also `board_find_unencoded_word()`*/
+   See also `player_find_unencoded_word()`*/
 def board_string_validate_word(board_string, word):
     let found = false
         
