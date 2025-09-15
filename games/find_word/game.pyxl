@@ -70,11 +70,10 @@ def draw_background_words():
     if not draw_background_words.array:
         // Initialize the background words
         draw_background_words.array = make_array(20, "")
-        const dict_array = if player.avatar.level < 10 then dictionary_array.common else dictionary_array.all
+        const dict_array = if player.avatar.level < 15 then dictionary_array.common else dictionary_array.all
         for y < size(draw_background_words.array):
             while size(draw_background_words.array[y]) < 250:
                 draw_background_words.array[y] += " " + random_safe_word(dict_array, ∅, min(7, 3 + ⌊¼ player.avatar.level⌋), min(5 + ⌊⅓ player.avatar.level⌋, 16))
-
     
     for s at y in draw_background_words.array:
         draw_text({
@@ -85,7 +84,6 @@ def draw_background_words():
             x_align: "left",
             z: -2})
     
-
 
 /* Updated once per frame by a frame hook. This ensures that there are no 
    race conditions within a frame because the time can only change 
