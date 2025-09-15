@@ -165,7 +165,7 @@ prev_level = player.avatar.level
 last_level_displayed = prev_level
 last_xp_row_displayed = 0
 
-const discovered_word_list = stats_update(player.stats, player_competitor, size(competitor_array), player.joined_late)
+const discovered_word_list = stats_update_from_competitor(player.stats, player_competitor, size(competitor_array), player.joined_late)
 
 // Compute the XP awards
 xp_array = [
@@ -291,7 +291,7 @@ push(xp_array, {text: "Match Total", xp: new_xp - prev_xp, color: HIGHLIGHT_COLO
 player.avatar.level = xp_to_level(new_xp)
 
 // Update the net vocabulary. Vocabulary was originally computed on load of stats
-// so is not updated by stats_update.
+// so is not updated by stats_update_from_competitor.
 array_to_set(discovered_word_list, 1, player.vocabulary)
 
 // Save the updated stats. Unlocked abilities are stored as part

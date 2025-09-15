@@ -37,6 +37,7 @@ def make_empty_stats_entry():
 
         points: 0,
         
+        // Total freestyle points, vs. max
         freestyle_points: 0,
         
         // Needed for normalizing freestyle correctly
@@ -236,7 +237,7 @@ def stats_merge_previous_days(stats)
             if size(day[field]) > size(lifetime[field]):
                 lifetime[field] = day[field]
         
-        for field in ["best_word", "best_freestyle_word", "best_wild_word"]:
+        for field in ["best_word", "best_freestyle_word", "best_freestyle"]:
             if day[field + "_points"] > lifetime[field + "_points"]:
                 lifetime[field + "_points"] = day[field + "_points"]
                 lifetime[field + "_text"] = day[field + "_text"]
@@ -289,7 +290,7 @@ def today_date_string(update default false):
 
     Returns a list of new unique words and the XP for badges and words.
 */
-def stats_update(stats, competitor, num_competitors, joined_late):
+def stats_update_from_competitor(stats, competitor, num_competitors, joined_late):
 
     // We may have passed midnight, so roll up any previous days
     // if needed before updating today's entry
@@ -303,7 +304,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
         if size(competitor[field]) > size(stats_entry[field]):
             stats_entry[field] = competitor[field]
 
-    for field in ["best_word", "best_freestyle_word", "best_wild_word"]:
+    for field in ["best_word", "best_freestyle_word", "best_freestyle"]:
         if competitor[field + "_points"] > stats_entry[field + "_points"]:
             stats_entry[field + "_points"] = competitor[field + "_points"]
             stats_entry[field + "_text"]   = competitor[field + "_text"] 
@@ -323,7 +324,7 @@ def stats_update(stats, competitor, num_competitors, joined_late):
             // Don't count if they didn't score
             ++stats_entry.matches
         
-        if competitor.freestyle_points:
+        if competitor.best_freestyle_points:
             // Don't count if they didn't score
             ++stats_entry.freestyle_matches
 

@@ -25,7 +25,9 @@ def make_competitor():
         // Properties that are immediately overridden on on construction
         avatar: ∅,
         score: 0,
-        freestyle_points: 0,
+        
+        // Named "best" to align with stats
+        best_freestyle_text: "",
         word_list: [],
         freestyle_word_list: [],
         
@@ -41,11 +43,8 @@ def make_competitor():
         best_freestyle_word_text: "",
 
         // This is for the entire freestyle sequence, including
-        // wildcard if available. It is poorly named for historical
-        // reasons and current locked into the stats under this name
-        
+        // wildcard if available. Named "best" to align with stats
         best_freestyle_points: 0,
-        best_freestyle_text: "",
 
         best_rare_points: 0,
         best_rare_text: "",
@@ -130,9 +129,8 @@ def competitor_analyze(competitor_array):
                     competitor["longest_" + prefix + "text"] = text
 
                 if prefix == "freestyle_":                        
-                    competitor.freestyle_points += points       
+                    competitor.best_freestyle_points += points       
 
-    todo("freestyle_points == best_wild_points, so remove one")
     
     // Count at which a word is rare
     const rare_threshold = max(1, ⌊⅙ size(competitor_array)⌋)

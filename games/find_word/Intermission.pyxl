@@ -275,8 +275,8 @@ def draw_leaderboard()
         draw_text({…text_args, text: size(competitor.word_list) + size(competitor.freestyle_word_list), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.COUNT_X, 0), x_align: "right"})
 
         // Freestyle points
-        if player.has_ability["Freestyle"] and competitor.freestyle_points:
-            draw_text({…text_args, text: format_number(competitor.freestyle_points, "commas"), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 0), x_align: "right"})
+        if player.has_ability["Freestyle"] and competitor.best_freestyle_points:
+            draw_text({…text_args, text: format_number(competitor.best_freestyle_points, "commas"), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 0), x_align: "right"})
 
         // Best word
         const freestyle_word = (show_freestyle_word and size(competitor.freestyle_word_list))
