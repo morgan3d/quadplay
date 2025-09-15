@@ -27,7 +27,6 @@ def insert_bots(competitor_array, max_non_npc_bots):
     
     /* If vocabulary is specified, the bot is limited to that vocabulary 
        (except for Moo).
-       
        Returns the competitor. */
     def maybe_add_bot_competitor(descriptor):
         assert(descriptor and descriptor.sprite and descriptor.name)
@@ -56,7 +55,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
             }}
     
         competitor.avatar.color = avatar_compute_color(competitor.avatar.sprite)
-        competitor.avatar.level = descriptor.level default clamp(⌈140 descriptor.base_ability^(1.3)⌉, 1, 40)
+        competitor.avatar.level = descriptor.level default clamp(⌈300 descriptor.base_ability^(1.2)⌉, 1, 50)
         
         const bot_rng = make_random(descriptor.name + match_shift)
 
@@ -73,10 +72,12 @@ def insert_bots(competitor_array, max_non_npc_bots):
             // Wraparound hours case
             (descriptor.last_hour ≤ descriptor.first_hour and
              hour > descriptor.last_hour and
-             hour < descriptor.first_hour)):
-            
-            todo("** Minute phase")
-            
+             hour < descriptor.first_hour)
+             
+             or
+             
+             descriptor.minute_mask[⌊minute / 10⌋] ≠ "X"):
+                        
             if DEBUG.BOTS: debug_print("Bot " + descriptor.name + " is not available now")
             return
         
