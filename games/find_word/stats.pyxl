@@ -1,3 +1,5 @@
+todo("best remix, words/remix stat")
+
 /* A `stats` object contains `{lifetime: stats_entry, <date>: stats_entry, …, word_list: []}` */
 def make_empty_stats_entry():
     return {

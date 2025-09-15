@@ -1,5 +1,10 @@
 /* Common code across modes. Mostly UI and timing. 
 
+BOARD DATA CONCEPTS:
+- board_string: Raw 16-character string (no spaces) representing tile letters, e.g., "FINDWORDALLLNITE"
+- board_space_string: Formatted version with spaces between rows, e.g., "FIND WORD ALLL NITE"  
+- board (currently `match`): Global game state containing board_string, word_list, word_set, and seed. This is the "model" of an MVC
+- player: Contains UI state for board interaction (tile, selection, selection_color) as direct fields. This is the "view" and "controller" of an MVC
 
 Button| Action
 ------|----------------------
@@ -35,26 +40,9 @@ let in_waiting_room
 
 const player = make_player()
 
-
-def make_match(seed, board_string, word_list):
-    return {
-        // Lower seed number and permutation number
-        // used to generate this board
-        seed: seed,
-        
-        // Q-encoded. Identified by `board_search()`
-        word_list: word_list,        
-    
-        // Q-encoded. Set version of word_list produced by `board_search()`
-        word_set: array_to_set(word_list),
-
-        // Raw board string used for generation. 16 characters, no spaces.
-        board_string: board_string}
-
-
-/* Global match state. No UI data. See also player.board for the GUI state
+/* Global board state. No UI data. See also player for the GUI state
    of the board. */
-let match = make_match(∅, ∅, []) 
+let board = make_board(∅, ∅, []) 
 
 
 // When debugging, do not make a reset player at a reasonable level re-do basic achievements
@@ -211,7 +199,7 @@ def draw_timer(board_pos):
     time_left -= 3/60 + GRACE_SECONDS
     
     draw_text({
-        pos: board_pos + xy(-½, -½) * get_board_pixel_size() - xy(-28, 16),
+        pos: board_pos + xy(-½, -½) * get_player_board_pixel_size() - xy(-28, 16),
         font: score_font,
         text: format_number(max(time_left, 0), "timer"),
         color: if in_waiting_room then #0F0 else #FFF,
@@ -382,7 +370,7 @@ def handle_buttons(
 
     if player.has_ability["Rotate"] and aux_sprite:
         const region = {
-            pos: get_board_pos() + xy(-4, -16) + xy(½, -½) get_board_pixel_size(), 
+            pos: get_board_pos() + xy(-4, -16) + xy(½, -½) get_player_board_pixel_size(), 
             size: 140% aux_sprite.size}
 
         if aux_callback and touch.hover and overlaps(region, touch.hover) and not player.using_gamepad:

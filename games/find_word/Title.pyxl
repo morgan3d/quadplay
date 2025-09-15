@@ -91,11 +91,11 @@ def update_button(pos, text, type):
 
 def bounce_row(y, sound default select_tile_sound, color default TILE.CENTER_SELECTED_COLOR):
     play_sound(sound)
-    board_deselect_all(player.board, player)
-    player.board.selection_color = color
+    player_deselect_all(player)
+    player.selection_color = color
     for x < 4:
-        push(player.board.selection, xy(x, y))
-        player.board.tile[x][y].selected = mode_frames
+        push(player.selection, xy(x, y))
+        player.tile[x][y].selected = mode_frames
 
 
 
@@ -154,8 +154,8 @@ if not easter_egg and player.stats.lifetime.xp > 2000 and ξ < 1.5%:
 
 // Initialize the fake board
 player_reset_match(player, SOLO_GAME, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO", "VILL WINS ALLL NITE"][easter_egg], true)
-player.board.selection_color = TILE.CENTER_SELECTED_COLOR
-board_deselect_all(player.board, player)
+player.selection_color = TILE.CENTER_SELECTED_COLOR
+player_deselect_all(player)
 
 intro = sequence(
     TITLE.INTRO.PRE_FRAMES, 
@@ -197,7 +197,7 @@ draw_background_words()
 const θ = -0.2° max(0, mode_frames - INTRO_DURATION)
 const pos = ½ SCREEN_SIZE
 player_update_board(player, pos, θ, false)
-draw_rect(pos, get_board_pixel_size() + 22, player.board.selection_color, ∅, θ, -1) 
+draw_rect(pos, get_player_board_pixel_size() + 22, player.selection_color, ∅, θ, -1) 
 
 // How far to slide the buttons, 0 if the intro has been skipped
 const slide = if intro then (-3 min(ease_out(mode_frames - INTRO_DURATION - TITLE.INTRO.SLIDE_FRAMES), 0)) else 0

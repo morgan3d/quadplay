@@ -3,7 +3,6 @@ Intermission
 
 todo("Favoriting UI + save")
 todo("Send emotes?!")
-todo("notify on personal best ever score > best free score > best wild > best daily")
 
 /* Used to prevent multiple VIL effects per intermission */
 let played_vil_sound
@@ -89,7 +88,7 @@ def draw_award_background(field, avatar, title)
 
 /* Called from `draw_awards()` when `stage` == `INTERMISSION.STAGE.SUMMARY` */
 def draw_award_summary():
-    board_deselect_all(player.board, player)    
+    player_deselect_all(player)    
     draw_corner_rect(xy(0, 0), xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH, INTERMISSION.LAYOUT.AWARD_HEIGHT), player.avatar.color)
         
     const shadow = 70% player.avatar.color
@@ -125,7 +124,7 @@ def draw_award_summary():
     // draw_text({…args, text: "Longest", pos: xy(x, 24)})
     // draw_text({…args, text: player_competitor.longest_text, font: history_font, pos: xy(30, 24), x_align: "right"})
 
-    board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 27, 33))
+    player_draw_mini(player, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 27, 33))
     
 
 
@@ -139,15 +138,15 @@ def draw_word_award(title, field):
         draw_award_background(field, award_winner[field].avatar, title)
         
         if award_winner[field] == player_competitor or not offensive[lowercase(text)]:
-            board_select_word(player.board, text)
-            board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
+            player_select_word(player, text)
+            player_draw_mini(player, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
     
 
 
 def draw_most_words_award(title, field):
     maybe_play_award_sound(award_winner[field])
     ++draw_most_words_award.frames
-    player.board.selection_color = HIGHLIGHT_COLOR
+    player.selection_color = HIGHLIGHT_COLOR
 
     const list = award_winner[field][slice(field, size("most_"), last_key(title)) + "_list"]
     if not size(list): return
@@ -173,8 +172,8 @@ def draw_most_words_award(title, field):
             pos: xy(62 + 55 ⌊i / 6⌋, 9 (i mod 6) + 12)})
     
     if award_winner[field] == player_competitor or not offensive[lowercase(q_decode(word))]:
-        board_select_word(player.board, word)
-        board_draw_mini(player.board, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
+        player_select_word(player, word)
+        player_draw_mini(player, xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 33, 38))
 
 
 

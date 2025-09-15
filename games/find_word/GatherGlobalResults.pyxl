@@ -16,6 +16,29 @@ def draw_globe(pos, radius):
             draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, HIGHLIGHT_COLOR)
 
 
+def notify_on_personal_bests():
+    const lifetime = player.stats.lifetime
+    const today = player.stats[today_date_string()]
+    
+    // Only acknowledge high scores if the player has played enough ever / today
+    if player_competitor.score > max(lifetime.best_score, today.best_score) and lifetime.matches ≥ 20:
+    
+        notify(stats_sprite[0][0], "Best Score", "New ALL-TIME personal best score of " + format_number(player.score, "commas") + " points!")
+    
+    else if player_competitor.freestyle_points > max(lifetime.best_freestyle_word_points, today.best_freestyle_word_points) and lifetime.matches ≥ 20:
+    
+        notify(ability_icon.freestyle, "Best Freestyle", "New ALL-TIME personal best freestyle score of " + format_number(player_competitor.freestyle_points, "commas") + " points for " + player_competitor.best_freestyle_word_text)
+    
+    else if player_competitor.score > today.best_score and today.matches ≥ 15:
+    
+        notify(stats_sprite[0][0], "Daily Best Score", "New daily personal best score of " + format_number(player.score, "commas") + " points!")
+    
+    else if player_competitor.freestyle_points > today.best_freestyle_word_points and today.matches ≥ 15:
+    
+        notify(ability_icon.freestyle, "Daily Best Freestyle", "New daily personal best freestyle score of " + format_number(player_competitor.freestyle_points, "commas") + " points for " + player_competitor.best_freestyle_word_text)
+
+
+
 enter
 ────────────────────────────────────────────────────────────────────────
 player_competitor = make_player_competitor()
@@ -28,14 +51,9 @@ end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - EARN_XP_SE
 
 if DEBUG.INTERMISSION or DEBUG.EARN_XP:
     end_time = frame_utc_now
+
+notify_on_personal_bests()
     
-// Only acknowledge high scores if the player has played enough ever / today
-if (player.score > max(player.stats.lifetime.best_score, player.stats[today_date_string()].best_score) and
-    player.stats.lifetime.matches ≥ 20):
-    notify(∅, "Personal Best", "New ALL-TIME personal best score of " + format_number(player.score, "commas") + " points!")
-else if (player.score > player.stats[today_date_string()].best_score and
-    player.stats[today_date_string()].matches ≥ 8):
-    notify(∅, "Daily Best", "New daily personal best score of " + format_number(player.score, "commas") + " points!")
 
 
 frame

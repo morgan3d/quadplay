@@ -20,7 +20,6 @@
         "avatar.pyxl",
         "player.pyxl",
         "game.pyxl",
-        "board_search.pyxl",
         "competitor.pyxl",
         "network.pyxl",
         "bot.pyxl",
@@ -95,7 +94,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.498",
+    "version": "0.500",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

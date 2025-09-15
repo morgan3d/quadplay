@@ -3,7 +3,7 @@ Play
 
 
 def enter_freestyle():
-    board_deselect_all(player.board, player)
+    player_deselect_all(player)
     push_mode(Freestyle) because "Button"
 
 
@@ -49,9 +49,9 @@ if DEBUG.BOTS:
     debug_print(competitor_array)
     for competitor in competitor_array:
         for word in competitor.word_list:
-            assert(match.word_set[word], competitor.avatar.name + " made illegal word " + word)
+            assert(board.word_set[word], competitor.avatar.name + " made illegal word " + word)
             for tile in word:
-                assert(contains(match.board_string, tile), competitor.avatar.name + " made illegal word " + word)
+                assert(contains(board.board_string, tile), competitor.avatar.name + " made illegal word " + word)
 
 play_sound(start_sound)
 
@@ -104,7 +104,7 @@ if time_left ≤ GRACE_SECONDS:
     
     
 if time_left ≤ 0 or DEBUG.INTERMISSION or DEBUG.EARN_XP:
-    board_deselect_all(player.board, player)
+    player_deselect_all(player)
     if game_type == SOLO_GAME:
         set_mode(SoloSummary) because "SOLO and timer"
     else:

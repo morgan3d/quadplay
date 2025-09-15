@@ -35,7 +35,7 @@ if mode_frames > 3:
     if DEBUG.INTERMISSION or DEBUG.EARN_XP:
         const n = if DEBUG.EARN_XP then 6 else 35
         for i < n:
-            const word = random_value(match.word_list)
+            const word = random_value(board.word_list)
             if not player.already_found[word]:
                 player_add_to_history(player, word, score_word(word))
                 

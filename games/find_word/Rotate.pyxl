@@ -8,7 +8,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 angle = 0°
 play_sound({sound: rotate_sound, playback_rate: 180%})
-board_deselect_all(player.board, player)
+player_deselect_all(player)
 
 player_achieve(player, "Rotate Board")
 

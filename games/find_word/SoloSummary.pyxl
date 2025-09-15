@@ -28,7 +28,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 shown_array = []
 unfound_word_array = []
-for word in match.word_list:
+for word in board.word_list:
     // Do not use anything in player.already_found
     if not offensive[lowercase(word)] and not player.already_found[q_encode(word)]:
         push(unfound_word_array, word)
@@ -66,7 +66,7 @@ draw_text({
 if mode_frames mod 320 == 60 and size(unfound_word_array) > 0:
     // Choose the next unfound word
     const word = pop(unfound_word_array)
-    board_select_word(player.board, word)
+    player_select_word(player, word)
     if size(shown_array) > 15:
         remove_all(shown_array)
         push(shown_array, "")
@@ -80,7 +80,7 @@ draw_corner_rect(history_rect.corner + xy(history_rect.size.x + 1, 0), xy(2, his
 
 local:
     const pos = history_rect.corner + xy(history_rect.size.x + 38, 35)
-    board_draw_mini(player.board, pos)
+    player_draw_mini(player, pos)
     
     for i < size(shown_array) - 1:
         draw_text({pos: pos + xy(0, 32 + 9i), color: #B7A, text: shown_array[i], font: history_font})

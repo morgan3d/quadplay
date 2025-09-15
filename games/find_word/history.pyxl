@@ -192,7 +192,7 @@ def history_update(history, history_rect)
         draw_text({
             pos: history_rect.corner + history_rect.size - (if landscape() then xy(½ history_rect.size.x - 25, 1) else xy(2, 1)),
             font: history_font,
-            text: "Found " + size(history.list) + "/" + size(match.word_list),
+            text: "Found " + size(history.list) + "/" + size(board.word_list),
             color: #DDD,
             outline: get_background(),
             x_align: "right",
@@ -215,7 +215,7 @@ def history_update(history, history_rect)
 /* Gets the history rect in `Play` and `Freestyle` modes. */
 def get_history_rect():
     const board_pos = get_board_pos()
-    const board_size = get_board_pixel_size()
+    const board_size = get_player_board_pixel_size()
 
     if landscape():
         return {

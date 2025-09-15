@@ -75,7 +75,7 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
             
 
             
-/* Given an unordered array of tile indices into `player.board.tile[][]`, finds all words that can be
+/* Given an unordered array of tile indices into `player.tile[][]`, finds all words that can be
    made from those tiles such that the words:
        
    - Trace through the tiles using adjacency in the board
@@ -91,11 +91,11 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
 def find_short_words_from_selection(max_word_length default 4):
     // Precompute adjacency. Parallel array to tile_array 
     // in which each element is an array of neighbor INDICES
-    // into player.board.selection.
+    // into player.selection.
     const neighborhood_array = []
-    for A in player.board.selection:
+    for A in player.selection:
         const neighbor_array = []
-        for B at t in player.board.selection:
+        for B at t in player.selection:
             if A ≠ B and ‖A - B‖ < 1.5:
                 push(neighbor_array, t)
         push(neighborhood_array, neighbor_array)
@@ -117,13 +117,13 @@ def find_short_words_from_selection(max_word_length default 4):
                 if not ((used_mask bitshr t) ∩ 1):
                     // This tile has not been used yet for this search path,
                     // so recursively explore it
-                    const tile_index = player.board.selection[t]
-                    search(t, word + player.board.tile[tile_index.x][tile_index.y].letter, used_mask ∪ (1 bitshl t))
+                    const tile_index = player.selection[t]
+                    search(t, word + player.tile[tile_index.x][tile_index.y].letter, used_mask ∪ (1 bitshl t))
     
 
     // Start with each letter in turn
-    for tile_index at t in player.board.selection:
-        search(t, player.board.tile[tile_index.x][tile_index.y].letter, 1 bitshl t, player.board.selection, neighborhood_array, word_set, max_word_length)
+    for tile_index at t in player.selection:
+        search(t, player.tile[tile_index.x][tile_index.y].letter, 1 bitshl t, player.selection, neighborhood_array, word_set, max_word_length)
 
     return keys(word_set)
     

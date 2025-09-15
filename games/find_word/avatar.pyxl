@@ -87,7 +87,7 @@ def avatar_draw_large(avatar, pos, background default true, color, shadow defaul
     draw_text({
         font: score_font,
         text: trim_spaces(avatar.name),
-        color: color default (if background then avatar.color else player.board.selection_color),
+        color: color default (if background then avatar.color else player.selection_color),
         shadow: shadow,
         pos: pos + xy(0, 26),
         z: 5})

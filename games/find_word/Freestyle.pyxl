@@ -279,7 +279,7 @@ def draw_freestyle_board(pos)
         
     const board_size = grid_size + ¼ tile_size.x
     for 0 ≤ i ≤ 2:
-        draw_rect(xy(0, 0), board_size + 2 i, if i then ∅ else player.background_color, player.board.selection_color)
+        draw_rect(xy(0, 0), board_size + 2 i, if i then ∅ else player.background_color, player.selection_color)
 
     if not player.has_achievement["Freestyle Word"]:
         draw_tutorial(
@@ -287,7 +287,7 @@ def draw_freestyle_board(pos)
             "Choose letters in\nany order to spell\none long word",
             if landscape() then 0° else 270°)
 
-    for col at i in player.board.tile:
+    for col at i in player.tile:
         for tile at j in col:
             const index = xy(i, j)
             const tile_pos = (index * (gutter * xy(min(index.x, 1), min(index.y, 1)) + tile_size.x) - ½ xy(COLS - 1, ROWS - 1) * (tile_size.x + gutter))
