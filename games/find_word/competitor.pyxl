@@ -36,9 +36,13 @@ def make_competitor():
         // Computed by analyze
         best_word_points: 0,
 
+        // This is for a SINGLE freestyle word
         best_freestyle_word_points: 0,
         best_freestyle_word_text: "",
 
+        // This is for the entire freestyle sequence, including
+        // wildcard if available. It is poorly named for historical
+        // reasons and current locked into the stats under this name
         best_wild_word_points: 0,
         best_wild_word_text: "",
 
@@ -76,7 +80,7 @@ def make_player_competitor():
         avatar: player.avatar,
         score: player.score,
         best_wild_word_points: player.wild_word_points,
-        best_wild_word_text: player.wild_word_text}
+        best_wild_word_text: player.wild_word_text }
 
     for list in [
         [player.history.list, competitor.word_list],
@@ -126,9 +130,10 @@ def competitor_analyze(competitor_array):
                     competitor["longest_" + prefix + "text"] = text
 
                 if prefix == "freestyle_":                        
-                    competitor.freestyle_points += points            
+                    competitor.freestyle_points += points       
 
-
+    todo("freestyle_points == best_wild_points, so remove one")
+    
     // Count at which a word is rare
     const rare_threshold = max(1, ⌊⅙ size(competitor_array)⌋)
 

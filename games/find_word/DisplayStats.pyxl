@@ -45,7 +45,7 @@ def draw_row(y, caption, lifetime, today, color default alternating_color(), tod
             color: today_color})
     
     // Change font for word display
-    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free") or ends_with(caption, "Wild")):
+    if caption and (ends_with(caption, "Word") or ends_with(caption, "Free") or ends_with(caption, "Freestyle") or ends_with(caption, "Wild")):
         args.font = history_font
         
     draw_text({…args, x_align: "right", text: lifetime, pos: xy(x_center, y)})
@@ -107,8 +107,8 @@ def draw_content():
     
     const best_row_array = [
         {ability: "Best Word Stat", title: "Best Word", prefix: "best_word"},
-        {ability: "Freestyle",      title: "Best Free", prefix: "best_freestyle_word"},
-        {ability: "Wild",           title: "Best Wild", prefix: "best_wild_word"}]
+        {ability: "Freestyle",      title: "Best Free Word", prefix: "best_freestyle_word"},
+        {ability: "Freestyle",      title: "Best Freestyle", prefix: "best_wild_word"}]
         
     for ability, title, prefix in row in best_row_array:
         if player.has_ability[ability]:

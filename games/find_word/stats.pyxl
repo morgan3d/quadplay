@@ -18,9 +18,11 @@ def make_empty_stats_entry():
         best_word_text: "", 
         best_word_points: 0,
 
+        // See note in competitor.pyxl
         best_freestyle_word_text: "",
         best_freestyle_word_points: 0,
         
+        // See note in competitor.pyxl
         // Includes the wildcard
         best_wild_word_text: "",
         best_wild_word_points: 0,

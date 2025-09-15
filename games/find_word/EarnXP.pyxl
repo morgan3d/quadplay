@@ -131,6 +131,7 @@ def draw_xp_table()
             x_align: "left",
             y_align: "top",
             wrap_width: 145,
+            markup: true,
             pos: xy(if row.avatar then 34 else (if row.header then 0 else 16), y)}).height
             
     scroll_offset = min(0, rect_height - y)
@@ -226,9 +227,12 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
             const xp_per_word = ⌈(num_tiles - 2)² * XP.VALUE.unique_word_per_tile⌉
             push(xp_array,
             {
-                text: "" + size(word_list) + " × " + xp_per_word + " xp / " + num_tiles + "-tile Word" + (if size(word_list) > 1 then "s" else ""),
+                text: "" + size(word_list) + " × " + xp_per_word + " xp / " + 
+                    (if num_tiles > 4 then "{color: HIGHLIGHT_COLOR " else "") + num_tiles + (if num_tiles > 4 then "}" else "") + 
+                    "-tile Word" + 
+                    (if size(word_list) > 1 then "s" else ""),
                 xp: size(word_list) * xp_per_word,
-                xp_color: if xp_per_word > 50 then HIGHLIGHT_COLOR else ∅,
+                xp_color: if num_tiles > 4 then HIGHLIGHT_COLOR else ∅,
                 color: TABLE_ALT_ROW_COLOR},
             {
                 text: join(word_list, ", "),

@@ -48,18 +48,14 @@ def player_free_selection_change_callback(player):
         play_points_sound(max_points)
         player_achieve(player, "Freestyle Word")
     
-    // Check for the presence of the wild character in the pattern
-    // instead of player.wild_tile.used because
-    // that is future-proof against possible multiple wildcards
-    const wild = contains(pattern, WILDCARD_CHARACTER)
-    player.wild_word_text = if wild then q_decode(pattern) else ""
+    player.wild_word_text = q_decode(pattern)
 
     // Choose the color based on the best selection
     player.wild_word_points = 0
     max_points = 0
     for points in entry in player.history.free:
         max_points = max(max_points, points)
-        if wild: player.wild_word_points += points
+        player.wild_word_points += points
     
     return (
         if max_points > 0 

@@ -17,7 +17,9 @@ def player_achieve(player, name, make_notification default false):
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()
-        
+    
+    todo("Rename the wild_word_* to freestyle_*")
+    
     return {
         // The tiles
         tile: make_array(xy(COLS, ROWS), make_tile(), deep_clone),
@@ -79,7 +81,7 @@ def make_player():
         
         wild_tile: make_tile(WILDCARD_CHARACTER),
 
-        // Needed for stats tracking
+        // Needed for stats tracking. 
         wild_word_points: 0,
         wild_word_text: "",
         

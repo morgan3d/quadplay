@@ -25,20 +25,18 @@ def notify_on_personal_bests():
     
         notify(stats_sprite[0][0], "Best Score", "New ALL-TIME personal best score of " + format_number(player.score, "commas") + " points!")
     
-    else if player_competitor.freestyle_points > max(lifetime.best_freestyle_word_points, today.best_freestyle_word_points) and lifetime.matches ≥ 20:
+    else if player_competitor.best_wild_word_points > max(lifetime.best_wild_word_points, today.best_wild_word_points) and lifetime.matches ≥ 20:
     
-        notify(ability_icon.freestyle, "Best Freestyle", "New ALL-TIME personal best freestyle score of " + format_number(player_competitor.freestyle_points, "commas") + " points for " + player_competitor.best_freestyle_word_text)
+        notify(ability_icon.freestyle, "Best Freestyle", "New ALL-TIME personal best freestyle score of " + format_number(player_competitor.freestyle_points, "commas") + " points for " + player_competitor.best_wild_word_text)
     
     else if player_competitor.score > today.best_score and today.matches ≥ 6:
     
         notify(stats_sprite[0][0], "Daily Best Score", "New daily personal best score of " + format_number(player.score, "commas") + " points!")
     
-    else if player_competitor.freestyle_points > today.best_freestyle_word_points and today.matches ≥ 6:
+    else if player_competitor.best_wild_word_points > today.best_wild_word_points and today.matches ≥ 6:
     
-        notify(ability_icon.freestyle, "Daily Best Freestyle", "New daily personal best freestyle score of " + format_number(player_competitor.freestyle_points, "commas") + " points for " + player_competitor.best_freestyle_word_text)
+        notify(ability_icon.freestyle, "Daily Best Freestyle", "New daily personal best freestyle score of " + format_number(player_competitor.freestyle_points, "commas") + " points for " + player_competitor.best_wild_word_text)
 
-    todo("Best wildcard")
-    todo("Distinguish best single freestyle word vs. best freestyle sequence")
 
 
 enter

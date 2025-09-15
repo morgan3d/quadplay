@@ -202,9 +202,7 @@ def draw_leaderboard()
     draw_text({…args, text: "Words", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.COUNT_X, 7)})
     
     if player.has_ability["Freestyle"]:
-        draw_text({…args, 
-            text: if player.has_ability["Wild"] then "Wild" else "Free",
-            pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 7)})
+        draw_text({…args, text: "Free", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.FREESTYLE_X, 7)})
     draw_text({…args, text: "Best Word", pos: xy(INTERMISSION.LAYOUT.LEADERBOARD.WIDTH - 2, 7)})
 
     // Content
@@ -282,7 +280,15 @@ def draw_leaderboard()
 
         // Best word
         const freestyle_word = (show_freestyle_word and size(competitor.freestyle_word_list))
-        let text = q_decode(if freestyle_word then competitor.freestyle_word_list[0].word else (competitor.word_list[0] default {word: "∅"}).word)
+        let text = q_decode(
+            if freestyle_word then 
+                (if player.has_ability["Wild"] then
+                    // Show the real pattern
+                    competitor.best_wild_word_text else
+                    // Show the best word resulting from the pattern
+                    competitor.freestyle_word_list[0].word)
+            else 
+                (competitor.word_list[0] default {word: "∅"}).word)
 
         if competitor ≠ player_competitor:
             text = censor(text)
