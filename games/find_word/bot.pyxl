@@ -9,7 +9,10 @@ todo("Misspelling bot")
    
  */
 def insert_bots(competitor_array, max_non_npc_bots):
-    assert(size(match.word_set) == size(match.word_list) and size(match.word_list) > 0)
+    // Verify that the match has been constructed correctly
+    assert(size(match.word_set) == size(match.word_list) and size(match.word_list) > 10)
+    assert(match.word_set[match.word_list[0]] and match.word_set[match.word_list[1]] and match.word_set[last_value(match.word_list)])
+    assert(contains(match.board_string, match.word_list[0][0]) and contains(match.board_string, match.word_list[1][0]))
     if DEBUG.BOTS: debug_print("------------------------\ninsert_bots()")
     
     // Used for determining which players are active
@@ -80,7 +83,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
         
         const word_set = {}
         
-        // Add word and its substrings to word_set if not sensitive
+        // Add word and its substrings to word_set if they are not sensitive
         def maybe_add_word(word, force default false):
             assert(word)
             if DEBUG.BOTS: debug_print("  considering " + word)
@@ -88,7 +91,10 @@ def insert_bots(competitor_array, max_non_npc_bots):
             // Accept words that this competitor hasn't found with
             // decreasing probability as the word gets longer than 3 letters.
             // Players with higher base percentages also are better at long words.
-            if (not word_set[word] and 
+            // We check word_set[word] at the start as an optimization; it would be
+            //
+            // fine to eliminate that as we're accumulating a set
+            if (not word_set[word] and
                 (force or
                      bot_rng() ≤ (3 descriptor.base_ability + 45%) / pow(max(size(word) - 2, 1), 15% + short_word_preference))):
 
@@ -98,7 +104,20 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 if DEBUG.BOTS: debug_print("  found " + word)
                 for 3 ≤ len ≤ size(word):
                     const subword = slice(word, 0, len)
-                    if match.word_set[subword] and not sensitive[lowercase(q_decode(subword))] and dictionary[descriptor.dictionary default "common"][word]:
+                    
+                    if (
+                        // Haven't already found on some other search branch (performance optimization)
+                        not word_set[subword]
+                    
+                        // Actually a word in the board (performance optimization; we check the dictionary again below)
+                        and match.word_set[subword]
+                        
+                        // Not a BAD word
+                        and not sensitive[lowercase(q_decode(subword))]
+                        
+                        // Is a word in THIS bot's dictionary (vs. the full dictionary)
+                        and dictionary[descriptor.dictionary default "common"][subword]):
+                            
                         word_set[subword] = 1
 
 
@@ -248,8 +267,9 @@ def _hinted_word_found_by_player(args):
    */
 def npc_maybe_make_suggestion(bot)
 & if bot.npc.expert_tile
-& with npc in bot:
-
+& with npc in bot
+& if player.has_ability[npc.required_ability]:
+    
     // Choose an 4+ tile word, prefering ones that the player
     // has never spelled themselves. This encourages the player to
     // learn and get the shorter words quickly so that the NPC will

@@ -44,6 +44,15 @@ assert(not in_waiting_room)
 remove_all(competitor_array)
 insert_bots(competitor_array, NUM_BOTS)
 
+if DEBUG.BOTS:
+    // Check that bots made legal words
+    debug_print(competitor_array)
+    for competitor in competitor_array:
+        for word in competitor.word_list:
+            assert(match.word_set[word], competitor.avatar.name + " made illegal word " + word)
+            for tile in word:
+                assert(contains(match.board_string, tile), competitor.avatar.name + " made illegal word " + word)
+
 play_sound(start_sound)
 
 last_countdown_sound_time = now()
@@ -68,8 +77,6 @@ set_background(game_type.BACKGROUND_COLOR)
 // Started more than 10s late, do not affect
 // ratio stats
 player.joined_late = (frame_utc_now > start_time + 10)
-
-board_deselect_all(player.board, player)
 
 
 frame
