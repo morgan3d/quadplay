@@ -93,7 +93,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.520",
+    "version": "0.521",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
