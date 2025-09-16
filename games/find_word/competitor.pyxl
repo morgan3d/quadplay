@@ -166,6 +166,8 @@ def competitor_analyze(competitor_array):
     // Find VIL, and give everyone ahead of VIL credit for beating them
     let found_vil = 0
     for j < size(competitor_array):
+        // Work backwards from the lowest to highest score--anyone ahead of 
+        // VIL records a win
         const competitor = competitor_array[size(competitor_array) - 1 - j]
         competitor.beat_vil_regular_match += found_vil
         found_vil = if found_vil or (competitor.avatar.id == "BOT_VIL") then 1 else 0

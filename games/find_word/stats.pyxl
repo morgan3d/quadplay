@@ -257,7 +257,7 @@ def stats_merge_previous_days(stats)
         for field in ["best_score", "most_words"]:
             lifetime[field] = max(lifetime[field], day[field])
         
-        for field in ["words", "points", "matches", "freestyle_matches", "xp", "days", "freestyle_points"]:
+        for field in ["words", "points", "matches", "freestyle_matches", "xp", "days", "freestyle_points", "beat_vil_regular_match"]:
             lifetime[field] += day[field]
             
         push(lifetime.word_list, …day.word_list)

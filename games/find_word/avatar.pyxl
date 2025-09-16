@@ -87,14 +87,14 @@ def avatar_draw(args):
                 …args, 
                 sprite: avatar_sprite[36][16 + toggle].y_flipped, 
                 override_color: args.avatar.color,
-                scale: (125% + pulse) * scale, 
+                scale: (135% + pulse) * scale, 
                 opacity: 40%, 
                 z: aura_z})
             draw_sprite({
                 …args, 
                 sprite: avatar_sprite[36][16 + toggle].y_flipped, 
                 override_color: #FFF,
-                scale: (110% + ¾ pulse) * scale, 
+                scale: (120% + ¾ pulse) * scale, 
                 opacity: 60%, 
                 z: aura_z})
             todo("Draw enhanced aura")

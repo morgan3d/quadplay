@@ -33,14 +33,15 @@ if mode_frames > 3:
     player_reset_match(player, game_type, board_string)
     
     if DEBUG.INTERMISSION or DEBUG.EARN_XP:
-        const n = if DEBUG.EARN_XP then 6 else 35
+        const n = 60
         for i < n:
             const word = random_value(board.word_list)
             if not player.already_found[word]:
                 player_add_to_history(player, word, score_word(word))
                 
     if DEBUG.EARN_XP:
-        player.score = 700
+        // Force a win
+        player.score = 1500
                     
     if in_waiting_room:
         set_mode(WaitingRoom) because "No GLOBAL in progress"

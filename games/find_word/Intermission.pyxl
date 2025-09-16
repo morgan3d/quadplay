@@ -402,7 +402,7 @@ if DEBUG.EARN_XP:
     
 intermission_end_time = end_time - EARN_XP_SECONDS
 
-// See if caf has any commentary. 
+// See if NPS have any commentary. 
 for competitor in competitor_array:
     if competitor.avatar.id == BOT.CAF.ID and competitor.score == 0 and not DEBUG.EARN_XP:
         notify(competitor.avatar.sprite, BOT.CAF.descriptor.name, "`too hard!!!!!'", play_sound, caf_too_hard_sound)
