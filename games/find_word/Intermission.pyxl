@@ -402,13 +402,16 @@ if DEBUG.EARN_XP:
     
 intermission_end_time = end_time - EARN_XP_SECONDS
 
-    
 // See if caf has any commentary. 
 for competitor in competitor_array:
     if competitor.avatar.id == BOT.CAF.ID and competitor.score == 0 and not DEBUG.EARN_XP:
         notify(competitor.avatar.sprite, BOT.CAF.descriptor.name, "`too hard!!!!!'", play_sound, caf_too_hard_sound)
 
-todo("** Have Vil acknowledge if the player wins")
+    if competitor.avatar.id == BOT.VIL.ID and player_competitor.beat_vil_regular_match:
+        if not player.has_achievement["Beat VIL Once"]:
+            player_achieve(player, "Beat VIL Once", false)
+            notify(competitor.avatar.sprite, BOT.VIL.descriptor.name, "`You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!'", play_sound, vil_00_sound)
+
 
 frame
 ────────────────────────────────────────────────────────────────────────

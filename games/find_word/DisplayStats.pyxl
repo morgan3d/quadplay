@@ -106,6 +106,7 @@ def draw_content():
             if better then "↑" else ∅)
     
     const best_row_array = [
+        {ability: "Beat VIL Stat",  title: "Beat VIL", prefix: "beat_vil_regular_match"},
         {ability: "Best Word Stat", title: "Best Word", prefix: "best_word"},
         {ability: "Freestyle",      title: "Best Free Word", prefix: "best_freestyle_word"},
         {ability: "Freestyle",      title: "Best Freestyle", prefix: "best_freestyle"}]

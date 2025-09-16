@@ -31,7 +31,7 @@ def make_competitor():
         word_list: [],
         freestyle_word_list: [],
         
-        // Evil characters do not give or receive aura
+        // Evil characters do not give or receive aura XP
         enemy: false,
 
         remixes: 0,
@@ -41,6 +41,8 @@ def make_competitor():
         /////////////////////////////////////////////////
         // Computed by analyze
         best_word_points: 0,
+        
+        beat_vil_regular_match: 0,
 
         // This is for a SINGLE freestyle word
         best_freestyle_word_points: 0,
@@ -159,6 +161,15 @@ def competitor_analyze(competitor_array):
         if count[entry.word] ≤ rare_threshold:
             entry.rare = true
     
+    sort(competitor_array, "score", true)
+    
+    // Find VIL, and give everyone ahead of VIL credit for beating them
+    let found_vil = 0
+    for j < size(competitor_array):
+        const competitor = competitor_array[size(competitor_array) - 1 - j]
+        competitor.beat_vil_regular_match += found_vil
+        found_vil = if found_vil or (competitor.avatar.id == "BOT_VIL") then 1 else 0
+    
     competitor_assign_awards(competitor_array)
 
 
@@ -173,10 +184,6 @@ def competitor_assign_awards(competitor_array):
         {field: "longest_text",     award: "longest",           measure: size,         field2: ∅},
         {field: "word_list",        award: "most_words",        measure: size,         field2: "freestyle_word_list"},
         {field: "rare_word_list",   award: "most_rare_words",   measure: size,         field2: ∅}]
-        
-    // Rank all competitors by score, so that ties are resolved in favor of the 
-    // higher scoring player
-    sort(competitor_array, "score", true)
     
     // Find the winner in each category. Ties are broken
     // by total score by running in order after that sort

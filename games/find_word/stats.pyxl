@@ -53,6 +53,8 @@ def make_empty_stats_entry():
 
         matches: 0,
         
+        beat_vil_regular_match: 0,
+        
         // Intentionally 1, so that each day is counted
         days: 1,
 
@@ -310,8 +312,9 @@ def stats_update_after_match(stats, competitor, num_competitors, joined_late):
     
     const stats_entry = stats[today_date_string()]
     
-    stats_entry["remixes"] += competitor.remixes
-    stats_entry["remix_words"] += competitor.remix_words
+    for field in ["remixes", "remix_words", "beat_vil_regular_match"]:
+        stats_entry[field] += competitor[field]
+    
     stats_entry["best_remix"] = max(stats_entry["best_remix"], competitor.best_remix)
 
     for field in ["longest_text", "longest_freestyle_text"]:
@@ -326,21 +329,18 @@ def stats_update_after_match(stats, competitor, num_competitors, joined_late):
     stats_entry.best_score = max(competitor.score, stats_entry.best_score)
         
     const N = size(competitor.word_list) + size(competitor.freestyle_word_list)
-    if N > stats_entry.most_words:
-        stats_entry.most_words = N
+    stats_entry.most_words = max(N, stats_entry.most_words)
     
     if not joined_late:
         stats_entry.words += N
         stats_entry.points += competitor.score
         stats_entry.freestyle_points += competitor.best_freestyle_points
                 
-        if competitor.score:
-            // Don't count if they didn't score
-            ++stats_entry.matches
+        // Don't count if they didn't score
+        stats_entry.matches += sign(competitor.score)
         
-        if competitor.best_freestyle_points:
-            // Don't count the match against normalization if they didn't score freestyle points
-            ++stats_entry.freestyle_matches
+        // Don't count the match against normalization if they didn't score freestyle points
+        stats_entry.freestyle_matches += sign(competitor.best_freestyle_points)
 
     // Update badge tracking    
     for pair in [
