@@ -7,7 +7,6 @@
     "scripts": [
         "quad://scripts/screen_lib.pyxl",
         "quad://scripts/cursor_lib.pyxl",
-        "quad://scripts/particle_lib.pyxl",
         "notify_lib.pyxl",
         "util.pyxl",
         "dictionary.pyxl",
@@ -94,7 +93,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.514",
+    "version": "0.516",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,

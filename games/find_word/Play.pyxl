@@ -13,6 +13,10 @@ def execute_remix():
     play_sound({sound: remix_sound, volume: 50%, playback_rate: 200%})
     sort(player.remix_list, size_comparator)
     
+    ++player.remixes
+    player.remix_words += size(player.remix_list)
+    player.best_remix = max(player.best_remix, size(player.remix_list))
+        
     for word at w in player.remix_list:
         const points = score_word(word)
         player_add_to_history(player, word, points)

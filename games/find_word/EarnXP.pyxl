@@ -165,7 +165,7 @@ prev_level = player.avatar.level
 last_level_displayed = prev_level
 last_xp_row_displayed = 0
 
-const discovered_word_list = stats_update_from_competitor(player.stats, player_competitor, size(competitor_array), player.joined_late)
+const discovered_word_list = stats_update_after_match(player.stats, player_competitor, size(competitor_array), player.joined_late)
 
 // Compute the XP awards
 xp_array = [

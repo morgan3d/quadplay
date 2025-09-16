@@ -34,6 +34,10 @@ def make_competitor():
         // Evil characters do not give or receive aura
         enemy: false,
 
+        remixes: 0,
+        remix_words: 0,
+        best_remix: 0,
+        
         /////////////////////////////////////////////////
         // Computed by analyze
         best_word_points: 0,
@@ -79,6 +83,9 @@ def make_player_competitor():
         …make_competitor(),
         avatar: player.avatar,
         score: player.score,
+        remixes: player.remixes,
+        remix_words: player.remix_words,
+        best_remix: player.best_remix,
         best_freestyle_text: q_decode(player_free_row_pattern(player))}
 
     for list in [

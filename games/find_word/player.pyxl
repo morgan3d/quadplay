@@ -46,6 +46,11 @@ def make_player():
         // for score animation
         remix_pos: xy(0,0),
         
+        // For stats
+        remixes: 0,
+        remix_words: 0,
+        best_remix: 0,
+        
         avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
         
         // Maps names of abilities from ABILITY_TABLE to 1 if present.
@@ -560,16 +565,22 @@ def player_draw_board(player, pos, angle, allow_selection)
 */
 def player_reset_match(player, game_type, board_space_string default ∅, skip_word_search default false):
     assert(not board_space_string or board_space_string[4] == " ", "board_space_string must have rows separated by spaces")
-    player.score = 0
     player.background_color = BOARD_COLOR
+    
     remove_all(player.free_row)
     remove_all(player.already_found)
     remove_all(player.history.list)
     remove_all(player.history.free)
+    
+    player.score = 0
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
     player.wild_tile.used = false
+    player.remixes = 0
+    player.remix_words = 0
+    player.best_remix = 0
     player.remix_list = ∅
+    
     player.remix_uses_left = (
         if player.has_ability["Remix × 10"] then 10
         else (if player.has_ability["Remix × 8"] then 8

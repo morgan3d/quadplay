@@ -156,11 +156,14 @@ def draw_content():
         
         {ability: "Days Played Stat",   title: "Days Played",           format: "commas",   field: "days",        per: 1},
         {ability: "Matches/Day Stat",   title: "Matches/Day",           format: "0",        field: "matches",     per: "days"},
-        {ability: "XP/Day Stat",        title: "XP/Day",                format: "commas",   field: "xp",          per: "days"}]
+        {ability: "XP/Day Stat",        title: "XP/Day",                format: "commas",   field: "xp",          per: "days"},
+        
+        {ability: "Remix Stats",        title: "Words/Remix",           format: "0.0",      field: "remix_words", per: "remixes"},
+        {ability: "Remix Stats",        title: "Best Remix",            format: "0",        field: "best_remix",  per: 1}]
 
     for ability, title, format, per, field in row in per_row_array
     & if player.has_ability[ability]:
-        if title == "Days Played": y += 10
+        if title == "Days Played" or title == "Words/Remix": y += 10
         
         y += draw_trend_row(
             y, 
@@ -266,8 +269,9 @@ for array in text_array:
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if landscape(): draw_background_words()
-draw_rect(½ SCREEN_SIZE, xy(WIDTH + 10, SCREEN_SIZE.y), #0009)
+if landscape(): 
+    draw_background_words()
+    draw_rect(½ SCREEN_SIZE, xy(WIDTH + 10, SCREEN_SIZE.y), #0009, ∅, ∅, -0.5)
 
 avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 22, 15), scale: 200%})
 

@@ -36,6 +36,7 @@ Remix × 3,27,"New power: Use Remix 3× per match",ability_icon.remix
 Matches/Day Stat,28,"You can now track matches per day and trends in Stats!",stats_sprite[0][0]
 Enemy of VIL,29,"I shall eviscerate the paltry vocabularies of your miniscule bovine and fowl companions!",avatar_sprite[25][20].x_flipped
 Wild,30,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
+Remix Stats,32,"You can now track words captured per Remix and trends in Stats!",stats_sprite[0][0]
 XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
 "Mz. Kiwi's Friend",40,"I know a keen keeper of knowledge you'll like…",avatar_sprite[15][28].x_flipped

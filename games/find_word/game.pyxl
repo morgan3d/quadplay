@@ -51,9 +51,6 @@ if DEBUG.FORCE_LEVEL > 3:
         player_achieve(player, achievement)
 
 
-/* Particle system shared across all modes, managed by a hook */
-const particle_array = []
-
 /* Accumulated total time for this mode */
 let EARN_XP_SECONDS = 0
 for frames at stage in EARN_XP.TIMING:
@@ -154,8 +151,8 @@ def set_hooks()
     // for a good mobile experience. See also `DEBUG.PORTRAIT`
     device_control("set_mouse_cursor", "pointer")
     
-    for func in [update_notifications, detect_input, _update_frame_utc_now, particles_update_and_draw, npc_message_hook]: 
-        add_frame_hook(func, ∅, ∞, "all", if func == particles_update_and_draw then particle_array else ∅)
+    for func in [update_notifications, detect_input, _update_frame_utc_now, npc_message_hook]: 
+        add_frame_hook(func, ∅, ∞, "all", ∅)
 
     ///////////////////////////////
     // Resolution hook special case
