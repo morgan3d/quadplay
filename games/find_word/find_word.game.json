@@ -93,7 +93,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.516",
+    "version": "0.517",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -441,7 +441,7 @@
                         "MIN_WORDS": {
                             "description": "including long words",
                             "type": "number",
-                            "value": "140",
+                            "value": "200",
                             "min": 0,
                             "max": 200,
                             "format": "0",
@@ -476,7 +476,7 @@
                         "SHUFFLE_RETRIES": {
                             "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
                             "type": "number",
-                            "value": "18",
+                            "value": "19",
                             "min": 0,
                             "max": 50,
                             "format": "0",
