@@ -673,15 +673,19 @@ function setUIMode(d, noFullscreen) {
             emulator.style.overflow = '';
         }
         
-        let dividerTop = 256; // Ghost, Test, Editor
+        let dividerTop = 256; // Ghost, Editor
         // Initialize emulator size for IDE modes using CSS default position
         if (uiMode !== 'Emulator' && uiMode !== 'Maximal' && uiMode !== 'Windowed') {
             // Use CSS default divider positions based on UI mode
-            if (uiMode === 'WideIDE' || uiMode === 'IDE') {
+            if (uiMode === 'WideIDE' || uiMode === 'Test') {
                 // Calculate divider position based on CSS variable height + offset
                 const emulatorHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--wide-ide-emulator-height'));
                 const headerHeight = document.getElementById('header').offsetHeight;
-                dividerTop = emulatorHeight + 33 - headerHeight; // Subtract header since dividerTop is relative to realBody
+                dividerTop = emulatorHeight + 33 - headerHeight; 
+            } else if (uiMode === 'IDE') {
+                // Use the default CSS position for IDE mode (265px)
+                const headerHeight = document.getElementById('header').offsetHeight;
+                dividerTop = 265 - headerHeight;
             }
         } else {
             dividerTop = parseInt(emulatorBottomDivider.style.top);
@@ -793,7 +797,7 @@ function getAvailableEmulatorScreenSize() {
                 const minimalButtons = document.getElementById('minimalButtons');
                 const minimalButtonsRect = minimalButtons.getBoundingClientRect();
                 const emulatorRect = emulatorDiv.getBoundingClientRect();
-                const controlMargin = emulatorRect.right - minimalButtonsRect.left;
+                const controlMargin = emulatorRect.right - minimalButtonsRect.left + 20;
                 availableWidth -= 2 * controlMargin;
             }
         }
@@ -867,7 +871,9 @@ function onResize() {
             if (! gbMode) {
                 // Resize the background to bound the screen more tightly
                 const MIN_LANDSCAPE_HEIGHT = 300;
-                const height = Math.min(windowHeight - 27, Math.max(MIN_LANDSCAPE_HEIGHT, Math.round(SCREEN_HEIGHT * scale + 19)));
+                // Account for border width: Emulator mode has 5px border on each side (10px total) plus some padding
+                const borderWidth = 5;
+                const height = Math.min(windowHeight - 27, Math.max(MIN_LANDSCAPE_HEIGHT, Math.round((SCREEN_HEIGHT + 2 * borderWidth + 9) * scale)));
                 delta = Math.ceil(height / 2);
                 background.style.top = Math.round((windowHeight - height) / 2 - 17) + 'px';
                 background.style.height = height + 'px';
@@ -930,7 +936,7 @@ function onResize() {
     
     screenBorder.style.width = (SCREEN_WIDTH * hostCrop) + 'px';
     screenBorder.style.height = (SCREEN_HEIGHT * hostCrop) + 'px';
-    if (uiMode === 'Maximal' || uiMode === 'Windowed') {
+    if (uiMode === 'Maximal' || uiMode === 'Windowed' || uiMode === 'Test') {
         screenBorder.style.borderRadius = '0px';
         screenBorder.style.borderWidth  = '0px';
     } else {

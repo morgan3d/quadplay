@@ -1798,6 +1798,7 @@ canvas#screenOverlay {
 
 .TestUI #screenBorder, .MaximalUI #screenBorder, .GhostUI #screenBorder {
     border: none;
+    border-radius: 0;
     box-shadow: none;
 }
 
