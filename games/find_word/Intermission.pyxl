@@ -332,7 +332,7 @@ def draw_intermission_countdown():
         draw_stats_button(stats_region.pos, selection_index == STATS_BUTTON_INDEX, ½ stats_region.size.x)
         
         if (touch.pressed_a and overlaps(touch.xy, stats_region)) or joy.pressed_q:
-            push_mode(DisplayStats, update_intermission_countdown) because "Button"
+            push_mode(DisplayStats, draw_intermission_countdown) because "Button"
 
     // Progress bar
     draw_corner_rect(countdown_rect.corner, countdown_rect.size, #000, #FFF)
@@ -353,8 +353,8 @@ def draw_intermission_countdown():
     
     if touch.pressed_a and overlaps(touch.xy, autostart_rect):
         play_sound(select_tile_sound)
-        update_intermission_countdown.ready = not update_intermission_countdown.ready
-        save_local("autostart", update_intermission_countdown.ready)
+        draw_intermission_countdown.ready = not draw_intermission_countdown.ready
+        save_local("autostart", draw_intermission_countdown.ready)
         
     if draw_intermission_countdown.ready:
         draw_text({
