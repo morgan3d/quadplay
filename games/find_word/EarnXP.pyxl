@@ -69,7 +69,7 @@ def draw_xp_bar()
     
     draw_corner_rect(
         EARN_XP.xp_rect.corner + 1,
-        xy(α * (EARN_XP.xp_rect.size.x - 2), EARN_XP.xp_rect.size.y - 2), 
+        xy(round(α * (EARN_XP.xp_rect.size.x - 2)), EARN_XP.xp_rect.size.y - 2), 
         HIGHLIGHT_COLOR)
     
     draw_text({font: history_font,
@@ -145,7 +145,7 @@ def draw_timer():
     // Progress bar. This is larger than it was on the intermission screen,
     // so we need to scale the remainder over EARN_XP_SECONDS
     draw_corner_rect(xy(0, SCREEN_SIZE.y - 20), xy(SCREEN_SIZE.x, 20), #000, #FFF)
-    draw_corner_rect(xy(0, SCREEN_SIZE.y - 20) + 1, xy(SCREEN_SIZE.x - 2 - 34 β, 18), #0F0)
+    draw_corner_rect(xy(0, SCREEN_SIZE.y - 20) + 1, xy(round(SCREEN_SIZE.x - 2 - 34 β), 18), #0F0)
     
     draw_text({
         font: score_font,
