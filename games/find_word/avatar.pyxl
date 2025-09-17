@@ -60,7 +60,10 @@ def avatar_draw(args):
         
     // Aura effect. Minimize the animation aspect when in-game to avoid thwarting the frame sleeper
     if args.avatar.level ≥ ABILITY_TABLE.Aura.level:
+        
+        const aura_highlight = if args.avatar.evil then #000 else #fff
         const aura_z = (args.z default 0) - ε
+        
         const pulse = (
             if get_mode() == Play or get_mode() == Freestyle or get_mode() == Rotate
             then 15%
@@ -70,14 +73,14 @@ def avatar_draw(args):
         draw_sprite({
             …args, 
             sprite: sprite, 
-            override_color: #FFF, 
+            override_color: aura_highlight, 
             scale: (112% + ½ pulse) * scale, 
             z: aura_z})
             
         draw_sprite({
             …args, 
             sprite: sprite, 
-            override_color: lerp(args.avatar.color, #FFF, 20%),
+            override_color: lerp(args.avatar.color, aura_highlight, 20%),
             scale: (130% + pulse) * scale, 
             opacity: 40%, 
             z: aura_z})
@@ -87,17 +90,16 @@ def avatar_draw(args):
                 …args, 
                 sprite: avatar_sprite[36][16 + toggle].y_flipped, 
                 override_color: args.avatar.color,
-                scale: (135% + pulse) * scale, 
-                opacity: 40%, 
+                scale: (145% + pulse) * scale, 
+                opacity: 50%, 
                 z: aura_z})
             draw_sprite({
                 …args, 
                 sprite: avatar_sprite[36][16 + toggle].y_flipped, 
-                override_color: #FFF,
-                scale: (120% + ¾ pulse) * scale, 
-                opacity: 60%, 
+                override_color: aura_highlight,
+                scale: (130% + ¾ pulse) * scale, 
+                opacity: 70%, 
                 z: aura_z})
-            todo("Draw enhanced aura")
             
     if args.outline:
         for -1 ≤ d ≤ +1:

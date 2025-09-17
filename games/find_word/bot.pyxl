@@ -39,6 +39,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
                 name: descriptor.name,
                 bot: true,
+                evil: descriptor.npc and descriptor.npc.evil,
                 appears_human: descriptor.appears_human default false,
                 id: "BOT_" + descriptor.name},
             
@@ -62,7 +63,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
         // Make stable how good this player is overall, and then add noise per game.
         // Apply that as a fraction of all words possible
         const find_percentage = min(30%, bot_rng(12%^⅓, 30%^⅓)³ + descriptor.base_ability)
-        const words_found = clamp(⌊size(board.word_list) * find_percentage⌋, 5, 55)
+        const words_found = clamp(⌊size(board.word_list) * find_percentage⌋, 5, 80)
         const short_word_preference = descriptor.short_word_preference
         
         // Is this particular competitor available right now?
