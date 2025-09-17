@@ -49,7 +49,9 @@ def make_competitor():
         best_freestyle_word_text: "",
 
         // This is for the entire freestyle sequence, including
-        // wildcard if available. Named "best" to align with stats
+        // wildcard if available. Named "best" to align with stats.
+        // best_freestyle_text is defined above because it is not
+        // computed by analyze
         best_freestyle_points: 0,
 
         best_rare_points: 0,

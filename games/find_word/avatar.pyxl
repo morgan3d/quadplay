@@ -90,14 +90,15 @@ def avatar_draw(args):
                 …args, 
                 sprite: avatar_sprite[36][16 + toggle].y_flipped, 
                 override_color: args.avatar.color,
-                scale: (145% + pulse) * scale, 
-                opacity: 50%, 
+                scale: (140% + pulse) * scale * (if args.avatar.evil then 110% else 100%), 
+                opacity: 75%, 
                 z: aura_z})
+                
             draw_sprite({
                 …args, 
                 sprite: avatar_sprite[36][16 + toggle].y_flipped, 
                 override_color: aura_highlight,
-                scale: (130% + ¾ pulse) * scale, 
+                scale: (130% + ¾ pulse) * scale * (if args.avatar.evil then 115% else 100%), 
                 opacity: 70%, 
                 z: aura_z})
             

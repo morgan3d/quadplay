@@ -93,7 +93,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.525",
+    "version": "0.526",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -911,7 +911,7 @@
             "value": {
                 "JOIN_MIN_REMAINING_TIME": {
                     "type": "number",
-                    "value": "15",
+                    "value": "13",
                     "description": "Amount of time in seconds that must be left in a game to permit joining it vs. going to the WaitingRoom",
                     "min": 0,
                     "max": 120,
@@ -920,7 +920,7 @@
                 },
                 "PLAY_SECONDS": {
                     "type": "number",
-                    "value": "136",
+                    "value": "135",
                     "min": 45,
                     "max": 480,
                     "format": "0",

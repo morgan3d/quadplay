@@ -280,15 +280,15 @@ def draw_leaderboard()
 
         // Best word
         const freestyle_word = (show_freestyle_word and size(competitor.freestyle_word_list))
-        let text = q_decode(
+        let text = (
             if freestyle_word then 
                 (if player.has_ability["Wild"] then
                     // Show the real pattern
                     competitor.best_freestyle_text else
                     // Show the best word resulting from the pattern
-                    competitor.freestyle_word_list[0].word)
+                    q_decode(competitor.freestyle_word_list[0].word))
             else 
-                (competitor.word_list[0] default {word: "∅"}).word)
+                q_decode((competitor.word_list[0] default {word: "∅"}).word))
 
         if competitor ≠ player_competitor:
             text = censor(text)

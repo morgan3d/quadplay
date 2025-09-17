@@ -150,7 +150,7 @@ def _index_to_pos(index):
 
 
 /* Return the word, maybe including a wildcard character, represented
-   by the player's current `free_row` tiles */
+   by the player's current `free_row` tiles. This is q-encoded */
 def player_free_row_pattern(player):
     let pattern = ""
     
