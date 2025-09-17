@@ -277,15 +277,7 @@ def player_add_to_history(player, word, points):
     
     if i ≠ ∅:
         // This word was made in free mode unnecessarily. Steal it
-        // so that it is locked in if they later change the free row
-
-        const entry = player.history.free[i]
-        // At the time when this function is called, the board transform is set.
-        // We want the history transform, which happens to be (0,0) for both layouts
-        const ws_pos = transform_ss_to_ws(entry.pos)
-        for j < 20 size(word):
-            particles_spawn(particle_array, ws_pos + xy(j / 3, 0), 0.4 random_on_circle() * xy(size(word), 1), entry.color, 1, 10)
-            
+        // so that it is locked in if they later change the free row            
         remove_key(player.history.free, i)
         
     player.already_found[word] = true
