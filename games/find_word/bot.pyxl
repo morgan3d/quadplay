@@ -267,15 +267,36 @@ def _hinted_word_found_by_player(args):
     return false
 
 
+
 /* If the npc has a good in-game suggestion, make it with the npc's importance level.
    All npcs can make suggestions and only the best one will win. 
    
    Any bot with an "expert_tile" property will try to suggest from their vocabulary.
-   */
+   VIL will offer taunts.
+*/
 def npc_maybe_make_suggestion(bot)
-& if bot.npc.expert_tile
+& if bot.npc.expert_tile or (bot.avatar.id == BOT.VIL.ID and ξ < 2%)
 & with npc in bot
 & if player.has_ability[npc.required_ability]:
+    
+    /* Returns true if it gives a hint */
+    def give_hint(prompt, word, tile, importance):
+        const data = {tile: tile, hint: word_to_hint_text(word, tile)}
+        
+        // The player may have not found the word the bot is suggesting, but MAY have found a different
+        // word that matches the hint pattern. In that case, keep looking for a good hint
+        if not _hinted_word_found_by_player(data):
+            set_npc_message(
+                bot.avatar, 
+                prompt + data.hint, 
+                importance, 
+                npc.play_sound_args, 
+                ∅, 
+                _hinted_word_found_by_player, 
+                data,
+                npc.play_sound_args)
+            return true
+                
     
     // Choose an 4+ tile word, prefering ones that the player
     // has never spelled themselves. This encourages the player to
@@ -284,29 +305,39 @@ def npc_maybe_make_suggestion(bot)
     for j < size(bot.word_list):
         // Working backwards because word lists are sorted from best to worst.
         const word = bot.word_list[size(bot.word_list) - j - 1].word
- 
-        // Iterate through all tiles that this npc knows. If multiple ones hit,
-        // then they will prefer the earlier ones
-        for tile in npc.expert_tile:
+
+        if bot.avatar.id == BOT.VIL.ID:
+            // VIL taunts. Set low importance so that any other bot can override
+            // Choose an insultingly short word the player has not gotten as a hint       
+            if not player.already_found[word]:
+                return give_hint(random_value(["Require aid? ", "Disgusting. Here: ", "Poor show. Try ", "I pity you. Try ", "Pathetic. Try "]), word, word[0], 0)
+           
+        else:
+            // Letter bot
+            const candidate_array = []
         
-            // Because a bot must get sub-strings of their expertise words en route to their word,
-            // we must check to make sure this word is actually in their expertise. We also
-            // prefer words that the player has not themselves seen before, but not exclusively
-            if size(word) ≥ 4 and contains(word, tile) and (ξ < 50% or not player.vocabulary[word]) and not player.already_found[word]:
-                const data = {tile: tile, hint: word_to_hint_text(word, tile)}
-                
-                // The player may have not found the word the bot is suggesting, but MAY have found a different
-                // word that matches the hint pattern. In that case, keep looking for a good hint
-                if not _hinted_word_found_by_player(data):
-                    return set_npc_message(
-                        bot.avatar, 
-                        npc.expert_prompt[tile] + data.hint, 
-                        npc.importance, 
-                        npc.play_sound_args, 
-                        ∅, 
-                        _hinted_word_found_by_player, 
-                        data,
-                        npc.play_sound_args)
+            // Iterate through all tiles that this npc knows. If multiple ones hit,
+            // then they will prefer the earlier ones
+            for tile in npc.expert_tile:
+            
+                // Because a bot must get sub-strings of their expertise words en route to their word,
+                // we must check to make sure this word is actually in their expertise. We also
+                // prefer words that the player has not themselves seen before, but not exclusively
+                if size(word) ≥ 4 and contains(word, tile) and not player.already_found[word]:
+                    push(candidate_array, {word: word, tile: tile})
+            
+            if size(candidate_array):
+                // There are multiple candidate words for this tile.
+                // Choose randomly among them, preferring slightly via rejection
+                // sampling shorter words
+                // that aren't in the player's vocabulary.
+                const NUM_TRIES = 15
+                for i < NUM_TRIES
+                & with word, tile in random_value(candidate_array):
+                    if not player.vocabulary[word] or ξ < 50% or i == NUM_TRIES - 1:
+                        if give_hint(npc.expert_prompt[tile], word, tile, npc.importance): return
+                    
+
 
 
 

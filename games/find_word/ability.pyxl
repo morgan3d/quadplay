@@ -1,6 +1,17 @@
 /* Manage player abilities. Abilities include messages that appear on leveling up. See also `ABILITY_TABLE` */
 
 
+/*
+Boons:
+  
+  Amplify length points
+  Bonuses for thematic words
+  Amplify letter points
+  
+*/
+
+todo("Double down: In Freestyle, you can use one tile twice")
+
 def ability_load():
     // Erase all abilities on force level. They will be immediately granted by grant_new_abilities
     const has_ability = if DEBUG.FORCE_LEVEL then {} else (load_local("has_ability") default {})

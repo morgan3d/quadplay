@@ -93,7 +93,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.527",
+    "version": "0.528",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1691,7 +1691,8 @@
                                 "npc": {
                                     "evil": true,
                                     "importance": 1,
-                                    "sound": "vil_00_sound"
+                                    "sound": "vil_00_sound",
+                                    "required_ability": "Meet VIL"
                                 },
                                 "sprite": "avatar_sprite[25][20]",
                                 "base_ability": 0.41,

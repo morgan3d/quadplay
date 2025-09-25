@@ -6,7 +6,7 @@ NT,avatar_sprite[17][6],8%,67%,8,12,XX__X_,common,false,false,false
 AMS,avatar_sprite[37][14],37%,32%,22,3,XX_XX_,all,false,false,false
 I♥U,avatar_sprite[3][20],2%,92%,19,6,X_X_X__,common,false,false,false
 jen,avatar_sprite[39][8],2%,85%,7,11,_XX_XX,common,false,true,false
-A11,avatar_sprite[24][18],5%,70%,21,10,XXX___,all,false,false,false
+A11,avatar_sprite[24][18],5%,50%,21,10,XXX___,all,false,false,false
 RLL,avatar_sprite[33][24],19%,42%,15,2,__XXX_,all,false,false,false
 CJ,avatar_sprite[12][12],9%,60%,16,5,XXX_XX,common,false,false,false
 Bob,avatar_sprite[28][26],10%,70%,0,7,_XXXX_,common,false,false,false

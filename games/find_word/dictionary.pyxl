@@ -115,7 +115,6 @@ def dictionary_search(pattern):
     return result
     
 
-todo("**Best possible word of length n point bonus and award")
 
 /* Computes the letter points and size multiplier. Assumes
    word is an all-uppercase string with only legal characters

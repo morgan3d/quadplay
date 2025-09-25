@@ -4,6 +4,7 @@ GenerateBoard
 // so that it does not look like the game has locked up when board
 // generation runs slowly
 
+todo("Choose between long word boards and short word boards")
 
 enter
 ────────────────────────────────────────────────────────────────────────
