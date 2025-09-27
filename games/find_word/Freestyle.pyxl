@@ -3,7 +3,6 @@ Freestyle
 let selection_color = TILE.CENTER_SELECTED_COLOR
 
 
-
 /* Recompute `player.history.free` from `player.free_row` and return the `free_selection_color`.
    See also `player_selection_change_callback()` for the `Play` mode. */
 def player_free_selection_change_callback(player):    
@@ -98,19 +97,18 @@ def player_remove_destroyed_freestyle_words(player):
     iterate(player.history.free, maybe_remove)
     
     
-    
+
 /* Add a tile to the free row */
-def add_tile_to_word(tile):
-    assert(not tile.used)
-    
+def add_tile_to_word(tile):    
     _board_play_sound(if tile == player.wild_tile then wild_placement_sound else select_tile_sound, 85%, 100%, xy(2, 2))
     
-    tile.used = true
     push(player.free_row, {
         letter: tile.letter,
         source_tile: tile,
+        double_dip: tile.used_count > 0,
         points: LETTER_POINT_TABLE[tile.letter]})
     
+    ++tile.used_count
     selection_color = player_free_selection_change_callback(player, player.free_row)
 
 
@@ -125,8 +123,10 @@ def remove_last_tile():
 def remove_tile_at_index(index):
     assert(index ≥ 0 and index < size(player.free_row))
     const tile = player.free_row[index]
+    
     // Put back into the board
-    tile.source_tile.used = false
+    --tile.source_tile.used_count
+    assert(tile.source_tile.used_count >= 0)
 
     // Remove from the player.free_row
     remove_values(player.free_row, tile)
@@ -149,7 +149,7 @@ def draw_free_row(board_pos)
     
     let history_rect = get_history_rect()
         
-    // Choose tile size. Leave room for one extra tile until we hit 16
+    // Choose tile size. Leave room for one extra tile until we hit 17 (for wild)
     // to imply that the player can keep going
     const tile_slots = clamp(size(player.free_row) + 1, if landscape() then 8 else 6, ROWS * COLS)
     
@@ -178,7 +178,6 @@ def draw_free_row(board_pos)
     const last_entry = last_value(player.history.free) default {word: "", color: TILE.CENTER_SELECTED_COLOR}
     let selection_length = size(last_entry.word)
     const selection_color = last_entry.color
-
     
     let free_rect
     if landscape():
@@ -267,6 +266,7 @@ def draw_freestyle_board(pos)
             "Choose letters in\nany order to spell\none long word",
             if landscape() then 0° else 270°)
 
+    
     for col at i in player.tile:
         for tile at j in col:
             const index = xy(i, j)
@@ -277,16 +277,21 @@ def draw_freestyle_board(pos)
             
             // Touch selection for adding tiles to word
             const tile_center = {pos: tile_pos, shape: "disk", size: tile_size - gutter}
-            if mode_frames > 5 and touch.a and overlaps(tile_center, touch.xy) and not tile.used:
-                add_tile_to_word(tile)
             
-            // Gamepad selection
-            if player.using_gamepad and is_cursor_tile:
-                if player.gamepad.pressed_a and not tile.used:
-                    add_tile_to_word(tile)
+            if tile.used_count < player.freestyle_tile_uses_allowed:
+                if (size(player.free_row) < ROWS * COLS and
+                    mode_frames > 5 and (
+                    // Touch selection. pressed_a for double dip, a for swipe
+                    (((touch.a and (size(player.free_row) == 0 or tile ≠ last_value(player.free_row).source_tile)) or 
+                     touch.pressed_a) and 
+                     overlaps(tile_center, touch.xy)) or
+
+                    // Gamepad selection
+                    (player.using_gamepad and is_cursor_tile and player.gamepad.pressed_a))):
                         
-            if not tile.used:
-                tile_draw(tile, tile_pos, is_cursor_tile, 0°, #CCC, tile_size)
+                    add_tile_to_word(tile)
+                    
+                tile_draw(tile, tile_pos, is_cursor_tile, 0°, #CCC, tile_size, ∅, tile.used_count)
             else:
                 draw_rect(tile_pos, xy(35, 35), TILE.HOLE_COLOR)
                 
@@ -304,7 +309,8 @@ def done():
 
 
 def wild_callback():
-    add_tile_to_word(player.wild_tile)
+    if size(player.free_row) < ROWS * COLS:
+        add_tile_to_word(player.wild_tile)
 
 
 

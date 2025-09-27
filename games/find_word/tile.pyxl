@@ -7,17 +7,21 @@ def make_tile(letter default "?"):
         // Last position rendered to in screen space
         pos: ∅,
         
-        // Has this been consumed for free word construction?
-        // If so, draw as missing.
-        used: false,
-                        
+        // How many times this has been consumed for free word construction.
+        // If > 0, draw as missing.
+        used_count: 0,
+        
+        // Is this the tile that was double-dipped in the free row during
+        // Freestyle mode
+        double_dip: false,
+        
         // mode_frame at which this was selected
         selected: 0}
         
-        
+                
 
 /* Draws a tile, adjusting fonts appropriately for the size */
-def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, force_background default false):
+def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, force_background default false, dim default false):
     // Shrink by 5 at 44
     const inset = if tile_size.x > 10 then ⌊tile_size.x / 9⌋ else 0
     const center_size_x = ceil(tile_size.x - inset, ½)
@@ -29,18 +33,19 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
         if tile.selected > game_frames - 12:
             radius += ⅕ oscillate(tile.selected - game_frames, 0, 6) + 0.8
     
-    if not tile.selected or is_cursor_tile or force_background:
+    if (not tile.selected and not dim and not tile.double_dip) or is_cursor_tile or force_background:
         // Background rect
         draw_rect(pos, tile_size, if is_cursor_tile then CURSOR_COLOR else TILE.COLOR, if is_cursor_tile then #0C0 else ∅) 
-    
+
     draw_disk(
         pos,
         radius,
-        if tile.selected then selection_color else TILE.CENTER_COLOR,
+        if tile.selected then selection_color else (if dim or tile.double_dip then #A else TILE.CENTER_COLOR),
         ∅, 
         TILE.CENTER_Z)
+        
 
-    let text_color = if tile.selected then TILE.SELECTED_TEXT_COLOR else TILE.TEXT_COLOR
+    let text_color = if tile.selected then TILE.SELECTED_TEXT_COLOR else (if dim then #6 else TILE.TEXT_COLOR)
     if equivalent(text_color, selection_color):
         // Won't be able to see
         text_color = HIGHLIGHT_COLOR
@@ -70,7 +75,7 @@ def tile_draw(tile, pos, is_cursor_tile, angle, selection_color, tile_size, forc
             pos: pos + subscript_offset, 
             font: if tile_size.x > 20 then tile_point_font else tile_small_point_font, 
             text: LETTER_POINT_TABLE[tile.letter], 
-            color: #AAA,
+            color: if tile.double_dip then #000 else #AAA,
             z: TILE.LETTER_Z})
             
 

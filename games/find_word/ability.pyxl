@@ -1,16 +1,49 @@
 /* Manage player abilities. Abilities include messages that appear on leveling up. See also `ABILITY_TABLE` */
 
+todo("Implement boon choice mode")
 
 /*
-Boons:
+Daily Boons:
   
-  Amplify length points
-  Bonuses for thematic words
-  Amplify letter points
+  Multiplex
+  Even higher multipliers than usual for long words, 
+  but lower multipliers for short words
+  
+  Tileplex
+  More points than usual for valuable tiles,
+  fewer points for other tiles.
+  
+  Short
+  Get a 3x multiplier for words of all lengths,
+  but lose the ability to use remix today.
+
+  Experienced
+  75% points, 2x XP bonus
+  
+  Sanctuary
+  VIL will not appear for you.
+  
+  Hotness
+  See how many words begin with each letter.
+  
+  Double Dip
+  Use one (every?!) letter twice in Freestyle (hard to implement)
+  
+  Double Wild
+  Gain a second Wild tile, but non-Freestyle words
+  only score ½ points (hard to implement)
+  
+  Salty
+  Bonus points for nautical words
+  
+  Textile
+  Bonus points for textile-themed words
+  
+  Scientific
+  Bonus points for medical or scientific terms 
   
 */
 
-todo("Double down: In Freestyle, you can use one tile twice")
 
 def ability_load():
     // Erase all abilities on force level. They will be immediately granted by grant_new_abilities

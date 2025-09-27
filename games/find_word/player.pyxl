@@ -33,6 +33,14 @@ def make_player():
 
         stats: stats,
         
+        double_dip: {
+            // Is double dip unlocked for this game
+            unlocked: false
+        },
+        
+        // How many times each tile can be used in freestyle mode
+        freestyle_tile_uses_allowed: 1,
+        
         // Q-encoded dictionary of all words this player has ever
         // found
         vocabulary: array_to_set([…stats.lifetime.word_list, …stats[today_date_string()].word_list], 1),
@@ -221,7 +229,7 @@ def player_find_good_board(player, game_type):
         for tile at y in player.tile[x]:
             tile.letter = board_string[x + y * COLS]
             tile.selected = 0
-            tile.used = false
+            tile.used_count = 0
 
 
 /* Called by the board after changing selection. 
@@ -567,11 +575,12 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     player.score = 0
     player.history.scroll.offset = xy(0, 0)
     player.history.scroll_history_size = 0
-    player.wild_tile.used = false
+    player.wild_tile.used_count = 0
     player.remixes = 0
     player.remix_words = 0
     player.best_remix = 0
     player.remix_list = ∅
+    player.freestyle_tile_uses_allowed = if player.double_dip.unlocked then 2 else 1
     
     player.remix_uses_left = (
         if player.has_ability["Remix × 10"] then 10
@@ -589,6 +598,7 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
             for x < COLS:
                 // COLS + 1 because there are spaces in the board_space_string
                 player.tile[x][y].letter = board_space_string[x + y * (COLS + 1)]
+                player.tile[x][y].used_count = 0
         
         // Collapse out the spaces and store that as the seed
         board.board_string = replace(board_space_string, " ", "")

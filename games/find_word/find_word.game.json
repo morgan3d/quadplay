@@ -93,7 +93,7 @@
         "caf_too_hard_sound": "caf-too-hard.sound.json",
         "quandary_sound": "quandary.sound.json"
     },
-    "version": "0.528",
+    "version": "0.529",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -641,7 +641,7 @@
                 "X": 8,
                 "Q": 11,
                 "Z": 10,
-                "*": -2
+                "*": -1
             }
         },
         "HISTORY": {
@@ -2091,6 +2091,11 @@
                 "INTERMISSION": {
                     "type": "boolean",
                     "value": false
+                },
+                "BOON": {
+                    "description": "Put the name of the boon here",
+                    "value": "",
+                    "type": "string"
                 },
                 "AURA": {
                     "type": "boolean",
