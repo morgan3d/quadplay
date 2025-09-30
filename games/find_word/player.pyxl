@@ -13,10 +13,12 @@ def player_achieve(player, name, make_notification default false):
 
 
 
+
 /* Constructs a new player with an uninitialized board. Loads
    their avatar from local storage or creates a random one.  */
 def make_player():
     const stats = stats_load()    
+    const unlocked_ability = ability_load()
     
     return {
         // The tiles
@@ -32,11 +34,6 @@ def make_player():
         free_row: [],
 
         stats: stats,
-        
-        double_dip: {
-            // Is double dip unlocked for this game
-            unlocked: false
-        },
         
         // How many times each tile can be used in freestyle mode
         freestyle_tile_uses_allowed: 1,
@@ -61,11 +58,14 @@ def make_player():
         
         avatar: {…avatar_load(), level: xp_to_level(stats.lifetime.xp + stats[today_date_string()].xp)},
         
-        // Maps names of abilities from ABILITY_TABLE to 1 if present.
-        // We do this instead of testing the player level so that during playtesting
-        // save files don't have to be updated; instead upgrades are sticky
-        // and automatically appear on level up retroactively
-        has_ability: ability_load(),
+        // Maps names of permanently unlocked abilities from ABILITY_TABLE to true if present.
+        // This is serialized/saved state.
+        unlocked_ability: unlocked_ability,
+        
+        // Maps names of currently enabled abilities to true if present.
+        // This includes all unlocked_ability entries plus temporary abilities.
+        // This is transient state and should not be serialized.
+        has_ability: clone(unlocked_ability),
         
         has_achievement: load_local("has_achievement") default {},
         
@@ -96,10 +96,14 @@ def make_player():
         // Show button prompts and cursor when using gamepad
         using_gamepad: false,
         
+        boon: load_local("boon") default {name: "", date: ""},
+        
         // Where the cursor is
         cursor_tile_index: xy(0, 0)}
+   
 
-
+todo("Add to ability.csv") 
+// Bovine Boon,71,"`You have proven yourself our worthy defender against Vilipend. caf and I will imbue you with a new bovine boon power each day to aid in your battles.'",avatar_sprite[34][22].x_flipped
 
 /* Returns a selection array [xy(), …] that matches the word, or ∅ if the word 
    does not appear in this board. The word is all caps and NOT Q-encoded */
@@ -580,7 +584,7 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     player.remix_words = 0
     player.best_remix = 0
     player.remix_list = ∅
-    player.freestyle_tile_uses_allowed = if player.double_dip.unlocked then 2 else 1
+    player.freestyle_tile_uses_allowed = if player.has_ability["Double Dip"] then 2 else 1
     
     player.remix_uses_left = (
         if player.has_ability["Remix × 10"] then 10

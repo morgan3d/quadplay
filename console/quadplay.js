@@ -1851,6 +1851,11 @@ for (const name in controlSchemeTable) {
 
 /* Optional loc = { line_number, url, fcn } used for creating hyperlinks and displaying output */
 function setErrorStatus(e, loc) {
+    if (e instanceof Error) {
+        // Internal quadplay error
+        console.log(e.stack);
+    }
+
     e = escapeHTMLEntities(e);
 
     if (loc) {
@@ -3700,13 +3705,13 @@ function redefineConstant(environment, key, value, alreadySeenMap) {
     console.assert(! (value instanceof GlobalReference));
 
     // When looking for the gameJSON, some constants such as
-    // SCREEN_SIZE will not be present, so allow this to fail to
+    // SCREEN_SIZE will not be present, so allow the following expression to fail to
     // undefined. Also allow support for games that have NO constants defined
     // at all in the JSON.
     const gameJSON = gameSource.json.constants ? nestedGet(gameSource.json.constants, key, true, true) : undefined;
     
-    if (gameJSON && (gameJSON.type === 'object' || (gameJSON.type === 'array' && gameJSON.url === undefined))) {
-        // Recursive case (note that arrays loaded from urls are
+    if (gameJSON && (gameJSON.type === 'object' || gameJSON.type === 'array') && gameJSON.url === undefined) {
+        // Recursive case (note that values loaded from urls are
         // excluded). Define the leaves as immutable properties, and
         // everything else as a frozen clone. This path is only used
         // for the initial definition.
@@ -3726,7 +3731,8 @@ function redefineConstant(environment, key, value, alreadySeenMap) {
     properties and everything else as a frozen deep clone. */
 function recursiveDefineConstantChain(json, value, debugJson, debugValue, alreadySeenMap) {
     console.assert(json.type === 'array' || json.type === 'object');
-    
+    console.assert(json.url === undefined);
+
     const newObj = json.type === 'array' ? [] : {};
     for (let k in value) {
         const j = json.value[k];
@@ -3737,7 +3743,7 @@ function recursiveDefineConstantChain(json, value, debugJson, debugValue, alread
 
         let newValue;
 
-        if (j.type === 'array' || j.type === 'object') {
+        if ((j.type === 'array' || j.type === 'object') && j.url === undefined) {
             newValue = recursiveDefineConstantChain(j, v, dj, dv, alreadySeenMap);
         } else {
             newValue = frozenDeepClone(dj && dj.enabled ? dv : v, alreadySeenMap);

@@ -10,7 +10,7 @@ of [<quadplay/>](manual.md.html).
 2025 September TBD
 ===================================
 
-- quadplay Discord now linked from Console/gear menu
+- quadplay Discord linked from Console/gear menu
 - API and language changes:
   - `touch` pointer input is now in world space instead of camera space
   - Allowed a larger set of unicode superscripts in code
@@ -19,6 +19,7 @@ of [<quadplay/>](manual.md.html).
   - CSV data files can now disable typed parsing using `"parse_as_strings"`
   - Frame hooks specific to a mode are removed when that mode exits via `set_mode()` or `pop_mode()`,
     including `delay()` frame hooks
+  - Constants with url fields are now supported for nested objects and arrays
 - IDE changes:
   - Moved debugger options from the Game menu to the Tools menu
   - The emulator view in the IDE can now be vertically resized to show more
@@ -28,8 +29,10 @@ of [<quadplay/>](manual.md.html).
   - Debugger now prints the `game_frames` at which a mode transition occurred
   - Sprite sheet dimensions now shown in the resource display of the debugger
   - Resource display now links back to the asseet consuming those resources
-  - Code editor now inserts spaces instead of tabs  
+  - Code editor now inserts spaces instead of tabs
 - Bug fixes:
+  - Nested object/array constants now show descriptions in the constant editor
+  - `"raw"` constant values are now visualized correctly in the constant editor
   - `format_number(n, "commas")` now rounds before formatting
   - Added workaround for quadplay hot-reloading when Chrome Memory Saver/Edge Sleeping Tabs is enabled in the browser 
   - Fixed IDE cursor horizontal misalignment in long code lines

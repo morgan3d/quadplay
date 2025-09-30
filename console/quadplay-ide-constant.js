@@ -50,29 +50,13 @@ function showConstantEditor(choice) {
 
     // Process all constants named in the array
     for (let i = 0; i < array.length; ++i) {
-        const index = array[i];
+        const constantName = array[i];
         
-        const value = gameSource.constants[index];
-        const json = gameSource.json.constants[index];
+        const value = gameSource.constants[constantName];
+        const json = gameSource.json.constants[constantName];
         console.assert(json);
-        const debugJSON = (gameSource.debug.json && gameSource.debug.json.constants ? gameSource.debug.json.constants[index] : undefined)
         
-        const constantName = index;
-        const controlName = index;
-        const debugControlName = 'debug_' + index;
-
-        let entryHTML = ''; 
-    
-        if (json.description && json.description !== '') {
-            entryHTML += `<div class="ace-quadplay" style="padding-bottom: ${compact ? 2 : 12}px"><i class="ace_comment">${json.description}</i></div>`;
-        }
-
-        entryHTML += '<span class="constantName">' + constantName + '</span> = ' + makeConstantEditorControlHTML(constantName, json, value, false, compact);
-
-        const isContainer = json.type === 'array' || json.type === 'object';
-        entryHTML = `<div class="${isContainer ? 'containerConstantEditor' : 'oneConstantEditor'}">${entryHTML}</div>`;
-            
-        html += entryHTML;
+        html += makeConstantEditorControlHTML(constantName, json, value, false, compact);
         
         if (i < array.length - 1) {
             html += '<hr>';
@@ -117,7 +101,7 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
 
     if (type === 'raw') {
 
-        return `<code>${value}</code>`;
+        html += `<code style="white-space:pre-wrap">${QRuntime.unparse(value, 3)}</code>`;
 
     } else if (type === 'string') {        
 
@@ -357,25 +341,16 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
                 const key = keyArray[k];
                 
                 // Recursively generate the child editor
-                const childIsContainer = json.value[key].type === 'array' || json.value[key].type === 'object';
-
-                let keyQuote = key;
-                if (! keyQuote.match(/^[a-zA-Z_][a-zA-Z_0-9]*$/)) {
-                    // Need quotes
-                    keyQuote = '"' + keyQuote + '"';
-                }
-
                 if (! json.value[key]) {
                     console.error(`Bad json for key ${key} makeConstantEditorControlHTML: ${json.value[key]}`);
                     
                 }
-                html += `<div class="${childIsContainer ? 'containerConstantEditor' : 'oneConstantEditor'}"><span class="constantName">${keyQuote}</span>:` +
-                    makeConstantEditorControlHTML(
+                html += makeConstantEditorControlHTML(
                         constantName + '.' + key.replace(/[^0-9a-zA-Z_]/g, '_'),
                         json.value[key],
                         value[key],
                         isDebugLayer,
-                        true) + '</div>';
+                        true);
             }
 
             if (editableProject) {
@@ -387,7 +362,8 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
 
     const isContainer = json.type === 'array' || json.type === 'object';
     const editableConstant = editableProject && ! isContainer;
-        
+    
+    // Add debug layer
     if (editableConstant && ! isDebugLayer) {
         const indent = 0;
         const debugJSON = (gameSource.debug.json && gameSource.debug.json.constants) ? nestedGet(gameSource.debug.json.constants, constantName, true, true) : undefined
@@ -415,6 +391,30 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
         html += '</div><br>';
     } // Debug override
     
+    if (! isDebugLayer) {
+        // The name/index of this variable in its parent
+        const key = constantName.replace(/^.*\./, '');
+
+        let keyQuote = key;
+        if (! keyQuote.match(/^[a-zA-Z_][a-zA-Z_0-9]*$|^[1-9][0-9]*$|^0$/)) {
+            // Need quotes
+            keyQuote = '"' + keyQuote + '"';
+        }
+
+        // Binding operator for key. = if top level, otherwise colon. For arrays, nothing
+        const op = isNaN(parseInt(key)) ? (constantName.indexOf('.') === -1 ? '=' : ':') : ''; 
+
+        // Insert binding
+        html = `<span class="constantName">${keyQuote}</span> ${op} ${html}`;
+
+        // Prefix with description
+        if (json.description && json.description !== '') {
+            html = `<br><div class="ace-quadplay" style="padding-bottom: ${compact ? 2 : 12}px"><i class="ace_comment">${json.description}</i></div>${html}`;
+        }
+
+        html = `<div class="${isContainer ? 'containerConstantEditor' : 'oneConstantEditor'}">${html}</div>`;
+    }
+
     return html;
 }
 

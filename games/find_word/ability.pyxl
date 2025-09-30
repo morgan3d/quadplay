@@ -2,86 +2,48 @@
 
 todo("Implement boon choice mode")
 
-/*
-Daily Boons:
-  
-  Multiplex
-  Even higher multipliers than usual for long words, 
-  but lower multipliers for short words
-  
-  Tileplex
-  More points than usual for valuable tiles,
-  fewer points for other tiles.
-  
-  Short
-  Get a 3x multiplier for words of all lengths,
-  but lose the ability to use remix today.
-
-  Experienced
-  75% points, 2x XP bonus
-  
-  Sanctuary
-  VIL will not appear for you.
-  
-  Hotness
-  See how many words begin with each letter.
-  
-  Double Dip
-  Use one (every?!) letter twice in Freestyle (hard to implement)
-  
-  Double Wild
-  Gain a second Wild tile, but non-Freestyle words
-  only score ½ points (hard to implement)
-  
-  Salty
-  Bonus points for nautical words
-  
-  Textile
-  Bonus points for textile-themed words
-  
-  Scientific
-  Bonus points for medical or scientific terms 
-  
-*/
 
 
 def ability_load():
-    // Erase all abilities on force level. They will be immediately granted by grant_new_abilities
-    const has_ability = if DEBUG.FORCE_LEVEL then {} else (load_local("has_ability") default {})
+    // Erase all abilities on force level. They will be immediately granted by unlock_new_abilities
+    const unlocked_ability = if DEBUG.FORCE_LEVEL then {} else (load_local("has_ability") default {})
 
     // Remove obsolete abilities from the save game
     // that have been removed from the game   
     let removed_any = false
-    for key in keys(has_ability):
+    for key in keys(unlocked_ability):
         if not ABILITY_TABLE[key]:
             removed_any = true
-            remove_key(has_ability, key)
+            remove_key(unlocked_ability, key)
     
     if removed_any:
-        save_local("has_ability", has_ability)
+        // Named "has_ability" for historical reasons
+        save_local("has_ability", unlocked_ability)
     
-    return has_ability
+    return unlocked_ability
 
 
 
 /* Notify of all new abilities, which are each saved when the notification appears. */
-def grant_new_abilities():
+def unlock_new_abilities():
     // Look for any abilities that should be unlocked
     for ability at name in ABILITY_TABLE:
-        if not contains(name, "TODO") and (not player.has_ability[name] and player.avatar.level ≥ ability.level):
+        if not contains(name, "TODO") and (not player.unlocked_ability[name] and player.avatar.level ≥ ability.level):
             def grant_ability():
 
                 todo("Custom notification open sounds for NPCs")
                 if ability.description ≠ "SILENT":
                     play_sound({sound: award_sound, pitch: 150%})
                     
+                player.unlocked_ability[name] = true
                 player.has_ability[name] = true
 
                 // Skip saving when debugging intermission
                 if DEBUG.INTERMISSION or DEBUG.EARN_XP: return
             
-                // Save new abilities
-                save_local("has_ability", player.has_ability)
+                // Save new abilities (only unlocked_ability is serialized, and
+                // called "has_ability" for historical reasons)
+                save_local("has_ability", player.unlocked_ability)
                 
             
             if ability.description ≠ "SILENT" and not DEBUG.FORCE_LEVEL:

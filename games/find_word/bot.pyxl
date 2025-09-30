@@ -34,15 +34,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
         const competitor = {
             …make_competitor(),
             
-            avatar: {
-                // Bots face left
-                sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
-                name: descriptor.name,
-                bot: true,
-                evil: descriptor.npc and descriptor.npc.evil,
-                appears_human: descriptor.appears_human default false,
-                id: "BOT_" + descriptor.name},
-            
+            avatar: make_bot_avatar(descriptor),  
             
             enemy: descriptor.npc and descriptor.npc.evil,
             
@@ -136,7 +128,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 if word: maybe_add_word(word, true)
                     
             // Look for short cow words. These can't be sensitive
-            for word in BOT.MOO.descriptor.vocabulary:
+            for word in NPC.MOO.descriptor.vocabulary:
                 if size(word) ≤ 3 and board.word_set[word]:
                     maybe_add_word(word, true)
         
@@ -165,7 +157,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 maybe_add_word(word, true)
                     
         let tries = 0        
-        if descriptor == BOT.CAF.descriptor:
+        if descriptor == NPC.CAF.descriptor:
             // Special case for caf, who sometimes finds a great word, finds all
             // three-letter cow words, and with a low probability finds a terrible word
             caf_ai()
@@ -174,12 +166,12 @@ def insert_bots(competitor_array, max_non_npc_bots):
 
             expert_npc_ai()
             
-        else if not descriptor.vocabulary or descriptor == BOT.MOO.descriptor:
+        else if not descriptor.vocabulary or descriptor == NPC.MOO.descriptor:
             // Default AI + Moo's short words
             //
             // Pick up a bunch of cheap words first. For Moo these must be 3 letters.
             // For other bots they can be 3 or 4 letters
-            const short_word_length = if descriptor == BOT.MOO.descriptor then 3 else 4
+            const short_word_length = if descriptor == NPC.MOO.descriptor then 3 else 4
             
             if DEBUG.BOTS: debug_print("  looking for short words")
             while size(word_set) < clamp(2 short_word_preference, 10%, 90%) * words_found and tries < 2 words_found:
@@ -189,7 +181,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                     maybe_add_word(word)
     
             // Bots without a fixed vocabulary now look for random words
-            if not descriptor.vocabulary and descriptor ≠ BOT.CAF.descriptor:
+            if not descriptor.vocabulary and descriptor ≠ NPC.CAF.descriptor:
                 if DEBUG.BOTS: debug_print("  looking for random words")
                 tries = 0
                 while size(word_set) < words_found and tries < 2 words_found:
@@ -206,7 +198,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 competitor.score += points
 
         // Only add bots if they found a word
-        if descriptor.allow_zero_score or size(competitor.word_list) or descriptor == BOT.VIL.descriptor:
+        if descriptor.allow_zero_score or size(competitor.word_list) or descriptor == NPC.VIL.descriptor:
             return push(competitor_array, competitor)
         else if DEBUG.BOTS:
             debug_print("  left because they couldn't find words")
@@ -224,25 +216,25 @@ def insert_bots(competitor_array, max_non_npc_bots):
     // it is an odd 10 minute interval right now. Process Moo after other bots
     // so that players who don't see Moo don't have their other results affected
     if player.has_ability["See Moo"] or (⌊minute / 10⌋ mod 2) or DEBUG.CAF:
-        maybe_add_bot_competitor(BOT.MOO.descriptor)
+        maybe_add_bot_competitor(NPC.MOO.descriptor)
     
         // caf only shows up if Moo is also there
         if (player.has_ability["See caf"] and ((hour + ⌊minute / 7⌋) mod 2 == 0)) or DEBUG.CAF:
-            maybe_add_bot_competitor(BOT.CAF.descriptor)
+            maybe_add_bot_competitor(NPC.CAF.descriptor)
 
     if (player.has_ability["See VIL"] and _VIL_is_online(utc_time().day, hour, minute)) or DEBUG.VIL:
-        maybe_add_bot_competitor(BOT.VIL.descriptor)
+        maybe_add_bot_competitor(NPC.VIL.descriptor)
 
     // Boo arrives when at least one of their words is available
-    maybe_add_bot_competitor(BOT.BOO.descriptor)
+    maybe_add_bot_competitor(NPC.BOO.descriptor)
     
     const expert_array = [
         {
-            descriptor: BOT.MZK.descriptor,
+            descriptor: NPC.MZK.descriptor,
             ability: "See Mz. Kiwi"},
         
         {
-            descriptor: BOT.DRQ.descriptor,
+            descriptor: NPC.DRQ.descriptor,
             ability: "See Dr. Quandary"}]
         
     for descriptor, ability in expert in expert_array:
@@ -253,7 +245,7 @@ def insert_bots(competitor_array, max_non_npc_bots):
                 bot.score = round(lerp(bot.score, 200, 80%))
         
     if DEBUG.AURA:
-        maybe_add_bot_competitor(BOT.aura_test_bot.descriptor)
+        maybe_add_bot_competitor(NPC.aura_test_bot.descriptor)
 
 
 
@@ -275,7 +267,7 @@ def _hinted_word_found_by_player(args):
    VIL will offer taunts.
 */
 def npc_maybe_make_suggestion(bot)
-& if bot.npc.expert_tile or (bot.avatar.id == BOT.VIL.ID and ξ < 2%)
+& if bot.npc.expert_tile or (bot.avatar.id == NPC.VIL.ID and ξ < 2%)
 & with npc in bot
 & if player.has_ability[npc.required_ability]:
     
@@ -306,7 +298,7 @@ def npc_maybe_make_suggestion(bot)
         // Working backwards because word lists are sorted from best to worst.
         const word = bot.word_list[size(bot.word_list) - j - 1].word
 
-        if bot.avatar.id == BOT.VIL.ID:
+        if bot.avatar.id == NPC.VIL.ID:
             // VIL taunts. Set low importance so that any other bot can override
             // Choose an insultingly short word the player has not gotten as a hint       
             if not player.already_found[word]:

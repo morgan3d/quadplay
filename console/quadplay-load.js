@@ -598,9 +598,11 @@ function loadGame(gameURL, callback, errorCallback) {
 
         // Constants:
         gameSource.constants = {};
+
         // Intentionally load from .json instead of .extendedJSON so that the source
         // colors can be upgraded to objects if needed
         loadConstants(gameSource.json.constants, gameURL, false, gameSource.constants);
+
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
         if (gameJSON.docs) {
@@ -656,53 +658,14 @@ function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
     if (! constantsJson) { return; }
 
     // Sort constants alphabetically
-    const keys = Object.keys(constantsJson);
-    keys.sort();
-    let hasReferences = false;
-    for (let i = 0; i < keys.length; ++i) {
-        const c = keys[i];
-        const definition = constantsJson[c];
-        if ((definition.type === 'raw') && (definition.url !== undefined)) {
-            if (isDebugLayer) {
-                throw 'raw url constants not supported in debug.json (' + c + ')';
-            }
-            
-            // Raw value loaded from a URL
-            const constantURL = makeURLAbsolute(gameURL, definition.url);
-            maybeRecordURLDependency(constantURL);
+    for (const key of Object.keys(constantsJson).sort()) {
+        const definition = constantsJson[key];
 
-            if (/\.json$/.test(constantURL)) {
-                loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
-                    result[c] = data;
-                }, undefined, undefined, true);
-            } else if (/\.yml$/.test(constantURL)) {
-                loadManager.fetch(constantURL, 'text', null, function (yaml) {
-                    const json = jsyaml.load(yaml);
-                    result[c] = nullToUndefined(json);
-                }, undefined, undefined, true);
-            } else {
-                throw 'Unsupported file format for ' + definition.url;
-            }
-        } else if ((definition.type === 'table' || definition.type === 'array') && (definition.url !== undefined)) {
-            if (isDebugLayer) {
-                throw definition.type + ' url constants not supported in debug.json (' + c + ')';
-            }
-            // Raw value loaded from a URL
-            const constantURL = makeURLAbsolute(gameURL, definition.url);
-            loadCSV(constantURL, definition, gameSource.constants, c);
-        } else if ((definition.type === 'string') && (definition.url !== undefined)) {
-            if (isDebugLayer) {
-                throw 'string url constants not supported in debug.json (' + c + ')';
-            }
-            // Raw value loaded from a URL
-            const constantURL = makeURLAbsolute(gameURL, definition.url);
-            loadTXT(constantURL, definition, gameSource.constants, c);
-        } else if (definition.type === 'reference') {
+        if (definition.type === 'reference') {
             // Defer evaluation until binding time.
-            result[c] = new GlobalReferenceDefinition(c, definition);
+            result[key] = new GlobalReferenceDefinition(key, definition);
         } else {
-            // Inline value
-            result[c] = evalJSONGameConstant(definition);
+            loadJSONGameConstant(definition, result, key, gameURL, isDebugLayer);
         }
     }
 }
@@ -1490,7 +1453,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 for (const key in data) {
                     if (key[0] !== '$' && key[0] !== '_' && builtInProperties.indexOf(key) === -1) {
                         try {
-                            otherProperties[key] = evalJSONGameConstant(data[key]);
+                            otherProperties[key] = evalJSONGameConstant(data[key], true);
                         } catch (e) {
                             throw e + " while parsing " + anim + "." + key;
                         }
@@ -2225,15 +2188,19 @@ function urlDir(url) {
     return url.replace(/\?.*$/, '').replace(/\/[^/]*$/, '/');
 }
 
+
+
 function urlFile(url) {
     return url.substring(url.lastIndexOf('/') + 1);
 }
+
 
 /** When reloading, force assets to be loaded from disk if using the IDE
     and they are not built-in or fastReload is false. */
 function computeForceReloadFlag(url) {
     return useIDE && ! (fastReload && isBuiltIn(url));
 }
+
 
 /** Returns the childURL made absolute relative to the parent. The
     result will be a valid http:// url, never a quad:// url. */
@@ -2477,25 +2444,104 @@ function $parse(source, i) {
 }
 
 
-/** Evaluate a simple quadplay constant value from a JSON definition. */
+/* Loads the value asynchronously and saves to container[key] */
+function loadJSONGameConstant(json, container, key, gameURL, isDebugLayer) {
+
+    if (json.url === undefined) {
+        switch (json.type) {
+        case 'object': 
+        {
+            if (typeof json.value !== 'object') {
+                throw 'Object constant must have an object {} value field';
+            }
+            const object = {};
+            for (const k of Object.keys(json.value)) {
+                loadJSONGameConstant(json.value[k], object, k, gameURL, isDebugLayer);
+            }
+            container[key] = object;
+            return;
+        }
+
+        case 'array':
+        {
+            if (! Array.isArray(json.value)) {
+                throw 'Array constant must have an array [] value field';
+            }
+            const array = [];
+            array.length = json.value.length;
+            for (let i = 0; i < json.value.length; ++i) {
+                loadJSONGameConstant(json.value[i], array, i, gameURL, isDebugLayer);
+            }
+            container[key] = array;
+        }
+
+        default:
+            // Non-recursive cases
+            container[key] = evalJSONGameConstant(json);
+            return;
+        }
+    } else {
+        // url case
+        if (isDebugLayer) {
+            throw 'Constants loaded from urls not supported in debug.json (' + key + ')';
+        }
+
+        const constantURL = makeURLAbsolute(gameURL, json.url);
+        maybeRecordURLDependency(constantURL);
+
+        switch (json.type) {
+            case 'raw':
+                if (/\.json$/.test(constantURL)) {
+                    loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
+                        container[key] = data;
+                    }, undefined, undefined, true);
+                } else if (/\.yml$/.test(constantURL)) {
+                    loadManager.fetch(constantURL, 'text', null, function (yaml) {
+                        container[key] = nullToUndefined(jsyaml.load(yaml));
+                    }, undefined, undefined, true);
+                } else {
+                    throw 'Unsupported file format for ' + json.url;
+                }
+                return;
+
+            case 'string':
+                loadTXT(constantURL, json, container, key);
+                return;
+
+            case 'table':
+            case 'array':
+                loadCSV(constantURL, json, container, key);
+                return;
+
+            default:
+                throw json.type + ' constants do not support urls';
+        }
+    }
+}        
+
+
+/** Evaluate a simple quadplay constant value from a JSON definition. 
+    If allowFetch is true then loadManager.fetch calls may be made,
+    i.e., properties my have URLs.
+*/
 function evalJSONGameConstant(json) {
     if (typeof json === 'number' || typeof json === 'string' || typeof json === 'boolean') {
         // Raw values
         return json;
     }
-
+    
+    if (json.url !== undefined) {
+        // We only allow raw at top level because otherwise we'd have to traverse
+        // constants during loading or load during constant evaluation, and would also
+        // have to deal with this mess from the GUI.
+        throw 'Values with URLs only permitted during loading';
+    }
+    
     switch (json.type) {
     case 'nil':
         return undefined;
         
     case 'raw':
-        if (json.url !== undefined) {
-            // We only allow raw at top level because otherwise we'd have to traverse
-            // constants during loading or load during constant evaluation, and would also
-            // have to deal with this mess from the GUI.
-            throw 'Raw values with URLs only permitted for top-level constants';
-        }
-        
         // Replace null with undefined, but otherwise directly read the value
         return nullToUndefined(json.value);
         
@@ -2509,7 +2555,12 @@ function evalJSONGameConstant(json) {
         
     case 'boolean': return (json.value === true) || (json.value === 'true');
 
-    case 'string': return json.value;
+    case 'string': 
+        if (typeof json.value === 'string') {
+            return json.value;
+        } else {
+            return $parse(json.value.trim()).result;
+        }
 
     case 'xy':
         return {x: evalJSONGameConstant(json.value.x),
@@ -2585,7 +2636,8 @@ function evalJSONGameConstant(json) {
         }
 
     case 'object':
-        {
+        {            
+            // TODO: Support objects with URLs
             if (typeof json.value !== 'object') {
                 throw 'Object constant must have an object {} value field';
             }
@@ -2600,6 +2652,7 @@ function evalJSONGameConstant(json) {
 
     case 'array':
         {
+            // TODO: Support arrays with URLs
             if (! Array.isArray(json.value)) {
                 throw 'Array constant must have an array [] value field';
             }

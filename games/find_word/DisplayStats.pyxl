@@ -173,18 +173,18 @@ def draw_content():
             lifetime[field] / max(if per == 1 then 1 else lifetime[per], 1),
             (today[field] / max(if per == 1 then 1 else today[per], 1)))
 
-    y += draw_section_title(y, "Earned " + size(player.has_ability) + " Abilities")
+    y += draw_section_title(y, "Earned " + size(player.unlocked_ability) + " Abilities")
 
     // Assumes the entries are sorted by increasing level    
     for entry at name in ABILITY_TABLE
     & if entry.description ≠ "SILENT" and name ≠ "Mz. Kiwi's Friend":
         // Break before the "new ability at..." message
-        if not player.has_ability[name]: y += 10
+        if not player.unlocked_ability[name]: y += 10
         
         const pos = xy(½ SCREEN_SIZE.x - 36, y)        
 
         // Icon
-        const sprite = if player.has_ability[name] then evaluate_constant_expression(entry.sprite_name) else shapes.lock
+        const sprite = if player.unlocked_ability[name] then evaluate_constant_expression(entry.sprite_name) else shapes.lock
         draw_disk(pos + xy(-17, 5), 7, #999)
         draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 10 / sprite.size.x})
         
@@ -201,16 +201,16 @@ def draw_content():
         // Text
         y += draw_text({
             pos: pos,
-            color: if player.has_ability[name] then alternating_color() else #999,
+            color: if player.unlocked_ability[name] then alternating_color() else #999,
             outline: #000,
             font: leaderboard_font,
-            text: if player.has_ability[name] then name else "New ability at level " + entry.level + "!",
+            text: if player.unlocked_ability[name] then name else "New ability at level " + entry.level + "!",
             wrap_width: WIDTH - 20,
             markup: true,
             y_align: "top",
             x_align: "left"}).height + 6
 
-        if not player.has_ability[name]:
+        if not player.unlocked_ability[name]:
             // We're done with abilities, having shown one more
             // than earned as a preview
             break

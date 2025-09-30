@@ -40,7 +40,7 @@ let in_waiting_room
 
 const player = make_player()
 if DEBUG.BOON == "Double Dip":
-    player.double_dip.unlocked = true
+    player.has_ability["Double Dip"] = true
 
 /* Global board state. No UI data. See also player for the GUI state
    of the board. */

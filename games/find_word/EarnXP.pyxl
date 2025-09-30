@@ -45,7 +45,7 @@ def draw_xp_bar()
         play_sound(level_up_sound)
         
         // Give the abilities after the sound has finished
-        delay(grant_new_abilities, 30)
+        delay(unlock_new_abilities, 30)
     
     last_level_displayed = level
     
@@ -187,7 +187,7 @@ if not player.has_ability["Aura"] and player.score > 0:
                 xp: max(5, ⌈(if competitor.avatar.level ≥ ABILITY_TABLE["Enhanced Aura"].level then XP.VALUE.enhanced_aura_point else XP.VALUE.aura_point) * competitor.score⌉)})
 
 for competitor in competitor_array:
-    if competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"] and player.score > 0:
+    if competitor.avatar.id == NPC.CAF.ID and player.has_ability["Friend of caf"] and player.score > 0:
         push(affinity_array, {
             text: competitor.avatar.name + "'s Affection",
             avatar: competitor.avatar,

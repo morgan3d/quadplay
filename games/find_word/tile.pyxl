@@ -8,7 +8,6 @@ def make_tile(letter default "?"):
         pos: ∅,
         
         // How many times this has been consumed for free word construction.
-        // If > 0, draw as missing.
         used_count: 0,
         
         // Is this the tile that was double-dipped in the free row during

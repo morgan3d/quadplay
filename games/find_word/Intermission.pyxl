@@ -54,11 +54,11 @@ def maybe_play_award_sound(winner):
     
     if winner.avatar.id == player_competitor.avatar.id:
         play_sound(award_sound)
-    else if winner.avatar.id == BOT.MOO.ID:
+    else if winner.avatar.id == NPC.MOO.ID:
         play_sound(moo_00_sound)
-    else if winner.avatar.id == BOT.CAF.ID:
+    else if winner.avatar.id == NPC.CAF.ID:
         play_sound({sound: moo_01_sound, playback_rate: 200%})
-    else if winner.avatar.id == BOT.VIL.ID and not played_vil_sound:
+    else if winner.avatar.id == NPC.VIL.ID and not played_vil_sound:
         played_vil_sound = true
         play_sound({sound: vil_00_sound, time: max(random(-1, 1), 0), pitch: random(90%, 150%)})
 
@@ -404,13 +404,13 @@ intermission_end_time = end_time - EARN_XP_SECONDS
 
 // See if NPS have any commentary. 
 for competitor in competitor_array:
-    if competitor.avatar.id == BOT.CAF.ID and competitor.score == 0 and not DEBUG.EARN_XP:
-        notify(competitor.avatar.sprite, BOT.CAF.descriptor.name, "`too hard!!!!!'", play_sound, caf_too_hard_sound)
+    if competitor.avatar.id == NPC.CAF.ID and competitor.score == 0 and not DEBUG.EARN_XP:
+        notify(competitor.avatar.sprite, NPC.CAF.descriptor.name, "`too hard!!!!!'", play_sound, caf_too_hard_sound)
 
-    if competitor.avatar.id == BOT.VIL.ID and player_competitor.beat_vil_regular_match:
+    if competitor.avatar.id == NPC.VIL.ID and player_competitor.beat_vil_regular_match:
         if not player.has_achievement["Beat VIL Once"]:
             player_achieve(player, "Beat VIL Once", false)
-            notify(competitor.avatar.sprite, BOT.VIL.descriptor.name, "`You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!'", play_sound, vil_00_sound)
+            notify(competitor.avatar.sprite, NPC.VIL.descriptor.name, "`You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!'", play_sound, vil_00_sound)
 
 
 frame

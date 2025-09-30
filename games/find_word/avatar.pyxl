@@ -13,6 +13,18 @@ def avatar_save(avatar):
 
 
 
+def make_bot_avatar(descriptor):
+    return {
+        // Bots face left
+        sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
+        name: descriptor.name,
+        bot: true,
+        evil: descriptor.npc and descriptor.npc.evil,
+        appears_human: descriptor.appears_human default false,
+        id: "BOT_" + descriptor.name}
+        
+        
+        
 def avatar_load():
     let avatar_data = load_local("avatar")
     
@@ -155,7 +167,7 @@ def avatar_next_sprite(sprite, dir default +1):
     // Advance one
     sprite = avatar_sprite_from_linear_index(loop(avatar_sprite_to_linear_index(sprite) + dir, AVATAR_SPRITE_COUNT))
     
-    if contains(AVATAR.RESTRICTED_INDEXES, sprite.tile_index, equivalent):
+    if contains(AVATAR.RESTRICTED_INDEXES, sprite.tile_index, equivalent) or contains(AVATAR.FAMILIAR_INDEXES, sprite.tile_index, equivalent):
         return avatar_next_sprite(sprite, dir)
     else:
         return sprite

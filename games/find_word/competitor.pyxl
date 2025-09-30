@@ -71,10 +71,10 @@ def make_competitor():
 def competitor_is_friend(competitor):
     todo("Remove when we have a friending UI")
     // For now, friend all humans, NPCs once unlocked, and the few bots who pretend to be human
-    return ((competitor.avatar.id == BOT.MOO.ID and player.has_ability["Friend of Moo"]) or
-            (competitor.avatar.id == BOT.CAF.ID and player.has_ability["Friend of caf"]) or    
-            (competitor.avatar.id == BOT.MZK.ID and player.has_ability["Meet Mz. Kiwi"]) or    
-            (competitor.avatar.id == BOT.DRQ.ID and player.has_ability["Meet Dr. Quandary"]) or
+    return ((competitor.avatar.id == NPC.MOO.ID and player.has_ability["Friend of Moo"]) or
+            (competitor.avatar.id == NPC.CAF.ID and player.has_ability["Friend of caf"]) or    
+            (competitor.avatar.id == NPC.MZK.ID and player.has_ability["Meet Mz. Kiwi"]) or    
+            (competitor.avatar.id == NPC.DRQ.ID and player.has_ability["Meet Dr. Quandary"]) or
             ((competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or
              competitor.avatar.appears_human or
              not competitor.avatar.bot)))
