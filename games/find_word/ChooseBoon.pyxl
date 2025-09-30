@@ -1,0 +1,101 @@
+ChooseBoon
+════════════════════════════════════════════════════════════════════════
+/*
+Daily Boons:
+  
+  Multiplex
+  Even higher multipliers than usual for long words, 
+  but lower multipliers for short words
+  
+  Tileplex
+  More points than usual for valuable tiles,
+  fewer points for other tiles.
+  
+  Short
+  Get a 3x multiplier for words of all lengths,
+  but lose the ability to use remix today.
+
+  Experienced
+  75% points, 2x XP bonus
+  
+  Sanctuary
+  VIL will not appear for you.
+  
+  Hotness
+  See how many words begin with each letter.
+  
+  Double Dip
+  Use one (every?!) letter twice in Freestyle (hard to implement)
+  
+  Double Wild
+  Gain a second Wild tile, but non-Freestyle words
+  only score ½ points (hard to implement)
+  
+  Salty
+  Bonus points for nautical words
+  
+  Textile
+  Bonus points for textile-themed words
+  
+  Scientific
+  Bonus points for medical or scientific terms 
+  
+*/
+
+const moo_avatar = make_bot_avatar(NPC.MOO.descriptor)
+const caf_avatar = make_bot_avatar(NPC.CAF.descriptor)
+
+let choice_array = [
+    {
+      sprite: ability_icon[0][0],      
+      name: "Multiplex",
+      description: "Long words score much more, shorter words much less.",
+    }, 
+    {
+      sprite: ability_icon[0][0],      
+      name: "Experienced",
+      description: "Gain a 2x XP bonus but only earn 75% points per word.",
+    },
+    {
+      sprite: ∅,
+      name: "No Thanks",
+      description: "Play with only your normal abilities today."
+    }]
+    
+  
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_background(#202)
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+avatar_draw({avatar: moo_avatar, pos: xy(32, ½ SCREEN_SIZE.y), scale: 300%, outline: #FFF})
+avatar_draw({avatar: caf_avatar, pos: xy(20, ½ SCREEN_SIZE.y + 12), scale: 300%, outline: #FFF})
+avatar_draw({avatar: player.avatar, pos: xy(SCREEN_SIZE.x - 32, ½ SCREEN_SIZE.y), scale: 300%, outline: #000})
+
+for choice at c in choice_array:
+    draw_text({
+        font: leaderboard_font,
+        pos: xy(64, (2 c + ½) * ⅙ SCREEN_SIZE.y),
+        color: HIGHLIGHT_COLOR,
+        text: choice.name + "{br}{color: #FFF " + choice.description + "}",
+        wrap_width: SCREEN_SIZE.x - 2 * 64,
+        markup: true,
+        x_align: "left",
+        y_align: "top"})
+
+if joy.pressed_a:
+    // Go back to GenerateBoard
+    todo("Implement")
+    player.boon = {name: "Multiplex", date: today_date_string()}
+    save_local("boon", player.boon)
+    
+    pop_mode()
+
+leave
+────────────────────────────────────────────────────────────────────────
+
+set_background(#000)
