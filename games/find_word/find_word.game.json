@@ -92,9 +92,10 @@
         "mzk_00_sound": "mzk-00.sound.json",
         "speech_bubble_sprite": "speech-bubble.sprite.json",
         "caf_too_hard_sound": "caf-too-hard.sound.json",
-        "quandary_sound": "quandary.sound.json"
+        "quandary_sound": "quandary.sound.json",
+        "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.531",
+    "version": "0.532",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -316,151 +317,988 @@
                     "type": "array",
                     "description": "Enable these as familiars and prevent players from using these",
                     "value": [
-                        {"type": "xy", "value": {"x": 8, "y": 2}},
-                        {"type": "xy", "value": {"x": 11, "y": 2}},
-                        {"type": "xy", "value": {"x": 26, "y": 0}},
-                        {"type": "xy", "value": {"x": 27, "y": 0}},
-                        {"type": "xy", "value": {"x": 3, "y": 4}},
-                        {"type": "xy", "value": {"x": 46, "y": 4}},
-                        {"type": "xy", "value": {"x": 7, "y": 6}},
-                        {"type": "xy", "value": {"x": 13, "y": 6}},
-                        {"type": "xy", "value": {"x": 23, "y": 6}},
-                        {"type": "xy", "value": {"x": 27, "y": 6}},
-                        {"type": "xy", "value": {"x": 30, "y": 6}},
-                        {"type": "xy", "value": {"x": 33, "y": 6}},
-                        {"type": "xy", "value": {"x": 44, "y": 6}},
-                        {"type": "xy", "value": {"x": 47, "y": 6}},
-                        {"type": "xy", "value": {"x": 2, "y": 8}},
-                        {"type": "xy", "value": {"x": 14, "y": 8}},
-                        {"type": "xy", "value": {"x": 18, "y": 8}},
-                        {"type": "xy", "value": {"x": 22, "y": 8}},
-                        {"type": "xy", "value": {"x": 30, "y": 8}},
-                        {"type": "xy", "value": {"x": 31, "y": 8}},
-                        {"type": "xy", "value": {"x": 34, "y": 8}},
-                        {"type": "xy", "value": {"x": 35, "y": 8}},
-                        {"type": "xy", "value": {"x": 36, "y": 8}},
-                        {"type": "xy", "value": {"x": 37, "y": 8}},
-                        {"type": "xy", "value": {"x": 38, "y": 8}},
-                        {"type": "xy", "value": {"x": 39, "y": 8}},
-                        {"type": "xy", "value": {"x": 40, "y": 8}},
-                        {"type": "xy", "value": {"x": 41, "y": 8}},
-                        {"type": "xy", "value": {"x": 42, "y": 8}},
-                        {"type": "xy", "value": {"x": 43, "y": 8}},
-                        {"type": "xy", "value": {"x": 44, "y": 8}},
-                        {"type": "xy", "value": {"x": 45, "y": 8}},
-                        {"type": "xy", "value": {"x": 46, "y": 8}},
-                        {"type": "xy", "value": {"x": 47, "y": 8}},
-                        {"type": "xy", "value": {"x": 5, "y": 12}},
-                        {"type": "xy", "value": {"x": 7, "y": 12}},
-                        {"type": "xy", "value": {"x": 15, "y": 12}},
-                        {"type": "xy", "value": {"x": 23, "y": 12}},
-                        {"type": "xy", "value": {"x": 43, "y": 12}},
-                        {"type": "xy", "value": {"x": 2, "y": 14}},
-                        {"type": "xy", "value": {"x": 11, "y": 14}},
-                        {"type": "xy", "value": {"x": 47, "y": 14}},
-                        {"type": "xy", "value": {"x": 39, "y": 16}},
-                        {"type": "xy", "value": {"x": 10, "y": 18}},
-                        {"type": "xy", "value": {"x": 12, "y": 18}},
-                        {"type": "xy", "value": {"x": 16, "y": 18}},
-                        {"type": "xy", "value": {"x": 18, "y": 18}},
-                        {"type": "xy", "value": {"x": 20, "y": 18}},
-                        {"type": "xy", "value": {"x": 22, "y": 18}},
-                        {"type": "xy", "value": {"x": 24, "y": 18}},
-                        {"type": "xy", "value": {"x": 26, "y": 18}},
-                        {"type": "xy", "value": {"x": 28, "y": 18}},
-                        {"type": "xy", "value": {"x": 30, "y": 18}},
-                        {"type": "xy", "value": {"x": 32, "y": 18}},
-                        {"type": "xy", "value": {"x": 34, "y": 18}},
-                        {"type": "xy", "value": {"x": 36, "y": 18}},
-                        {"type": "xy", "value": {"x": 39, "y": 18}},
-                        {"type": "xy", "value": {"x": 40, "y": 18}},
-                        {"type": "xy", "value": {"x": 43, "y": 18}},
-                        {"type": "xy", "value": {"x": 46, "y": 18}},
-                        {"type": "xy", "value": {"x": 0, "y": 20}},
-                        {"type": "xy", "value": {"x": 2, "y": 20}},
-                        {"type": "xy", "value": {"x": 4, "y": 20}},
-                        {"type": "xy", "value": {"x": 6, "y": 20}},
-                        {"type": "xy", "value": {"x": 8, "y": 20}},
-                        {"type": "xy", "value": {"x": 10, "y": 20}},
-                        {"type": "xy", "value": {"x": 14, "y": 20}},
-                        {"type": "xy", "value": {"x": 22, "y": 20}},
-                        {"type": "xy", "value": {"x": 27, "y": 20}},
-                        {"type": "xy", "value": {"x": 28, "y": 20}},
-                        {"type": "xy", "value": {"x": 29, "y": 20}},
-                        {"type": "xy", "value": {"x": 30, "y": 20}},
-                        {"type": "xy", "value": {"x": 31, "y": 20}},
-                        {"type": "xy", "value": {"x": 32, "y": 20}},
-                        {"type": "xy", "value": {"x": 33, "y": 20}},
-                        {"type": "xy", "value": {"x": 34, "y": 20}},
-                        {"type": "xy", "value": {"x": 35, "y": 20}},
-                        {"type": "xy", "value": {"x": 37, "y": 20}},
-                        {"type": "xy", "value": {"x": 39, "y": 20}},
-                        {"type": "xy", "value": {"x": 41, "y": 20}},
-                        {"type": "xy", "value": {"x": 44, "y": 20}},
-                        {"type": "xy", "value": {"x": 47, "y": 20}},
-                        {"type": "xy", "value": {"x": 2, "y": 22}},
-                        {"type": "xy", "value": {"x": 8, "y": 22}},
-                        {"type": "xy", "value": {"x": 10, "y": 22}},
-                        {"type": "xy", "value": {"x": 15, "y": 22}},
-                        {"type": "xy", "value": {"x": 17, "y": 22}},
-                        {"type": "xy", "value": {"x": 25, "y": 22}},
-                        {"type": "xy", "value": {"x": 27, "y": 22}},
-                        {"type": "xy", "value": {"x": 30, "y": 22}},
-                        {"type": "xy", "value": {"x": 35, "y": 22}},
-                        {"type": "xy", "value": {"x": 40, "y": 22}},
-                        {"type": "xy", "value": {"x": 42, "y": 22}},
-                        {"type": "xy", "value": {"x": 44, "y": 22}},
-                        {"type": "xy", "value": {"x": 46, "y": 22}},
-                        {"type": "xy", "value": {"x": 0, "y": 24}},
-                        {"type": "xy", "value": {"x": 2, "y": 24}},
-                        {"type": "xy", "value": {"x": 8, "y": 24}},
-                        {"type": "xy", "value": {"x": 12, "y": 24}},
-                        {"type": "xy", "value": {"x": 15, "y": 24}},
-                        {"type": "xy", "value": {"x": 20, "y": 24}},
-                        {"type": "xy", "value": {"x": 22, "y": 24}},
-                        {"type": "xy", "value": {"x": 3, "y": 26}},
-                        {"type": "xy", "value": {"x": 6, "y": 26}},
-                        {"type": "xy", "value": {"x": 8, "y": 26}},
-                        {"type": "xy", "value": {"x": 10, "y": 26}},
-                        {"type": "xy", "value": {"x": 12, "y": 26}},
-                        {"type": "xy", "value": {"x": 14, "y": 26}},
-                        {"type": "xy", "value": {"x": 16, "y": 26}},
-                        {"type": "xy", "value": {"x": 18, "y": 26}},
-                        {"type": "xy", "value": {"x": 20, "y": 26}},
-                        {"type": "xy", "value": {"x": 22, "y": 26}},
-                        {"type": "xy", "value": {"x": 24, "y": 26}},
-                        {"type": "xy", "value": {"x": 26, "y": 26}},
-                        {"type": "xy", "value": {"x": 28, "y": 26}},
-                        {"type": "xy", "value": {"x": 30, "y": 26}},
-                        {"type": "xy", "value": {"x": 32, "y": 26}},
-                        {"type": "xy", "value": {"x": 34, "y": 26}},
-                        {"type": "xy", "value": {"x": 26, "y": 26}},
-                        {"type": "xy", "value": {"x": 28, "y": 26}},
-                        {"type": "xy", "value": {"x": 40, "y": 26}},
-                        {"type": "xy", "value": {"x": 42, "y": 26}},
-                        {"type": "xy", "value": {"x": 44, "y": 26}},
-                        {"type": "xy", "value": {"x": 46, "y": 26}},
-                        {"type": "xy", "value": {"x": 0, "y": 28}},
-                        {"type": "xy", "value": {"x": 2, "y": 28}},
-                        {"type": "xy", "value": {"x": 4, "y": 28}},
-                        {"type": "xy", "value": {"x": 6, "y": 28}},
-                        {"type": "xy", "value": {"x": 9, "y": 28}},
-                        {"type": "xy", "value": {"x": 10, "y": 28}},
-                        {"type": "xy", "value": {"x": 12, "y": 28}},
-                        {"type": "xy", "value": {"x": 14, "y": 28}},
-                        {"type": "xy", "value": {"x": 16, "y": 28}},
-                        {"type": "xy", "value": {"x": 19, "y": 28}},
-                        {"type": "xy", "value": {"x": 22, "y": 28}},
-                        {"type": "xy", "value": {"x": 24, "y": 28}},
-                        {"type": "xy", "value": {"x": 26, "y": 28}},
-                        {"type": "xy", "value": {"x": 28, "y": 28}},
-                        {"type": "xy", "value": {"x": 30, "y": 28}},
-                        {"type": "xy", "value": {"x": 35, "y": 28}}
-
-
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 8,
+                                "y": 2
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 11,
+                                "y": 2
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 26,
+                                "y": 0
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 27,
+                                "y": 0
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 3,
+                                "y": 4
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 46,
+                                "y": 4
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 7,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 13,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 23,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 27,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 33,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 44,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 47,
+                                "y": 6
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 2,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 14,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 18,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 22,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 31,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 34,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 35,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 36,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 37,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 38,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 39,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 40,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 41,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 42,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 43,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 44,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 45,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 46,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 47,
+                                "y": 8
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 5,
+                                "y": 12
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 7,
+                                "y": 12
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 15,
+                                "y": 12
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 23,
+                                "y": 12
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 43,
+                                "y": 12
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 2,
+                                "y": 14
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 11,
+                                "y": 14
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 47,
+                                "y": 14
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 39,
+                                "y": 16
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 10,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 12,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 16,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 18,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 20,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 22,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 24,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 26,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 28,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 32,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 34,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 36,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 39,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 40,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 43,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 46,
+                                "y": 18
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 0,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 2,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 4,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 6,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 8,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 10,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 14,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 22,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 27,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 28,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 29,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 31,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 32,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 33,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 34,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 35,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 37,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 39,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 41,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 44,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 47,
+                                "y": 20
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 2,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 8,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 10,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 15,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 17,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 25,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 27,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 35,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 40,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 42,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 44,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 46,
+                                "y": 22
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 0,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 2,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 8,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 12,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 15,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 20,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 22,
+                                "y": 24
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 3,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 6,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 8,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 10,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 12,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 14,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 16,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 18,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 20,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 22,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 24,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 26,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 28,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 32,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 34,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 26,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 28,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 40,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 42,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 44,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 46,
+                                "y": 26
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 0,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 2,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 4,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 6,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 9,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 10,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 12,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 14,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 16,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 19,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 22,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 24,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 26,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 28,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 30,
+                                "y": 28
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "value": {
+                                "x": 35,
+                                "y": 28
+                            }
+                        }
                     ]
                 },
-
                 "RESTRICTED_INDEXES": {
                     "type": "array",
                     "description": "Prevent players from using these",
@@ -475,6 +1313,14 @@
                             "nudge": {
                                 "x": "+1",
                                 "y": -1
+                            }
+                        },
+                        {
+                            "type": "xy",
+                            "description": "MSP",
+                            "value": {
+                                "x": 31,
+                                "y": 26
                             }
                         },
                         {
@@ -1648,6 +2494,66 @@
                                 "last_hour": 23,
                                 "dictionary": "all",
                                 "level": 66
+                            }
+                        }
+                    }
+                },
+                "MSP": {
+                    "type": "object",
+                    "value": {
+                        "ID": {
+                            "type": "string",
+                            "description": "Must be kept in sync with MSP.descriptor.name",
+                            "value": "BOT_MSP"
+                        },
+                        "descriptor": {
+                            "type": "object",
+                            "description": "Argument to `make_bot_competitor`",
+                            "value": {
+                                "allow_zero_score": {
+                                    "type": "boolean",
+                                    "value": false
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "value": "MSP"
+                                },
+                                "sprite": {
+                                    "type": "string",
+                                    "value": "avatar_sprite[31][26]"
+                                },
+                                "npc": {
+                                    "type": "raw",
+                                    "value": {
+                                        "sound": "msp_00_sound",
+                                        "evil": false,
+                                        "importance": 6
+                                    }
+                                },
+                                "base_ability": {
+                                    "type": "number",
+                                    "value": 0.17
+                                },
+                                "short_word_preference": {
+                                    "type": "number",
+                                    "value": 0.2
+                                },
+                                "first_hour": {
+                                    "type": "number",
+                                    "value": 8
+                                },
+                                "minute_mask": {
+                                    "type": "string",
+                                    "value": "____X_"
+                                },
+                                "last_hour": {
+                                    "type": "number",
+                                    "value": 18
+                                },
+                                "dictionary": {
+                                    "type": "string",
+                                    "value": "all"
+                                }
                             }
                         }
                     }

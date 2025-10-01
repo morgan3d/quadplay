@@ -1,4 +1,9 @@
-todo("Make a misspelling bot")
+const caf_avatar = make_bot_avatar(NPC.CAF.descriptor)
+const moo_avatar = make_bot_avatar(NPC.MOO.descriptor)
+const msp_avatar = make_bot_avatar(NPC.MSP.descriptor)
+
+const bot_descriptor_array = clone(BOT_DESCRIPTOR_ARRAY)
+insert(bot_descriptor_array, 6, NPC.MSP.descriptor)
 
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `match`. 
@@ -206,8 +211,8 @@ def insert_bots(competitor_array, max_non_npc_bots):
     
     // Add random bots based on time of day
     let c = 0
-    while size(competitor_array) < max_non_npc_bots and BOT_DESCRIPTOR_ARRAY[c]:
-        maybe_add_bot_competitor(BOT_DESCRIPTOR_ARRAY[c])
+    while size(competitor_array) < max_non_npc_bots and bot_descriptor_array[c]:
+        maybe_add_bot_competitor(bot_descriptor_array[c])
         ++c
     
 

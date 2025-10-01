@@ -75,6 +75,7 @@ def competitor_is_friend(competitor):
             (competitor.avatar.id == NPC.CAF.ID and player.has_ability["Friend of caf"]) or    
             (competitor.avatar.id == NPC.MZK.ID and player.has_ability["Meet Mz. Kiwi"]) or    
             (competitor.avatar.id == NPC.DRQ.ID and player.has_ability["Meet Dr. Quandary"]) or
+            (competitor.avatar.id == NPC.MSP.ID and player.has_ability["Meet Miss Pelican"]) or
             ((competitor ≠ player_competitor) and (player.friends[competitor.avatar.id] or
              competitor.avatar.appears_human or
              not competitor.avatar.bot)))

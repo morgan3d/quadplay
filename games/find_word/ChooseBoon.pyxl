@@ -42,9 +42,6 @@ Daily Boons:
   
 */
 
-const moo_avatar = make_bot_avatar(NPC.MOO.descriptor)
-const caf_avatar = make_bot_avatar(NPC.CAF.descriptor)
-
 let choice_array = [
     {
       sprite: ability_icon[0][0],      

@@ -185,8 +185,8 @@ def draw_content():
 
         // Icon
         const sprite = if player.unlocked_ability[name] then evaluate_constant_expression(entry.sprite_name) else shapes.lock
-        draw_disk(pos + xy(-17, 5), 7, #999)
-        draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 10 / sprite.size.x})
+        draw_disk(pos + xy(-17, 5), 10, #999)
+        draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 14 / sprite.size.x})
         
         /*
         // Debug: force showing message
@@ -208,7 +208,7 @@ def draw_content():
             wrap_width: WIDTH - 20,
             markup: true,
             y_align: "top",
-            x_align: "left"}).height + 6
+            x_align: "left"}).height + 12
 
         if not player.unlocked_ability[name]:
             // We're done with abilities, having shown one more
