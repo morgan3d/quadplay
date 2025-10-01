@@ -1,8 +1,7 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-todo("Implement MSP")
-
+    
 
 def enter_freestyle():
     player_deselect_all(player)
@@ -91,6 +90,8 @@ const time_left = end_time - frame_utc_now
 
 // Disallow rotation if the mode is about to end
 const allow_rotate = (60 time_left) > (90° / ROTATION_SPEED)
+
+maybe_run_miss_pelican_ai(player_selected_word(player), time_left)
 
 player_update(player, get_player_board_pos(), ∅, allow_rotate)
 

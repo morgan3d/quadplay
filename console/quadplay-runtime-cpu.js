@@ -944,12 +944,90 @@ function iterate(array, callback, ...args) {
     return removedAny;
 }
 
-
-iterate.REMOVE = "REMOVE";
-iterate.BREAK  = "BREAK";
-iterate.REMOVE_AND_BREAK = "REMOVE_AND_BREAK";
-iterate.CONTINUE = "CONTINUE";
+// These are arrays to make them unique pointers
+iterate.REMOVE = ["REMOVE"];
+iterate.BREAK  = ["BREAK"];
+iterate.REMOVE_AND_BREAK = ["REMOVE_AND_BREAK"];
+iterate.CONTINUE = ["CONTINUE"];
 Object.freeze(iterate);
+
+
+function iterated(data, callback, ...args) {
+    if (! is_string(callback) && ! is_function(callback) && ! is_number(callback)) {
+        $error('The callback to iterated() must be a function, string property name, or integer key');
+    }
+
+    if (data === undefined) {
+        $error('Data argument to iterated() is nil');
+    }
+
+    const isArray = Array.isArray(data);
+    const isString = is_string(data);
+    
+    if (! isArray && ! isString && typeof data !== 'object') {
+        $error('The data argument to iterated() must be a string, array, or table');
+    }
+
+    const keyCase = is_string(callback) || is_number(callback);
+    
+    if (keyCase && isString) {
+        $error('Cannot use a string or integer key callback with a string data argument');
+    }
+    
+    let result;
+    
+    if (isString) {
+        // For strings, build a new string
+        result = "";
+        for (let i = 0; i < data.length; ++i) {
+            const value = data[i];
+            const r = callback(value, ...args);
+            
+            if (r === iterate.REMOVE_AND_BREAK || r === iterate.BREAK) {
+                break;
+            } else if (r === iterate.REMOVE || r === iterate.CONTINUE) {
+                // Skip this element (continue and remove have same effect)
+            } else {
+                // Append the returned value
+                result += r;
+            }
+        }
+    } else if (isArray) {
+        // For arrays, build a new array
+        result = [];
+        for (let i = 0; i < data.length; ++i) {
+            const value = data[i];
+            const r = keyCase ? value[callback] : callback(value, ...args);
+            
+            if (r === iterate.REMOVE_AND_BREAK || r === iterate.BREAK) {
+                break;
+            } else if (r === iterate.REMOVE || r === iterate.CONTINUE) {
+                // Skip this element (continue and remove have same effect)
+            } else {
+                // Append the returned value
+                result.push(r);
+            }
+        }
+    } else {
+        // For tables/objects, build a new table
+        result = {};
+        for (const key in data) {
+            const value = data[key];
+            const r = keyCase ? value[callback] : callback(value, ...args);
+            
+            if (r === iterate.REMOVE_AND_BREAK || r === iterate.BREAK) {
+                break;
+            } else if (r === iterate.REMOVE || r === iterate.CONTINUE) {
+                // Skip this element (continue and remove have same effect)
+            } else {
+                // Store the returned value
+                result[key] = r;
+            }
+        }
+    }
+    
+    return result;
+}
 
 
 function iterate_pairs(array, callback, ...args) {
@@ -10527,7 +10605,7 @@ function set_mode(mode, ...args) {
 
     if (mode.$name[0] !== '$') {
         $systemPrint('');
-        $outputAppend('Enter ' + mode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : '') + ' @ game_frames=' + game_frames, $lastBecause.location);
+        $outputAppend('<i>Enter ' + mode.$name + ($lastBecause.reason ? ' because "' + $lastBecause.reason + '"' : '') + ' @ game_frames=' + game_frames + '</i>\n', $lastBecause.location);
     }
     
     // Run the enter callback on the new mode

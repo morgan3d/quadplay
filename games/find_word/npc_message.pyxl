@@ -15,8 +15,10 @@ let _npc_message
    be played the first time that the message is displayed. 
    
    Will close if the user clicks, presses (c), or if
-   `auto_close_condition(data, game_frames_since_opened)` is truish */
-def set_npc_message(avatar, text, importance default 0, play_sound_args default ∅, max_frames default ∞, auto_close_condition default ∅, data default ∅, auto_close_play_sound_args default ∅):
+   `auto_close_condition(data, game_frames_since_opened)` is truish.
+   
+   `close_callback()` is called when the message is dismissed. */
+def set_npc_message(avatar, text, importance default 0, play_sound_args default ∅, max_frames default ∞, auto_close_condition default ∅, data default ∅, auto_close_play_sound_args default ∅, close_callback default ∅):
     if not _npc_message or _npc_message.importance < importance:
         _npc_message = {
             avatar: avatar,
@@ -27,12 +29,15 @@ def set_npc_message(avatar, text, importance default 0, play_sound_args default 
             auto_close_condition: auto_close_condition,
             data: data,
             max_frames: max_frames,
+            close_callback: close_callback,
             open_game_frames: game_frames}
 
 
 
 /* Call to erase the current message. */
 def clear_npc_message():
+    if _npc_message and _npc_message.close_callback:
+        _npc_message.close_callback()
     _npc_message = ∅
 
 
@@ -55,7 +60,6 @@ def npc_message_hook()
     if _npc_message.play_sound_args:
         play_sound(_npc_message.play_sound_args)
         _npc_message.play_sound_args = ∅
-    
 
     draw_corner_rect(rect.corner, rect.size, rgba(get_background(), 50%))
     
@@ -107,7 +111,6 @@ def npc_message_hook()
         (auto_close_condition and auto_close_condition(data))):
         
         play_sound(_npc_message.auto_close_play_sound_args)
-            
         clear_npc_message()
     
     

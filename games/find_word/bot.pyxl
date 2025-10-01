@@ -5,6 +5,7 @@ const msp_avatar = make_bot_avatar(NPC.MSP.descriptor)
 const bot_descriptor_array = clone(BOT_DESCRIPTOR_ARRAY)
 insert(bot_descriptor_array, 6, NPC.MSP.descriptor)
 
+
 /* Generate a stable set of bots with a range of abilities, and 
    produce their scores and word lists for the current `match`. 
    
@@ -364,5 +365,53 @@ if DEBUG.VIL:
 
 
 
+/*
+  Shows a high-priority npc notification suggesting the correct spelling
+  from Miss Pelican if:
+  
+  - The player has unlocked Miss Pelican
+  - `word` appears to be mispelled according to `spell_check`
+  - `word` has at least five letters
+  - A Miss Pelican notification has not been visible for at least 15 seconds
+  - The game has at least 12 seconds left
+  - The notification for this word has not previously been shown in this match
+  - In `Freestyle` mode, or in (`Play` mode and the player has tried exactly this word twice in this match)
+
+ */
+def maybe_run_miss_pelican_ai(word, time_left):
+    if (in_waiting_room or 
+        not player.has_ability["Meet Miss Pelican"] or
+        size(word) < 5 or
+        not word or
+        game_frames - player.miss_pelican.last_shown_frame < 15 * 60 or
+        time_left < 12 or
+        player.miss_pelican.shown_this_match[word]): return
+    
+    const suggestions = spell_check(word)
+    if not suggestions or size(suggestions) == 0: return
+    
+    // In Play mode, require the word to be attempted twice
+    if get_mode() == Play:
+        player.miss_pelican.attempt_count[word] = (player.miss_pelican.attempt_count[word] default 0) + 1
+        if player.miss_pelican.attempt_count[word] < 2: return
+    
+    // Mark as shown
+    player.miss_pelican.shown_this_match[word] = true
+    
+    def close_callback():
+        player.miss_pelican.last_shown_frame = game_frames
+
+    // Build suggestion text with up to 3 words
+    set_npc_message(
+        msp_avatar,
+        "Did you mean " + join(iterated(slice(suggestions, 0, min(3, size(suggestions))), q_decode), ", ", " or ") + "?",
+        6,
+        evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
+        ∅,
+        ∅,
+        ∅,
+        ∅,
+        close_callback)
+    
 
 

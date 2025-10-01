@@ -99,7 +99,13 @@ def make_player():
         boon: load_local("boon") default {name: "", date: ""},
         
         // Where the cursor is
-        cursor_tile_index: xy(0, 0)}
+        cursor_tile_index: xy(0, 0),
+        
+        // Miss Pelican spell check state
+        miss_pelican: {
+            last_shown_frame: -∞,
+            shown_this_match: {},
+            attempt_count: {}}}
    
 
 todo("Add to ability.csv") 
@@ -585,6 +591,10 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     player.best_remix = 0
     player.remix_list = ∅
     player.freestyle_tile_uses_allowed = if player.has_ability["Double Dip"] then 2 else 1
+    
+    // Reset Miss Pelican state for new match
+    player.miss_pelican.shown_this_match = {}
+    player.miss_pelican.attempt_count = {}
     
     player.remix_uses_left = (
         if player.has_ability["Remix × 10"] then 10

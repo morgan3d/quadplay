@@ -188,3 +188,63 @@ def word_to_hint_text(word, tile):
 
 word_to_hint_text.cache = {}
 
+
+
+/*
+ `word` is a q-encoded, all upper case string.
+
+ Returns `nil` if `word` is in the `dictionary.all` set, otherwise returns an array of
+ the most likely correct spellings sorted by likelihood. The strings in the returned
+ array are all upper case and q-encoded.
+ 
+ Does not suggest words that only append one letter to the end, as the user may still
+ be in the process of typing.
+ */
+def spell_check(word):
+    if dictionary.all[word]: return ∅
+    
+    const result = {}
+
+    // Add candidate to result if it is a valid word
+    def maybe_add(candidate):
+        if dictionary.all[candidate] and not result[candidate]:
+            result[candidate] = {
+                candidate: candidate,
+                score: size(candidate) + (if dictionary.common[candidate] then 5 else 0) + (if candidate[0] == word[0] then 20 else 0)}
+    
+    // Deletions: remove each character
+    if size(word) - 1 ≥ DICTIONARY.MIN_WORD_LENGTH:
+        for i < size(word):
+            maybe_add(slice(word, 0, i) + slice(word, i + 1))
+    
+    // Substitutions: replace each character
+    for i < size(word):
+        for letter in DICTIONARY.ALPHABET:
+            if letter ≠ word[i]:
+                maybe_add(slice(word, 0, i) + letter + slice(word, i + 1))
+    
+    // Insertions: add a character at each position (except the end, as user may still be typing)
+    for i < size(word):
+        for letter in DICTIONARY.ALPHABET:
+            maybe_add(slice(word, 0, i) + letter + slice(word, i))
+    
+    // Transpositions: swap adjacent characters
+    for i < size(word) - 1:
+        maybe_add(slice(word, 0, i) + word[i + 1] + word[i] + slice(word, i + 2))
+    
+    // Phonetic substitutions: common sound-alike letter confusions
+    for original at i in word:
+        for group in ["AEIOU", "CKQ", "SZ", "DT", "MN", "BP", "FV", "GJ"]:
+            if contains(group, original):
+                for substitute in group:
+                    if substitute ≠ original:
+                        maybe_add(slice(word, 0, i) + substitute + slice(word, i + 1))
+    
+    // Sort by liklihood and then extract just the words
+    const word_array = []
+    for entry in sorted(values(result), "score", true):
+        push(word_array, entry.candidate)
+    
+    return word_array
+
+

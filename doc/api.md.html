@@ -128,6 +128,27 @@ Array
    not otherwise mutate the array.
 
 
+`iterated(data, callback, ...args)`
+: Functional version of `iterate()` that returns a new string, array, or table
+  instead of mutating the input. Iterates through `data` in order using a callback
+  function or key. The input `data` can be a string, array, or table.
+
+   If `callback` is a string or integer, `iterated()` extracts `data[i][callback]` from
+   each element and appends it to the result. It is an error to use a string or integer
+   callback with a string data argument. If `callback` is a function, `iterated()` calls
+   `callback(data[i], ...args)` on each element.
+   
+   Return values from the called function or extracted field have the following effects:
+
+   - `iterate.REMOVE` or `iterate.CONTINUE`: skip the current value and continue iterating.
+     These have the same effect since there is no element to remove in a functional context.
+   - `iterate.BREAK` or `iterated()`: immediately stop iterating and return the result built so far.
+   - Any other value: append the returned value to the result.
+
+   For arrays, returns a new array. For strings, returns a new string. For objects,
+   returns a new objects with the same keys.
+
+
 `iterate_pairs(array, callback, ...args)`
 : Iterates over all n * (n - 1) / 2 uniquely indexed pairs of elements
   in the n-element array. This is useful for testing for collisions, for example.
