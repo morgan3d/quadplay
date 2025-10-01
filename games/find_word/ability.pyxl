@@ -47,11 +47,7 @@ def unlock_new_abilities():
                 
             
             if ability.description ≠ "SILENT" and not DEBUG.FORCE_LEVEL:
-                notify(
-                    if ability.sprite_name == "<default>" 
-                      then player.avatar.sprite.x_flipped 
-                      else evaluate_constant_expression(ability.sprite_name),
-                    name, ability.description, grant_ability, ∅, if DEBUG.FORCE_LEVEL then 2 else 8)
+                notify(evaluate_constant_expression(ability.sprite_name), name, ability.description, grant_ability)
             else:
                 // Grant the ability immediately because there is no notification
                 grant_ability()

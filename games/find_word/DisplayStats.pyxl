@@ -173,30 +173,22 @@ def draw_content():
             lifetime[field] / max(if per == 1 then 1 else lifetime[per], 1),
             (today[field] / max(if per == 1 then 1 else today[per], 1)))
 
-    y += draw_section_title(y, "Earned " + size(player.unlocked_ability) + " Abilities")
+    y += draw_section_title(y, "Earned " + size(player.unlocked_ability) + " Abilities\n(touch icons to review)")
 
     // Assumes the entries are sorted by increasing level    
-    for entry at name in ABILITY_TABLE
-    & if entry.description ≠ "SILENT" and name ≠ "Mz. Kiwi's Friend":
+    for ability at name in ABILITY_TABLE
+    & if ability.description ≠ "SILENT" and name ≠ "Mz. Kiwi's Friend":
         // Break before the "new ability at..." message
         if not player.unlocked_ability[name]: y += 10
         
         const pos = xy(½ SCREEN_SIZE.x - 36, y)        
 
         // Icon
-        const sprite = if player.unlocked_ability[name] then evaluate_constant_expression(entry.sprite_name) else shapes.lock
+        const sprite = if player.unlocked_ability[name] then evaluate_constant_expression(ability.sprite_name) else shapes.lock
         draw_disk(pos + xy(-17, 5), 10, #999)
         draw_sprite({sprite: sprite, pos: pos + xy(-17, 5), scale: 14 / sprite.size.x})
-        
-        /*
-        // Debug: force showing message
-        if touch.pressed_a and overlaps(touch.xy, {pos: pos, size: xy(WIDTH, 20)}) and not size(_notification_queue):
-            notify(
-                if entry.sprite_name == "<default>" 
-                  then player.avatar.sprite.x_flipped 
-                  else evaluate_constant_expression(entry.sprite_name),
-                name, entry.description, ∅, ∅, 8)
-                */
+        if player.unlocked_ability[name] and not scroll.dragged and touch.released_a and overlaps(touch.xy, {pos: pos + xy(-17, 5), size: xy(20, 20), shape: "disk"}):
+            notify(sprite, name, ability.description)
         
         // Text
         y += draw_text({
@@ -204,7 +196,7 @@ def draw_content():
             color: if player.unlocked_ability[name] then alternating_color() else #999,
             outline: #000,
             font: leaderboard_font,
-            text: if player.unlocked_ability[name] then name else "New ability at level " + entry.level + "!",
+            text: if player.unlocked_ability[name] then name else "New ability at level " + ability.level + "!",
             wrap_width: WIDTH - 20,
             markup: true,
             y_align: "top",

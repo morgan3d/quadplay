@@ -292,6 +292,11 @@ def make_scroll_tracker():
     return {
         offset: xy(0, 0),
         
+        // True if a significant drag is in progress
+        // or just ended this frame. Useful for distinguishing
+        // a click from a drag on release of a touch
+        dragged: false,
+        
         // Change in `scroll.offset`, used for explicit `touch` inertia. Mouse wheels
         // apply their own inertia at the OS level.
         _vel: ∅,
@@ -332,6 +337,8 @@ def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change
     const DRAG_INERTIA = 93%
     const VEL_THRESHOLD = 0.1
     
+    scroll.dragged = false
+    
     const max_scroll = max(content_size - screen_scroll_rect.size, xy(0, 0))
 
     if not scroll._drag_start.pos:
@@ -353,7 +360,10 @@ def scroll_tracker_update(scroll, content_size, screen_scroll_rect, other_change
         scroll.offset = scroll._drag_start.offset + scroll._drag_start.pos - touch.xy
         // Smooth the noisy velocity signal
         scroll._vel = lerp(scroll._vel, scroll.offset - prev, 50%)
-    else:
+        scroll.dragged = ‖scroll._drag_start.pos - touch.xy‖ > 4
+    else if touch.released_a:
+        scroll.dragged = ‖scroll._drag_start.pos - touch.xy‖ > 4
+        
         // End drag (only get here if in a drag that just ended)
         scroll._drag_start.pos = ∅
             
