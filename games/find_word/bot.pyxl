@@ -398,7 +398,8 @@ def maybe_run_miss_pelican_ai(word):
         player.miss_pelican.shown_this_match[word] or
         
         // Don't show message until word has been stable
-        game_frames - player.miss_pelican.current_word_frame < msp_npc.word_stability_time * 60): return
+        game_frames - player.miss_pelican.current_word_frame < msp_npc.word_stability_time * 60): 
+        return
     
     // Track when this word was first seen
     if player.miss_pelican.current_word ≠ word:
@@ -406,9 +407,9 @@ def maybe_run_miss_pelican_ai(word):
         player.miss_pelican.current_word_frame = game_frames
         return
     
-    let suggestions = spell_check(word)
-    if not suggestions: return
-    
+    // Prevent checking this word again
+    player.miss_pelican.shown_this_match[word] = true
+
     // Filter and highlight suggestions in one pass
     def process_suggestion(suggestion):
         // Check if invalid
@@ -436,12 +437,9 @@ def maybe_run_miss_pelican_ai(word):
                 slice(suggestion, middle_end))
     
     // Process all suggestions and take first 3
-    suggestions = slice(iterated(suggestions, process_suggestion), 0, 3)
+    const suggestions = slice(iterated(spell_check(word) default [], process_suggestion), 0, 3)
     if size(suggestions) == 0: return
-    
-    // Mark as shown
-    player.miss_pelican.shown_this_match[word] = true
-    
+        
     def close_callback():
         player.miss_pelican.last_shown_frame = game_frames
     

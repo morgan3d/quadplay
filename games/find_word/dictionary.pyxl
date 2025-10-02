@@ -211,34 +211,46 @@ def spell_check(word):
             result[candidate] = {
                 candidate: candidate,
                 score: size(candidate) + (if dictionary.common[candidate] then 5 else 0) + (if candidate[0] == word[0] then 20 else 0)}
+
+    // Phonetic substitutions: common letter confusions
+    def consider_phonetic_variations(candidate):
+        maybe_add(candidate)
+
+        // Also try phonetic substitutions on this candidate
+        for original at i in candidate:
+            for group in ["AEIOU", "CKQ", "SZ", "DT", "MN", "BP", "FV", "GJ"]:
+                if contains(group, original):
+                    for substitute in group:
+                        if substitute ≠ original:
+                            const phonetic_candidate = spliced(candidate, i, 1, substitute)
+                            if dictionary.all[phonetic_candidate] and not result[phonetic_candidate]:
+                                result[phonetic_candidate] = {
+                                    candidate: phonetic_candidate,
+                                    score: size(phonetic_candidate) + (if dictionary.common[phonetic_candidate] then 5 else 0) + (if phonetic_candidate[0] == word[0] then 20 else 0)}
     
+    consider_phonetic_variations(word)
+
     // Deletions: remove each character
     if size(word) - 1 ≥ DICTIONARY.MIN_WORD_LENGTH:
         for i < size(word):
-            maybe_add(spliced(word, i, 1))
+            consider_phonetic_variations(spliced(word, i, 1))
     
     // Substitutions: replace each character
     for i < size(word):
         for letter in DICTIONARY.ALPHABET:
             if letter ≠ word[i]:
-                maybe_add(spliced(word, i, 1, letter))
+                consider_phonetic_variations(spliced(word, i, 1, letter))
     
-    // Insertions: add a character at each position (except the end, as user may still be typing)
-    for i < size(word):
+    // Insertions: add a character at each position (except the end 
+    // in Play mode, as the user may still be swiping)
+    for i < size(word) + (if get_mode() == Freestyle then 1 else 0):
         for letter in DICTIONARY.ALPHABET:
-            maybe_add(spliced(word, i, 0, letter))
+            consider_phonetic_variations(spliced(word, i, 0, letter))
     
     // Transpositions: swap adjacent characters
     for i < size(word) - 1:
-        maybe_add(spliced(word, i, 2, word[i + 1], word[i]))
+        consider_phonetic_variations(spliced(word, i, 2, word[i + 1], word[i]))
     
-    // Phonetic substitutions: common sound-alike letter confusions
-    for original at i in word:
-        for group in ["AEIOU", "CKQ", "SZ", "DT", "MN", "BP", "FV", "GJ"]:
-            if contains(group, original):
-                for substitute in group:
-                    if substitute ≠ original:
-                        maybe_add(spliced(word, i, 1, substitute))
     
     // Sort by liklihood and then extract just the words
     const word_array = []
