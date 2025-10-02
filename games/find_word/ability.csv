@@ -41,12 +41,12 @@ XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
 "Mz. Kiwi's Friend",40,"`I know a keen keeper of knowledge you'll like…'",avatar_sprite[15][28].x_flipped
 Meet Dr. Quandary,40,"`Salutations, I'm Quandary! Justifiably perplexed and ajumble with J, Q, X, and Z? My quality expertise will expand your puzzle vocabulary in a jiffy.'",avatar_sprite[22][4].x_flipped
+Aura,45,"You now give lower-level players bonus XP based on your score",icon_sprite.aura
 Remix × 5,48,"New power: Use Remix 5× per match",ability_icon.remix
 See VIL More Frequently,49,SILENT,
 Beat VIL Stat,49,"Stats now shows how many times you beat Vilipend's score in a match",stats_sprite[0][0]
-Aura,50,"You now give lower-level players bonus XP based on your score",icon_sprite.aura
-"Meet Miss Pelican",53,"`I'm Miss Pelican. Should you encounter an idiosyncratic spelling, do not acquiesce! I'll conscientiously intercede on your behalf.'",avatar_sprite[31][26].x_flipped
-Remix × 6,57,"New power: Use Remix 6× per match",ability_icon.remix
+"Meet Miss Pelican",50,"`I'm Miss Pelican. Should you encounter an idiosyncratic spelling, do not acquiesce! I'll conscientiously intercede on your behalf.'",avatar_sprite[31][26].x_flipped
+Remix × 6,55,"New power: Use Remix 6× per match",ability_icon.remix
 Enhanced Aura,60,"Your aura is now more powerful and gives lower-level players more bonus XP",icon_sprite.aura
 See VIL Always,60,SILENT
 Remix × 8,65,"New power: Use Remix 8× per match",ability_icon.remix
