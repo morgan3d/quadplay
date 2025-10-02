@@ -243,7 +243,8 @@ def spell_check(word):
     
     // Insertions: add a character at each position (except the end 
     // in Play mode, as the user may still be swiping)
-    for i < size(word) + (if get_mode() == Freestyle then 1 else 0):
+    const N = size(word) + (if get_mode() == Freestyle then 1 else 0)
+    for i < N:
         for letter in DICTIONARY.ALPHABET:
             consider_phonetic_variations(spliced(word, i, 0, letter))
     

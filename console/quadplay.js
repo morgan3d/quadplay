@@ -586,6 +586,15 @@ function unlockAudio() {
 }
 
 
+// Handle iOS Safari audio resume during user interaction.
+// Must be called from a user input event handler.
+function resumeAudioOnUserInteraction() {
+    if (audioContext.state === 'suspended' && emulatorMode === 'play') {
+        audioContext.resume();
+    }
+}
+
+
 function requestFullScreen() {
     // Full-screen the UI. This can fail if not triggered by a user interaction.
 
@@ -2213,6 +2222,7 @@ function onDocumentKeyDown(event) {
         return;
     }
 
+    resumeAudioOnUserInteraction();
     wake();
 
     switch (event.which || event.keyCode) {
@@ -4618,10 +4628,15 @@ function showContextMenu(parent) {
 }
 
 document.addEventListener('mousedown', function (event) {
+    resumeAudioOnUserInteraction();
     if (customContextMenu.style.visibility === 'visible') {
         customContextMenu.style.visibility = 'hidden';
     }
 });
+
+document.addEventListener('touchstart', function (event) {
+    resumeAudioOnUserInteraction();
+}, {passive: true});
 
 
 // Pause when losing focus if currently playing...prevents quadplay from
@@ -4669,12 +4684,6 @@ function onInactive() {
 
     
 function onActivatePage() {
-
-    if (isMobile && isApple && audioContext.state === 'suspended') {
-        // A slight delay is needed on iOS for the resume
-        // https://stackoverflow.com/questions/53100047/why-state-can-be-invalid-in-web-audio-in-safari-after-resume?rq=2
-        setTimeout(() => audioContext.resume(), 500);
-    }
 
     // Reset the bloom state; it might have disabled
     // while defocused due to browser throttling.

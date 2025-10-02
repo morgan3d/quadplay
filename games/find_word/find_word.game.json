@@ -95,7 +95,7 @@
         "quandary_sound": "quandary.sound.json",
         "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.537",
+    "version": "0.538",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
