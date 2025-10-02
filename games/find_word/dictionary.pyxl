@@ -215,22 +215,22 @@ def spell_check(word):
     // Deletions: remove each character
     if size(word) - 1 ≥ DICTIONARY.MIN_WORD_LENGTH:
         for i < size(word):
-            maybe_add(slice(word, 0, i) + slice(word, i + 1))
+            maybe_add(spliced(word, i, 1))
     
     // Substitutions: replace each character
     for i < size(word):
         for letter in DICTIONARY.ALPHABET:
             if letter ≠ word[i]:
-                maybe_add(slice(word, 0, i) + letter + slice(word, i + 1))
+                maybe_add(spliced(word, i, 1, letter))
     
     // Insertions: add a character at each position (except the end, as user may still be typing)
     for i < size(word):
         for letter in DICTIONARY.ALPHABET:
-            maybe_add(slice(word, 0, i) + letter + slice(word, i))
+            maybe_add(spliced(word, i, 0, letter))
     
     // Transpositions: swap adjacent characters
     for i < size(word) - 1:
-        maybe_add(slice(word, 0, i) + word[i + 1] + word[i] + slice(word, i + 2))
+        maybe_add(spliced(word, i, 2, word[i + 1], word[i]))
     
     // Phonetic substitutions: common sound-alike letter confusions
     for original at i in word:
@@ -238,7 +238,7 @@ def spell_check(word):
             if contains(group, original):
                 for substitute in group:
                     if substitute ≠ original:
-                        maybe_add(slice(word, 0, i) + substitute + slice(word, i + 1))
+                        maybe_add(spliced(word, i, 1, substitute))
     
     // Sort by liklihood and then extract just the words
     const word_array = []

@@ -556,7 +556,6 @@ function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
 
         // Create the value
         debugPane.innerHTML =
-            `<span class="constantName">${name}</span> =` +
             makeConstantEditorControlHTML(name, debugJSON.object,
                                           nestedGet(gameSource.debug.constants, name), true, true);
     }

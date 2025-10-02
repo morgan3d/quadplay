@@ -109,7 +109,7 @@ def make_player():
             current_word_frame: -∞}}   
 
 todo("Add to ability.csv") 
-// Bovine Boon,71,"`You have proven yourself our worthy defender against Vilipend. caf and I will imbue you with a new bovine boon power each day to aid in your battles.'",avatar_sprite[34][22].x_flipped
+// Bovine Boon,70,"`You have proven yourself our worthy defender against Vilipend. caf and I will imbue you with a new bovine boon power each day to aid in your battles.'",avatar_sprite[34][22].x_flipped
 
 /* Returns a selection array [xy(), …] that matches the word, or ∅ if the word 
    does not appear in this board. The word is all caps and NOT Q-encoded */

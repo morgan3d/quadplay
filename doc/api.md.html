@@ -308,6 +308,11 @@ Array
   optional `e` (exclusive, defaults to length). Clamps `e` to
   the length.
 
+`splice(array, start, delete_count, item1, item2, ...)`
+: Removes `delete_count` elements from `array` starting at index `start`,
+  and then inserts `item1`, `item2`, etc. at that position. Mutates the array in place.
+  Returns nothing to avoid confusion with `spliced()`.
+
 `sort(array, k, reverse default false)`
 : Sort the array from least to greatest in place. If `k` is a string, then
   elements of the array are assumed to be objects and are sorted by
@@ -330,6 +335,11 @@ Array
 `sorted(array, k, reverse default false)`
 : Clone the array, sort it, and return the sorted array. See `sort()`
   for details.
+
+`spliced(array, start, delete_count, item1, item2, ...)`
+: Returns a new array with `delete_count` elements removed starting at index `start`,
+  and then `item1`, `item2`, etc. inserted at that position. 
+  See also `spliced(string, ...)` and `slice(array, ...)`.
   
 `swap(array, i, j)`
 : Swaps elements `i` and `j` in the array in place.
@@ -463,6 +473,11 @@ String
 
 `split(string, count default 0)`
 : Returns an array of strings that are every sequential `count` characters from `string`.
+
+`spliced(string, start, deleteCount, item1, item2, ...)`
+: Returns a new string with `deleteCount` characters removed starting at index `start`,
+  and then `item1`, `item2`, etc. (converted to strings and concatenated) inserted at that position.
+  See also `spliced(array, ...)`.
 
 `starts_with(string, target)`
 : Returns true if `string` begins with the substring `target`. See also `ends_with()`.

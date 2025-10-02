@@ -54,7 +54,7 @@ def npc_message_hook()
     const history_rect = get_history_rect()
     const rect = {
         corner: xy(0, 0), 
-        size: xy(history_rect.size.x, 50)}
+        size: xy(history_rect.size.x, 64)}
         
     set_transform(history_rect.corner + ½ xy(0, history_rect.size.y - rect.size.y - 8), ∅, 50)
     

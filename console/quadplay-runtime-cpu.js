@@ -1101,6 +1101,12 @@ function reverse(array) {
 }
 
 
+function splice(array, start, deleteCount) {
+    if (! Array.isArray(array)) { $error('splice() takes an array as the first argument'); }
+    array.splice(start, deleteCount, ...Array.prototype.slice.call(arguments, 3));
+}
+
+
 function remove_key(t, i) {
     if ($iteratorCount.get(t)) {
         $error('Cannot remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
@@ -8680,6 +8686,20 @@ function reversed(a) {
     } else {
         // String case
         return a.split('').reverse().join('');
+    }
+}
+
+
+function spliced(source, start, deleteCount) {
+    if (Array.isArray(source)) {
+        const c = clone(source);
+        c.splice(start, deleteCount, ...Array.prototype.slice.call(arguments, 3));
+        return c;
+    } else {
+        // String case
+        const items = Array.prototype.slice.call(arguments, 3);
+        const insertStr = items.join('');
+        return source.substring(0, start) + insertStr + source.substring(start + deleteCount);
     }
 }
 

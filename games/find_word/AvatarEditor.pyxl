@@ -97,7 +97,7 @@ preserving_transform:
         for j < 2:
             const s = sign(j - 0.5)
             if update_triangle_button(xy(x, 45 s), i + 1, s):
-                player.avatar.name = letter_replaced(player.avatar.name, i, avatar_next_name_letter(letter, s))
+                player.avatar.name = spliced(player.avatar.name, i, 1, avatar_next_name_letter(letter, s))
         
         // Letter
         draw_text({
