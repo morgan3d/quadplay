@@ -17,6 +17,15 @@ def size_comparator(A, B):
 
 
 
+/* Compute matching prefix length */
+def prefix_length(word, candidate):
+    let length = 0
+    const N = min(size(word), size(candidate))
+    while length < N and word[length] == candidate[length]:
+        ++length
+    return length
+    
+
     
 def draw_arc(pos, radius, start, stop, color):
     const N = 10

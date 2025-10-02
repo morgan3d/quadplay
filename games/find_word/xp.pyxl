@@ -33,12 +33,11 @@ for 0 < i < 30:
     debug_print(level, ":", level_to_xp(level), "≤", xp, "<", level_to_xp(level + 1))
     assert(level_to_xp(level) ≤ xp)
     assert(xp < level_to_xp(level + 1)) 
-  */
+    */
 
 /*
-local:
-    for 0 < level ≤ 50:
-        debug_print(level, "|", format_number(level_to_xp(level), "commas"))
+for 0 < level ≤ 75:
+    debug_print(level, "|", format_number(level_to_xp(level), "commas"))
 */
 
 

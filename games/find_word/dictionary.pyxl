@@ -210,7 +210,7 @@ def spell_check(word):
         if dictionary.all[candidate] and not result[candidate]:
             result[candidate] = {
                 candidate: candidate,
-                score: size(candidate) + (if dictionary.common[candidate] then 5 else 0) + (if candidate[0] == word[0] then 20 else 0)}
+                score: size(candidate) + 10 * prefix_length(word, candidate) + (if dictionary.common[candidate] then 5 else 0)}
 
     // Phonetic substitutions: common letter confusions
     def consider_phonetic_variations(candidate):
@@ -222,11 +222,7 @@ def spell_check(word):
                 if contains(group, original):
                     for substitute in group:
                         if substitute ≠ original:
-                            const phonetic_candidate = spliced(candidate, i, 1, substitute)
-                            if dictionary.all[phonetic_candidate] and not result[phonetic_candidate]:
-                                result[phonetic_candidate] = {
-                                    candidate: phonetic_candidate,
-                                    score: size(phonetic_candidate) + (if dictionary.common[phonetic_candidate] then 5 else 0) + (if phonetic_candidate[0] == word[0] then 20 else 0)}
+                            maybe_add(spliced(candidate, i, 1, substitute))
     
     consider_phonetic_variations(word)
 

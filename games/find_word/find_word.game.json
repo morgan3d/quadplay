@@ -95,7 +95,7 @@
         "quandary_sound": "quandary.sound.json",
         "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.538",
+    "version": "0.540",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -217,11 +217,11 @@
                         },
                         "enhanced_aura_point": {
                             "type": "number",
-                            "value": 0.05
+                            "value": "0.06"
                         },
                         "caf_affection": {
                             "type": "number",
-                            "value": 12
+                            "value": "15"
                         },
                         "point": {
                             "type": "number",
@@ -237,7 +237,7 @@
                         },
                         "decimatch_today": {
                             "type": "number",
-                            "value": "30"
+                            "value": "100"
                         },
                         "unique_word_per_tile": {
                             "description": "The first two letters don't count. The length will be squared.",
@@ -252,12 +252,12 @@
                 },
                 "LEVEL_EXPONENT": {
                     "type": "number",
-                    "value": 0.6,
+                    "value": "0.58",
                     "description": "See `xp_to_level()`. Higher is easier to level up. Chosen to make Level 20 ~= 40k XP"
                 },
                 "LEVEL_DIVISOR": {
                     "type": "number",
-                    "value": 250,
+                    "value": "180",
                     "description": "See `xp_to_level()`"
                 }
             }
