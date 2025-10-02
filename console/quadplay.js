@@ -4671,7 +4671,9 @@ function onInactive() {
 function onActivatePage() {
 
     if (isMobile && isApple && audioContext.state === 'suspended') {
-        audioContext.resume();
+        // A slight delay is needed on iOS for the resume
+        // https://stackoverflow.com/questions/53100047/why-state-can-be-invalid-in-web-audio-in-safari-after-resume?rq=2
+        setTimeout(() => audioContext.resume(), 500);
     }
 
     // Reset the bloom state; it might have disabled
