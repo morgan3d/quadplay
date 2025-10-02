@@ -436,8 +436,8 @@ def maybe_run_miss_pelican_ai(word):
                 "{color:#000 " + slice(suggestion, prefix_len, middle_end) + "}" +
                 slice(suggestion, middle_end))
     
-    // Process all suggestions and take first 3
-    const suggestions = slice(iterated(spell_check(word) default [], process_suggestion), 0, 3)
+    // Process all suggestions and take first few
+    const suggestions = slice(iterated(spell_check(word) default [], process_suggestion), 0, 4)
     if size(suggestions) == 0: return
         
     def close_callback():
@@ -447,7 +447,7 @@ def maybe_run_miss_pelican_ai(word):
     def auto_close_condition(initial_word_count):
         return size(player.history.list) + size(player.history.free) > initial_word_count
 
-    // Build suggestion text with up to 3 words
+    // Build suggestion text with a few words
     set_npc_message(
         msp_avatar,
         "You may be thinking of " + join(suggestions, ", ", " or "),
