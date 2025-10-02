@@ -16,6 +16,7 @@ def draw_globe(pos, radius):
             draw_arc(pos, xy(cos ϕ, 1) * radius, 90°, 270°, HIGHLIGHT_COLOR)
 
 
+
 def notify_on_personal_bests():
     const lifetime = player.stats.lifetime
     const today = player.stats[today_date_string()]
@@ -65,6 +66,14 @@ update_network()
 
 set_background(GLOBAL_GAME.BACKGROUND_COLOR)
 
+
+if (get_conduit_online_status() ≠ "online" or not (conduit and conduit.status == "online")) and not DEBUG.OFFLINE:
+    draw_text({
+        text: "network " + (conduit and conduit.status),
+        font: leaderboard_font,
+        pos: xy(½ SCREEN_SIZE.x, 10),
+        color: #FC5})
+        
 draw_text({
     text: "Gathering Global Scores…",
     font: score_font,
@@ -100,7 +109,9 @@ for i < ⌊max(N, 10) τ⌋:
 
 if frame_utc_now ≥ end_time:
     set_mode(Intermission) because "Timer"
-    
+
+
+
     
 leave
 ────────────────────────────────────────────────────────────────────────

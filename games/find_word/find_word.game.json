@@ -95,7 +95,7 @@
         "quandary_sound": "quandary.sound.json",
         "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.535",
+    "version": "0.536",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -2480,7 +2480,7 @@
                 },
                 "PLAY_SECONDS": {
                     "type": "number",
-                    "value": "135",
+                    "value": "137",
                     "min": 45,
                     "max": 480,
                     "format": "0",
@@ -3281,11 +3281,6 @@
                 "HISTORY": {
                     "type": "boolean",
                     "value": false
-                },
-                "MISS_PELICAN": {
-                    "type": "boolean",
-                    "value": false,
-                    "description": "Debug Miss Pelican AI spell check suggestions"
                 },
                 "OFFLINE": {
                     "type": "boolean",
