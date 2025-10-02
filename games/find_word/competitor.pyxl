@@ -127,6 +127,9 @@ def competitor_analyze(competitor_array):
         if offensive[looks_like] or sensitive[looks_like]:
             competitor.avatar.name = competitor.avatar.name[0] + competitor.avatar.name[2] + " "
         
+        // Reset to recompute from word list
+        competitor.best_freestyle_points = 0
+        
         for prefix in ["", "freestyle_"]:
             for word, points in entry in competitor[prefix + "word_list"]:
                 // Increment the count

@@ -53,9 +53,13 @@ end_time = next_global_game_utc_start_time() - INTERMISSION.SECONDS - EARN_XP_SE
 if DEBUG.INTERMISSION or DEBUG.EARN_XP:
     end_time = frame_utc_now
 
+// Calculate best_freestyle_points for notification checking
+// (full competitor_analyze happens later in leave)
+for word, points in entry in player_competitor.freestyle_word_list:
+    player_competitor.best_freestyle_points += points
+
 notify_on_personal_bests()
     
-
 
 frame
 ────────────────────────────────────────────────────────────────────────
