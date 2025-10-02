@@ -305,7 +305,8 @@ Array
 
 `slice(array, s, e default size(array))`
 : Return the subarray of `array` between `s` (inclusive) and
-  optional `e` (exclusive, defaults to length).
+  optional `e` (exclusive, defaults to length). Clamps `e` to
+  the length.
 
 `sort(array, k, reverse default false)`
 : Sort the array from least to greatest in place. If `k` is a string, then
@@ -452,7 +453,8 @@ String
 
 `slice(string, s, e default size(str))`
 : Return the substring of `string` between `s` (inclusive) and
-  optional `e` (exclusive, defaults to length).
+  optional `e` (exclusive, defaults to length). Clamps `e` to
+  the length.
 
 `split(string, separator default "", max_splits default infinity)`
 : Returns an array of strings separated by `separator`. If 

@@ -105,8 +105,8 @@ def make_player():
         miss_pelican: {
             last_shown_frame: -∞,
             shown_this_match: {},
-            attempt_count: {}}}
-   
+            current_word: "",
+            current_word_frame: -∞}}   
 
 todo("Add to ability.csv") 
 // Bovine Boon,71,"`You have proven yourself our worthy defender against Vilipend. caf and I will imbue you with a new bovine boon power each day to aid in your battles.'",avatar_sprite[34][22].x_flipped
@@ -170,12 +170,7 @@ def _index_to_pos(index):
 /* Return the word, maybe including a wildcard character, represented
    by the player's current `free_row` tiles. This is q-encoded */
 def player_free_row_pattern(player):
-    let pattern = ""
-    
-    for tile at t in player.free_row:
-        pattern += tile.letter
-        
-    return pattern
+    return join(iterated(player.free_row, "letter"))
 
 
 
@@ -594,7 +589,6 @@ def player_reset_match(player, game_type, board_space_string default ∅, skip_w
     
     // Reset Miss Pelican state for new match
     player.miss_pelican.shown_this_match = {}
-    player.miss_pelican.attempt_count = {}
     
     player.remix_uses_left = (
         if player.has_ability["Remix × 10"] then 10

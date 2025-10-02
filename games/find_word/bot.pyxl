@@ -375,42 +375,90 @@ if DEBUG.VIL:
   - A Miss Pelican notification has not been visible for at least 15 seconds
   - The game has at least 12 seconds left
   - The notification for this word has not previously been shown in this match
-  - In `Freestyle` mode, or in (`Play` mode and the player has tried exactly this word twice in this match)
+  - The word has been stable (unchanged) for the configured time
 
  */
-def maybe_run_miss_pelican_ai(word, time_left):
+def maybe_run_miss_pelican_ai(word):
+    const msp_npc = NPC.MSP.descriptor.npc
+    
+    // Check all trivial rejection conditions
     if (in_waiting_room or 
+        not word or 
+        contains(word, WILDCARD_CHARACTER) or
         not player.has_ability["Meet Miss Pelican"] or
         size(word) < 5 or
-        not word or
-        game_frames - player.miss_pelican.last_shown_frame < 15 * 60 or
-        time_left < 12 or
-        player.miss_pelican.shown_this_match[word]): return
+        
+        // Cooldown since last shown
+        game_frames - player.miss_pelican.last_shown_frame < msp_npc.cooldown_time * 60 or
+        
+        // Time left in match
+        end_time - frame_utc_now < msp_npc.min_time_left or
+        
+        // Haven't shown this match before
+        player.miss_pelican.shown_this_match[word] or
+        
+        // Don't show message until word has been stable
+        game_frames - player.miss_pelican.current_word_frame < msp_npc.word_stability_time * 60): return
     
-    const suggestions = spell_check(word)
-    if not suggestions or size(suggestions) == 0: return
+    // Track when this word was first seen
+    if player.miss_pelican.current_word ≠ word:
+        player.miss_pelican.current_word = word
+        player.miss_pelican.current_word_frame = game_frames
+        return
     
-    // In Play mode, require the word to be attempted twice
-    if get_mode() == Play:
-        player.miss_pelican.attempt_count[word] = (player.miss_pelican.attempt_count[word] default 0) + 1
-        if player.miss_pelican.attempt_count[word] < 2: return
+    let suggestions = spell_check(word)
+    if not suggestions: return
+    
+    // Filter and highlight suggestions in one pass
+    def process_suggestion(suggestion):
+        // Check if invalid
+        const lower = lowercase(q_decode(suggestion))
+        if size(suggestion) < 5 or player.already_found[suggestion] or offensive[lower] or sensitive[lower]:
+            return iterate.REMOVE
+        
+        // Highlight the part that differs from the original word
+        let prefix_len = 0
+        while (prefix_len < size(word) and 
+               prefix_len < size(suggestion) and
+               word[prefix_len] == suggestion[prefix_len]):
+            ++prefix_len
+        
+        let suffix_len = 0
+        while (suffix_len < size(word) - prefix_len and
+               suffix_len < size(suggestion) - prefix_len and
+               word[size(word) - 1 - suffix_len] == suggestion[size(suggestion) - 1 - suffix_len]):
+            ++suffix_len
+        
+        const middle_end = size(suggestion) - suffix_len
+        
+        return (slice(suggestion, 0, prefix_len) + 
+                "{color:#000 " + slice(suggestion, prefix_len, middle_end) + "}" +
+                slice(suggestion, middle_end))
+    
+    // Process all suggestions and take first 3
+    suggestions = slice(iterated(suggestions, process_suggestion), 0, 3)
+    if size(suggestions) == 0: return
     
     // Mark as shown
     player.miss_pelican.shown_this_match[word] = true
     
     def close_callback():
         player.miss_pelican.last_shown_frame = game_frames
+    
+    // Auto-close if player completes any word
+    def auto_close_condition(initial_word_count):
+        return size(player.history.list) + size(player.history.free) > initial_word_count
 
     // Build suggestion text with up to 3 words
     set_npc_message(
         msp_avatar,
-        "Did you mean " + join(iterated(slice(suggestions, 0, min(3, size(suggestions))), q_decode), ", ", " or ") + "?",
-        6,
+        "You may be thinking of " + join(suggestions, ", ", " or "),
+        msp_npc.importance,
         evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
         ∅,
-        ∅,
-        ∅,
-        ∅,
+        auto_close_condition,
+        size(player.history.list) + size(player.history.free),
+        evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
         close_callback)
     
 

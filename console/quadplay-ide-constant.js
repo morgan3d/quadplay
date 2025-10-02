@@ -518,7 +518,7 @@ function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
 
     if (! debugJSON.object) {
         // Copy from the non-debug version
-        debugJSON.parent[name] = debugJSON.object = deep_clone(gameJSON.object);
+        debugJSON.parent[debugJSON.key] = debugJSON.object = deep_clone(gameJSON.object);
         nestedSet(gameSource.debug.constants, name,
                   (debugJSON.object.type === 'reference')  ?
                   new GlobalReferenceDefinition(name, debugJSON.object) :

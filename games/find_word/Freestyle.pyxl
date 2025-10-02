@@ -325,7 +325,7 @@ frame
 maybe_connect_to_network()
 const time_left = end_time - frame_utc_now
 
-maybe_run_miss_pelican_ai(player_free_row_pattern(player), time_left)
+maybe_run_miss_pelican_ai(player_free_row_pattern(player))
 
 // Handle gamepad cursor movement
 if player.using_gamepad:

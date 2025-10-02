@@ -14,6 +14,8 @@ let _npc_message
    multiple NPCs to try and comment without overriding anyone. The sound will
    be played the first time that the message is displayed. 
    
+   The `text` supports markup formatting (e.g., {color:#D00 text}).
+   
    Will close if the user clicks, presses (c), or if
    `auto_close_condition(data, game_frames_since_opened)` is truish.
    
@@ -52,7 +54,7 @@ def npc_message_hook()
     const history_rect = get_history_rect()
     const rect = {
         corner: xy(0, 0), 
-        size: xy(history_rect.size.x, 36)}
+        size: xy(history_rect.size.x, 50)}
         
     set_transform(history_rect.corner + ½ xy(0, history_rect.size.y - rect.size.y - 8), ∅, 50)
     
@@ -64,33 +66,24 @@ def npc_message_hook()
     draw_corner_rect(rect.corner, rect.size, rgba(get_background(), 50%))
     
     // Avatar
+    const avatar_scale = 200%
+    const scaled_avatar_size = avatar_scale * avatar_sprite.sprite_size
     avatar_draw({
         avatar: avatar,
-        pos: xy(avatar_sprite.sprite_size.x, rect.size.y - avatar_sprite.sprite_size.y),
-        scale: 200%,
+        pos: xy(½ scaled_avatar_size.x, rect.size.y - ½ scaled_avatar_size.y),
+        scale: avatar_scale,
         outline: #CCC})
     
     // Inset by the border size and offset by the avatar sprite
     const bubble_rect = {
-        corner: speech_bubble_sprite.sprite_size + xy(2 avatar_sprite.sprite_size.x - 2, 1), 
-        size: rect.size - 2 speech_bubble_sprite.sprite_size - xy(2 avatar_sprite.sprite_size.x - 2, ¾ avatar_sprite.sprite_size.y + 2)}
+        corner: speech_bubble_sprite.sprite_size + xy(scaled_avatar_size.x, 1), 
+        size: rect.size - xy(2 speech_bubble_sprite.sprite_size.x, speech_bubble_sprite.sprite_size.y) - xy(scaled_avatar_size.x, ½ scaled_avatar_size.y + 2)}
 
     // Animate opening the message
     bubble_rect.size.x = round(lerp(32, bubble_rect.size.x, min(100%, (game_frames - open_game_frames) / 10)))
     
     // Speech bubble
     draw_sprite_corner_rect(speech_bubble_sprite.center, bubble_rect.corner, bubble_rect.size)
-
-    // Clip the message to the speech bubble, but only in the horizontal direction.
-    // Vertically we need to extend into the region and the bubble only grows horizontally.
-    set_clip(transform_ws_to_ss(xy(bubble_rect.corner.x - 8, rect.corner.y)), xy(bubble_rect.size.x + 16, rect.size.y))
-    
-    // The message    
-    draw_text({
-        font: leaderboard_font, 
-        pos: bubble_rect.corner + ½ bubble_rect.size - xy(0, 1),
-        text: "\"" + text + "\"",
-        color: avatar.color})
 
     // Close prompt
     if player.using_gamepad:
@@ -101,6 +94,20 @@ def npc_message_hook()
             x_align: "right",
             y_align: "bottom",
             color: #333})
+
+    // Clip the message to the speech bubble, but only in the horizontal direction.
+    // Vertically we need to extend into the region and the bubble only grows horizontally.
+    set_clip(transform_ws_to_ss(xy(bubble_rect.corner.x - 8, rect.corner.y)), xy(bubble_rect.size.x + 16, rect.size.y))
+    
+    // The message
+    draw_text({
+        font: leaderboard_font, 
+        pos: bubble_rect.corner + ½ bubble_rect.size - xy(0, 1),
+        text: "\"" + text + "\"",
+        wrap_width: bubble_rect.size.x,
+        color: avatar.color,
+        markup: true})
+
     
     if (((game_frames - open_game_frames ≥ MIN_DIALOG_FRAMES) and 
          (touch.a and overlaps(touch.xy, rect)) or 
@@ -110,7 +117,8 @@ def npc_message_hook()
         
         (auto_close_condition and auto_close_condition(data))):
         
-        play_sound(_npc_message.auto_close_play_sound_args)
+        if _npc_message.auto_close_play_sound_args:
+            play_sound(_npc_message.auto_close_play_sound_args)
         clear_npc_message()
     
     

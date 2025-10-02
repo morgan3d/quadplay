@@ -254,9 +254,8 @@ for word in vocab:
 if size(array): push(text_array, array)
 
 // Break into max 26 strings to avoid overloading the renderer
-vocabulary_text_array = []
-for array in text_array:
-    push(vocabulary_text_array, join(array, ", "))
+def _join_array(array): return join(array, ", ")
+vocabulary_text_array = iterated(text_array, _join_array)
 
 
 

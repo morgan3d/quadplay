@@ -1232,7 +1232,7 @@ The PyxlScript language feels a lot like Python, with these changes:
 - No comparison operator chaining
 - Use `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either due to the `for` loop syntax)
 - Use `for value at key in obj:` instead of `for key, value in obj.items():`
-- Use `iterate()` instead of `map()`, `filter()`, or list comprehensions
+- Use `iterate()` or `iterated()` instead of `map()`, `filter()`, `fold()` or list comprehensions
 - Use `x = if t then a else b` for Python `x = a if t else b`
 - Use `true`, `false`, `nil` instead of `True`, `False`, `None`
 - Use `def foo(a, b, ...rest)` instead of `def foo(a, b, *rest)`

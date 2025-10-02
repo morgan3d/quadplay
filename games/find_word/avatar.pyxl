@@ -14,14 +14,16 @@ def avatar_save(avatar):
 
 
 def make_bot_avatar(descriptor):
+    const sprite = evaluate_constant_expression(descriptor.sprite).x_flipped
     return {
         // Bots face left
-        sprite: evaluate_constant_expression(descriptor.sprite).x_flipped,
+        sprite: sprite,
         name: descriptor.name,
         bot: true,
         evil: descriptor.npc and descriptor.npc.evil,
         appears_human: descriptor.appears_human default false,
-        id: "BOT_" + descriptor.name}
+        id: "BOT_" + descriptor.name,
+        color: avatar_compute_color(sprite)}
         
         
         

@@ -197,8 +197,8 @@ word_to_hint_text.cache = {}
  the most likely correct spellings sorted by likelihood. The strings in the returned
  array are all upper case and q-encoded.
  
- Does not suggest words that only append one letter to the end, as the user may still
- be in the process of typing.
+ Does not suggest words that only append one letter to the end,
+ as the user may still be in the process of typing.
  */
 def spell_check(word):
     if dictionary.all[word]: return ∅
