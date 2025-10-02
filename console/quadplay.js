@@ -4634,6 +4634,12 @@ function onInactive() {
         return;
     }
 
+    if (isMobile && isApple) {
+        // iOS Safari needs the audio context suspended or it will
+        // lose audio https://github.com/phaserjs/phaser/issues/4790
+        audioContext.suspend();
+    }
+
     // Don't do anything if already sleeping/paused or if auto-pause is disabled
     if (!autoPauseEnabled || isHosting || isGuesting || 
         (emulatorMode === 'pause') || 
@@ -4663,6 +4669,10 @@ function onInactive() {
 
     
 function onActivatePage() {
+
+    if (isMobile && isApple && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
 
     // Reset the bloom state; it might have disabled
     // while defocused due to browser throttling.
