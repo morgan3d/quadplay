@@ -436,7 +436,7 @@ if competitor_table[NPC.VIL.ID]:
 todo("Test npc messages above")
 todo("VIL-MzK interaction")
 
-if present[NPC.VIL.ID] and present[NPC.CAF.ID]:        
+if competitor_table[NPC.VIL.ID] and competitor_table[NPC.CAF.ID]:        
     todo("VIL - caf interaction")
 
    
