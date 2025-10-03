@@ -402,17 +402,44 @@ if DEBUG.EARN_XP:
     
 intermission_end_time = end_time - EARN_XP_SECONDS
 
-// See if NPS have any commentary. 
-for competitor in competitor_array:
-    if competitor.avatar.id == NPC.CAF.ID and competitor.score == 0 and not DEBUG.EARN_XP:
-        notify(competitor.avatar.sprite, NPC.CAF.descriptor.name, "`too hard!!!!!'", play_sound, caf_too_hard_sound)
+// See if NPS have any commentary
 
-    if competitor.avatar.id == NPC.VIL.ID and player_competitor.beat_vil_regular_match:
+const competitor_table = {}
+for competitor in competitor_array:
+    competitor_table[competitor.avatar.id] = competitor
+    
+if competitor_table[NPC.CAF.ID] and competitor_table[NPC.CAF.ID].score == 0 and not DEBUG.EARN_XP:
+    set_npc_message(caf_avatar, "too hard!!!!!", 0, {sound: caf_too_hard_sound}, 60 * 4)
+
+if competitor_table[NPC.VIL.ID]:
+    if player_competitor.beat_vil_regular_match:
         if not player.has_achievement["Beat VIL Once"]:
             player_achieve(player, "Beat VIL Once", false)
-            notify(competitor.avatar.sprite, NPC.VIL.descriptor.name, "`You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!'", play_sound, vil_00_sound)
+            set_npc_message(vil_avatar, "You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!", 6, {sound: vil_00_sound}, 60 * 10)
+    else if ξ < 8%:
+        if size(competitor_table[NPC.VIL.ID].badges) > 0 and size(player_competitor.badges) == 0:
+            set_npc_message(vil_avatar, "No award XP for you!", 1, {sound: vil_00_sound}, 60 * 8)
+        else:
+            set_npc_message(vil_avatar, random_value([
+                "Ignoramus.", 
+                "You have a vegetal cerebrum.", 
+                "So sorry.", 
+                "How unfortunate for you.", 
+                "Go lacrimate with your cattle.",
+                "Your orthographic abilities are profoundly insufficient.",
+                "I detest the cacophonous squawking of that zealous avian.",
+                "Observe the vacant expression on your cud-chewing friend.",
+                "These animals form a menagerie of the unintelligent, led by the inadequate.",
+                "Your ornithological allies possess a rudimentary intellect, at best.",
+                "Your lexicon appears as limited as your prospects."]), 1, {sound: vil_00_sound}, 60 * 8)
 
+todo("Test npc messages above")
+todo("VIL-MzK interaction")
 
+if present[NPC.VIL.ID] and present[NPC.CAF.ID]:        
+    todo("VIL - caf interaction")
+
+   
 frame
 ────────────────────────────────────────────────────────────────────────
 

@@ -2603,10 +2603,6 @@ function searchForDefinitionInFile(identifier, content, fileUrl, currentUrl, cur
         const line = lines[i];
         const defMatch = line.match(new RegExp(`^\\s*def\\s+(${escapeRegExp(identifier)})\\s*\\(`));
         if (defMatch) {
-            // If in current file, check if definition is before cursor (lexical scoping)
-            if (isCurrentFile && i >= cursorPos.row) {
-                continue; // Definition must be before usage in lexical scoping
-            }
             return {
                 url: fileUrl,
                 line: i + 1,
@@ -2617,10 +2613,6 @@ function searchForDefinitionInFile(identifier, content, fileUrl, currentUrl, cur
         // Search for variable declarations: let identifier = ... or const identifier = ...
         const varMatch = line.match(new RegExp(`^\\s*(?:let|const)\\s+(${escapeRegExp(identifier)})\\s*[=:]`));
         if (varMatch) {
-            // If in current file, check lexical scoping
-            if (isCurrentFile && i >= cursorPos.row) {
-                continue;
-            }
             return {
                 url: fileUrl,
                 line: i + 1,
@@ -2640,9 +2632,6 @@ function searchForDefinitionInFile(identifier, content, fileUrl, currentUrl, cur
                 };
             }
         }
-        
-        // TODO: Handle with and for statement variable declarations
-        // These have complex syntax and scoping rules that need careful parsing
     }
     
     return null;

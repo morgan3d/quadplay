@@ -84,6 +84,10 @@ def competitor_is_friend(competitor):
 
 /* Convert the local player into a competitor */
 def make_player_competitor():
+    
+    
+    todo("Trim the free word to the used length")
+    
     const competitor = {
         …make_competitor(),
         avatar: player.avatar,

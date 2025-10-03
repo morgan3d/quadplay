@@ -243,7 +243,7 @@ def make_good_board_string(board_rng):
     let short_word_count = 0
     let long_word_count = 0
     let very_long_word_count = 0
-    let valuable_letter_table = {}
+    let valuable_letter_use_count = {}
     let valuable_letter_long_count = {}
     let mean_valuable_letter_uses = 0
     let mean_valuable_letter_long_uses = 0
@@ -257,7 +257,7 @@ def make_good_board_string(board_rng):
     let tries = -1  
     while tries < GENERATE_BOARD.CRITERIA.RETRIES:
         ++tries
-        if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because still bad after " + GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES + " shuffles ***") 
+        if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n****************************************\n*** Rerolling because still bad after " + GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES + " shuffles ***") 
 
         seed_base = random_integer(0x0, 0x7FFFFFFF, board_rng)
                 
@@ -278,22 +278,35 @@ def make_good_board_string(board_rng):
                         
             // Between 4 and 7 vowels seems to be the sweet spot for a good 4x4 grid,
             // so re-roll if we fail on this
-            if gen.vowels ≤ ROWS or gen.vowels ≥ 2 ROWS:
-                if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + gen.vowels + " ***")
+            if gen.vowels < ROWS or gen.vowels ≥ 2 ROWS:
+                if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + gen.vowels + " vowels ***")
                 // Break out of the shuffle loop
                 break
-
     
-            if board_string_has_obvious_sensitive_word(board_string, tries > ½ GENERATE_BOARD.CRITERIA.RETRIES or permute_number > 0):
+            if board_string_has_obvious_sensitive_word(board_string, tries > ½ GENERATE_BOARD.CRITERIA.RETRIES):
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it had an obvious sensitive word")
                 continue
     
-            // Delay computation until trivial tests have passed
+            // Now that trivial tests have passed, examine whether there
+            // are enough good words
             word_array = board_string_find_all_words(board_string)
             
-            if size(word_array) < GENERATE_BOARD.CRITERIA.MIN_WORDS:
+            // Number of times a valuable letter was used
+            valuable_letter_use_count = {}
+            let num_valuable_letter_instances = 0
+            let num_very_valuable_letter_instances = 0
+            for letter in board_string:
+                if LETTER_POINT_TABLE[letter] ≥ 4:
+                    valuable_letter_use_count[letter] = 0
+                    ++num_valuable_letter_instances
+                    if LETTER_POINT_TABLE[letter] ≥ 5:
+                        ++num_very_valuable_letter_instances
+            
+            const valuable_letters = keys(valuable_letter_use_count)
+
+            if size(word_array) < (if size(valuable_letters) then GENERATE_BOARD.CRITERIA.MIN_WORDS_VERY_VALUABLE_LETTER_BOARD else GENERATE_BOARD.CRITERIA.MIN_WORDS):
                 // Not enough words to even examine the board
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + size(word_array) + " words")        
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + size(word_array) + " words on a board with " + num_very_valuable_letter_instances + " very valuable letters")        
                 continue
             
             if tries ≥ GENERATE_BOARD.CRITERIA.RETRIES - 2:
@@ -303,23 +316,13 @@ def make_good_board_string(board_rng):
                 if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted board " + seed_base + " because we had two tries left and this passed minumum words")
                 done = true
                 break
-
     
             // Examine the actual words to see if there are enough *good* ones   
             //
             // If a valuable letter appears, ensure that it is used in 
             // at least two words. First find high point value letters.
                         
-            // Number of times a valuable letter was used
-            valuable_letter_table = {}
-            let num_valuable_letter_instances = 0
-            for letter in board_string:
-                if LETTER_POINT_TABLE[letter] ≥ 4:
-                    valuable_letter_table[letter] = 0
-                    ++num_valuable_letter_instances
-            
-            const valuable_letters = keys(valuable_letter_table)
-            valuable_letter_long_count = clone(valuable_letter_table)
+            valuable_letter_long_count = clone(valuable_letter_use_count)
             
             // Iterate through words, rating them for each criterion
             short_word_count = 0
@@ -335,7 +338,7 @@ def make_good_board_string(board_rng):
                                         
                 for letter in valuable_letters:
                     if contains(word, letter):
-                        ++valuable_letter_table[letter]
+                        ++valuable_letter_use_count[letter]
                         
                         if size(word) ≥ 5:
                             ++valuable_letter_long_count[letter]
@@ -358,7 +361,7 @@ def make_good_board_string(board_rng):
             min_valuable_letter_uses = ∞
             min_valuable_letter_long_uses = ∞
             
-            for count at letter in valuable_letter_table:
+            for count at letter in valuable_letter_use_count:
                 total_valuable_letter_uses += count
                 total_valuable_letter_long_uses += valuable_letter_long_count[letter]
                 min_valuable_letter_uses = min(min_valuable_letter_uses, count)
@@ -368,15 +371,15 @@ def make_good_board_string(board_rng):
             mean_valuable_letter_long_uses = total_valuable_letter_long_uses / max(num_valuable_letter_instances, 1)
             
             if mean_valuable_letter_uses < GENERATE_BOARD.CRITERIA.MEAN_VALUABLE_LETTER_USES:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough on average")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters " + GENERATE_BOARD.CRITERIA.MEAN_VALUABLE_LETTER_USES + " times on average")
                 continue
             
             if mean_valuable_letter_long_uses < GENERATE_BOARD.CRITERIA.MEAN_VALUABLE_LETTER_LONG_WORDS:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_LONG_WORDS + " long words on average")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters in " + GENERATE_BOARD.CRITERIA.MEAN_VALUABLE_LETTER_LONG_WORDS + " long words on average")
                 continue
 
             if min_valuable_letter_uses < GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_USES:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters enough")
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it did not use all of the valuable letters " + GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_USES + " times")
                 continue
             
             if min_valuable_letter_long_uses < GENERATE_BOARD.CRITERIA.MIN_VALUABLE_LETTER_LONG_WORDS:
@@ -404,7 +407,7 @@ def make_good_board_string(board_rng):
     if DEBUG.BOARD_SEARCH:
         debug_print(join(word_array, ", "))
         debug_print("very_long_word_count =", very_long_word_count)
-        debug_print("valuable_letter_table =", valuable_letter_table)
+        debug_print("valuable_letter_use_count =", valuable_letter_use_count)
         debug_print("valuable_letter_long_count =", valuable_letter_long_count)
         debug_print("size(word_array) =", size(word_array))
         debug_print("short_word_count =", short_word_count)

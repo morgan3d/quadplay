@@ -95,7 +95,7 @@
         "quandary_sound": "quandary.sound.json",
         "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.542",
+    "version": "0.543",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -1999,11 +1999,20 @@
                     "type": "object",
                     "value": {
                         "MIN_WORDS": {
-                            "description": "including long words",
+                            "description": "If there are no valuable letters, this is the minimum number of total words (including long words)",
                             "type": "number",
-                            "value": "190",
+                            "value": "200",
                             "min": 0,
                             "max": 200,
+                            "format": "0",
+                            "quantum": 1
+                        },
+                        "MIN_WORDS_VERY_VALUABLE_LETTER_BOARD": {
+                            "type": "number",
+                            "value": "110",
+                            "description": "If there are letters worth 5 or more points, this lower threshold is used for the total number of words (including long words)",
+                            "min": 0,
+                            "max": 300,
                             "format": "0",
                             "quantum": 1
                         },
@@ -2027,7 +2036,7 @@
                         "MIN_VERY_LONG_WORDS": {
                             "description": "7+ letters",
                             "type": "number",
-                            "value": "9",
+                            "value": "8",
                             "min": 0,
                             "max": 50,
                             "format": "0",
@@ -2036,7 +2045,7 @@
                         "SHUFFLE_RETRIES": {
                             "description": "How many times to shuffle a given board trying to find a way to satisfy the other constraints. Making this high avoids affecting letter distribution while still improving board quality.",
                             "type": "number",
-                            "value": "19",
+                            "value": "22",
                             "min": 0,
                             "max": 50,
                             "format": "0",
@@ -2191,8 +2200,8 @@
                 "C": 3,
                 "M": 3,
                 "P": 4,
-                "F": 5,
                 "H": 4,
+                "F": 4,
                 "V": 5,
                 "W": 5,
                 "Y": 5,
