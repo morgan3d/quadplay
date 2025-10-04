@@ -69,7 +69,6 @@ def make_competitor():
 
 /* Are they a friend of the player_competitor */
 def competitor_is_friend(competitor):
-    todo("Remove when we have a friending UI")
     // For now, friend all humans, NPCs once unlocked, and the few bots who pretend to be human
     return ((competitor.avatar.id == NPC.MOO.ID and player.has_ability["Friend of Moo"]) or
             (competitor.avatar.id == NPC.CAF.ID and player.has_ability["Friend of caf"]) or    
@@ -87,9 +86,9 @@ def make_player_competitor():
     
     // Trim best_freestyle_text to the used length
     let max_free_len = 0
-    for word in player.history.free:
+    for word in entry in player.history.free:
         max_free_len = max(size(word), max_free_len)
-        
+    
     const competitor = {
         …make_competitor(),
         avatar: player.avatar,

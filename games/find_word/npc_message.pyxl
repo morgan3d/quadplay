@@ -24,7 +24,7 @@ let _npc_message
    - `data`: Data passed to auto_close_condition (default ∅)
    - `auto_close_play_sound_args`: Sound to play when auto-closing (default ∅)
    - `close_callback`: Function called when message is dismissed (default ∅)
-   - `right`: If truish, avatar appears on right with flipped bubble (default ∅)
+   - `right`: If truish, avatar appears on right with flipped bubble (default ∅ = false)
    
    Will close if the user clicks, presses (c), or if
    `auto_close_condition(data)` is truish. */
@@ -57,12 +57,9 @@ def set_npc_message(args):
    the first message, and false otherwise (unless explicitly specified as non-nil). */
 def set_npc_conversation(...array):
     assert(size(array) > 1)
-    
-    const first_avatar = array[0].avatar
-
     for m < size(array):
         // Default right based on avatar match if not explicitly specified
-        const right = if array[m].right == ∅ then (array[m].avatar == first_avatar) else array[m].right
+        const right = if array[m].right == ∅ then (array[m].avatar == array[0].avatar) else array[m].right
         
         if m + 1 < size(array):
             // Capture this callback before we mutate the array values
@@ -120,25 +117,22 @@ def npc_message_hook()
     // Avatar
     const avatar_scale = 200%
     const scaled_avatar_size = avatar_scale * avatar_sprite.sprite_size
-    const avatar_x = if right then (rect.size.x - ½ scaled_avatar_size.x) else (½ scaled_avatar_size.x)
     avatar_draw({
         avatar: avatar,
-        pos: xy(avatar_x, rect.size.y - ½ scaled_avatar_size.y),
+        pos: xy(if right then (rect.size.x - ½ scaled_avatar_size.x) else (½ scaled_avatar_size.x), rect.size.y - ½ scaled_avatar_size.y),
         scale: avatar_scale,
         outline: #CCC})
     
     // Inset by the border size and offset by the avatar sprite
-    const bubble_corner_x = if right then (speech_bubble_sprite.sprite_size.x + 1) else (speech_bubble_sprite.sprite_size.x + scaled_avatar_size.x + 1)
     const bubble_rect = {
-        corner: xy(bubble_corner_x, speech_bubble_sprite.sprite_size.y + 1), 
+        corner: xy(if right then (speech_bubble_sprite.sprite_size.x + 1) else (speech_bubble_sprite.sprite_size.x + scaled_avatar_size.x + 1), speech_bubble_sprite.sprite_size.y + 1), 
         size: rect.size - xy(2 speech_bubble_sprite.sprite_size.x, speech_bubble_sprite.sprite_size.y) - xy(scaled_avatar_size.x, ½ scaled_avatar_size.y + 2)}
 
     // Animate opening the message
     bubble_rect.size.x = round(lerp(32, bubble_rect.size.x, min(100%, (game_frames - open_game_frames) / 10)))
     
     // Speech bubble
-    const bubble_sprite = if right then speech_bubble_sprite.center.x_flipped else speech_bubble_sprite.center
-    draw_sprite_corner_rect(bubble_sprite, bubble_rect.corner, bubble_rect.size)
+    draw_sprite_corner_rect(if right then speech_bubble_sprite.center.x_flipped else speech_bubble_sprite.center, bubble_rect.corner, bubble_rect.size)
 
     // Close prompt
     if player.using_gamepad:
