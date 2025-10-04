@@ -6055,7 +6055,7 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     const numTilesY = 1 + $Math.ceil((y2 - y1 + 1) / (2 * CC.size.y) - 0.49) * 2;
     
     // Iterate over center box, clipping at its edges
-    const spriteCenter = {x:0, y:0, z:corner.z};
+    const spriteCenter = {x: 0, y: 0, z: corner.z};
     $pushGraphicsState(); {
         intersect_clip(xy(x1, y1), xy(x2 - x1 + 1, y2 - y1 + 1));
         
@@ -6071,17 +6071,51 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
         }
     } $popGraphicsState();
     
-    // Generate relative sprites
-    const LT = CC.$spritesheet[$Math.max(0, CC.$tileX - 1)][$Math.max(0, CC.$tileY - 1)];
-    const CT = CC.$spritesheet[$Math.max(0, CC.$tileX    )][$Math.max(0, CC.$tileY - 1)];
-    const RT = CC.$spritesheet[$Math.max(0, CC.$tileX + 1)][$Math.max(0, CC.$tileY - 1)];
+    // Determine the orientation transformations
+    const base = CC.base;
+    const isTransposed = (base.$spritesheet !== CC.$spritesheet);
+    const isXFlipped = (CC.scale.x < 0);
+    const isYFlipped = (CC.scale.y < 0);
 
-    const LC = CC.$spritesheet[$Math.max(0, CC.$tileX - 1)][$Math.max(0, CC.$tileY    )];
-    const RC = CC.$spritesheet[$Math.max(0, CC.$tileX + 1)][$Math.max(0, CC.$tileY    )];
+    // Helper to get neighbor sprite with orientation-adjusted indexing
+    const getNeighbor = function(dx, dy) {
+        // Apply inverse transformations in reverse order to map visual
+        // neighbor positions back to base spritesheet positions
+        if (isYFlipped) {
+            dy = -dy;
+        }
+        
+        if (isXFlipped) {
+            dx = -dx;
+        }
+        
+        if (isTransposed) {
+            // Transposed spritesheet has swapped axes, so swap the offsets
+            const temp = dx;
+            dx = dy;
+            dy = temp;
+        }
+        
+        // Get the sprite at the transformed offset
+        const tileX = $Math.max(0, base.$tileX + dx);
+        const tileY = $Math.max(0, base.$tileY + dy);
+        const neighborSprite = base.$spritesheet[tileX][tileY];
+        
+        // Transfer orientation from CC to the neighbor
+        return sprite_transfer_orientation(CC, neighborSprite);
+    };
+    
+    // Generate relative sprites with proper orientation
+    const LT = getNeighbor(-1, -1);
+    const CT = getNeighbor( 0, -1);
+    const RT = getNeighbor(+1, -1);
 
-    const LB = CC.$spritesheet[$Math.max(0, CC.$tileX - 1)][$Math.max(0, CC.$tileY + 1)];
-    const CB = CC.$spritesheet[$Math.max(0, CC.$tileX    )][$Math.max(0, CC.$tileY + 1)];
-    const RB = CC.$spritesheet[$Math.max(0, CC.$tileX + 1)][$Math.max(0, CC.$tileY + 1)];
+    const LC = getNeighbor(-1,  0);
+    const RC = getNeighbor(+1,  0);
+
+    const LB = getNeighbor(-1, +1);
+    const CB = getNeighbor( 0, +1);
+    const RB = getNeighbor(+1, +1);
 
     // Centers of the sprites on these edges
     const left   = ((x1 - CC.size.x * 0.5) - $offsetX) / $scaleX - 0.5;

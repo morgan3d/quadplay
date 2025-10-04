@@ -3594,8 +3594,11 @@ same color as the fill. Shapes include their endpoints and borders.
   in its spritesheet. The edges surround the specified coordinates.
   Used for drawing user interface elements (GUI) of dynamic size such as
   windows and health bars.  Keep in mind that some artwork is designed
-  to only be stretched in one dimension, or to tile only at integer
+  to tile only at integer
   multiples.
+
+  If `sprite` has been transformed then the neighbors will be transformed
+  consistently, e.g., using `sprite.rotated_90`, etc.
 
   See also `draw_corner_rect()` and `draw_rect()`.
   
