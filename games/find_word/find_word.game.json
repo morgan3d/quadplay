@@ -3326,7 +3326,7 @@
                 },
                 "FORCE_LEVEL": {
                     "type": "number",
-                    "value": "31",
+                    "value": "0",
                     "description": "If non-zero, forces the player to this level"
                 }
             }
