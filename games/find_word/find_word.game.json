@@ -95,7 +95,7 @@
         "quandary_sound": "quandary.sound.json",
         "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.546",
+    "version": "0.547",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -3123,7 +3123,7 @@
                                         "word_stability_time": {
                                             "type": "number",
                                             "description": "Seconds word must remain unchanged before showing message",
-                                            "value": "2"
+                                            "value": "1"
                                         }
                                     }
                                 },
@@ -3326,7 +3326,7 @@
                 },
                 "FORCE_LEVEL": {
                     "type": "number",
-                    "value": "0",
+                    "value": "31",
                     "description": "If non-zero, forces the player to this level"
                 }
             }

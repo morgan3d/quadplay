@@ -265,20 +265,10 @@ if landscape():
     draw_background_words()
     draw_rect(½ SCREEN_SIZE, xy(WIDTH + 10, SCREEN_SIZE.y), #0009, ∅, ∅, -0.5)
 
-avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(½ SCREEN_SIZE.x - ½ WIDTH + 22, 15), scale: 200%})
-
-local:
-    const x = ½ SCREEN_SIZE.x - ½ WIDTH + 50
-    draw_text({text: trim_spaces(player.avatar.name) + ": Level " + player.avatar.level, font: score_font, x_align: "left", pos: xy(x, 9), color: #FFF})
-    draw_text({
-        text: format_number(player.stats.lifetime.xp + player.stats[today_date_string()].xp, "commas") + " XP. Next level @ " + format_number(level_to_xp(player.avatar.level + 1), "commas") + " XP", 
-        font: if player.avatar.level > 38 then history_font else leaderboard_font,
-        x_align: "left", 
-        pos: xy(x, 22), 
-        color: #FFF})
+draw_xp_bar(player.stats.lifetime.xp + player.stats[today_date_string()].xp)
 
 preserving_transform:
-    const scroll_rect = {corner: xy(0, 30), size: xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 58)}
+    const scroll_rect = {corner: xy(0, 46), size: xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 74)}
     set_clip(scroll_rect)
     set_transform(scroll_rect.corner - scroll.offset)
     scroll_tracker_update(scroll, xy(0, draw_content()), scroll_rect)
