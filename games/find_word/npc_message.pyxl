@@ -12,27 +12,60 @@ let _npc_message
 
 /* A higher importance message will clear a lower importance one. This allows 
    multiple NPCs to try and comment without overriding anyone. The sound will
-   be played the first time that the message is displayed. 
+   be played the first time that the message is displayed.
    
-   The `text` supports markup formatting (e.g., {color:#D00 text}).
+   Args properties:
+   - `avatar`: Avatar to display with the message
+   - `text`: Message text, supports markup formatting (e.g., {color:#D00 text})
+   - `importance`: Priority level (default 0)
+   - `play_sound_args`: Sound to play when opening (default ∅)
+   - `max_time`: Maximum display time in seconds (default ∞)
+   - `auto_close_condition`: Function(data) that returns truish to close (default ∅)
+   - `data`: Data passed to auto_close_condition (default ∅)
+   - `auto_close_play_sound_args`: Sound to play when auto-closing (default ∅)
+   - `close_callback`: Function called when message is dismissed (default ∅)
    
    Will close if the user clicks, presses (c), or if
-   `auto_close_condition(data, game_frames_since_opened)` is truish.
-   
-   `close_callback()` is called when the message is dismissed. */
-def set_npc_message(avatar, text, importance default 0, play_sound_args default ∅, max_frames default ∞, auto_close_condition default ∅, data default ∅, auto_close_play_sound_args default ∅, close_callback default ∅):
-    if not _npc_message or _npc_message.importance < importance:
+   `auto_close_condition(data)` is truish. */
+def set_npc_message(args):
+    if not _npc_message or _npc_message.importance < args.importance:
         _npc_message = {
-            avatar: avatar,
-            text: text,
-            importance: importance,
-            play_sound_args: play_sound_args,
-            auto_close_play_sound_args: auto_close_play_sound_args,
-            auto_close_condition: auto_close_condition,
-            data: data,
-            max_frames: max_frames,
-            close_callback: close_callback,
+            avatar: args.avatar,
+            text: args.text,
+            importance: args.importance default 0,
+            max_frames: 60 * (args.max_time default ∞),
+
+            // Optional, can be nil
+            play_sound_args: args.play_sound_args,
+            auto_close_play_sound_args: args.auto_close_play_sound_args,
+            auto_close_condition: args.auto_close_condition,
+            data: args.data,
+            close_callback: args.close_callback,
+
+            // Not an arg
             open_game_frames: game_frames}
+
+
+
+/* Sets a chain of messages via set_npc_message. If the first message is shown,
+   then the entire chain will be shown (if no other messages intervene), 
+   otherwise none will be shown.    
+   */
+def set_npc_conversation(...array):
+    assert(size(array) > 1)
+
+    for m < size(array) - 1:
+        // Capture this callback before we mutate the array values
+        const original_close_callback = array[m].close_callback
+        
+        def chained_close_callback():
+            if original_close_callback: original_close_callback()
+            set_npc_message(array[m + 1])
+        
+        array[m] = {...array[m], close_callback: chained_close_callback}
+    
+    // Start the chain with the first message
+    set_npc_message(array[0])
 
 
 
@@ -41,6 +74,12 @@ def clear_npc_message():
     if _npc_message and _npc_message.close_callback:
         _npc_message.close_callback()
     _npc_message = ∅
+
+
+
+/* Returns true if a message is currently displayed */
+def npc_message_showing():
+    return _npc_message != ∅
 
 
 

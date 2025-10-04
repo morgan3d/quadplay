@@ -409,21 +409,21 @@ for competitor in competitor_array:
     competitor_table[competitor.avatar.id] = competitor
     
 if competitor_table[NPC.CAF.ID] and competitor_table[NPC.CAF.ID].score == 0 and not DEBUG.EARN_XP:
-    set_npc_message(caf_avatar, "too hard!!!!!", 0, {sound: caf_too_hard_sound}, 60 * 4)
+    set_npc_message({avatar: caf_avatar, text: "too hard!!!!!", importance: 0, play_sound_args: {sound: caf_too_hard_sound}, max_time: 4})
 
 if competitor_table[NPC.VIL.ID]:
     if player_competitor.beat_vil_regular_match:
         // Player won
         if not player.has_achievement["Beat VIL Once"]:
             player_achieve(player, "Beat VIL Once", false)
-            set_npc_message(vil_avatar, "You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!", 6, {sound: vil_00_sound}, 60 * 10)
+            set_npc_message({avatar: vil_avatar, text: "You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!", importance: 6, play_sound_args: {sound: vil_00_sound}, max_time: 10})
     else if ξ < 8%:
         if size(competitor_table[NPC.VIL.ID].badges) > 0 and size(player_competitor.badges) == 0:
             // VIL won and blocked the player from badges
-            set_npc_message(vil_avatar, "No award XP for you!", 1, {sound: vil_00_sound}, 60 * 8)
+            set_npc_message({avatar: vil_avatar, text: "No award XP for you!", importance: 1, play_sound_args: {sound: vil_00_sound}, max_time: 8})
         else:
             // VIL won, but didn't beat the player on badges
-            set_npc_message(vil_avatar, random_value([
+            set_npc_message({avatar: vil_avatar, text: random_value([
                 "Ignoramus.", 
                 "You have a vegetal cerebrum.", 
                 "So sorry.", 
@@ -434,7 +434,7 @@ if competitor_table[NPC.VIL.ID]:
                 "Observe the vacant expression on your cud-chewing friend.",
                 "These animals form a menagerie of the unintelligent, led by the inadequate.",
                 "Your ornithological allies possess a rudimentary intellect, at best.",
-                "Your lexicon appears as limited as your prospects."]), 1, {sound: vil_00_sound}, 60 * 8)
+                "Your lexicon appears as limited as your prospects."]), importance: 1, play_sound_args: {sound: vil_00_sound}, max_time: 8})
 
 todo("Make multi-message npc API")
 todo("Test npc messages above")

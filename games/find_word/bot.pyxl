@@ -1,6 +1,7 @@
 const caf_avatar = make_bot_avatar(NPC.CAF.descriptor)
 const moo_avatar = make_bot_avatar(NPC.MOO.descriptor)
 const msp_avatar = make_bot_avatar(NPC.MSP.descriptor)
+const vil_avatar = make_bot_avatar(NPC.VIL.descriptor)
 
 const bot_descriptor_array = clone(BOT_DESCRIPTOR_ARRAY)
 insert(bot_descriptor_array, 6, NPC.MSP.descriptor)
@@ -284,15 +285,14 @@ def npc_maybe_make_suggestion(bot)
         // The player may have not found the word the bot is suggesting, but MAY have found a different
         // word that matches the hint pattern. In that case, keep looking for a good hint
         if not _hinted_word_found_by_player(data):
-            set_npc_message(
-                bot.avatar, 
-                prompt + data.hint, 
-                importance, 
-                npc.play_sound_args, 
-                ∅, 
-                _hinted_word_found_by_player, 
-                data,
-                npc.play_sound_args)
+            set_npc_message({
+                avatar: bot.avatar, 
+                text: prompt + data.hint, 
+                importance: importance, 
+                play_sound_args: npc.play_sound_args, 
+                auto_close_condition: _hinted_word_found_by_player, 
+                data: data,
+                auto_close_play_sound_args: npc.play_sound_args})
             return true
                 
     
@@ -448,16 +448,15 @@ def maybe_run_miss_pelican_ai(word):
         return size(player.history.list) + size(player.history.free) > initial_word_count
 
     // Build suggestion text with a few words
-    set_npc_message(
-        msp_avatar,
-        "You may be thinking of " + join(suggestions, ", ", " or "),
-        msp_npc.importance,
-        evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
-        ∅,
-        auto_close_condition,
-        size(player.history.list) + size(player.history.free),
-        evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
-        close_callback)
+    set_npc_message({
+        avatar: msp_avatar,
+        text: "You may be thinking of " + join(suggestions, ", ", " or "),
+        importance: msp_npc.importance,
+        play_sound_args: evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
+        auto_close_condition: auto_close_condition,
+        data: size(player.history.list) + size(player.history.free),
+        auto_close_play_sound_args: evaluate_constant_expression(NPC.MSP.descriptor.npc.sound),
+        close_callback: close_callback})
     
 
 
