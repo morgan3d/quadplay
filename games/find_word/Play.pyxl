@@ -71,11 +71,10 @@ else:
     start_time = prev_global_game_utc_start_time()
     end_time = start_time + GLOBAL_GAME.PLAY_SECONDS
 
-todo("Allow 3x")
 // Allow NPC suggestions at ⅓ and ⅔ of the way through the match
 if not in_waiting_room:
-    for 1 ≤ i ≤ 2:
-        delay(npc_suggestions, max(0, round(i * (if DEBUG.MZK or DEBUG.DRQ or DEBUG.VIL then 5% else ⅓) * (end_time - frame_utc_now) * 60)))
+    for progress in [33%, 60%, 80%]:
+        delay(npc_suggestions, max(0, round((if DEBUG.MZK or DEBUG.DRQ or DEBUG.VIL then progress/4 else progress) * (end_time - frame_utc_now) * 60)))
 
 
 set_background(game_type.BACKGROUND_COLOR)
