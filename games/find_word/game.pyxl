@@ -458,3 +458,51 @@ def wildcard_starts_with(pattern, prefix):
         return starts_with(pattern, prefix)
     
 
+
+/* Used by EarnXP */
+def draw_xp_bar(xp, flash)
+& preserving_transform:
+    set_transform(xy(½ SCREEN_SIZE.x, 0))
+        
+    // Currently-displayed level
+    const level = xp_to_level(xp)
+    
+    // Lower bound for xp bar
+    const xp_lo = level_to_xp(level)
+    
+    // Upper bound for xp bar
+    const xp_hi = level_to_xp(level + 1)
+    
+    // Progress bar value
+    const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
+           
+    avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(-20, 16), scale: 200%, z: 5})
+    draw_text({text: player.avatar.name, pos: xy(8, 10), font: score_font, x_align: "left", color: #FFF})
+
+    // Flash and turn pink on level change
+    draw_text({
+        color:   if flash then HIGHLIGHT_COLOR else #FFF,
+        outline: if flash then #FFF else ∅,
+        font:    leaderboard_font,
+        text:    "Level " + level,
+        x_align: "left",
+        pos:     xy(8, 22)})
+
+    // Progress bar
+    draw_corner_rect(EARN_XP.xp_rect.corner + xy(0, 1), EARN_XP.xp_rect.size)
+    
+    draw_corner_rect(
+        EARN_XP.xp_rect.corner + 1,
+        xy(round(α * (EARN_XP.xp_rect.size.x - 2)), EARN_XP.xp_rect.size.y - 2), 
+        HIGHLIGHT_COLOR)
+    
+    draw_text({font: history_font,
+        color: #FFF,
+        shadow: #0008,
+        font: history_font,
+        text: format_number(xp, "commas") + " XP",
+        x_align: "right",
+        y_align: "baseline",
+        pos: EARN_XP.xp_rect.corner + ½ EARN_XP.xp_rect.size + xy(17, 2)})
+        
+    draw_corner_rect(EARN_XP.xp_rect.corner, EARN_XP.xp_rect.size, ∅, #FFF)

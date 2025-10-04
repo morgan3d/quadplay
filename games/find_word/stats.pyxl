@@ -191,7 +191,7 @@ def stats_load():
                 day[k] = day[k] default deep_clone(v)
             
             // Upgrade
-            todo("Legacy upgrade: Remove after September")
+            todo("Legacy upgrade: Remove after October")
             if is_nan(day.freestyle_points):
                 day.freestyle_points = 0               
             if day.best_wild_word_points ≠ ∅:

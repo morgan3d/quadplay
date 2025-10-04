@@ -257,7 +257,7 @@ def draw_leaderboard()
         // Score
         draw_text({…text_args, text: format_number(competitor.score, "commas"), pos: pos + xy(INTERMISSION.LAYOUT.LEADERBOARD.SCORE_X, 0), x_align: "right"})
 
-        // Badges
+        // Awards
         if size(competitor.badges) > 2:
             draw_text({…text_args,
                 text: slice(competitor.badges, 0, 2),
@@ -413,13 +413,16 @@ if competitor_table[NPC.CAF.ID] and competitor_table[NPC.CAF.ID].score == 0 and 
 
 if competitor_table[NPC.VIL.ID]:
     if player_competitor.beat_vil_regular_match:
+        // Player won
         if not player.has_achievement["Beat VIL Once"]:
             player_achieve(player, "Beat VIL Once", false)
             set_npc_message(vil_avatar, "You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!", 6, {sound: vil_00_sound}, 60 * 10)
     else if ξ < 8%:
         if size(competitor_table[NPC.VIL.ID].badges) > 0 and size(player_competitor.badges) == 0:
+            // VIL won and blocked the player from badges
             set_npc_message(vil_avatar, "No award XP for you!", 1, {sound: vil_00_sound}, 60 * 8)
         else:
+            // VIL won, but didn't beat the player on badges
             set_npc_message(vil_avatar, random_value([
                 "Ignoramus.", 
                 "You have a vegetal cerebrum.", 
@@ -433,11 +436,12 @@ if competitor_table[NPC.VIL.ID]:
                 "Your ornithological allies possess a rudimentary intellect, at best.",
                 "Your lexicon appears as limited as your prospects."]), 1, {sound: vil_00_sound}, 60 * 8)
 
+todo("Make multi-message npc API")
 todo("Test npc messages above")
 todo("VIL-MzK interaction")
 
 if competitor_table[NPC.VIL.ID] and competitor_table[NPC.CAF.ID]:        
-    todo("VIL - caf interaction")
+    todo("VIL-caf interaction")
 
    
 frame

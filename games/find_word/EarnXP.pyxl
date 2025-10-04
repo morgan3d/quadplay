@@ -12,78 +12,7 @@ let xp_array
 /* For the xp_array. Automatically updated as words scroll off screen */
 let scroll_offset
 
-
-todo("Match design of the stats view for the avatar")
-def draw_xp_bar()
-& preserving_transform:
-    set_transform(xy(½ SCREEN_SIZE.x, 0))
-
-    // Animation time between 0% and 100% for the bar
-    const τ = clamp((mode_frames - EARN_XP.TIMING.PRE_FRAMES - EARN_XP.TIMING.TABLE_FRAMES - EARN_XP.TIMING.POST_TABLE_FRAMES - EARN_XP.TIMING.MID_FRAMES) / EARN_XP.TIMING.BAR_FRAMES, 0%, 100%)
-    
-    // Currently-displayed XP
-    const xp = round(lerp(prev_xp, new_xp, τ))
-    
-    // Currently-displayed level
-    const level = xp_to_level(xp)
-    
-    // Lower bound for xp bar
-    const xp_lo = level_to_xp(level)
-    
-    // Upper bound for xp bar
-    const xp_hi = level_to_xp(level + 1)
-    
-    // Progress bar value
-    const α = clamp((xp - xp_lo) / (xp_hi - xp_lo), 0%, 100%)
-    
-    // Play the glissando sound
-    if mode_frames == EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES - 2 and player.score > 0:
-        play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
-    
-    if mode_frames > 1 and (last_level_displayed ≠ level):
-        // Level up
-        play_sound(level_up_sound)
-        
-        // Give the abilities after the sound has finished
-        delay(unlock_new_abilities, 30)
-    
-    last_level_displayed = level
-    
-    const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0) and mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES + EARN_XP.TIMING.BAR_FRAMES + ½ EARN_XP.TIMING.POST_FRAMES
-    
-    avatar_draw({avatar: player.avatar, sprite: player.avatar.sprite.x_flipped, pos: xy(-20, 16), scale: 200%, z: 5})
-    draw_text({text: player.avatar.name, pos: xy(8, 10), font: score_font, x_align: "left", color: #FFF})
-
-    // Flash and turn pink on level change
-    draw_text({
-        color:   if flash then HIGHLIGHT_COLOR else #FFF,
-        outline: if flash then #FFF else ∅,
-        font:    leaderboard_font,
-        text:    "Level " + level,
-        x_align: "left",
-        pos:     xy(8, 22)})
-
-    // Progress bar
-    todo("Tweak colors on XP bar to separate new vs previous")
-    draw_corner_rect(EARN_XP.xp_rect.corner + xy(0, 1), EARN_XP.xp_rect.size)
-    
-    draw_corner_rect(
-        EARN_XP.xp_rect.corner + 1,
-        xy(round(α * (EARN_XP.xp_rect.size.x - 2)), EARN_XP.xp_rect.size.y - 2), 
-        HIGHLIGHT_COLOR)
-    
-    draw_text({font: history_font,
-        color: #FFF,
-        shadow: #0008,
-        font: history_font,
-        text: format_number(xp, "commas") + " XP",
-        x_align: "right",
-        y_align: "baseline",
-        pos: EARN_XP.xp_rect.corner + ½ EARN_XP.xp_rect.size + xy(17, 2)})
-        
-    draw_corner_rect(EARN_XP.xp_rect.corner, EARN_XP.xp_rect.size, ∅, #FFF)
-    
-    
+       
     
 def draw_xp_table()
 & preserving_transform:
@@ -318,9 +247,32 @@ if DEBUG_NETWORK_ON_SCREEN:
             z: 101})
 
 
+// Animation time between 0% and 100% for the bar
+const τ = clamp((mode_frames - EARN_XP.TIMING.PRE_FRAMES - EARN_XP.TIMING.TABLE_FRAMES - EARN_XP.TIMING.POST_TABLE_FRAMES - EARN_XP.TIMING.MID_FRAMES) / EARN_XP.TIMING.BAR_FRAMES, 0%, 100%)
+
+// Currently-displayed XP
+const xp = round(lerp(prev_xp, new_xp, τ))
+        
+// Play the glissando sound
+if mode_frames == EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES - 2 and player.score > 0:
+    play_sound({sound: xp_sound, playback_rate: 10%, pitch: 200%})
+
+const level = xp_to_level(xp)
+if mode_frames > 1 and (last_level_displayed ≠ level):
+    // Level up
+    play_sound(level_up_sound)
+    
+    // Give the abilities after the sound has finished
+    delay(unlock_new_abilities, 30)
+    
+last_level_displayed = level
+const flash = (level ≠ prev_level) and (⌊mode_frames / 15⌋ mod 2) and (player.score > 0) and mode_frames < EARN_XP.TIMING.PRE_FRAMES + EARN_XP.TIMING.TABLE_FRAMES + EARN_XP.TIMING.POST_TABLE_FRAMES + EARN_XP.TIMING.MID_FRAMES + EARN_XP.TIMING.BAR_FRAMES + ½ EARN_XP.TIMING.POST_FRAMES
+
 draw_xp_table()
-draw_xp_bar()
+draw_xp_bar(xp, flash)
 draw_timer()
+
+
 
 if frame_utc_now ≥ end_time - 1.75:
     const pos = xy(SCREEN_SIZE.x - 24, 12)

@@ -132,7 +132,7 @@ def draw_content():
     if player.has_ability["Award Stat"]:
         for title at i in ["Highest Score", "Best Word", "Best Rare", "Longest", "Most Words"]:
             const field = lowercase(replace(title, " ", "_"))
-            y += draw_row(y, replace(title, "Highest", "High") + " Badges", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"))
+            y += draw_row(y, replace(title, "Highest", "High") + " Awards", format_number(lifetime.badge_count[field], "commas"), "+" + format_number(today.badge_count[field], "commas"))
     
     y += 10
     const total_row_array = [

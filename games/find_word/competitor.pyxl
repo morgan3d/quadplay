@@ -85,9 +85,11 @@ def competitor_is_friend(competitor):
 /* Convert the local player into a competitor */
 def make_player_competitor():
     
-    
-    todo("Trim the free word to the used length")
-    
+    // Trim best_freestyle_text to the used length
+    let max_free_len = 0
+    for word in player.history.free:
+        max_free_len = max(size(word), max_free_len)
+        
     const competitor = {
         …make_competitor(),
         avatar: player.avatar,
@@ -95,7 +97,7 @@ def make_player_competitor():
         remixes: player.remixes,
         remix_words: player.remix_words,
         best_remix: player.best_remix,
-        best_freestyle_text: q_decode(player_free_row_pattern(player))}
+        best_freestyle_text: q_decode(slice(player_free_row_pattern(player), 0, max_free_len))}
 
     for list in [
         [player.history.list, competitor.word_list],
