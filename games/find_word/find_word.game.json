@@ -95,7 +95,7 @@
         "quandary_sound": "quandary.sound.json",
         "msp_00_sound": "msp_00.sound.json"
     },
-    "version": "0.553",
+    "version": "0.554",
     "min_players": 1,
     "max_players": "∞",
     "cooperative": false,
@@ -217,7 +217,7 @@
                         },
                         "rareness": {
                             "type": "number",
-                            "value": "0.75"
+                            "value": "0.5"
                         },
                         "enhanced_aura_point": {
                             "type": "number",
@@ -3046,6 +3046,59 @@
                         }
                     }
                 },
+                "SLT": {
+                    "type": "object",
+                    "description": "Bot that is good with nautical words",
+                    "value": {
+                        "ID": {
+                            "type": "string",
+                            "value": "BOT_slt"
+                        },
+                        "descriptor": {
+                            "type": "object",
+                            "description": "Argument to `make_bot_competitor`",
+                            "value": {
+                                "name": {
+                                    "type": "string",
+                                    "value": "slt"
+                                },
+                                "sprite": {
+                                    "type": "string",
+                                    "value": "avatar_sprite[37][24]"
+                                },
+                                "base_ability": {
+                                    "type": "number",
+                                    "value": 0.17
+                                },
+                                "short_word_preference": {
+                                    "type": "number",
+                                    "value": 0.6
+                                },
+                                "first_hour": {
+                                    "type": "number",
+                                    "value": 0
+                                },
+                                "minute_mask": {
+                                    "type": "string",
+                                    "value": "XXXXXX"
+                                },
+                                "last_hour": {
+                                    "type": "number",
+                                    "value": 23
+                                },
+                                "dictionary": {
+                                    "type": "string",
+                                    "value": "all"
+                                },
+                                "vocabulary": {
+                                    "type": "array",
+                                    "url": "slt.csv",
+                                    "parse_as_strings": true
+                                }
+                            }
+                        }
+                    }
+                },
                 "VIL": {
                     "type": "object",
                     "value": {
@@ -3320,7 +3373,7 @@
                     "type": "boolean",
                     "value": false
                 },
-                "BOO": {
+                "VOCABULARY_NPCS": {
                     "type": "boolean",
                     "value": false
                 },

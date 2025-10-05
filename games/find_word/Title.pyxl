@@ -111,7 +111,6 @@ def update_stats_done_button():
 
 enter
 ────────────────────────────────────────────────────────────────────────
-
 set_background(#000)
 set_hooks()
 

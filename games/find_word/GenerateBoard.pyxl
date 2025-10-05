@@ -53,12 +53,13 @@ if mode_frames > 3:
     // There is no game currently running because the global game is in 
     // the GameOver state, or about to be so. Send this player to the waiting room
     // so that they aren't bored. 
-    in_waiting_room = ((game_type == GLOBAL_GAME and
+    in_waiting_room = (game_type == GLOBAL_GAME and
+        not (DEBUG.INTERMISSION or DEBUG.EARN_XP) and
         (prev_game_finished or curr_game_remaining_time < GLOBAL_GAME.JOIN_MIN_REMAINING_TIME) and
-        not next_game_imminent))
+        not next_game_imminent) 
         
     const board_string = (
-        if DEBUG.BOO then "GHOS BOOT FEAR HALE" else 
+        if DEBUG.VOCABULARY_NPCS then "GHOS BOOT FEAR KEEL" else 
         (if not player.has_achievement["Play Solo Match"] then TUTORIAL.FIRST_TIME_BOARD 
         else ∅))
     player_reset_match(player, game_type, board_string)
