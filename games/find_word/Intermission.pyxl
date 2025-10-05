@@ -418,7 +418,7 @@ if competitor_table[NPC.VIL.ID]:
             player_achieve(player, "Beat VIL Once", false)
             set_npc_message({avatar: vil_avatar, text: "You beat ME?! It is a perversion of nature to be vanquished by your intellectual paucity. I demand a rematch!", importance: 6, play_sound_args: {sound: vil_00_sound}, max_time: 10})
     else if ξ < 8%:
-        if size(competitor_table[NPC.VIL.ID].badges) > 0 and size(player_competitor.badges) == 0:
+        if size(competitor_table[NPC.VIL.ID].badges) > 0 and size(player_competitor.badges) == 0 and ξ < 25%:
             // VIL won and blocked the player from badges
             set_npc_message({avatar: vil_avatar, text: "No award XP for you!", importance: 1, play_sound_args: {sound: vil_00_sound}, max_time: 8})
         else:
@@ -432,14 +432,11 @@ if competitor_table[NPC.VIL.ID]:
                 "Your orthographic abilities are profoundly insufficient.",
                 "I detest the cacophonous squawking of that zealous avian.",
                 "Observe the vacant expression on your cud-chewing friend.",
-                "These animals form a menagerie of the unintelligent, led by the inadequate.",
+                "This is menagerie of the unintelligent, led by you, the inadequate.",
                 "Your ornithological allies possess a rudimentary intellect, at best.",
                 "Your lexicon appears as limited as your prospects."]), importance: 1, play_sound_args: {sound: vil_00_sound}, max_time: 8})
 
-todo("Make multi-message npc API")
-todo("Test npc messages above")
 todo("VIL-MzK interaction")
-
 if competitor_table[NPC.VIL.ID] and competitor_table[NPC.CAF.ID]:        
     todo("VIL-caf interaction")
 

@@ -147,7 +147,7 @@ if size(discovered_word_list) and player.has_ability["Discovery XP"]:
     
     // To keep the length of this list managable, we group 
     // words of the same length.
-    const words_by_tile_length = make_array(17, [], clone)
+    const words_by_tile_length = make_array(16, [], clone)
     for word in discovered_word_list:
         push(words_by_tile_length[size(word)], q_decode(word))
 
@@ -184,6 +184,33 @@ if player_competitor.badges and player.has_ability["Award XP"]:
         push(xp_array, {text: badge + " " + titlecase(text + (if contains(text, "word") then "" else " word")), xp: badge_xp, color: TABLE_ALT_ROW_COLOR})
 
 
+// To keep the length of this list managable, we group 
+// words of the same rareness
+const rare_text_list_table = {}
+for entry in player_competitor.word_list:
+    if entry.rareness:
+        object_array_push(rare_text_list_table, entry.rareness, q_decode(entry.word))
+
+
+if player.has_ability["Rare Word XP"] and size(rare_text_list_table):        
+    push(xp_array, {text: "★ Rare Words", header: true})
+    
+    for text_list at rareness in rare_text_list_table:
+        const r = parse(rareness)
+        const xp_per_word = round(XP.VALUE.rareness * r)
+        const N = (size(competitor_array) - r)
+        
+        push(xp_array,
+        {
+            text: "" + size(text_list) + " × " + xp_per_word + " xp / " + (if N < 3 then "{color: HIGHLIGHT_COLOR " else "") + (if N == 1 then "Unique}" else (N  + "-Found" + (if N < 3 then "}" else ""))) + " Word",
+            xp: size(text_list) * xp_per_word,
+            xp_color: if N < 3 then HIGHLIGHT_COLOR else ∅,
+            color: TABLE_ALT_ROW_COLOR},
+        {
+            text: join(text_list, ", "),
+            font: history_font,
+            color: TABLE_ALT_ROW_COLOR})
+
 // Only give streak awards for games where the player
 // actually earned points, otherwise it could have been
 // running unmonitored in the background
@@ -193,16 +220,17 @@ if player.score > 0 and not player.joined_late:
     if player.stats[today_date_string()].matches == 1:
         push(streak, {text: "First Match Today", xp: XP.VALUE.first_match_today, color: TABLE_ALT_ROW_COLOR})
     
-    else if player.stats[today_date_string()].matches mod 10 == 0:
+    else if player.stats[today_date_string()].matches mod 5 == 0:
         push(streak, {
             text: "" + player.stats[today_date_string()].matches + "ᵗʰ Match Today", 
-            xp: XP.VALUE.decimatch_today + 10 ⌊player.stats[today_date_string()].matches / 10 - 1⌋, 
+            xp: XP.VALUE.pentamatch_today + 10 ⌊player.stats[today_date_string()].matches / 5 - 1⌋, 
             color: TABLE_ALT_ROW_COLOR})
     
     if size(streak):
         push(xp_array, 
             {text: "Streak", header: true},
             …streak)
+
 
 for row in xp_array:
     player.stats[today_date_string()].xp += row.xp default 0

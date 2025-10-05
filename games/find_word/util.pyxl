@@ -1,6 +1,41 @@
 /* Utility functions that are not specific to this game */
 
 
+/* For sorting on size(A) */
+def size_comparator(A, B):
+    return size(A) - size(B)
+
+
+/* push(object[key], value), creating the array object[key] if it does not 
+   exist. Returns value. */
+def object_array_push(object, key, value):
+    if not object[key]:
+        object[key] = []
+    push(object[key], value)
+    return value
+    
+    
+    
+/* object[table_key][key] = value, creating the object object[table_key] if
+  it does not exist. Returns value. */
+def object_object_set(object, table_key, key, value):
+    if not object[key]:
+        object[table_key] = {}
+    object[table_key][key] = value
+    return value
+    
+
+
+/* Compute matching prefix length of two strings. */
+def prefix_length(word, candidate):
+    let length = 0
+    const N = min(size(word), size(candidate))
+    while length < N and word[length] == candidate[length]:
+        ++length
+    return length
+    
+
+
 /* Returns a boolean that is true if the button has just been
    pressed or is on a repeat press this frame, where `button_frames`
    is the value of a gamepad button. */
@@ -9,22 +44,6 @@ def button_repeat(button_frames):
         (button_frames == 1) or 
           (MAX(button_frames - BUTTON_REPEAT.DELAY, 0) mod BUTTON_REPEAT.PERIOD) == 1)
 
-
-
-/* For sorting on size(A) */
-def size_comparator(A, B):
-    return size(A) - size(B)
-
-
-
-/* Compute matching prefix length */
-def prefix_length(word, candidate):
-    let length = 0
-    const N = min(size(word), size(candidate))
-    while length < N and word[length] == candidate[length]:
-        ++length
-    return length
-    
 
     
 def draw_arc(pos, radius, start, stop, color):

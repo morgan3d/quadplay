@@ -6,13 +6,13 @@ Most Words Stat,3,Most Words per match is now available in Stats!,stats_sprite[0
 Friend of Moo,4,"`Hi I'm Moo. Let's Be Friends!'",avatar_sprite[34][22].x_flipped
 See caf,4,SILENT,
 High Score Stat,5,Highest Score per match is now available in Stats!,stats_sprite[0][0]
+See Mz. Kiwi,5,SILENT,
 Longest Word Stat,6,Your Longest Word is now available in Stats!,shapes.triangle.rotated_270
+See Dr. Quandary,6,SILENT,
 Best Word Stat,7,Best Word is now available in Stats!,shapes.diamond
 Friend of caf,8,`moo is my mom-cow! you be my pal??',avatar_sprite[33][22].x_flipped
-See Mz. Kiwi,6,SILENT,
 Discovered Words Stat,8,Discovered Words count is now available in Stats!,stats_sprite[0][0]
 Discovery XP,9,Get an XP bonus for every time you discover a new word!,notify_icon.xp
-See Dr. Quandary,9,SILENT,
 Words/Match Stat,10,Average Words per Match is now available in Stats!,stats_sprite[0][0]
 "Meet Mz. Kiwi",12,"`I know many quirky words with Ks, dear. Kindly let me be the your key to unlocking the knack for this tricky task.'",avatar_sprite[15][28].x_flipped
 Points/Match Stat,13,Average Points per Match is now available in Stats!,stats_sprite[0][0]
@@ -37,7 +37,8 @@ Matches/Day Stat,28,"You can now track matches per day and trends in Stats!",sta
 Enemy of VIL,29,"`I shall eviscerate the paltry vocabularies of your beef, veal, and poultry companions!'",avatar_sprite[25][20].x_flipped
 Wild,30,"New power: Wild (blank) tile in Freestyle",ability_icon.wild
 Remix Stats,32,"You can now track words captured per Remix and trends in Stats!",stats_sprite[0][0]
-XP/Day Stat,34,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
+Rare Word XP,33,"You now earn an XP bonus for each rare word based on uniqueness among players",notify_icon.xp
+XP/Day Stat,35,"You can now track XP per day and trends in Stats!",stats_sprite[0][0]
 Remix × 4,38,"New power: Use Remix 4× per match",ability_icon.remix
 "Mz. Kiwi's Friend",40,"`I know a keen keeper of knowledge you'll like…'",avatar_sprite[15][28].x_flipped
 Meet Dr. Quandary,40,"`Salutations, I'm Quandary! Justifiably perplexed and ajumble with J, Q, X, and Z? My quality expertise will expand your puzzle vocabulary in a jiffy.'",avatar_sprite[22][4].x_flipped

@@ -116,15 +116,16 @@ set_background(#000)
 set_hooks()
 
 easter_egg = (
-    if DEBUG.VIL or (player.avatar.level > ABILITY_TABLE["See VIL Always"].level and ξ < 4%) then 3 else
+    if player.avatar.level > 50 and ξ < 5% then 4 else
+    (if DEBUG.VIL or (player.avatar.level > ABILITY_TABLE["See VIL Always"].level and ξ < 4%) then 3 else
     (if player.avatar.level > 20 and ξ < 8% then 2 else 
-    (if player.avatar.level > 15 and ξ < 10% then 1 else 0)))
+    (if player.avatar.level > 15 and ξ < 10% then 1 else 0))))
 
 if not easter_egg and player.stats.lifetime.xp > 2000 and ξ < 1.5%:
     notify(shapes.gear, "Please Backup", "FWAN is in beta and could crash!\n\nUse the gear button to export a save game as a backup.")
 
 // Initialize the fake board
-player_reset_match(player, SOLO_GAME, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO", "VILL WINS ALLL NITE"][easter_egg], true)
+player_reset_match(player, SOLO_GAME, ["FIND WORD ALLL NITE", "FIND COWS ALLL NITE", "MOOO OOOO OOOO OOOO", "VILL WINS ALLL NITE", "GRIN DWOR DALL NITE"][easter_egg], true)
 player.selection_color = TILE.CENTER_SELECTED_COLOR
 player_deselect_all(player)
 

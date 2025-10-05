@@ -83,7 +83,7 @@ set_background(game_type.BACKGROUND_COLOR)
 // ratio stats
 player.joined_late = (frame_utc_now > start_time + 10)
 
-todo("Give some kind of rare word bonus")
+
 
 
 frame

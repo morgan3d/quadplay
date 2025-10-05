@@ -215,7 +215,7 @@ def stats_load():
     else:
         stats = {lifetime: make_empty_stats_entry()}
 
-    if DEBUG.FORCE_LEVEL:
+    if DEBUG.FORCE_LEVEL and IDE_USER[0] == "m":
         stats.lifetime.xp = level_to_xp(DEBUG.FORCE_LEVEL)
         
     // Ensure an entry for today

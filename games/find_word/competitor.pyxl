@@ -148,19 +148,25 @@ def competitor_analyze(competitor_array):
                 if size(text) > size(competitor["longest_" + prefix + "text"]):
                     competitor["longest_" + prefix + "text"] = text
 
-                if prefix == "freestyle_":                        
-                    competitor.best_freestyle_points += points       
+                if prefix == "freestyle_":    
+                    competitor.best_freestyle_points += points
 
     
-    // Count at which a word is rare
+    // Count at which a word is "rare" for most rare words award
     const rare_threshold = max(1, ⌊⅙ size(competitor_array)⌋)
 
-    // Find the best rare word for each competitor
-    for competitor in competitor_array:          
+    // Find the best regular rare word for each competitor.
+    //
+    // Simultaneously, modify each entry to record rareness on a scale of
+    // 0 (everyone got it) to N-1 (only the player got it) for words
+    // that pass the rare_threshold
+    for competitor in competitor_array:
         for word, points in entry in competitor.word_list:
             if count[word] ≤ rare_threshold:
                 // This word has appeared very few times
                 push(competitor.rare_word_list, entry)
+                
+                entry.rareness = size(competitor_array) - count[word]
                 
                 if points > competitor.best_rare_points:
                     competitor.best_rare_points = points
