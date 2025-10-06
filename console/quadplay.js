@@ -591,7 +591,7 @@ function unlockAudio() {
 function resumeAudioOnUserInteraction() {
     if (audioContext.state === 'suspended' && emulatorMode === 'play') {
         audioContext.resume();
-        resumeAllSounds();
+        //resumeAllSounds();
     }
 }
 
@@ -1265,7 +1265,9 @@ function onPlayButton(slow, skipStartAnimation, args, callback) {
         }
         document.getElementById('playButton').checked = 1;
         setControlEnable('pause', true);
-        audioContext.resume();
+        if (audioContext.state === 'suspended') { 
+            audioContext.resume();
+        }
     
         setErrorStatus('');
         emulatorMode = 'play';
@@ -4653,7 +4655,7 @@ function onInactive() {
     if (isMobile && isApple) {
         // iOS Safari needs the audio context suspended or it will
         // lose audio priviliges https://github.com/phaserjs/phaser/issues/4790
-        pauseAllSounds();
+        //pauseAllSounds();
         audioContext.suspend();
     }
 
