@@ -591,7 +591,7 @@ function unlockAudio() {
 function resumeAudioOnUserInteraction() {
     if (audioContext.state === 'suspended' && emulatorMode === 'play') {
         //audioContext.resume();
-        //resumeAllSounds();
+        resumeAllSounds();
     }
 }
 
@@ -4655,7 +4655,7 @@ function onInactive() {
     if (isMobile && isApple) {
         // iOS Safari needs the audio context suspended or it will
         // lose audio priviliges https://github.com/phaserjs/phaser/issues/4790
-        //pauseAllSounds();
+        pauseAllSounds();
         //audioContext.suspend();
     }
 
@@ -4688,6 +4688,8 @@ function onInactive() {
 
     
 function onActivatePage() {
+    resumeAudioOnUserInteraction();
+    
 
     // Reset the bloom state; it might have disabled
     // while defocused due to browser throttling.
