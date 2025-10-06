@@ -590,7 +590,7 @@ function unlockAudio() {
 // Must be called from a user input event handler.
 function resumeAudioOnUserInteraction() {
     if (audioContext.state === 'suspended' && emulatorMode === 'play') {
-        audioContext.resume();
+        //audioContext.resume();
         //resumeAllSounds();
     }
 }
@@ -4656,7 +4656,7 @@ function onInactive() {
         // iOS Safari needs the audio context suspended or it will
         // lose audio priviliges https://github.com/phaserjs/phaser/issues/4790
         //pauseAllSounds();
-        audioContext.suspend();
+        //audioContext.suspend();
     }
 
     // Don't do anything if already sleeping/paused or if auto-pause is disabled
