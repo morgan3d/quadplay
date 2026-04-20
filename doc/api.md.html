@@ -142,7 +142,7 @@ Array
 
    - `iterate.REMOVE` or `iterate.CONTINUE`: skip the current value and continue iterating.
      These have the same effect since there is no element to remove in a functional context.
-   - `iterate.BREAK` or `iterated()`: immediately stop iterating and return the result built so far.
+   - `iterate.BREAK` or `iterate.REMOVE_AND_CONTINUE`: immediately stop iterating and return the result built so far.
    - Any other value: append the returned value to the result.
 
    For arrays, returns a new array. For strings, returns a new string. For objects,
@@ -461,7 +461,7 @@ String
 `size(s)`
 : Get the length of the string. O(1) time.
 
-`slice(string, s, e default size(str))`
+`slice(string, s, e default size(string))`
 : Return the substring of `string` between `s` (inclusive) and
   optional `e` (exclusive, defaults to length). Clamps `e` to
   the length.

@@ -1,4 +1,4 @@
-The quadplay✜ IDE and compiler are copyright 2019-2025 Morgan McGuire. They are licensed under the
+The quadplay✜ IDE and compiler are copyright 2019-2026 Shmuel Ravensky and Morgan McGuire. They are licensed under the
 [LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be relicensed in the future.
 This includes the contents of:
 

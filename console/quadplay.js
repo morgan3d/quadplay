@@ -589,9 +589,12 @@ function unlockAudio() {
 // Handle iOS Safari audio resume during user interaction.
 // Must be called from a user input event handler.
 function resumeAudioOnUserInteraction() {
+    // This does not seem necesary (at least on iOS 26)--any touching of
+    // a CONTROL (not a canvas...) seems to resume audio. However, the
+    // sleepOverlay DIV also is able to resume audio.
     if (audioContext.state === 'suspended' && emulatorMode === 'play') {
         //audioContext.resume();
-        resumeAllSounds();
+        //resumeAllSounds();
     }
 }
 
@@ -4655,7 +4658,7 @@ function onInactive() {
     if (isMobile && isApple) {
         // iOS Safari needs the audio context suspended or it will
         // lose audio priviliges https://github.com/phaserjs/phaser/issues/4790
-        pauseAllSounds();
+        //pauseAllSounds();
         //audioContext.suspend();
     }
 

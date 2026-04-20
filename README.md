@@ -1,6 +1,6 @@
 [quadplay✜ website](https://morgan3d.github.io/quadplay)
 
-**quadplay✜** is a fantasy console by [CasualEffects](https://casual-effects.com)
+**quadplay✜** is a fantasy console by Shmuel and Morgan at [CasualEffects](https://casual-effects.com)
 for creating and playing retro-style video games on any device.
 
 - [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html?)
@@ -122,4 +122,4 @@ All sounds, sprites, and games distributed with quadplay✜ are Creative
 Commons licensed. The copyright and license on each of those is in 
 a JSON file next to the asset.
 
-© 2020-2025 Morgan McGuire
+© 2020-2026 Shmuel Ravensky and Morgan McGuire
