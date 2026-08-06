@@ -3,7 +3,7 @@
 function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgramAPIOverloads = {}) {
     console.assert(typeof pyxlCode === 'string', typeof pyxlCode);
 
-    let mdSource = `# ${scriptName}\n\n`;
+    let mdSource = `## ${scriptName}\n\n`;
     let license = null;
     let summary = null;
     let requires_array = [];
@@ -109,7 +109,7 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgram
     // Generate documentation in sorted order
     // Public variables first, then public functions
     if (Object.keys(publicVariableTable).length > 0) {
-        mdSource += `## Variables\n\n`;
+        mdSource += `### Variables\n\n`;
     
         for (const variableName of Object.keys(publicVariableTable).sort(sortVarNames)) {
             mdSource += publicVariableTable[variableName];
@@ -117,14 +117,14 @@ function pyxlScriptToMarkdeepDoc(scriptName, pyxlCode, url, documentationProgram
     }
 
     if (Object.keys(publicFunctionTable).length > 0) {
-        mdSource += `## Functions\n\n`;
+        mdSource += `### Functions\n\n`;
         for (const functionName of Object.keys(publicFunctionTable).sort()) {
             mdSource += publicFunctionTable[functionName];
         }
     }
     
     if (Object.keys(privateVariableTable).length || Object.keys(privateFunctionTable).length) {
-        mdSource += `## Internal\n\n`;
+        mdSource += `### Internal\n\n`;
         // Private variables first, then private functions
         for (const variableName of Object.keys(privateVariableTable).sort(sortVarNames)) {
             mdSource += privateVariableTable[variableName];

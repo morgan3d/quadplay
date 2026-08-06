@@ -1320,7 +1320,7 @@ function onNewDocCreate() {
             // Construct the relative path to the quad:// root
             const relPath = '../'.repeat(getGamePath().substring(basePath.length).split('/').length - 1);
 
-            templateBody = templateBody.replace(/src="doc\/markdeep\.min\.js"/g, 'src="' + relPath + 'doc/markdeep.min.js"');
+            templateBody = templateBody.replace(/src="doc\/markdeep2\.min\.js"/g, 'src="' + relPath + 'doc/markdeep2.min.js"');
         }
 
         const gameJSON = gameSource.json;

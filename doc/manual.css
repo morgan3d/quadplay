@@ -3,8 +3,8 @@ body { background: #302b2b }
 @font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
 .big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
 em.asterisk { font-style: normal; font-weight: bold; }
-.md div.title { font-family: quadplay; font-size: 40px}
-.md div.title, .md div.subtitle {text-align: center}
+.md h1 { font-family: quadplay; font-size: 40px}
+.md h1, .md div.subtitle {text-align: center}
 img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
 .md .hljs-built_in {font-weight: bold; color: #f7a8fd}
 .md .hljs-keyword {font-weight: bold; color: #a1aefe}
@@ -45,7 +45,7 @@ div.preview {
   float:right;
 }
 
-.md h1, .md h2, .md h3 { font-family: quadplay }
+.md h2, .md h3, .md h4 { font-family: quadplay }
 .md pre.listing.backtick {
   margin-bottom: 0px;
 }

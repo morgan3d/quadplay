@@ -16,9 +16,9 @@ body {
 
 /* reset heading/link fonts to that of body */
 .md a,
-.md div.title, contents, .md .tocHeader,
-.md h1, .md h2, .md h3, .md h4, .md h5, .md h6,
-.md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6,
+.md h1, contents, .md .tocHeader,
+.md h2, .md h3, .md h4, .md h5, .md h6, .md h6,
+.md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6, .md .nonumberh6,
 .md .shortTOC, .md .mediumTOC, .md .longTOC {
     font-family: inherit;
 }
@@ -36,12 +36,12 @@ body {
     margin-bottom: -30px;
 }
 
-.md div.title, .md div.subtitle, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6 {
+.md h1, .md div.subtitle, .md h2, .md h3, .md h4, .md h5, .md h6, .md h6 {
     font-family: 'Roboto', Arial, Helvetica, "sans serif";
     font-weight: 300;
 }
 
-.md div.title {
+.md h1 {
     font-size: 43px;
     text-align: left;
     margin-bottom: 0px;
@@ -65,7 +65,7 @@ body {
     margin-top: 30px;
 }
 
-.md h1 {
+.md h2 {
     font-size: 175%;
     margin-bottom: 25px;
     margin-left:-20px;
@@ -76,12 +76,12 @@ body {
     border-top:6px solid #5a5a5a;
 }
 
-.md h2 {
+.md h3 {
     font-size: 150%;
     border: none;
 }
 
-.md h3, .md h4, .md h5, .md h6 {
+.md h4, .md h5, .md h6, .md h6 {
     font-size: 120%;
 }
 
@@ -191,7 +191,7 @@ body {
         border-bottom: 1px solid #fff;
     }
     
-    .md div.title, .md div.subtitle, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6 {
+    .md h1, .md div.subtitle, .md h2, .md h3, .md h4, .md h5, .md h6, .md h6 {
         color: #fff;
     }
 
@@ -203,7 +203,7 @@ body {
         background: #3a3a3a;
     }
 
-    .md div.title, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited {
+    .md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md h6, .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited {
         text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
     }
 

@@ -46,13 +46,13 @@ function updateProgramDocumentation() {
 <link rel="stylesheet" href="${docPath}manual.css">
 <style>
 body {left: 8px}
-.md div.title {font-size: 24px}
-.md h1:before, .md h2:before, .md h3:before {content: none}
-.md h1 {font-size: 28px; font-weight: 800}
-.md h2 {font-size: 22px; font-weight: normal; font-color: #DDD}
-.md h3 {font-size: 20px; font-weight: normal; font-color: #DDD}
+.md h1 {font-size: 24px}
+.md h2:before, .md h3:before, .md h4:before {content: none}
+.md h2 {font-size: 28px; font-weight: 800}
+.md h3 {font-size: 22px; font-weight: normal; font-color: #DDD}
+.md h4 {font-size: 20px; font-weight: normal; font-color: #DDD}
 </style>
-<!-- Markdeep: --><script src="${docPath}markdeep.min.js" charset="utf-8"></script>`;
+<script src="${docPath}markdeep2.min.js" charset="utf-8"></script>`;
 
     const iframe = document.getElementById('programAPI');
 

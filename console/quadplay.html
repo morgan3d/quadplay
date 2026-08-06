@@ -1271,44 +1271,44 @@
         // Scripts, in order of issuing the load. Do not reorder. These can be a raw
         // URL or an object with the arguments for loadScript.
         const scriptArray = [
-            {url: 'lib/gif.js', lazyLoad: true},
+            {url: 'vendor/gif.js', lazyLoad: true},
 
             // Editor
             {url: 'ace/ace.js', ide: true},
 
             // Mode graph library
-            {url: 'lib/dagre.min.js', lazyLoad: true, ide: true},
+            {url: 'vendor/dagre.min.js', lazyLoad: true, ide: true},
 
             // QR code generator. This is needed for networking
             // even when not in the IDE
-            {url: 'lib/qrcode.min.js', lazyLoad: true},
+            {url: 'vendor/qrcode.min.js', lazyLoad: true},
 
             // Zipfile parsing
-            'lib/jszip.min.js',
+            'vendor/jszip.min.js',
 
             // LZ-string compression for the quadplay API
-            {url: 'lib/lz-string.min.js', lazyLoad: true},
+            {url: 'vendor/lz-string.min.js', lazyLoad: true},
 
             // YAML parsing
-            'lib/js-yaml.min.js',
+            'vendor/js-yaml.min.js',
 
             // JSON parsing
             'WorkJSON.js',
 
             // Compiler dependency
-            {url: 'lib/vectorify.js', lazyLoad: true},
+            {url: 'vendor/vectorify.js', lazyLoad: true},
             
             // Physics library
             //
-            // Cannot lazy load lib/matter.min.js because matter-extensions.js needs to run
+            // Cannot lazy load vendor/matter.min.js because matter-extensions.js needs to run
             // after matter.min.js is loaded since it mutates it
-            {url: 'lib/decomp.min.js', lazyLoad: true},
-            'lib/matter.min.js',
+            {url: 'vendor/decomp.min.js', lazyLoad: true},
+            'vendor/matter.min.js',
             'matter-extensions.js',
 
             // Network
-            {url: 'lib/peerjs.min.js', lazyLoad: true},
-            {url: 'lib/serialize.js', lazyLoad: true},
+            {url: 'vendor/peerjs.min.js', lazyLoad: true},
+            {url: 'vendor/serialize.js', lazyLoad: true},
 
             {url: 'LoadManager.js', forceReload: useIDE},
             {url: 'filters.js', forceReload: useIDE},

@@ -1,9 +1,9 @@
-<meta charset="utf-8"><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
+<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
 <link rel="icon" type="image/png" sizes="64x64" href="../console/icons/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/icons/favicon-32x32.png">
 <link rel="shortcut icon" href="../console/icons/favicon.ico">
 
-                      **quadplay✜**
+# quadplay✜
     Fantasy Console by [Casual Effects](https://casual-effects.com)
 
 <center>[*Quick Start*](#quickstart) 
@@ -100,8 +100,7 @@ and a 64x64 screen mode for [Lowrezjam](https://itch.io/jam/lowrezjam-2024 targe
 has been maintained by lead developer Shmuel Ravensky. The distribution
 contains contributions from the community as credited in each game and asset.
 
-Quick Start
-====================================================================================
+## Quick Start
 
 Welcome to <quadplay/>! 
 
@@ -235,8 +234,7 @@ from sites like [OpenGameArt.org](http://opengameart.org) and
 _People playing your game don't need Python, just a web browser. See the Deploying Games section for more information._
 
 
-Workflow
-------------------------------------------------------------------------------------
+### Workflow
 
 You should create your programs however works best for you. Here's how
 I like to work in <quadplay/>:
@@ -275,8 +273,7 @@ prototypes don't go the distance to become big programs,
 anyway. There's no reason to overdesign early on.
 
 
-Built-In Games
-------------------------------------------------------------------------------------
+### Built-In Games
 
 Five complete games and many examples are included to show how to use the API.
 If you are accessing this manual from a web site or your local machine running
@@ -284,7 +281,7 @@ the <quadplay/> emulator, use the links here to launch the game in your browser,
 press the Run button (F5) to start the game.
 
 
-### Playable
+#### Playable
 
   <center><img src="../games/quadpaddle/logo.png" width="300px" style="border:0"></center>
 
@@ -526,7 +523,7 @@ controller (Push, Launchpad, APC, etc.). Also demonstrates built-in AI routines.
 
 
 
-### Examples
+#### Examples
 
 <table class="aligned">
 <tr><td width=192>![](../examples/starter/label128.png)</td><td>
@@ -830,7 +827,7 @@ and brightnesses.
 
 </td></tr></table>
 
-### Inspiration
+#### Inspiration
 
 Some games that were not made in <quadplay/>, but which fit within the
 restrictions of quadplay and are sources of inspiration for their
@@ -919,8 +916,7 @@ These are games whose style and gameplay would fit, but that would exceed the re
 - [Axiom Verge](http://www.axiomverge.com/)
 - [Into the Breach](https://subsetgames.com/itb.html)
 
-Programming Model
-------------------------------------------------------------------------------------
+### Programming Model
 
 The **PyxlScript** programming language is designed to make compact,
 readable games. It blends Python, Lua, and JavaScript
@@ -939,7 +935,7 @@ There are three special parts of the PyxlScript programming model that
 are designed to simplify programming arcade games. These special
 features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame hooks*](#framehooks).
 
-### Modes
+#### Modes
 
 Your program consists of one or more *modes* which are game states that the
 player will experience. Common modes are "Play", "Title", "Inventory", "CutScene", and "GameOver". Use `set_mode()` to change which mode the program is in.
@@ -1091,7 +1087,7 @@ menu.leave();
 [This is the rough equivalent of the menu mode PyxlScript code in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
 
 
-#### Unmatched Push and Pop Mode
+##### Unmatched Push and Pop Mode
 
 Push and pop on modes aren't always paired, because sometimes an exceptional
 change to state flow occurs. 
@@ -1128,7 +1124,7 @@ transitioned to C.
 [Equivalent behavior triggered by the actual code, so that PyxlScript can ensure matched push/pop]
 
 
-### 2.5D Graphics
+#### 2.5D Graphics
 
 Graphics in PyxlScript are similar to other 2D rendering APIs. You can
 set the background color, draw basic shapes and text, and render
@@ -1165,7 +1161,7 @@ of them. This rendering retains z-order, so you can even inject new
 graphics in between objects from a previous mode's frozen image.
 
 
-### Frame Hooks
+#### Frame Hooks
 
 In addition to the mode's frame code, you can dynamically register
 hook functions to run at the beginning of every frame using
@@ -1181,7 +1177,7 @@ The closest relative to frame hooks is JavaScript's `setTimeout()`
 function, although it is much more limited.
 
 
-### Network Multiplayer
+#### Network Multiplayer
 
 All <quadplay/> games automatically support *shared-screen* network
 multiplayer through the built-in system menu's Online options. The
@@ -1194,13 +1190,12 @@ online play. This includes simplifying the user experience for
 creating and joining games and *private per-player views*.
 
 
-Coming from...
-------------------------------------------------------------------------------------
+### Coming from...
 
 Here are some tips to get you started quickly when you're coming to
 PyxlScript from other popular programming languages.
 
-### PICO-8
+#### PICO-8
 
 If you're used to programming in PICO-8 Lua, make these changes for the
 PyxlScript:
@@ -1219,7 +1214,7 @@ PyxlScript:
 - Enjoy the overloaded operators, array functions, z-order, and alpha blend
 
 
-### Python
+#### Python
 
 The PyxlScript language feels a lot like Python, with these changes:
 
@@ -1249,7 +1244,7 @@ The PyxlScript language feels a lot like Python, with these changes:
   so they do not capture and share values
 
 
-### JavaScript
+#### JavaScript
 
 The PyxlScript language feels a lot like JavaScript strict mode, with these changes:
 
@@ -1270,8 +1265,7 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 - Enjoy the overloaded operators for vectors
 
 
-Online Multiplayer
-====================================================================================
+## Online Multiplayer
 
 Quadplay supports safe online play for shared-screen multiplayer games
 over the internet. This is similar to the Steam "Remote Play Together"
@@ -1312,11 +1306,9 @@ flag.
 
 
 
-Tools
-====================================================================================
+## Tools
 
-Development Environment
------------------------------------------------------------------------------
+### Development Environment
 
 The browser development environment supports several alternative
 layouts, which are selected from the buttons on the upper right of the
@@ -1364,8 +1356,7 @@ can run in for removing the top control bar when running on
 an arcade machine or other public display mode.
 
 
-Emulator
-------------------------------------------------------------------------------------
+### Emulator
 
 The main tool is the console emulator, which you can launch with the
 `quadplay` command at the command line.
@@ -1394,7 +1385,7 @@ On macOS, either Control or Command can be used for "Ctrl".
  address you access <quadplay/> from).
 
 
-### Controls
+#### Controls
 
 <quadplay/> presents virtual controllers for four players. You can use
 the on-screen buttons on mobile and touch screens for a single player,
@@ -1526,7 +1517,7 @@ version 19.4 or later. On macOS, also install the open source
 driver. The Chromium-based browsers (Chrome, Edge, and Brave) provide the most reliable
 mapping. Safari and Firefox have inconsistent results.
 
-#### Arcade Controller Mappings
+##### Arcade Controller Mappings
 
 The X-arcade default mapping is below. For other operating systems, browsers, or
 older controllers, just use keyboard mode and program the buttons to match
@@ -1547,7 +1538,7 @@ you use to play games depending on the physical layout.
 
 ![Symmetric ECDF fightstick layout.<br>(Example only; this controller has not been tested with quadplay)](symmetric-arcade.jpg width=80% style="image-rendering:auto") ![Asymmetric CDEF fightstick layout.<br>(Example only; this controller has not been tested with quadplay)](right-arcade.jpg width=80% style="image-rendering:auto")
 
-#### Dual D-Pad
+##### Dual D-Pad
 
 When `dual_dpad` is enabled (in the game.json file or via the project checkbox),
 player 1's  _physical_ controller right stick can override the 
@@ -1555,7 +1546,7 @@ the player 2 (`gamepad_array[1]`) _virtual_ controller D-pad. This allows
 you to make digital twin-stick games that work with both default keyboard
 controls and a single modern dual-stick controller.
 
-### Analog Sticks
+#### Analog Sticks
 
 Quadplay exposes system features beyond the standard quadplay
 capabilities using the `device_control("get_analog_axes", ...)`
@@ -1567,7 +1558,7 @@ will not work on all quadplay devices. But, it is a great way to
 program for a specific platform that you have in mind or have built.
 
 
-### Resolution
+#### Resolution
 
 The emulator screen tries to maintain an integer multiple of the
 native pixel resolution to prevent distortion of pixel art. When
@@ -1615,8 +1606,7 @@ previous work, here are the resolutions of classic and retro machines:
 
 
 
-quantize✜
----------------------------------------------------------------------------------------------
+### quantize✜
 
 [quantize✜](../tools/quantize.html target="_blank") is a standalone browser tool for
 converting any image format that your browser can load into a sRGB8 PNG
@@ -1625,8 +1615,7 @@ them using quantize✜ you will have control over the color reduction process
 and be able to produce much smaller files for distribution.
 
 
-fontgen✜
----------------------------------------------------------------------------------------------
+### fontgen✜
 
 [fontgen✜](../tools/fontgen.html target="_blank") is a standalone browser tool for
 producing rough <quadplay/> font images from fonts installed on your local
@@ -1634,8 +1623,7 @@ computer. You can then screen capture these and edit them in your
 favorite pixel editor to clean them up.
 
 
-fontpack✜
----------------------------------------------------------------------------------------------
+### fontpack✜
 
 [fontpack✜](../tools/fontpack.html target="_blank") is a standalone browser tool for
 taking a font PNG file with regular tiles (such as the one produced by
@@ -1653,8 +1641,7 @@ characters with accents or button prompts to get a readable result in
 a few pixels.
 
 
-scalepix✜
----------------------------------------------------------------------------------------------
+### scalepix✜
 
 [scalepix✜](../tools/scalepix.html target="_blank") is a standalone browser tool for
 upscaling a font or sprit PNG file to twice the resolution in each
@@ -1665,8 +1652,7 @@ NES, PICO8, and Game Boy assets.
 (insert api.md.html here)
 
 
-Project Files
-=============================================================================================
+## Project Files
 
 When importing assets using the IDE as JSON or raw PNG, MP3, or TMX
 files, the subdirectories `journal`, `screenshots`, `metadata`,
@@ -1680,8 +1666,7 @@ files, the subdirectories `journal`, `screenshots`, `metadata`,
     may be incompatible with other tools. 
 
 
-Game JSON
----------------------------------------------------------------------------------------------
+### Game JSON
 
 The project file is a JSON file describing all of the parts of the
 program. The project file and all of its dependencies are reloaded
@@ -1923,7 +1908,7 @@ but still have metadata embedded in the game itself and use raw data
 instead of media formats.
 
 
-### Constants
+#### Constants
 
 Unlike constants declared in code, the constants in the `.game.json`
 file appear in the IDE in the project list and have GUI editors. They
@@ -1986,7 +1971,7 @@ The available constants types are:
     can be recursive, but obviously cannot form a cycle. References must be 
     defined at top level and not nested inside an array or object. 
 
-### `number` Constants
+#### `number` Constants
 
 Number contants may have the following additional parameters
 for controlling the IDE:
@@ -1997,7 +1982,7 @@ for controlling the IDE:
 - `scale`: Must be `"linear"` if specified
 - `format`: Values are shown in the IDE using `format_number(value, format)`
 
-### CSV Constants
+#### CSV Constants
 
 A `table` or `array` entry in the game constants that uses 
 a separate CSV file for the data has additional properties:
@@ -2069,7 +2054,7 @@ number ending in `deg`   |  number (in radians, same as native quadplay constant
 Double-quoted text may contain newlines.
 
 
-#### Object Examples
+##### Object Examples
 
 Consider the following CSV files, produced using a spreadsheet program
 or by hand:
@@ -2114,7 +2099,7 @@ debug_print( 'off-hand actions: ', slot.off) // {fighter:"shield", rogue:"blackj
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#### Array Examples
+##### Array Examples
 
 Consider the following CSV files, produced using a spreadsheet program
 or by hand:
@@ -2184,7 +2169,7 @@ debug_print( matrix[1][2] ) // 21
 debug_print( matrix[3][1] ) // 13
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### `raw` Format
+#### `raw` Format
 
 The `raw` format allows embedding a JSON-expressible value directly. `raw` format also
 supports the format <code>{"type":"raw", "url": "</code><i>your url</i><code>"}</code> instead of an inline value.
@@ -2199,8 +2184,7 @@ implementation and to ensure that GUI editors can be built effectively
 for objects and arrays.
 
 
-Debug JSON
----------------------------------------------------------------------------------------------
+### Debug JSON
 
 When working with multiple developers on a game, it is often useful to
 have slightly different settings for each developer. For example,
@@ -2256,8 +2240,7 @@ YAML url, `string` constants loaded from a text file url, and `table`
 constants loaded from a CSV url.
 
 
-Sprite JSON
----------------------------------------------------------------------------------------------
+### Sprite JSON
 
 The sprite sheet JSON descriptor looks like:
 
@@ -2416,8 +2399,7 @@ You can use the Python script `tools/sprite_json_generator.py` to generate
 these json blobs for you. Use the `--help` argument for more details.
 
 
-Font JSON
----------------------------------------------------------------------------------------------
+### Font JSON
 
 Fonts have a JSON descriptor file that looks like:
 
@@ -2507,8 +2489,7 @@ Multiple fonts loaded from the same sound.json file will be pointers
 to the same object, which is immutable.
 
 
-Sound JSON
----------------------------------------------------------------------------------------------
+### Sound JSON
 
 The sound JSON descriptor looks like:
 
@@ -2539,8 +2520,7 @@ Multiple sounds loaded from the same sound.json file will be pointers
 to the same object, which is immutable.
 
 
-Map JSON
----------------------------------------------------------------------------------------------
+### Map JSON
 
 The easy way to create a map is within the IDE using the "Create new
 asset..." option in the project. Select asset type Map and set the map
@@ -2627,8 +2607,7 @@ the layer indices increase upwards.
 
 
 
-Data JSON
----------------------------------------------------------------------------------------------
+### Data JSON
 
 The special data asset type allows importing a large amount of data in
 an arbitrary format. It supports PNG, JPG, GIF, CSV, TXT, JSON, YAML,
@@ -2662,11 +2641,9 @@ Images are loaded as `image.color[x][y]` where `color` can be `r`, `g`,
 extend that range when the input has 16 or 32 bits per channel.
 
 
-PyxlScript Language
-=========================================================================
+## PyxlScript Language
 
-Numbers
--------------------------------------------------------------------------
+### Numbers
 
 Numbers are stored internally as double-precision (64-bit) IEEE
 floating point values. Integer operators truncate the decimal places
@@ -2717,8 +2694,7 @@ No octal or exponential float notation are supported. Trailing decimal
 points are not allowed. For example, `0.` is illegal.
 
 
-Booleans
---------------------------------------------------------------------
+### Booleans
 
 The boolean literals are `true` and `false`.
 
@@ -2726,8 +2702,7 @@ Logical operators work with any values. For logical operators and flow
 control, `0`, `∅`, and empty string `""` act as `false`.
 
 
-Strings
---------------------------------------------------------------------
+### Strings
 
 String literals are enclosed in double quotes (`"..."`). They may not contain newlines or
 double quotes.
@@ -2739,8 +2714,7 @@ The `+` operator performs string concatenation, coercing the right-hand argument
 string. String characters are read-only substrings accessed using zero-based array syntax.
 
 
-Arrays
---------------------------------------------------------------------
+### Arrays
 
 Arrays are ordered sets of values. They are zero-based and have
 dynamically typed elements.  Array literals are surrounded in square
@@ -2761,8 +2735,7 @@ Negative indices are permitted on arrays but will not be reported in the length.
 out-of-bounds value from an Array returns `∅`.
 
 
-Objects
----------------------------------------------------------------------------
+### Objects
 
 Objects are unordered sets of keys. Objects (also known as
 dictionaries and tables in other languages) map these keys to values.
@@ -2782,8 +2755,7 @@ debug_print(keyArray(t))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Functions
----------------------------------------------------------------------------
+### Functions
 
 Functions are first-class values. They can be passed to and returned
 from other functions, stored in data structures, and bound to
@@ -2848,8 +2820,7 @@ parentheses, use the `call` function.
 
 
 
-Variables
----------------------------------------------------------------------------
+### Variables
 
 Variable name identifiers consist of an optional leading underscore `_`, 
 optional upper case delta `Δ`,
@@ -2921,7 +2892,7 @@ global to the entire program.
 It is an error to assign to a variable before it is declared.
 
 
-### Reserved Words
+#### Reserved Words
 
 
 These are reserved tokens that cannot be used as variable names. Some
@@ -2962,7 +2933,7 @@ have bound will be invoked instead.
 
 
 
-### `with` Statement
+#### `with` Statement
 
 The `with` statement creates a local scope in which explicitly named
 keys from an object are variables aliased to the properties on the
@@ -3003,7 +2974,7 @@ the overhead of other statements, so avoid them for performance-sensitive
 inner loops.
 
 
-### `local` Statement
+#### `local` Statement
 
 
 The `local` statement allows you to create a block without any other
@@ -3021,8 +2992,7 @@ local:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Comments
--------------------------------------------------------------------
+### Comments
 
 Comments follow C/C++/Java/JavaScript syntax of `//` for single line comments and `/*`...`*/`
 for multi-line comments.
@@ -3036,8 +3006,7 @@ for multi-line comments.
 
 
 
-Operators
--------------------------------------------------------------------
+### Operators
 
 Built-in arithmetic operators and functions are overloaded for numbers
 and objects.
@@ -3214,7 +3183,7 @@ y = call(tbl["myfunc"], 3, 4)
 z = call(f(a), b)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### Assignment and Equality
+#### Assignment and Equality
 
 As in Python and JavaScript, all assignment operators perform pointer
 assignment and all equality operators check for pointer equality. All
@@ -3247,7 +3216,7 @@ makes the _binding_ constant, but has no effect on the value (as in
 JavaScript).
 
 
-### Exponents
+#### Exponents
 
 The characters `⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲᵏⁿᵘˣʸᶻ⁽⁾` can form exponent expressions that operate as if
 the `^` operator or `pow` function was invoked using those expressions as a second argument.
@@ -3262,7 +3231,7 @@ without parentheses. This follows the rules from JavaScript's `**` operator. For
 confusing and redundant expression, if that's really what was intended) `x=y+-(1²)`.
 
 
-### Implicit Multiplication
+#### Implicit Multiplication
 
 Multiplication is implicit wherever a number is immediately followed by a parenthesized
 expression or variable (including a function call). This also ocurrs when any exponent
@@ -3277,7 +3246,7 @@ For example, `(x + 1) (x + 2)` and `|y| x` are syntax errors, not implicit produ
 Implicit multiplication can be used within exponents.
 
 
-### Spread Operator
+#### Spread Operator
 
 The spread operator (`…` or `...`) allows defining and calling
 functions with a variable number of arguments and creating an extended
@@ -3309,7 +3278,7 @@ draw_text({text: "World", pos: xy(10, 120), …text_args})
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-### Built-in Objects
+#### Built-in Objects
 
 The following are built-in constants and special zero-argument
 operators. They are not variable names and thus cannot be
@@ -3355,8 +3324,7 @@ Symbol         | ASCII           | Value
                
 
 
-Loops and Flow Control
---------------------------------------------------------------------------
+### Loops and Flow Control
 
 Whitespace is significant, as in Python. A block is a line ending with a `:`
 whose body is indented. All blocks create a new scope line (unlike Python).
@@ -3419,7 +3387,7 @@ while x != "end":
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### `&` Elision 
+#### `&` Elision 
 
 Trivial blocks can increase indentation so much that code is hard to
 read because it extends too far to the right. All blocks except for
@@ -3451,7 +3419,7 @@ def player_update(player)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-### `for` Loop
+#### `for` Loop
 
 Numeric `for` loops increment by 1 each iteration and always count up. The loop variable must
 be on the left-side of a single comparison loop expression or the center of a multi-comparison
@@ -3494,7 +3462,7 @@ use parentheses to make the parsing unambiguous, for example, `for i
 &lt; (a &lt; b):`.
 
 
-### `for-in` Loop
+#### `for-in` Loop
 
 Container iteration `for` loops iterate over the keys of a object, the
 characters of a string, or the elements of an array. 
@@ -3534,7 +3502,7 @@ The Java/C++ equivalents of `for-in`-loop conditions are:
 `for x in S`           | `for (const x : S)`
 
 
-### `for-with` Loop
+#### `for-with` Loop
 
 You can combine a `for` and `with` statement together by chaining `∈`
 expressions, in what is called a `for`-`with` loop. The properties
@@ -3569,9 +3537,9 @@ for health, power,
 
 
 
-### Examples
+#### Examples
 
-#### `for` loop variations
+##### `for` loop variations
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Iterate over each current enemy once, destroying those
@@ -3616,7 +3584,7 @@ if joy.x or joy.y:
 [`for` loop examples]
 
 
-#### Array Iteration
+##### Array Iteration
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let names = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
@@ -3645,7 +3613,7 @@ for i < size(names):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#### Object Iteration
+##### Object Iteration
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let poemBy = {
@@ -3671,7 +3639,7 @@ for author in poemBy:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#### Array of Objects
+##### Array of Objects
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let spots = [xy(1, 1), xy(100, 2), xy(10, 20), xy(50, 20)]
@@ -3689,8 +3657,7 @@ while i < size(spots):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Debugging
----------------------------------------------------------
+### Debugging
 
 There are two special forms for debugging that can be enabled or
 disabled at runtime for efficiency on the Output pane. These are not
@@ -3709,8 +3676,7 @@ from the program when assertions are disabled.
 
 
 
-Multiline Expressions
----------------------------------------------------------------
+### Multiline Expressions
 
 Newlines end PyxlScript expressions, unless there are unbalanced
 brackets (), [], {}. This allows you to spread function calls, array
@@ -3734,8 +3700,7 @@ the end of a multiline expression, it may not also contain multiple statements.
 
 
 
-Symbols
----------------------------------------------------------------
+### Symbols
 
 The <quadplay/> IDE supports autocorrect for typing the optional special
 symbols such as `nil` --> `∅`, `1/2` --> `½`, and `>=` --> `≥`. To generate
@@ -3838,8 +3803,7 @@ is using the `gamepad.prompt` object with the string `replace()`
 function, rather than hardcoding these characters into a game.
 
 
-Version Control
-====================================================================================
+## Version Control
 
 <quadplay/> is designed to work well with version control systems such
 as git, svn, Perforce, etc. The metadata and project files are all
@@ -3881,8 +3845,7 @@ GUI git tools with the built-in git support (although don't try it
 _while_ a command is being processed).
 
 
-Advanced Tools
-====================================================================================
+## Advanced Tools
 
 In addition to the friendlier browser-based tools from the Tools
 menu, the distribution includes command-line tools for experienced
@@ -3892,8 +3855,7 @@ IDE, some of these have additional dependencies and assume that you
 know how to install those on your own.
 
 
-Local Emulator
------------------------------------------------------------------------------
+### Local Emulator
 
 You can launch the IDE on your local machine. This allows you to run
 without a network connection and to work with local files instead of
@@ -3964,8 +3926,7 @@ disable this behavior, force a reload of the entire page with
 shift+browser reload button, or remove `&fastReload=1` from the URL.
 
 
-Visual Studio Code
-------------------------------------------------------------------------------------
+### Visual Studio Code
 
 Visual Studio Code natively supports the `.json` files. To configure it with
 PyxlScript file support as well:
@@ -3976,8 +3937,7 @@ PyxlScript file support as well:
 4. At the command line, run `code --install-extension vscode-pyxlscript.vsix`
 
 
-Vim
-------------------------------------------------------------------------------------
+### Vim
 
 To install the PyxlScript mode for Vim, you'll need to modify your .vimrc.
 
@@ -3992,8 +3952,7 @@ If you want to directly copy the files into your ~/.vim directory, make sure you
 [`pyxlscript.vim`](../tools/pyxlscript.vim)
 
 
-Emacs
-------------------------------------------------------------------------------------
+### Emacs
 
 To install the PyxlScript mode for Emacs, add the following lines to
 your `~/.emacs` file:
@@ -4010,8 +3969,7 @@ Note that you have to put the real path in for the `"path/to/quadplay/tools"`,
 such as `~/quadplay/tools`, or wherever you installed quadplay to.
 
 
-Other Editors
-------------------------------------------------------------------------------------
+### Other Editors
 
 Fortunately, PyxlScript syntax is very close to Python syntax. If you
 tell your editor to treat `.pyxl` files as Python files, then it will
@@ -4019,8 +3977,7 @@ probably handle indenting and most keywords correctly. Comments are
 the one element that will probably confuse your syntax highlighter.
 
 
-Command-Line Tools
-------------------------------------------------------------------------------------
+### Command-Line Tools
 
 `quadplay`
 : Launches the emulator from the command line on any operating system.
@@ -4083,8 +4040,7 @@ directory that containst the game.json for your project.
   Note that while aseprite supports sprites of varying size, quadplay does not.
 
 
-`quadplay.html`
-------------------------------------------------------------------------------------
+### `quadplay.html`
 
 The `quadplay.html` application launched by the `quadplay` script accepts the following
 HTML query arguments:
@@ -4143,10 +4099,9 @@ HTML query arguments:
   quadplay.
 
 
-Physical Consoles
----------------------------------------------------------------------------------------------
+### Physical Consoles
 
-### Build
+#### Build
 
 I expect most people will use <quadplay/> on phones, laptops, and desktops
 as a _virtual_ console. But, if you have some maker experience you can make a
@@ -4156,7 +4111,7 @@ If you want an arcade form factor, then a <quadplay/> arcade cabinet
 can be built with some carpentry and any low-cost PC and display, or
 by purchasing some (expensive!) pre-built arcade cabinets.
 
-#### Processor
+##### Processor
 
 Any Mac, Windows, or Linux computer can be used to power a <quadplay/>
 physical build. An old laptop often works well. Alternatively, an embedded
@@ -4220,7 +4175,7 @@ for powering a mini console, but has a lot more graphics power than an
 embedded processor and will comfortably run all games at 60 Hz.
 
 
-#### Arcade Controller
+##### Arcade Controller
 
 When you're color coding the physical controls for a full four-player setup, the standard
 <quadplay/> arcade player colors and physical layout order is: P3 Yellow, P1 Magenta
@@ -4306,7 +4261,7 @@ keyboard controls place these buttons _lower_ than on a gamepad, so that they
 are in reach of the pinkies for ease holding down. They are not "shoulder"
 buttons, even though that is the best location for them on a physical controller.
 
-#### Display
+##### Display
 
 For a physical cabinet, a 24" screen will match a
 traditional arcade size. For a handheld or mini installation, the screen
@@ -4359,7 +4314,7 @@ Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Ef
 *2560x1440*|  *6x*       |*2304x1344*| *84%*       | 6.42x      | 2468x1440 | 96%
 
 
-### Buy
+#### Buy
 
 <quadplay/> works on all Mac, Windows, and Linux devices, so any
 computer you buy can be a dedicated device for playing or making
@@ -4401,8 +4356,7 @@ games include:
 
 
 
-Mobile Development
-=====================================================
+## Mobile Development
 
 The quadplay IDE allows you to easily test your game on a mobile device while 
 developing from a laptop or desktop computer. 
@@ -4434,8 +4388,7 @@ device to see the changes. You do not need to re-scan the QR code for each chang
     BlueTooth or plugged in directly over USB.
 
 
-Deploying Games
-====================================================================================
+## Deploying Games
 
 Your games can be played on any major web browser on desktop/laptop,
 phone, tablet, or embedded processor such as Raspberry Pi. You can
@@ -4451,8 +4404,7 @@ will have its own rules and restrictions. The code provided with
 own closed-source came). See the Credits section for more information.
 
 
-itch.io
-------------------------------------------------------------------------------------
+### itch.io
 
 Deploying to [itch.io](https://itch.io/) as a Browser Game allows you
 to create a self contained online game that others can buy from you,
@@ -4487,10 +4439,9 @@ replacement for the original file.
 ![](itch.png style="image-rendering:none" width=50%)
 
 
-GitHub
-------------------------------------------------------------------------------------
+### GitHub
 
-### Using GitHub as a web host
+#### Using GitHub as a web host
 
 1. Create a repository
   1. Go to https://github.com and sign in
@@ -4517,7 +4468,7 @@ use those tools instead of the web interface to git. In that case, you may prefe
 the export process using the command line <quadplay/> `tools/export.py` script as well.
 
 
-### Combined develop and deployment repo
+#### Combined develop and deployment repo
 
 Use this method develop your game directly in a git repo and have it continuously
 shared online from the main branch of your repo. *It does not require exporting.*
@@ -4545,10 +4496,9 @@ in the root of your repo with the contents:
 People visiting the URL `https://USER.github.io/REPO` will then be redirected to the correct page.
 
 
-Web Server
-------------------------------------------------------------------------------------
+### Web Server
 
-### Standalone
+#### Standalone
 You can host your game using only your own files on any web server that supports
 [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), or as a copy
 of all of <quadplay/> on _any_ web server, regardless of whether it supports CORS.
@@ -4560,15 +4510,14 @@ generated zipfile to your server.
 Your URL will be just https://myserver.com/mygame for the directory containing
 the `index.html` file.
 
-### Minimal
+#### Minimal
 If you wish to only host the source files for your game and not all of quadplay,
 then you can do so. The URL for your game is:
 
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
 
 
-Phones
-------------------------------------------------------------------------------------
+### Phones
 
 Any <quadplay/> game hosted on a web page using the methods from the previous sections
 can be played on a mobile phone. The emulator automatically creates on-screen buttons
@@ -4585,8 +4534,7 @@ The basic idea is to use the method described in the itch.io section to create a
 standalone web app, and then use Cordova to create the phone app.
 
 
-Desktop
-------------------------------------------------------------------------------------
+### Desktop
 [Electron](https://electronjs.org/) is a tool that turns web apps into desktop binary
 projects which can be distributed through the Windows or Mac App stores, Steam, the
 Epic Store, etc. It works by bundling an entire web browser with your application, wrapped
@@ -4594,8 +4542,7 @@ so that it looks like a native app. The process is similar to that of using Cord
 
 
 
-Performance
-====================================================================================
+## Performance
 
 <quadplay/> is designed to make it easy to write small games that have
 very readable source code. I recommend designing your code primarily
@@ -4702,8 +4649,7 @@ Take note of the 4-bit sprite
 quality produced by Photoshop for color reduction.
 
 
-Safety and Security
-====================================================================================
+## Safety and Security
 
 A <quadplay/> game cannot do anything that would let you access external content as 
 a safety and security measure. 
@@ -4740,8 +4686,7 @@ and `quad://data/english_sensitive.json`. There is currently no support for lang
 beyond English but games can provide their own dictionaries.
 
 
-Vision
-====================================================================================
+## Vision
 
 The <quadplay/> API is stable, and many people are using it to make
 hobby games, participate in game jams, and to learn/teach programming.
@@ -4768,8 +4713,7 @@ The overarching design principles of the quadplay IDE and language are:
    - Or any combination!
 
 
-Credits
-====================================================================================
+## Credits
 
 <quadplay/> was created by Morgan McGuire. Stephan Steinbach provided
 extensive testing and design feedback, Josh Minor helped with the
@@ -4872,16 +4816,14 @@ It is based on the Amstrad PC1512 BIOS font.
 
 All built-in assets are Creative Commons licensed have complete license and copyright information in the "license" property of the corresponding JSON file.
 
-Logos
--------------------------------------------------------------------------------------
+### Logos
 
 The following logos may be used for promoting or linking to <quadplay/>:
 
 ![](logos/quadplay-logo-gradient-round.png) ![](logos/quadplay-logo-gradient.png) ![](logos/quadplay-logo-gray.png)
 
 
-Notes for Beta Testers
-=====================================================================================
+## Notes for Beta Testers
 
 The IDE will receive major new features throughout and after the beta
 phase. This includes editors for sprites and maps.
@@ -4922,4 +4864,3 @@ setTimeout(function(){document.title='manual✜';},5000)</script>
 <link rel="shortcut icon" href="../console/favicon.ico">
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
-<!-- Markdeep: --><script src="markdeep.min.js"></script>

@@ -1,8 +1,7 @@
-Standard Library
-=========================================================
+<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script>
+## Standard Library
 
-Types
----------------------------------------------------------
+### Types
 
 `is_array(value)`
 : Returns true for arrays and false for all other types.
@@ -32,8 +31,7 @@ Types
   `"function"`, `"nil"`, `"number"`, `"object"`, or `"string"`.
 
 
-Array
----------------------------------------------------------
+### Array
 
 `array_value(array, i, extrapolate default (array.extrapolate or "clamp"))`
 : Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
@@ -344,8 +342,7 @@ Array
 `swap(array, i, j)`
 : Swaps elements `i` and `j` in the array in place.
 
-String
----------------------------------------------------------
+### String
 `array_value(string, i, extrapolate default "clamp")`
 : Extract a character with extrapolation for out of bounds values.
   Applies `floor()` to `i` and then applies the extrapolation mode.
@@ -528,8 +525,7 @@ String
 : Returns the upper case version of the string.
 
 
-Object
----------------------------------------------------------
+### Object
 `clone(object)`
 : Return a shallow clone of `object`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
@@ -614,10 +610,9 @@ Object
 : An array of the values in the object.
 
 
-Random Values
----------------------------------------------------------
+### Random Values
 
-### 1D
+#### 1D
 
 `make_random(seed default local_time().millisecond)`
 : Returns a new _function_ that acts like `random()` but has its own private
@@ -666,7 +661,7 @@ Random Values
   See also `make_random()`.
 
 
-### 2D
+#### 2D
 
 `random_direction2D(rng default random)`
 : Same as `random_on_circle()`
@@ -724,7 +719,7 @@ Random Values
   See also `random_gaussian2D()`.
 
 
-### 3D
+#### 3D
 `random_direction3D(rng default random)`
 : Same as `random_on_sphere()`.
 
@@ -760,8 +755,7 @@ Random Values
   See also `random_gaussian3D()`.
 
 
-Vector
----------------------------------------------------------
+### Vector
 
 Most of the math functions and operators defined for numbers _also_
 operate component-wise on vectors represented as structures or arrays.
@@ -878,16 +872,14 @@ For example, `clamp()`, `min()`, `+`, `/`, etc.
   color spaces.
 
 
-Function
----------------------------------------------------------
+### Function
 
 `call(f, a, b, ...)`
 : Invoke function `f` with arguments `a`, `b`, etc.
 
 
 
-Math
----------------------------------------------------------
+### Math
 `abs(x)`
 : Absolute value
 
@@ -1099,10 +1091,9 @@ Math
 `oscillate(x, 4)` |  1   |  2   |   3  |   2  |   1  |  0  |  1  |  2  |  3  |  2  |  1  |  0
 [Table [tblCompare]: Comparison of range restriction functions useful for animation.]
 
-Input
------------------------------------------------------------
+### Input
 
-### Gamepads
+#### Gamepads
 
 The gamepad objects in the four-element `gamepad_array` each have
 the following properties:
@@ -1211,7 +1202,7 @@ space.
 : The array of all gamepads. Regardless of how many physical controllers are
   connected, there are always four elements.
 
-### Button Prompts
+#### Button Prompts
 
 The `prompt` property of a `gamepad_array[]` value is to be used with `replace()` to
 create strings for showing controls and button prompts to players with
@@ -1243,7 +1234,7 @@ The `gamepad_array[i].type` property describes the control scheme used for
 the prompts.
 
 
-### Touch
+#### Touch
 
 <quadplay/> provides single-touch and single-button mouse input via
 virtual touch screen. Not all <quadplay/> devices support touch input
@@ -1283,7 +1274,7 @@ a scroll wheel or second mouse button with `touch`.
 additional device-specific properties for a mouse or other pointing device.
 
 
-### Main Menu
+#### Main Menu
 
 The system pause menu is bound to the ⓟ button, which is not visible to games.
 Games can add up to three custom elements on the pause menu, and can change these
@@ -1302,7 +1293,7 @@ at any point.
     string as an additional message on the confirmation dialog.
 
 
-### MIDI
+#### MIDI
 
 <quadplay/> supports MIDI on all platforms except for macOS
 Safari. Other browsers on macOS support MIDI. The global `midi` object
@@ -1512,8 +1503,7 @@ passing the `midi` object as an argument and then accessing properties
 of it by another name will not trigger the initialization correctly.
 
 
-Modes
-------------------------------------------------------------------------
+### Modes
 
 
 `get_previous_mode()`
@@ -1588,8 +1578,7 @@ When changing modes via `set_mode()`, the order of operations is:
 5. Any `enter` code executes on the _new_ mode and arguments supplied.
 
 
-Sound
----------------------------------------------------------
+### Sound
 
 The sound object has a single property, `sound.duration`, which is the number
 of seconds that it will play before ending or looping.
@@ -1664,8 +1653,7 @@ of seconds that it will play before ending or looping.
   sound value in a variable, e.g., `stop_audio(background_audio)`
 
 
-Coordinate Systems
------------------------------------------------------------
+### Coordinate Systems
 
 The <quadplay/> default coordinate system places the origin at the
 upper-left corner of the screen, with the y-axis facing down, 0° to
@@ -1950,7 +1938,7 @@ The transformation routines are:
 : Transform `point` from the reference frame defined by `pos`, `angle`, and `scale`.
 
 
-### Screen Space
+#### Screen Space
 
 Note that `preserving_transform` also preserves the clipping rectangle.
 
@@ -2070,7 +2058,7 @@ is centered at (1.5, 1.5) but will draw in the same way if centered
 at (1, 1), which would be consistent with integer pixel centers.
 The center of the entire screen is `½ SCREEN_SIZE`.
 
-### Camera Space
+#### Camera Space
 
 Note that `preserving_transform` also preserves the camera.
 
@@ -2100,7 +2088,7 @@ Note that `preserving_transform` also preserves the camera.
 `set_camera(args)`
 : Named argument object version of `set_camera()`.
 
-### Entity Space
+#### Entity Space
 
 Each entity has its own coordinate system defined by `entity.pos`,
 `entity.scale`, and `entity.angle`. The `entity.scale` is often used to
@@ -2164,13 +2152,13 @@ draw_rect(transform_es_to_ws(entity, es_pos), size * entity.scale, fill, border,
 draw_poly(es_vertex_array, fill, border, entity.pos, entity.angle, entity.scale, entity.z))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### Sprite Pixel Coordinates
+#### Sprite Pixel Coordinates
 
 Sprite coordinates are used by `sprite_pixel_color()`. These are integers
 with (0,0) on the top left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
 on the lower right.
 
-### The Z-Axis
+#### The Z-Axis
 
 All drawing commands take one or more position values, color and other
 parameters, and a `z` value.
@@ -2197,14 +2185,14 @@ produces correct skew and zoom for them, while and forcing their `z` to the same
 will cause the individual draw calls can be aggregated for better performance.
 
 
-### Spritesheet Indices
+#### Spritesheet Indices
 
 *Sprite sheets* use integer coordinates with (0, 0) at the upper-left
 corner and (`size(sheet)` - 1, `size(sheet[0])` - 1) at the
 lower-right corner. Instead of functions for operating on these, sprite
 sheets are directly accessed as 2D arrays: `sheet[x][y]`.
 
-### Map Cell Indices
+#### Map Cell Indices
 
 *Map space* integer coordinates used by maps have (0, 0) as upper-left
 tile and `map.size` - 1 at the lower-right tile.
@@ -2222,8 +2210,7 @@ corner of the map to the top-left corner of the screen. Use
 the location of the map when rendered.
 
 
-Animations
-------------------------------------------------------------
+### Animations
 
 Each named sprite animation `spritesheet["`<i>animation_name</i>`"]`
 or `spritesheet.`<i>animation_name</i> of a spritesheet is an array
@@ -2251,8 +2238,7 @@ entry of the .sprite.json file.
 
 
 
-Sprite
-------------------------------------------------------------
+### Sprite
 
 Each sprite element `spritesheet[x][y]` of a spritesheet has the following immutable properties.
 Sprites can also be referenced by name `spritesheet["`<i>name</i>`"]` or 
@@ -2380,8 +2366,7 @@ The functions that operate on sprites and spritesheets are `draw_sprite()` and:
   of detail, shadow rendering, and character swaps, for example.
 
 
-Entity
-------------------------------------------------------------
+### Entity
 
 The entity system is optional. It is convenient for providing fast,
 reliable implementations of common game-like simulation operations for
@@ -2397,7 +2382,7 @@ available as user properties today, but are likely to be added as
 built-in properties in the future: `density` and `friction`.
 
 
-### Basic
+#### Basic
 
 `draw_entity(e, recurse default true)`
 : Draw the entity, if its sprite is defined. If `recurse` is true,
@@ -2557,7 +2542,7 @@ draw(e)
 [Example of replacing `draw_entity` with a version that uses arbitrary callbacks.]
 
 
-### Label Properties
+#### Label Properties
 
 A text label is drawn for the entity if `entity.text and
 entity.font` is not `nil`. This is useful for showing player
@@ -2574,7 +2559,7 @@ set of label properties is:
 - `entity.text_outline`
 
 
-### Physics Properties
+#### Physics Properties
 
 A key relating textbook symbols and definitions to the <quadplay/> entity property names is:
 
@@ -2710,7 +2695,7 @@ See also the Physics section for relevant functions.
   motion. This is not a drag _coefficient_ because it is independent of cross-sectional area.
 
 
-### Hierarchy
+#### Hierarchy
 
 The hierarchy is not a traditional scene graph. Children can opt to
 either compose their properties with their ancestors recursively or
@@ -2778,14 +2763,13 @@ The hierarchy properties are:
   applied recursively. Defaults to 0.
 
 
-Physics
----------------------------------------------------------
+### Physics
 
 You can implement your own physics simulation, use entity and the
 entity helpers, enable the full entity physics engine, or mix these
 techniques.
 
-### Entity Helpers
+#### Entity Helpers
 
 Also see the Intersections section for computing your own collisions and
 intersections.
@@ -2950,7 +2934,7 @@ intersections.
 : Creates a unique value for an `entity.contact_group`.
 
 
-### Intersections
+#### Intersections
 
 These are methods for determining intersections and collisions explicitly, without
 using the full physics engine.
@@ -3034,7 +3018,7 @@ using the full physics engine.
   
   
 
-### Engine
+#### Engine
 
 The full physics engine provides collision detection, response, and
 constraints.
@@ -3268,11 +3252,10 @@ to start colliding with each other.
   the sign is the same.
 
 
-Graphics
----------------------------------------------------------
+### Graphics
 
 
-### Colors
+#### Colors
 
 Colors in quadplay are interpreted in the
 [sRGB](https://en.wikipedia.org/wiki/SRGB) color space and are on the
@@ -3469,7 +3452,7 @@ fills, so a transparent border is identical to a border that is the
 same color as the fill. Shapes include their endpoints and borders.
 
 
-### Drawing
+#### Drawing
 
 `draw_corner_rect(corner, size, color, outline default ∅, z default corner.z default 0)`
 : Draw a rectangle covering all of the pixel centers between `corner`
@@ -3804,7 +3787,7 @@ Some accents or descenders for exceptional cases
 may stick out of these bounds vertically. 
 
 
-### Post Effects
+#### Post Effects
 
 The final image drawn can be transformed in limited ways during scan
 out to the display, as if it were a sprite being drawn to the screen.
@@ -3852,7 +3835,7 @@ Setting any post effects may slow down rendering slightly.
 : Restore the defaults, which directly composite each frame.
 
 
-### Resolution
+#### Resolution
 
 `set_screen_size(size, private_views default false)`
 : Erases the current and previous graphics drawing state, including
@@ -3931,8 +3914,7 @@ private _audio_.
 </table>
 </center>
 
-Map
----------------------------------------------------------------------------
+### Map
 
 A map asset has the following fields. The sprites in the map can be
 changed at runtime (maps are the only mutable assets). Use `deep_clone(map)`
@@ -4190,8 +4172,7 @@ indices. The map's z-axis corresponds to layers.
   `transform_from(pos, angle, scale, transform_map_space_to_ws(map, map_coord))`.
 
 
-Frame Hooks
-----------------------------------------------------------
+### Frame Hooks
 
 Frame hooks are useful for registering animation callbacks that happen
 at the beginning of every frame or after a set number of frames.
@@ -4304,8 +4285,7 @@ in the desired order regardless of the order in which drawing executes.
   needs of angular and color interpolation.
 
 
-Time
-----------------------------------------------------------
+### Time
 
 <quadplay/> always runs your `frame` event code at 60 fps. You can
 hardcode this assumption into your program. For example, the built-in
@@ -4378,9 +4358,8 @@ unaffected.
   within a frame. See also `now()`.
  
  
-AI
-----------------------------------------------------------
-### AI Gamepads
+### AI
+#### AI Gamepads
 
 Virtual gamepads follow the same API as `gamepad_array[]`
 elements. These allow implementing AI players by synthetic control
@@ -4412,7 +4391,7 @@ inputs instead of direct logic within simulation.
   function is called.
   
 
-### Board Games
+#### Board Games
 
 `find_move(player_index, game_state, generate_moves, apply_move, static_evaluate, max_depth default 2, unpredictability default 0, debug_move_to_string default nil)`
 : Chooses the best move for the current player in a two player, zero
@@ -4443,7 +4422,7 @@ inputs instead of direct logic within simulation.
   the AI. Otherwise, `progress` is less than 100% and `move` is `nil`.
 
 
-### Path Finding
+#### Path Finding
 
 `find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj default ∅)`
 : `find_path()` is a general-purpose path-finding routine for any kind of
@@ -4503,7 +4482,7 @@ better understanding of how they are typically computed.
 : Any object that represents your world graph. This can be `nil` if the other
   function arguments use global state.
 
-### Map Example
+#### Map Example
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 const sprite = map.spritesheet_table["mapTiles"]
@@ -4538,8 +4517,7 @@ for P in path: debug_print(P)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Debugging
-------------------------------------------------------------------------------------
+### Debugging
 
 The following are provided for debugging and development support
 only. They may do nothing on some platforms and may crash on others.
@@ -4634,8 +4612,7 @@ debug_graphics and debug_print("Running iteration" + i)
   to `because`.
 
 
-Persistence
------------------------------------------------------------
+### Persistence
 
 The local persistence API stores values in the browser's 
 [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
@@ -4691,8 +4668,7 @@ determined to hack save games.
 : Delete all previous key-value pairs
 
 
-Network
-------------------------------------------------------------------------------------
+### Network
 
 All <quadplay/> games with 2-4 player *local* multiplayer ("couch multiplayer") support
 automatically recieve shared-screen *network* multiplayer support.
@@ -4724,7 +4700,7 @@ You can customize network multiplayer in several ways beyond this automatic supp
 Because all of these APIs are is implemented using on WebRTC, they will work even between
 computers that are not publicly accessible on the internet due to NATs or firewalls.
 
-### Host-Guest
+#### Host-Guest
 
 You can make your own 2-4 player games easier to join, or support private screens
 using this Host Code network API. These are still programmed with an entirely
@@ -4770,7 +4746,7 @@ state synchronization or messages. Those are still handled automatically for you
 See also `gamepad.online_name` and `gamepad.status` for information about
 guests. 
 
-#### Limitations
+##### Limitations
 
 Host-Guest online play can only be entered from 384x224 and 192x112
 resolution because the on-screen UI is designed for those.
@@ -4789,7 +4765,7 @@ As host, you cannot currently kick or ban players, or change the order of player
 guest, you cannot currently leave a game without restarting <quadplay/>.
 
 
-### Conduit
+#### Conduit
 
 !!! Warning Experimental API
     The Conduit API is currently experimental and likely to change throughout fall 2025
@@ -5077,7 +5053,7 @@ network API by unchecking the corresponding option on your game's main
 page in the IDE or changing it directly in the game.json file.
 
 
-### HTTP
+#### HTTP
 
 !!! Warning Experimental API
     The HTTP API is in beta and may change or be removed in the future.
@@ -5129,8 +5105,7 @@ launcher or in kiosk mode. You can make the API calls in this case, but they wil
   If the request fails because of quadplay security restrictions, then the failure status code
   will be 418.
 
-Raw Device Access
------------------------------------------------------------
+### Raw Device Access
 
 `device_control(command, ...)`
 : Reserved function for executing device-specific features such as the
@@ -5213,8 +5188,7 @@ For example, combining
 that is responsive to the exact resolution of a browser window or orientation
 and fullscreen status on a phone.
 
-Intrinsics
------------------------------------------------------------
+### Intrinsics
 
 <quadplay/> can execute about 10,000 vector operations per frame even
 on embedded platforms. This is sufficient to program most mathematical
@@ -5501,4 +5475,3 @@ and other operations that naturally compile with maximum efficiency.
 <script>markdeepOptions = {tocStyle:'long', definitionStyle:'long', inlineCodeLang: 'PyxlScript'};</script>
 <link rel="stylesheet" href="slate.css">
 <link rel="stylesheet" href="manual.css">
-<!-- Markdeep: --><script src="markdeep.min.js"></script>
