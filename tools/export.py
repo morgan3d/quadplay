@@ -68,6 +68,7 @@ def generate_standalone(args, out_path, game_path, game_title):
     <meta charset="utf-8">
     <link rel="icon" href="{favicon_rel_path}">
     <link rel="icon" type="image/png" sizes="{favicon_size}x{favicon_size}" href="{favicon_rel_path}">
+    <link rel="apple-touch-icon" href="{favicon_rel_path}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -98,6 +99,7 @@ def generate_remote(args, out_path, game_path, game_title):
     <meta charset="utf-8"/>
     <link rel="icon" href="{favicon_rel_path}">
     <link rel="icon" type="image/png" sizes="{favicon_size}x{favicon_size}" href="{favicon_rel_path}">
+    <link rel="apple-touch-icon" href="{favicon_rel_path}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

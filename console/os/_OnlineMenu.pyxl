@@ -95,7 +95,7 @@ def draw_view(view):
         // Construct the host array every time through the rendering to
         // minimize stored state (and bugs)
         choice_array = ["Visit A New Host"]
-        const recent_host_array = parse($localStorage.getItem("recent_host_array") or "[]")
+        const recent_host_array = parse($storage.getItem("recent_host_array") or "[]")
         for i < min(size(recent_host_array), $max_recent_hosts):
             push(choice_array, "Visit " + $netIDToString(recent_host_array[i].code, recent_host_array[i].name))
         push(choice_array, "Change Online Name (" + uppercase(gamepad_array[0].online_name) + ")")
@@ -111,9 +111,9 @@ def draw_view(view):
     if online_choice_index == nil:
         // Uninitialized
 
-        // Use "or" instead of "default" because localStorage returns null instead
+        // Use "or" instead of "default" because $storage returns null instead
         // of undefined
-        if parse($localStorage.getItem("last_hosted") or "false"):
+        if parse($storage.getItem("last_hosted") or "false"):
             online_choice_index = size(choice_array) - 1
             // Skip the "done"
             if not manage_tabs: --online_choice_index

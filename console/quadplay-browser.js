@@ -32,7 +32,7 @@ let audioContext;
 
 // Table mapping controller IDs that we've seen to what non-keyboard
 // device was set on them 
-const controllerTypeTable = JSON.parse(localStorage.getItem('controllerTypeTable') || '{}');
+const controllerTypeTable = JSON.parse(quadplayStorage.getItem('controllerTypeTable') || '{}');
 
 function defaultControlType(playerIndex) {
     if (playerIndex === 0) {
@@ -104,11 +104,11 @@ function setPadType(p, type) {
     if (id && !/^keyboard|^kbd_/i.test(type)) {
         // Update the autodetection table based on what we just learned from this user
         controllerTypeTable[id] = type;
-        localStorage.setItem('controllerTypeTable', JSON.stringify(controllerTypeTable));
+        quadplayStorage.setItem('controllerTypeTable', JSON.stringify(controllerTypeTable));
     }
     
     // Update the stored binding for this controller
-    localStorage.setItem('pad0' + p, JSON.stringify({id: id, type: type}));
+    quadplayStorage.setItem('pad0' + p, JSON.stringify({id: id, type: type}));
 }
 
 
@@ -401,7 +401,7 @@ function device_control(cmd) {
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 console.assert(window.AudioContext);
-let volumeLevel = parseFloat(localStorage.getItem('volumeLevel') || '1');
+let volumeLevel = parseFloat(quadplayStorage.getItem('volumeLevel') || '1');
 document.getElementById('volumeSlider').value = Math.round(volumeLevel * 100);
 try {
     audioContext = new AudioContext({
@@ -423,7 +423,7 @@ try {
 
 function onVolumeChange() {
     volumeLevel = parseInt(document.getElementById('volumeSlider').value) / 100;
-    localStorage.setItem('volumeLevel', '' + volumeLevel);
+    quadplayStorage.setItem('volumeLevel', '' + volumeLevel);
     audioContext.gainNode.gain.value = 0.2 * volumeLevel;
 }
 

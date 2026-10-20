@@ -55,7 +55,7 @@ const hasBrowserScaleBug = isSafari;
 
 
 // Can the game pause/sleep when idle to save power?
-let autoPauseEnabled = (localStorage.getItem('autoPauseEnabled') === 'true');
+let autoPauseEnabled = (quadplayStorage.getItem('autoPauseEnabled') === 'true');
 
 
 const noop = ()=>{};
@@ -258,7 +258,7 @@ function debugOptionClick(event) {
 function onIntegerScalingClick(event) {
     const element = event.target;
     event.stopPropagation();
-    localStorage.setItem('integerScalingEnabled', '' + element.checked);
+    quadplayStorage.setItem('integerScalingEnabled', '' + element.checked);
     onResize();
 }
 
@@ -266,7 +266,7 @@ function onIntegerScalingClick(event) {
 let codeEditorFontSize = 14;
 function setCodeEditorFontSize(f) {
     codeEditorFontSize = Math.max(6, Math.min(32, f));
-    localStorage.setItem('codeEditorFontSize', '' + codeEditorFontSize)
+    quadplayStorage.setItem('codeEditorFontSize', '' + codeEditorFontSize)
 
     if (useIDE) {
         aceEditor.setOption('fontSize', codeEditorFontSize + 'px');
@@ -308,7 +308,7 @@ function setGamepadOrderMap(map) {
     }
     pane.innerHTML = s + ' <a title="Change gamepad order" onclick="showReorderGamepadsDialog(); return false" href="#">Click to change</a>';
     gamepadOrderMap = map.slice();
-    localStorage.setItem('gamepadOrderMap', gamepadOrderMap.join(''));
+    quadplayStorage.setItem('gamepadOrderMap', gamepadOrderMap.join(''));
 }
 
 
@@ -438,7 +438,7 @@ function setColorScheme(scheme) {
     // Replacement rules
     stylesheet.insertRule(`a, #header a, .menu a { color: ${themeColor} !important; text-decoration: none; }`, 0);
     stylesheet.insertRule(`.emulator .emulatorBackground { background: ${emulatorColor}; ! important}`, 0);
-    localStorage.setItem('colorScheme', colorScheme);
+    quadplayStorage.setItem('colorScheme', colorScheme);
 }
 
 /*
@@ -451,7 +451,50 @@ function setColorScheme(scheme) {
 */
 let welcomeScreenChallenge = ! useIDE;
 
-/* 
+/* Returns the text to show in place of the game, or undefined when the game
+   may run. iOS browsers delete a web page's storage after seven days without
+   a visit, so a game that persists state runs only when installed to the home
+   screen, where navigator.standalone is true. [RQEaej] */
+function installRequirementMessage() {
+    const usesPersistence = resourceStats.usesAPI['save_local'] || resourceStats.usesAPI['load_local'];
+    if (! (isSafari && isMobile && usesPersistence && getQueryString('game') && navigator.standalone !== true)) {
+        return undefined;
+    }
+
+    if (isUIWebView) {
+        return 'Open in Safari to play.';
+    } else {
+        return 'Install to play:\ntap Share, then Add to Home Screen.';
+    }
+}
+
+
+/* In an in-app browser the message is a link using the iOS x-safari scheme,
+   which hands the top-level page URL to Safari. [RQEaej] */
+function showInstallScreen(message) {
+    const installScreen = document.getElementById('installScreen');
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = gameSource.extendedJSON.title;
+    installScreen.textContent = '';
+    installScreen.appendChild(title);
+
+    if (isUIWebView) {
+        const pageURL = (window === window.top) ? location.href : document.referrer;
+        const link = document.createElement('a');
+        link.href = pageURL.replace(/^http(s?):\/\//, 'x-safari-http$1://');
+        link.textContent = message;
+        installScreen.appendChild(link);
+    } else {
+        installScreen.appendChild(document.createTextNode(message));
+    }
+
+    installScreen.style.zIndex = 120;
+    installScreen.style.visibility = 'visible';
+}
+
+
+/*
    Force users in auto-play modes to interact in order to enable the
    audio engine and full-screen on mobile (where it is harder to hit
    the small full-screen button).
@@ -466,7 +509,13 @@ function onAppWelcomeTouch(hasTouchScreen) {
     appWelcomeOverlay.style.display = 'none';
 
     unlockAudio();
-    
+
+    const installMessage = installRequirementMessage();
+    if (installMessage) {
+        showInstallScreen(installMessage);
+        return;
+    }
+
     if ((uiMode === 'Maximal' || uiMode === 'Windowed') && ! useIDE && hasTouchScreen && (gameSource.extendedJSON.mobile_touch_gamepad !== false)) {
         // This device probably requires on-screen controls.
         // Setting the UI mode forces fullscreen as well.
@@ -640,7 +689,7 @@ let backgroundPauseEnabled = true;
 function setKeyboardMappingMode(type) {
     keyboardMappingMode = type;
     document.getElementById(type + 'KeyboardRadio').checked = '1';
-    localStorage.setItem('keyboardMappingMode', type);
+    quadplayStorage.setItem('keyboardMappingMode', type);
 }
 
 
@@ -997,7 +1046,7 @@ function onResize() {
                 const reduction = dividerTopInRealBody - maxDividerTop;
                 const newTopHeight = Math.max(0, currentTopHeight - reduction);
                 codePlusFrame.style.gridTemplateRows = `${newTopHeight}px auto auto 1fr`;
-                localStorage.setItem('codeDividerTop', Math.round(newTopHeight));
+                quadplayStorage.setItem('codeDividerTop', Math.round(newTopHeight));
             }
         }
     }
@@ -1153,7 +1202,7 @@ function onSlowButton() {
 function onAutoPauseCheckbox(event) {
     event.stopPropagation();
     autoPauseEnabled = document.getElementById('autoPauseCheckbox').checked;
-    localStorage.setItem('autoPauseEnabled', autoPauseEnabled.toString());
+    quadplayStorage.setItem('autoPauseEnabled', autoPauseEnabled.toString());
     saveIDEState();
 }
 
@@ -2462,7 +2511,7 @@ function saveIDEState() {
     }
 
     for (let name in options) {
-        localStorage.setItem(name, options[name]);
+        quadplayStorage.setItem(name, options[name]);
     }
 }
 
@@ -2684,7 +2733,7 @@ function onRadio(id) {
     } else if ((id === 'testUIButton') && (uiMode !== 'Test')) {
         setUIMode('Test');
         // Test mode works better with the rollout unpinned
-        localStorage.setItem('projectPinButtonEnabled', false);
+        quadplayStorage.setItem('projectPinButtonEnabled', false);
         document.body.classList.remove('projectPinned');
         if (document.getElementById('projectPinButton')) {
             document.getElementById('projectPinButton').checked = false;
@@ -2702,7 +2751,7 @@ function onRadio(id) {
     } else if ((id === 'ghostUIButton') && (uiMode !== 'Ghost')) {
         setUIMode('Ghost');
         // Ghost mode doesn't work well without the rollout pinned
-        localStorage.setItem('projectPinButtonEnabled', true);
+        quadplayStorage.setItem('projectPinButtonEnabled', true);
         document.body.classList.add('projectPinned');
         if (document.getElementById('projectPinButton')) {
             document.getElementById('projectPinButton').checked = true;
@@ -3160,15 +3209,8 @@ function reloadRuntime(oncomplete) {
             return (this && this.$name) || QRuntime.unparse(this);
         };
 
-        if (isQuadserver) {
-            // Persist to disk
-            // TODO: implement persistence
-            QRuntime.$getLocalStorage    = function (key) { return localStorage.getItem(key); };
-            QRuntime.$setLocalStorage    = function (key, value) { return localStorage.setItem(key, value); };
-        } else {
-            QRuntime.$getLocalStorage    = function (key) { return localStorage.getItem(key); };
-            QRuntime.$setLocalStorage    = function (key, value) { return localStorage.setItem(key, value); };
-        }
+        // For save_local(), load_local(), and the OS menus
+        QRuntime.$storage            = quadplayStorage;
 
         // For use by the online component
         QRuntime.$wordsToNetID       = wordsToNetID;
@@ -3190,7 +3232,6 @@ function reloadRuntime(oncomplete) {
         Object.defineProperty(QRuntime, 'midi', {value: midi, writable: false});
 
         // For use by the controller remapping
-        QRuntime.$localStorage       = localStorage;
         QRuntime.$getIdealGamepads   = getIdealGamepads;
         QRuntime.$setGamepadOrderMap = setGamepadOrderMap;
 
@@ -3397,7 +3438,7 @@ function reloadRuntime(oncomplete) {
 
             // These will be overridden immediately on the first call to updateInput()
             // if the id of the underlying device has changed.
-            let controlBindings = JSON.parse(localStorage.getItem('pad0' + p) || 'null');
+            let controlBindings = JSON.parse(quadplayStorage.getItem('pad0' + p) || 'null');
             if (! controlBindings) {
                 controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(p)};
             }
@@ -4137,8 +4178,8 @@ function exportSaveGame() {
    const metadata = getSaveGameMetadata();
    const metadataString = JSON.stringify(metadata);
 
-    // Extract all game state from localStorage
-    const gameState = localStorage.getItem('GAME_STATE_' + metadata.game_url);
+    // Extract all game state from storage
+    const gameState = quadplayStorage.getItem('GAME_STATE_' + metadata.game_url);
 
     // Create a binary blob consisting of:
     //
@@ -4253,8 +4294,8 @@ function importSaveGame(event) {
                     return;
                 }
                 
-                // Write to localStorage
-                localStorage.setItem('GAME_STATE_' + destMetadata.game_url, gameState);
+                // Write to storage
+                quadplayStorage.setItem('GAME_STATE_' + destMetadata.game_url, gameState);
                 
                 // Restart the game to force reload
                 alert('Save game successfully imported.');
@@ -4792,7 +4833,7 @@ function onConfirmButtonClick(ok) {
 
 // Load state
 
-backgroundPauseEnabled = (localStorage.getItem('backgroundPauseEnabled') !== 'false');
+backgroundPauseEnabled = (quadplayStorage.getItem('backgroundPauseEnabled') !== 'false');
 
 for (const option of [
     { name: 'showPhysicsEnabled', defaultValueString: 'false', isDOMElement: true  },
@@ -4814,20 +4855,20 @@ for (const option of [
     if (option.isDOMElement) {
         const element = document.getElementById(option.name);
         if (element) {
-            element.checked = JSON.parse(localStorage.getItem(option.name) ?? option.defaultValueString);
+            element.checked = JSON.parse(quadplayStorage.getItem(option.name) ?? option.defaultValueString);
         } else {
             console.error(option.name + " HTML element not found");
         }
-    } else if (localStorage.getItem(option.name) === null) {
-        localStorage.setItem(option.name, option.defaultValueString);
+    } else if (quadplayStorage.getItem(option.name) === null) {
+        quadplayStorage.setItem(option.name, option.defaultValueString);
     }
 }
 
 
 
-document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
+document.getElementById(quadplayStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
-setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
+setKeyboardMappingMode(quadplayStorage.getItem('keyboardMappingMode') || 'Normal');
 
 
 
@@ -4937,7 +4978,7 @@ function checkForUpdate() {
 //////////////////////////////////////////////////////////////////////////////////////
 
 // Load state
-autoPauseEnabled = (localStorage.getItem('autoPauseEnabled') !== 'false');
+autoPauseEnabled = (quadplayStorage.getItem('autoPauseEnabled') !== 'false');
 
 if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
@@ -4954,18 +4995,18 @@ if (getQueryString('kiosk') === '1') {
 if (! useIDE) {
     setUIMode('Maximal');
 } else {
-    localStorage.getItem('uiMode') || 'IDE';
+    quadplayStorage.getItem('uiMode') || 'IDE';
 }
 
 
 initializeBrowserEmulator();
 setErrorStatus('');
-setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
+setCodeEditorFontSize(parseFloat(quadplayStorage.getItem('codeEditorFontSize') || '14'));
 
 // When not in the IDE, force the dots color scheme
-setColorScheme(useIDE ? (localStorage.getItem('colorScheme') || 'dots') : 'dots');
+setColorScheme(useIDE ? (quadplayStorage.getItem('colorScheme') || 'dots') : 'dots');
 {
-    let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');
+    let tmp = gamepadOrderMap = (quadplayStorage.getItem('gamepadOrderMap') || '0123').split('');
     for (let i = 0; i < tmp.length; ++i) {
         tmp[i] = parseInt(tmp[i]);
     }
@@ -5044,7 +5085,7 @@ reloadRuntime(function () {
             let newMode = getQueryString('mode');
             if (! newMode || newMode === 'DefaultWindow') {
                 if (useIDE) {
-                    newMode = localStorage.getItem('uiMode') || 'IDE';
+                    newMode = quadplayStorage.getItem('uiMode') || 'IDE';
                 } else {
                     newMode = 
                         isMobile ? 

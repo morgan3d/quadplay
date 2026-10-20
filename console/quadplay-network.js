@@ -222,11 +222,11 @@ function wordsToNetID(list) {
 }
 
 
-/* Call to replace myHostNetID and commit the new one to localStorage.
+/* Call to replace myHostNetID and commit the new one to storage.
    Returns the new ID  */
 function changeMyHostNetID() {
     myHostNetID = generateNetID();
-    localStorage.setItem('myHostNetID', myHostNetID);
+    quadplayStorage.setItem('myHostNetID', myHostNetID);
     return myHostNetID;
 }
 
@@ -247,7 +247,7 @@ function setMyOnlineName(n) {
     }
     
     myOnlineName = myOnlineName.substring(0, MAX_ONLINE_NAME_LENGTH);
-    localStorage.setItem('myOnlineName', myOnlineName);
+    quadplayStorage.setItem('myOnlineName', myOnlineName);
 }
 
 
@@ -351,7 +351,7 @@ function startHosting() {
         QRuntime.gamepad_array[i].$status = 'absent';
     }
     
-    localStorage.setItem('last_hosted', 'true');
+    quadplayStorage.setItem('last_hosted', 'true');
     isHosting = true;
     
     // Create the video stream. Setting the frame rate here increases
@@ -458,7 +458,7 @@ function startHosting() {
                 disconnect: function () {
                     const gamepad = QRuntime.gamepad_array[player_index];
 
-                    let controlBindings = JSON.parse(localStorage.getItem('pad0' + player_index) || 'null');
+                    let controlBindings = JSON.parse(quadplayStorage.getItem('pad0' + player_index) || 'null');
                     if (! controlBindings) {
                         controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(player_index)};
                     }
@@ -660,7 +660,7 @@ function stopHosting() {
 
 function startGuesting(hostNetID) {
     isGuesting = true;
-    localStorage.setItem("last_hosted", "false");
+    quadplayStorage.setItem("last_hosted", "false");
     console.log('startGuesting("' + hostNetID + '")');
 
     // Pause quadplay's regular loop to allow streaming to take over
@@ -917,7 +917,7 @@ function startGuesting(hostNetID) {
                 console.log('received CONNECT message from host');
             
                 // Store the host in the recent list on successful connect
-                const recent_host_array = QRuntime.parse(localStorage.getItem('recent_host_array') || '[]');
+                const recent_host_array = QRuntime.parse(quadplayStorage.getItem('recent_host_array') || '[]');
                 // Remove any previous instance of this ID
                 for (let i = 0; i < recent_host_array.length; ++i) {
                     if (recent_host_array[i].code === hostNetID) {
@@ -927,7 +927,7 @@ function startGuesting(hostNetID) {
                 }
                 recent_host_array.unshift({code: hostNetID, name: message.name});
                 recent_host_array.length = Math.min(recent_host_array.length, 3);
-                localStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, 0));
+                quadplayStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, 0));
                 PRIVATE_VIEW = message.private_view;
                 QRuntime.$postFX.bloom = message.bloom;
                 myGuestPlayerIndex = message.player_index;
@@ -1018,5 +1018,5 @@ let myGuestPlayerIndex = null;
 let myPeer = null;
 
 const connectedGuestArray = [];
-myHostNetID = localStorage.getItem('myHostNetID') || changeMyHostNetID();
-myOnlineName = localStorage.getItem('myOnlineName') || getQueryString('name') || 'Unknown';
+myHostNetID = quadplayStorage.getItem('myHostNetID') || changeMyHostNetID();
+myOnlineName = quadplayStorage.getItem('myOnlineName') || getQueryString('name') || 'Unknown';

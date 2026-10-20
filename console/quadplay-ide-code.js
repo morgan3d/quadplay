@@ -1585,8 +1585,8 @@ function onEmulatorBottomDividerDrag(event) {
 }
 
 
-function setCodeEditorDividerFromLocalStorage() {
-    let dividerHeight = parseInt(localStorage.getItem('codeDividerTop'));
+function setCodeEditorDividerFromStorage() {
+    let dividerHeight = parseInt(quadplayStorage.getItem('codeDividerTop'));
     if (isNaN(dividerHeight) || dividerHeight > window.innerHeight - 64) {
         // Fallback
         dividerHeight = '1fr';
@@ -1603,7 +1603,7 @@ function onCodeEditorDividerDrag(event) {
         const codePlusFrameRect = codePlusFrame.getBoundingClientRect();
         const topHeight = Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - codePlusFrameRect.top - codeEditorDividerDragOffset));
 	    codePlusFrame.style.gridTemplateRows = `${topHeight}px auto auto 1fr`;
-        localStorage.setItem('codeDividerTop', Math.round(topHeight));
+        quadplayStorage.setItem('codeDividerTop', Math.round(topHeight));
 	    event.preventDefault();
         
         // Do not resize the aceEditor while dragging most of the time--it is slow. Wait until onCodeEditorDividerDragEnd()

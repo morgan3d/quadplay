@@ -46,6 +46,8 @@ function onProjectSelect(target, type, object) {
     for (let i = 0; i < editorContentFrame.children.length; ++i) {
         editorContentFrame.children[i].style.visibility = 'hidden';
     }
+    // Safari paints media controls through an ancestor's visibility: hidden
+    document.querySelector('#soundEditor audio').style.display = 'none';
 
     const codeEditor     = document.getElementById('codeEditor');
     const spriteEditor   = document.getElementById('spriteEditor');
@@ -90,13 +92,13 @@ function onProjectSelect(target, type, object) {
 
             // Show the editor after loading the content
             if (fileContents[object] !== undefined) {
-                setCodeEditorDividerFromLocalStorage();
+                setCodeEditorDividerFromStorage();
                 setCodeEditorSession(object);
             } else {
                 // Load and set the contents
                 LoadManager.fetchOne({forceReload: true}, object, 'text', null, function (doc) {
                     fileContents[object] = doc;
-                    setCodeEditorDividerFromLocalStorage();
+                    setCodeEditorDividerFromStorage();
                     setCodeEditorSession(object);
                 });
             }
@@ -114,7 +116,7 @@ function onProjectSelect(target, type, object) {
         visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
         gameEditor.style.visibility = 'visible';
         codePlusFrame.style.visibility = 'visible';
-        setCodeEditorDividerFromLocalStorage();
+        setCodeEditorDividerFromStorage();
         setCodeEditorSession(gameSource.jsonURL);
         return;
     }
@@ -170,7 +172,7 @@ function onProjectSelect(target, type, object) {
 
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
-        setCodeEditorDividerFromLocalStorage();
+        setCodeEditorDividerFromStorage();
         const spriteEditorCanvas = document.getElementById('spriteEditorCanvas');
         const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
         const spriteEditorPivot = document.getElementById('spriteEditorPivot');
@@ -186,6 +188,7 @@ function onProjectSelect(target, type, object) {
         } else if (/\.mp3$/i.test(url)) {
             soundEditor.style.visibility = 'visible';
             soundEditorCurrentSound = object;
+            document.querySelector('#soundEditor audio').style.display = '';
             document.querySelector('#soundEditor audio').src = object.$url;
         } else if (/\.tmx$/i.test(url)) {
             visualizeMap(object);
@@ -392,10 +395,10 @@ function visualizeGame(gameEditor, url, game) {
         s += `<tr valign="top"><td>Folder</td><td colspan=3><a onclick="onOpenFolder('${path}')" style="cursor:pointer">${path}</a></td></tr>\n`;
     }
     
-    s += `<tr valign="top"><td width="110px">Title</td><td colspan="3"><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${(game.title || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>Version</td><td colspan="3"><input type="text" title="Version in the format of decimal separated integers ##.##, ##.###.##, etc., or YYYY.MM.DD.HH" autocomplete="false" style="width:334px" ${disabled} onchange="onProjectMetadataChanged()" id="projectVersion" value="${(game.version === undefined ? '0' : game.version).toString().replace(/"/g, '\\"')}"><button ${disabled} style="width: 50px; height: 19px; font-size: 85%" onclick="onProjectBumpVersion()">Bump</button></td></tr>\n`;
-    s += `<tr valign="top"><td>Developer</td><td colspan="3"><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${(game.developer || '').replace(/"/g, '\\"')}"></td></tr>\n`;
-    s += `<tr valign="top"><td>Copyright</td><td colspan="3"><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${(game.copyright || '').replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td width="110px">Title</td><td colspan="3"><input type="text" autocomplete="off" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${(game.title || '').replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Version</td><td colspan="3"><input type="text" title="Version in the format of decimal separated integers ##.##, ##.###.##, etc., or YYYY.MM.DD.HH" autocomplete="off" style="width:334px" ${disabled} onchange="onProjectMetadataChanged()" id="projectVersion" value="${(game.version === undefined ? '0' : game.version).toString().replace(/"/g, '\\"')}"><button ${disabled} style="width: 50px; height: 19px; font-size: 85%" onclick="onProjectBumpVersion()">Bump</button></td></tr>\n`;
+    s += `<tr valign="top"><td>Developer</td><td colspan="3"><input type="text" autocomplete="off" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${(game.developer || '').replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Copyright</td><td colspan="3"><input type="text" autocomplete="off" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${(game.copyright || '').replace(/"/g, '\\"')}"></td></tr>\n`;
     s += `<tr valign="top"><td>License</td><td colspan="3"><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectLicense" onchange="onProjectMetadataChanged()">${game.license}</textarea>`;
     if (editableProject) {
         // License defaults
@@ -414,10 +417,10 @@ function visualizeGame(gameEditor, url, game) {
         }
         s += '</select></td></tr>\n';
 
-        s += `<tr valign="top"><td></td><td colspan=3><label title="In exported HTML games, show the start animation that tells the user about controls and shows the quadplay logo"><input id="project_show_start_animation" type="checkbox" autocomplete="false" style="margin-left:0" ${game.show_start_animation !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Show&nbsp;Start&nbsp;Animation</label></td>\n`;
+        s += `<tr valign="top"><td></td><td colspan=3><label title="In exported HTML games, show the start animation that tells the user about controls and shows the quadplay logo"><input id="project_show_start_animation" type="checkbox" autocomplete="off" style="margin-left:0" ${game.show_start_animation !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Show&nbsp;Start&nbsp;Animation</label></td>\n`;
 
         const overrideInitialMode = gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
-        s += `<tr valign="top"><td></td><td><label><input id="projectdebugstartmodeoverridecheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
+        s += `<tr valign="top"><td></td><td><label><input id="projectdebugstartmodeoverridecheckbox" type="checkbox" autocomplete="off" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
             if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
@@ -437,22 +440,22 @@ function visualizeGame(gameEditor, url, game) {
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
             if (! mode.name.startsWith('quad://console/os/_') && (mode.name === gameSource.json.start_mode)) {
-                s += `<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${mode.name.replace(/\*/g, '')}"></td></tr>\n`;
+                s += `<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><input type="text" autocomplete="off" style="width:384px" ${disabled} value="${mode.name.replace(/\*/g, '')}"></td></tr>\n`;
                 break;
             }
         }
-        s += `<tr valign="top"><td>Screen</td><td colspan=3><input id="projectscreensizetextbox" type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
+        s += `<tr valign="top"><td>Screen</td><td colspan=3><input id="projectscreensizetextbox" type="text" autocomplete="off" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
     }
-    s += `<tr valign="top"><td></td><td colspan=3><label><input id="projectyupcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td colspan=3><label><input id="projectyupcheckbox" type="checkbox" autocomplete="off" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
     s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>I/O</td><td><label title="Map the right stick of a physical game controller to P2 D-pad controls for dual-stick shooter style controls without needing device_control()"><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td>`;
-    s +=   `<td><label title="Enable MIDI Sysex message permission (regular MIDI always enabled). Causes a popup for the player."><input id="projectmidicheckbox" type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)"  style="margin-left:0px">MIDI Sysex Output</label></td></tr>\n`;
-    s += `<tr valign="top"><td></td><td><label title="In the player's quadplay toolbar, show the icons for active physical controllers and link them to the Pause menu Controls option"><input id="project_show_controls_button" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.show_controls_button !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Show Controls Button</label></td>`;
-    s +=   `<td><label title="Enable a virtual gamepad on touch screens"><input id="project_mobile_touch_gamepad" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.mobile_touch_gamepad !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Mobile Touch Gamepad</label></td></tr>\n`;
-    s += `<tr valign="top"><td></td><td colspan=2><label title="Show arcade keyboard mapping options (Normal, MAME, etc.) in the Console/⚙ menu for arcade machine installations"><input id="projectArcadeKeyboardOptionsCheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.show_arcade_keyboard_options !== false ? 'checked' : ''} onchange="onProjectArcadeKeyboardOptionsChange(this)">Show Arcade Keyboard Options</label></td></tr>\n`;
+    s += `<tr valign="top"><td>I/O</td><td><label title="Map the right stick of a physical game controller to P2 D-pad controls for dual-stick shooter style controls without needing device_control()"><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="off" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td>`;
+    s +=   `<td><label title="Enable MIDI Sysex message permission (regular MIDI always enabled). Causes a popup for the player."><input id="projectmidicheckbox" type="checkbox" autocomplete="off"${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)"  style="margin-left:0px">MIDI Sysex Output</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td><label title="In the player's quadplay toolbar, show the icons for active physical controllers and link them to the Pause menu Controls option"><input id="project_show_controls_button" type="checkbox" autocomplete="off" style="margin-left:0" ${disabled} ${game.show_controls_button !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Show Controls Button</label></td>`;
+    s +=   `<td><label title="Enable a virtual gamepad on touch screens"><input id="project_mobile_touch_gamepad" type="checkbox" autocomplete="off" style="margin-left:0" ${disabled} ${game.mobile_touch_gamepad !== false ? 'checked' : ''} onchange="onProjectMetadataChanged()">Mobile Touch Gamepad</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td colspan=2><label title="Show arcade keyboard mapping options (Normal, MAME, etc.) in the Console/⚙ menu for arcade machine installations"><input id="projectArcadeKeyboardOptionsCheckbox" type="checkbox" autocomplete="off" style="margin-left:0" ${disabled} ${game.show_arcade_keyboard_options !== false ? 'checked' : ''} onchange="onProjectArcadeKeyboardOptionsChange(this)">Show Arcade Keyboard Options</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>Network</td><td><label title="Show the Online option in the game's Pause menu for automatic network multiplayer support. Disable for single-player games or games using the advanced conduit network API"><input id="projectOnlineMenuCheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.online_menu !== false ? 'checked' : ''} onchange="onProjectOnlineMenuChange(this)">Online option in System Menu</label></td></tr>\n`;
+    s += `<tr valign="top"><td>Network</td><td><label title="Show the Online option in the game's Pause menu for automatic network multiplayer support. Disable for single-player games or games using the advanced conduit network API"><input id="projectOnlineMenuCheckbox" type="checkbox" autocomplete="off" style="margin-left:0" ${disabled} ${game.online_menu !== false ? 'checked' : ''} onchange="onProjectOnlineMenuChange(this)">Online option in System Menu</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged()" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
@@ -467,10 +470,10 @@ function visualizeGame(gameEditor, url, game) {
     s += `<tr><td></td><td><input style="width: 30px; text-align: right" type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged()" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="text" style="width: 30px; text-align: right" ${disabled} onchange="onProjectMetadataChanged()" id="projectMaxPlayers" value="${game.max_players || 1}"></input><button ${disabled} onclick="document.getElementById('projectMaxPlayers').value='∞'; onProjectMetadataChanged()" style="width: 20px; height: 19px; font-size: 85%">∞</button> Players</td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
 
-    s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="off" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;
     if (editableProject) {
         const overrideTag = gameSource.debug.json && gameSource.debug.json.screenshot_tag_enabled;
-        s += `<tr><td></td><td><label><input id="projectscreenshottag" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideTag ? 'checked' : ''} onchange="onDebugScreenshotTagOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2><input type="text" autocomplete="false" style="width:198px" ${overrideTag ? '' : 'disabled'} ${disabled} onchange="onProjectMetadataChanged()" id="debugScreenshotTag" value="${(game.debug && game.debug.json && game.debug.json.screenshot_tag !== undefined) ? game.debug.json.screenshot_tag.replace(/"/g, '\\"') : ''}"></td></tr>`;
+        s += `<tr><td></td><td><label><input id="projectscreenshottag" type="checkbox" autocomplete="off" style="margin-left:0" ${overrideTag ? 'checked' : ''} onchange="onDebugScreenshotTagOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2><input type="text" autocomplete="off" style="width:198px" ${overrideTag ? '' : 'disabled'} ${disabled} onchange="onProjectMetadataChanged()" id="debugScreenshotTag" value="${(game.debug && game.debug.json && game.debug.json.screenshot_tag !== undefined) ? game.debug.json.screenshot_tag.replace(/"/g, '\\"') : ''}"></td></tr>`;
     }
     s += '<tr><td>&nbsp;</td></tr>\n';
         
@@ -718,7 +721,7 @@ function createProjectWindow(gameSource) {
 
     // Update to the stored state
     const button = document.getElementById('projectPinButton');
-    button.checked = localStorage.getItem('projectPinButtonEnabled') == 'true';
+    button.checked = quadplayStorage.getItem('projectPinButtonEnabled') == 'true';
     onProjectPinToggle(document.getElementById('projectPinButton'));
 }
 
@@ -730,7 +733,7 @@ function onProjectPinToggle(button) {
     } else {
         document.body.classList.remove('projectPinned');
     }
-    localStorage.setItem('projectPinButtonEnabled', '' + button.checked);
+    quadplayStorage.setItem('projectPinButtonEnabled', '' + button.checked);
 }
 
 

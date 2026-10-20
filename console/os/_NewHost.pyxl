@@ -119,7 +119,7 @@ selected_column_index = 0
 word_array = [16, 16, 16, 16, 16, 16]
 
 // Default to the most recent host
-const recent_host_array = parse($localStorage.getItem("recent_host_array") or "[]")
+const recent_host_array = parse($storage.getItem("recent_host_array") or "[]")
 if size(recent_host_array) > 0:
     // Use this machinery for robustness to misparsing
     set_from_sentence($netIDToSentence(recent_host_array[0].code))

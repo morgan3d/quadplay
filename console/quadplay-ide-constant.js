@@ -106,7 +106,7 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
     } else if (type === 'string') {        
 
         const isLarge = value.length > 20 || value.indexOf('\n') !== -1;
-        html += `"<textarea ${json.url ? 'disabled' : ''} style="${isLarge ? '' : 'display: inline-block;'} vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=${isLarge ? 4 : 1} cols=${isLarge ? 40 : 20}>${value}</textarea>"<br>`;
+        html += `"<textarea ${json.url ? 'disabled' : ''} style="${isLarge ? '' : 'display: inline-block;'} vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="off" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=${isLarge ? 4 : 1} cols=${isLarge ? 40 : 20}>${value}</textarea>"<br>`;
 
     } else if (value === undefined || value === null) {
 
@@ -152,7 +152,7 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
 
               // The maxVal - minVal will be NaN if one is infinity, but then this code will never execute, either!
               `if (slider) { slider.value = 1000 * (v - ${minVal}) / (${maxVal - minVal}); }}`;
-        html += `<input id="constantEditor_${controlName}_textbox" style="width:100px; text-align: right" type="text" onchange="${onchange}" autocomplete="false" ${disabled} value="${numValue}">`;
+        html += `<input id="constantEditor_${controlName}_textbox" style="width:100px; text-align: right" type="text" onchange="${onchange}" autocomplete="off" ${disabled} value="${numValue}">`;
 
         // Show a slider
         if (editableProject &&
@@ -176,7 +176,7 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
         
     } else if (type === 'boolean') {
 
-        html += `<label><div id="constantEditor_${controlName}_display" class="code" style="display: inline-block; width: 45px; font-size: 100%">${value}</div><input type="checkbox" style="position: relative; top: 2px; left: -3px; margin-right:0.5px" autocomplete="false" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.checked, this.checked)" ${disabled} ${value ? 'checked' : ''}></label><br>`;
+        html += `<label><div id="constantEditor_${controlName}_display" class="code" style="display: inline-block; width: 45px; font-size: 100%">${value}</div><input type="checkbox" style="position: relative; top: 2px; left: -3px; margin-right:0.5px" autocomplete="off" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.checked, this.checked)" ${disabled} ${value ? 'checked' : ''}></label><br>`;
 
     } else if (type === 'xy' || type === 'xz' || type === 'xyz' ||
                type === 'rgb' || type === 'rgba' ||
@@ -197,7 +197,7 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
                 elementQuote = '"' + elementQuote + '"';
             }
             
-            html += `<tr><td>${elementQuote}:</td><td style="white-space: nowrap"><input id="constantEditor_${controlName}_${element.replace(/[^a-z0-9_A-Z]/g, '_')}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${elementValue}">`;
+            html += `<tr><td>${elementQuote}:</td><td style="white-space: nowrap"><input id="constantEditor_${controlName}_${element.replace(/[^a-z0-9_A-Z]/g, '_')}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="off" ${disabled} value="${elementValue}">`;
             html += '</td></tr>';
         }
 
@@ -369,7 +369,7 @@ function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, 
         const debugJSON = (gameSource.debug.json && gameSource.debug.json.constants) ? nestedGet(gameSource.debug.json.constants, constantName, true, true) : undefined
         const debugEnabled = debugJSON && debugJSON.enabled;
         
-        html += `<input type="checkbox" style="margin-left:${indent + 1}px; position: relative; top: 2px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)" class="${compact ? 'debugOverrideCheckbox' : ''}"><label style="color:#bbb" class="${compact ? 'debugOverrideCheckbox' : ''}">Debug&nbsp;Override</label>`;
+        html += `<input type="checkbox" style="margin-left:${indent + 1}px; position: relative; top: 2px" autocomplete="off" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)" class="${compact ? 'debugOverrideCheckbox' : ''}"><label style="color:#bbb" class="${compact ? 'debugOverrideCheckbox' : ''}">Debug&nbsp;Override</label>`;
         html += `<div class="debugOverride ${debugEnabled ? '' : 'disabled'}" id="constantEditor_${controlName}_debug_div" ${debugEnabled ? '' : 'disabled'} style="margin-left:${indent - 3}px">`;
         
         if (gameSource.debug.constants) {

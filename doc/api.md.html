@@ -4616,8 +4616,8 @@ debug_graphics and debug_print("Running iteration" + i)
 
 ### Persistence
 
-The local persistence API stores values in the browser's 
-[`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+The local persistence API stores values in the browser's
+[`IndexedDB`](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API).
 
 This state is tied to a specific web browser and the URL from which
 <quadplay/> is hosted, as well as the URL of the game. Some browsers may
@@ -4635,7 +4635,7 @@ to other commands. Avoid using it every frame.
 This API is useful for saved game state, GUI defaults, high scores,
 and persistent worlds.
 
-Beware that the `localStorage` state can be accessed by anyone from the browser's
+Beware that the stored state can be accessed by anyone from the browser's
 development tools. A sufficiently motivated player can therefore hack the state 
 and you should obfuscate data if you want to inhibit this.
 The save game files are always lightly obfuscated by quadplay, although

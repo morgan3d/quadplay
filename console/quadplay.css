@@ -161,6 +161,37 @@ html {
     transition: opacity 0.8s ease-in-out;
 }
 
+#installScreen {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    z-index: -100;
+    visibility: hidden;
+    color: #ccc;
+    background: #000;
+    text-align: center;
+    padding: 24px 16px 0px 16px;
+    font-family: "Boot";
+    white-space: pre-line;
+    font-size: 10px;
+    line-height: 1.6;
+    font-smooth: never;
+    -webkit-font-smoothing: none;
+}
+
+#installScreen .title {
+    font-family: quadplay;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+#installScreen a {
+    color: #fff;
+    text-decoration: underline;
+}
+
 body {
     /** Disable apple mouse back gesture https://stackoverflow.com/questions/15829172/stop-chrome-back-forward-two-finger-swipe */
     overscroll-behavior-x: none;

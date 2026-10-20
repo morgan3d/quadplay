@@ -356,10 +356,10 @@ function loadGame(gameURL, callback, errorCallback) {
         }
 
         {
-            const prevVersion = localStorage.getItem('game_version_' + gameURL);
+            const prevVersion = quadplayStorage.getItem('game_version_' + gameURL);
             if (prevVersion !== gameJSON.version) {
                 // The game version changed. Force reload of everything for this session
-                localStorage.setItem('game_version_' + gameURL, gameJSON.version);
+                quadplayStorage.setItem('game_version_' + gameURL, gameJSON.version);
                 loadManager.forceReload = true;
             }
         }

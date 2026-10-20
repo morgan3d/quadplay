@@ -10132,7 +10132,7 @@ function split(str, c, n) {
 
 // default_value is deprecated...use `default` now
 function load_local(key, default_value) {
-    let table = $window.localStorage.getItem('GAME_STATE_' + $gameURL);
+    let table = $storage.getItem('GAME_STATE_' + $gameURL);
     if (! table) { return default_value; }
     
     table = JSON.parse(table);
@@ -10159,7 +10159,7 @@ function load_local(key, default_value) {
 function save_local(key, value) {
     if (arguments.length === 0) {
         // Erase all storage
-        $setLocalStorage('GAME_STATE_' + $gameURL, '{}');
+        $storage.setItem('GAME_STATE_' + $gameURL, '{}');
         return;
     }
 
@@ -10175,7 +10175,7 @@ function save_local(key, value) {
     }
     
     // Get the string that encodes all storage for this game
-    let table = $getLocalStorage('GAME_STATE_' + $gameURL);
+    let table = $storage.getItem('GAME_STATE_' + $gameURL);
     
     // Parse the string into a table of key-value pairs
     if (table) {
@@ -10203,7 +10203,7 @@ function save_local(key, value) {
     table.$modified_date = unparse(new Date().toUTCString(), 0);
 
     // Commit back
-    $setLocalStorage('GAME_STATE_' + $gameURL, JSON.stringify(table));
+    $storage.setItem('GAME_STATE_' + $gameURL, JSON.stringify(table));
 }
 
 

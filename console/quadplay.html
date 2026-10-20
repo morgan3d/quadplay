@@ -8,6 +8,7 @@
     <link rel="icon" href="icons/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64x64.png">
+    <link rel="apple-touch-icon" href="icons/favicon-120x120.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta property="og:title" content="quadplay✜">
     <meta property="og:image" content="https://morgan3d.github.io/quadplay/doc/emulator.png">
@@ -19,16 +20,17 @@
     <script>
       // Force a reload of version.js immediately and synchronously. This tells us whether we need to force a refresh on other scripts
       document.write('<script src="version.js?refresh=' + new Date().getTime() + '"><' + '/script>');
+      document.write('<script src="quadplay-storage.js?refresh=' + new Date().getTime() + '"><' + '/script>');
     </script>
 
     <!-- Must separate these two script tags so that the previous one completes -->
     <script>
       performance.mark('Loading quadplay.html');
-  
-      // Track if quadplay was updated since the previous load of this game
-      const forceReloadEverything = localStorage.getItem('quadplay_version') !== version;
-      localStorage.setItem('quadplay_version', version);
-      
+
+      // Track if quadplay was updated since the previous load of this game.
+      // Assigned once quadplayStorage has loaded, at the end of this file.
+      let forceReloadEverything = false;
+
       const useIDE = (getQueryString('IDE') === '1') || false;
       
       /* Returns null if the query is not specified */
@@ -113,8 +115,11 @@
           game state. Made visible by a loadGameAndConfigureUI() callback.
        4. introControlsScreen: Shows instructions for reaching pause and controls during emulator boot 
           for exported games. Appears as an image overlay with fade in/out animation controlled by _Message.pyxl.
-       5. sleepOverlay: Blocks interaction when quadplay is sleeping due to inactivity or out of focus. 
+       5. sleepOverlay: Blocks interaction when quadplay is sleeping due to inactivity or out of focus.
           Controlled by onInteraction(). See also sleepPollCallback().
+       6. installScreen: Replaces the game on iOS browsers for games that use save_local()/load_local(),
+          until the game is installed to the home screen. Shown by showInstallScreen() from
+          onAppWelcomeTouch() when installRequirementMessage() returns a message.
 
        Other related elements of interest are:
 
@@ -634,6 +639,9 @@
         <!-- Shows instructions for reaching pause and controls during boot. This is designed to look like
              it is rendered by quadplay but is really an image -->
         <div id="introControlsScreen" class="pixelate"></div>
+
+        <!-- Replaces the game on iOS browsers, where saved games would be deleted, until the game is installed -->
+        <div id="installScreen" class="pixelate"></div>
 
         <!-- Runtime popup dialogs that require user interaction for permissions (can't run off gamepad polling) -->
         <div id="hostCodeCopyRuntimeDialog" class="runtimeDialog" style="overflow: visible">
@@ -1250,10 +1258,8 @@
              size and multiple files towards itch.io's file count limit.
         
            - `lazyLoad`: true if not needed immediately at load/startup
-             time which then loads with `async`. Otherwise load with `defer`.
-            Defer scripts execute in the order that they are declared, but
-            after the page has completed, so they don't block loading and
-            can be loaded asynchronously. 
+             time. Currently every script loads in declaration order
+             after quadplayStorage has loaded.
         */    
         function loadScript(url, ideFile, lazyLoad, type, forceReload) {
             if (! ideFile || useIDE) {
@@ -1261,10 +1267,13 @@
                 url += '?refresh=' + new Date().getTime();
               }
 
-              // Not currently using async because of race condition concerns
-              return `<script ${lazyLoad ? (useIDE && false ? 'async' : 'defer') : 'defer'} src="${url}" ${type ? 'type="' + type + '"' : ''}><` + '/script>\n';
-            } else {
-              return '';
+              // async = false preserves execution order for scripts inserted
+              // after parsing, matching the previous defer semantics
+              const element = document.createElement('script');
+              element.src = url;
+              element.async = false;
+              if (type) { element.type = type; }
+              document.head.appendChild(element);
             }
         }
 
@@ -1345,16 +1354,18 @@
             {url: 'quadplay.js', forceReload: useIDE}
         ];
 
-        let s = '';
-        for (let script of scriptArray) {
-            if (script.url) {
-                s += loadScript(script.url, script.ide, script.lazyLoad, script.type, script.forceReload);
-            } else {
-                s += loadScript(script);
-            }
-        }
+        storageLoad(function () {
+            forceReloadEverything = quadplayStorage.getItem('quadplay_version') !== version;
+            quadplayStorage.setItem('quadplay_version', version);
 
-        document.write(s);
+            for (let script of scriptArray) {
+                if (script.url) {
+                    loadScript(script.url, script.ide, script.lazyLoad, script.type, script.forceReload);
+                } else {
+                    loadScript(script);
+                }
+            }
+        });
   }
   </script>
 </html>

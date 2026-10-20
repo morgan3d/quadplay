@@ -187,7 +187,7 @@ if VIEW_ARRAY[0].size.y > 64 and (mode_frames > open_frames or manage_tabs):
     // is based on _ControllerOrder's rendering
     // so that the transition is seamless
 
-    const map = $localStorage.getItem("gamepadOrderMap") default "0123"
+    const map = $storage.getItem("gamepadOrderMap") default "0123"
     
     for p < 4:
         let entry = ""
