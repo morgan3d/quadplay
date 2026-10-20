@@ -148,10 +148,19 @@ def quaddepend(args):
    for f in game_data.get('modes', []):
       _depend(f.replace('*', '') + '.pyxl', args, basepath)
 
-   for c in game_data.get('constants', {}).values():
-      if isinstance(c, dict):
-         if (c.get('type', '') in ['data', 'raw', 'string', 'table']) and ('url' in c):
+   # Same traversal as loadJSONGameConstant() in console/quadplay-load.js
+   def depend_constant(c):
+      if not isinstance(c, dict): return
+      if 'url' in c:
+         if c.get('type', '') in ['data', 'raw', 'string', 'table', 'array']:
             _depend(c['url'], args, basepath)
+      elif c.get('type') == 'object' and isinstance(c.get('value'), dict):
+         for v in c['value'].values(): depend_constant(v)
+      elif c.get('type') == 'array' and isinstance(c.get('value'), list):
+         for v in c['value']: depend_constant(v)
+
+   for c in game_data.get('constants', {}).values():
+      depend_constant(c)
    
 
 if __name__== '__main__':
