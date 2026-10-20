@@ -663,77 +663,217 @@ function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
 
 /* Run-length encoded horizontal or vertical spans of points
    that have already been clipped and flattened to 16-bit */
+// Packs a color with float channels in [0, 1] the way the CPU's
+// $colorToUint16() does, so that composited span pixels match it.
+function $spanPackColor(r, g, b, a) {
+    r = (r < 0) ? 0 : (r > 1) ? 1 : r;
+    g = (g < 0) ? 0 : (g > 1) ? 1 : g;
+    b = (b < 0) ? 0 : (b > 1) ? 1 : b;
+    a = (a < 0) ? 0 : (a > 1) ? 1 : a;
+    return ((((a * 15 + 0.5) & 0xf) << 12) | ((b * 15 + 0.5) << 8) | ((g * 15 + 0.5) << 4) | (r * 15 + 0.5)) >>> 0;
+}
+
+
 function $executeSPN(cmd) {
-    // Uint16Array formatted in blocks, where the USED length is
-    // separately encoded because the array has to be allocated
-    // before it is known how much will be used.
-    //
-    // For each block, the header element specifies:
-    //
-    // - header & 0x1 is 1 if the entire block has alpha = 0xf and can be memcpy'd
-    // - header & 0x2 is 1 if the block has alpha = 0x0 (in which case, there is
-    //              no actual data in the block)
-    // - header >> 2 is the length of the span. 
-    //
-    // Blocks with both low bits == 0 *may* have some alpha = 0x0 and
-    // some alpha = 0xf pixels in them.
+    // A horizontal span of map texels. The run layout is documented
+    // in draw_map_span(). Pixel i has map coordinate
+    // (map_x0 + i * step_x, map_y0 + i * step_y), evaluated here with
+    // the same expression the CPU used to find the runs.
     const data = cmd.data;
     const N = cmd.data_length;
+    const map_x0 = cmd.map_x0, map_y0 = cmd.map_y0;
+    const step_x = cmd.step_x, step_y = cmd.step_y;
+    const ssX = cmd.sprite_size_x | 0, ssY = cmd.sprite_size_y | 0;
+    const ssXm1 = (ssX - 1) | 0, ssYm1 = (ssY - 1) | 0;
+    const low_res = cmd.low_res;
+    const override_mode = cmd.override_mode | 0;
+    const override_r = cmd.override_r, override_g = cmd.override_g, override_b = cmd.override_b, override_a = cmd.override_a;
 
-    const dst_step = (cmd.dx + $SCREEN_WIDTH * cmd.dy) | 0;
+    // Override applied to an opaque texel, per channel nibble. The
+    // arithmetic is the CPU's: unpack as n * (1/15), blend, repack.
+    let lut_r, lut_g, lut_b;
+    if (override_mode) {
+        lut_r = new Uint8Array(16); lut_g = new Uint8Array(16); lut_b = new Uint8Array(16);
+        for (let n = 0; n < 16; ++n) {
+            let r = n * (1 / 15), g = r, b = r;
+            if (override_mode === 1) {
+                r += (override_r - r) * override_a;
+                g += (override_g - g) * override_a;
+                b += (override_b - b) * override_a;
+            } else {
+                r *= override_r; g *= override_g; b *= override_b;
+            }
+            const packed = $spanPackColor(r, g, b, 1);
+            lut_r[n] = packed & 0xf;
+            lut_g[n] = (packed >>> 4) & 0xf;
+            lut_b[n] = (packed >>> 8) & 0xf;
+        }
+    }
+
     let dst_index = (cmd.x + $SCREEN_WIDTH * cmd.y) | 0;
-    let src_index = 0;
-    
+    let i = 0, src_index = 0;
+
+    // At half resolution every even pixel repeats the previous pixel
+    // when that pixel was drawn
+    let prev_drawn = false, prev_color = 0;
+
     while (src_index < N) {
+        const length = data[src_index++];
         const header = data[src_index++];
-        const length = header >> 2;
-        
-        const skip = header & 0x2;
-        if (skip) {
-            dst_index += length * dst_step;
-        } else {
-            const opaque = header & 0x1;
-            if (opaque) {
-                if (dst_step === 1) {
-                    // Horizontal span
-                    // Memcpy from data[src_index] to $screen[dst_index]
-                    $screen.set(data.subarray(src_index, src_index + length), dst_index);
-                    src_index += length;
-                    dst_index += length * dst_step;
+        const count = header & 0x7FFF;
+
+        if (count === 0) {
+            // Skip run
+            i += length;
+            dst_index += length;
+            prev_drawn = false;
+            continue;
+        }
+
+        // The last pixel of this run is a repeated pixel that was
+        // drawn only if the previous pixel was drawn
+        const repeat_last = (header & 0x8000) !== 0;
+
+        // Two's complement int16
+        const mx = (data[src_index++] << 16) >> 16, my = (data[src_index++] << 16) >> 16;
+
+        const entry_index = src_index;
+        src_index += 4 * count;
+
+        // Single-layer case constants
+        const sheet = $spritesheetArray[data[entry_index]].$uint16Data;
+        const sheet_width = sheet.width >>> 0;
+        const corner_x = data[entry_index + 1] >>> 0, corner_y = data[entry_index + 2] >>> 0;
+        const flags = data[entry_index + 3];
+        const flip_x = (flags & 1) !== 0, flip_y = (flags & 2) !== 0;
+
+        const end = (i + length) | 0;
+        for (; i < end; ++i, ++dst_index) {
+            let color;
+
+            if (low_res && ((i & 1) === 0) && prev_drawn) {
+                color = prev_color;
+            } else if (repeat_last && (i === end - 1)) {
+                // The previous pixel was skipped, so skip this repeat too
+                continue;
+            } else {
+                let u = ((map_x0 + i * step_x - mx) * ssX) | 0;
+                let v = ((map_y0 + i * step_y - my) * ssY) | 0;
+                if (u > ssXm1) { u = ssXm1; }
+                if (v > ssYm1) { v = ssYm1; }
+
+                if (count === 1) {
+                    const tx = flip_x ? (ssXm1 - u) : u;
+                    const ty = flip_y ? (ssYm1 - v) : v;
+                    const texel = sheet[(corner_x + tx) + (corner_y + ty) * sheet_width] >>> 0;
+                    const a15 = texel >>> 12;
+
+                    if (a15 === 0xf) {
+                        if (override_mode) {
+                            color = (0xF000 | (lut_b[(texel >>> 8) & 0xf] << 8) | (lut_g[(texel >>> 4) & 0xf] << 4) | lut_r[texel & 0xf]) >>> 0;
+                        } else {
+                            color = texel;
+                        }
+                    } else if (a15 === 0) {
+                        // Transparent texel: skip the pixel
+                        prev_drawn = false;
+                        continue;
+                    } else {
+                        // Fractional alpha takes the composited path
+                        // below with a single layer
+                        color = -1;
+                    }
                 } else {
-                    // Vertical span
-                    for (let i = 0; i < length; ++i, ++src_index, dst_index += dst_step) {
-                        $screen[dst_index] = data[src_index];
+                    color = -1;
+                }
+
+                if (color === -1) {
+                    // Composite the layers from the top down in
+                    // premultiplied space, as $get_map_pixel_color()
+                    // does on the CPU
+                    let result_a = 0, result_b = 0, result_g = 0, result_r = 0;
+                    let hit = false;
+                    let opaque_texel = -1;
+                    for (let k = 0, e = entry_index; k < count; ++k, e += 4) {
+                        const layer_sheet = $spritesheetArray[data[e]].$uint16Data;
+                        const f = data[e + 3];
+                        const tx = (f & 1) ? (ssXm1 - u) : u;
+                        const ty = (f & 2) ? (ssYm1 - v) : v;
+                        const texel = layer_sheet[(data[e + 1] + tx) + (data[e + 2] + ty) * (layer_sheet.width >>> 0)] >>> 0;
+                        const alpha16 = texel & 0xF000;
+                        if ((result_a === 0) && (alpha16 === 0xF000)) {
+                            opaque_texel = texel;
+                            break;
+                        } else if (alpha16 !== 0) {
+                            const layer_color_a = ((texel >>> 12) & 0xf) * (1 / 15);
+                            const kk = (1 / 15) * layer_color_a;
+                            const layer_color_b = ((texel >>> 8) & 0xf) * kk;
+                            const layer_color_g = ((texel >>> 4) & 0xf) * kk;
+                            const layer_color_r = (texel & 0xf) * kk;
+                            if (result_a === 0) {
+                                result_r = layer_color_r;
+                                result_g = layer_color_g;
+                                result_b = layer_color_b;
+                                result_a = layer_color_a;
+                            } else {
+                                const kr = 1 - result_a;
+                                result_r += layer_color_r * kr;
+                                result_g += layer_color_g * kr;
+                                result_b += layer_color_b * kr;
+                                result_a += layer_color_a * kr;
+                            }
+                            hit = true;
+                            if (result_a >= 0.995) { break; }
+                        }
+                    }
+
+                    if (opaque_texel >= 0) {
+                        if (override_mode) {
+                            color = (0xF000 | (lut_b[(opaque_texel >>> 8) & 0xf] << 8) | (lut_g[(opaque_texel >>> 4) & 0xf] << 4) | lut_r[opaque_texel & 0xf]) >>> 0;
+                        } else {
+                            color = opaque_texel;
+                        }
+                    } else if (! hit) {
+                        prev_drawn = false;
+                        continue;
+                    } else {
+                        let r = result_r, g = result_g, b = result_b;
+                        if (result_a > 0 && result_a < 0.995) {
+                            const inv_a = 1 / result_a;
+                            r *= inv_a; g *= inv_a; b *= inv_a;
+                        }
+                        if (override_mode === 1) {
+                            r += (override_r - r) * override_a;
+                            g += (override_g - g) * override_a;
+                            b += (override_b - b) * override_a;
+                        } else if (override_mode === 2) {
+                            r *= override_r; g *= override_g; b *= override_b;
+                        }
+                        color = $spanPackColor(r, g, b, result_a);
                     }
                 }
+            }
+
+            // Must be unsigned shift to avoid sign extension
+            const a15 = color >>> 12;
+            if (a15 === 0xf) {
+                // No blending
+                $screen[dst_index] = color;
             } else {
-                // Maybe blend
-                for (let i = 0; i < length; ++i, dst_index += dst_step) {
-                    const color = data[src_index++];
-                    
-                    // Must be unsigned shift to avoid sign extension
-                    const a15 = color >>> 12;
-                    
-                    if (a15 === 0xf) {
-                        // No blending
-                        $screen[dst_index] = color;
-                    } else {
-                        // Blend
-                        
-                        // No need to force to unsigned int because the alpha channel of the output is always 0xff
-                        const a = a15 * (1 / 15);
-                        const back = $screen[dst_index] >>> 0;
-                        let result = 0xF000;
-                        result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x0100) & 0x0F00;
-                        result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x0010) & 0x00F0;
-                        result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
-                        $screen[dst_index] = result;
-                    }
-                } // loop over pixels
-            } // if opaque block
-        } // if skip
-        
-    } // loop over blocks
+                // Blend
+                const a = a15 * (1 / 15);
+                const back = $screen[dst_index] >>> 0;
+                let result = 0xF000;
+                result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x0100) & 0x0F00;
+                result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x0010) & 0x00F0;
+                result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
+                $screen[dst_index] = result;
+            }
+
+            prev_drawn = true;
+            prev_color = color;
+        } // loop over pixels
+    } // loop over runs
 }
 
 
@@ -870,6 +1010,17 @@ function $executeSPR(metaCmd) {
         dstX1 = $Math.round(dstX1); dstY1 = $Math.round(dstY1);
         dstX2 = $Math.floor(dstX2 - 0.5); dstY2 = $Math.floor(dstY2 - 0.5);
 
+        // Pixel centers are sampled exactly at +0.5. The open near
+        // edge and closed far edge above require a texel to own its
+        // far boundary along an axis that is not flipped, so the
+        // texel index is ceil(s) - 1 there, and to own its near
+        // boundary along a flipped axis, where it is floor(s). Both
+        // are computed as floor(k * s) * k + o. The simple branch
+        // below reads flipped x data, so its x index always takes
+        // the ceil rule.
+        const kX = (A >= 0) ? -1 : 1, oX = (A >= 0) ? -1 : 0;
+        const kY = (D >= 0) ? -1 : 1, oY = (D >= 0) ? -1 : 0;
+
         // Restrict to the clipping region
         dstX1 = $Math.max(dstX1, clipX1); dstY1 = $Math.max(dstY1, clipY1);
         dstX2 = $Math.min(dstX2, clipX2); dstY2 = $Math.min(dstY2, clipY2);
@@ -912,8 +1063,8 @@ function $executeSPR(metaCmd) {
 
             const width = (dstX2 - dstX1 + 1) | 0;
             if (width >= 1) {
-                const srcY = ((dstY1 + 0.4999 - DY) * $Math.sign(D) + SY) | 0;
-                let srcOffset = ((((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth) | 0;
+                const srcY = ($Math.floor(kY * ((dstY1 + 0.5 - DY) * $Math.sign(D) + SY)) * kY + oY) | 0;
+                let srcOffset = ((-$Math.floor(-((dstX1 + 0.5 - DX) + SX)) - 1) + srcY * srcDataWidth) | 0;
                 let dstOffset = (dstX1 + dstY1 * $SCREEN_WIDTH) | 0;
                 const srcStep = (srcDataWidth * $Math.sign(D)) | 0;
 
@@ -993,17 +1144,15 @@ function $executeSPR(metaCmd) {
             // No blending case with rotation and scale
             dstY1 |= 0; dstY2 |= 0;
             for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
-                // Offset everything by 0.5 to transform the pixel
-                // center. Needs to be *slightly* less in order to round
-                // the correct way.
-                const xterms = (dstY + 0.4999 - DY) * B + SX + (0.4999 - DX) * A;
-                const yterms = (dstY + 0.4999 - DY) * D + SY + (0.4999 - DX) * C;
-                
+                // Offset by 0.5 to sample the pixel center
+                const xterms = (dstY + 0.5 - DY) * B + SX + (0.5 - DX) * A;
+                const yterms = (dstY + 0.5 - DY) * D + SY + (0.5 - DX) * C;
+
                 let dstOffset = dstX1 + dstY * $SCREEN_WIDTH;
-                
+
                 for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
-                    const srcX = (dstX * A + xterms) | 0;
-                    const srcY = (dstX * C + yterms) | 0;
+                    const srcX = ($Math.floor(kX * (dstX * A + xterms)) * kX + oX) | 0;
+                    const srcY = ($Math.floor(kY * (dstX * C + yterms)) * kY + oY) | 0;
 
                     if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
                         // Inside the source sprite
@@ -1018,6 +1167,7 @@ function $executeSPR(metaCmd) {
             const override = override_color;
             const override_a = 1 - (override >>> 12) * (1 / 15);
             const override_mode = (override_color && cmd.multiply) ? 3 : ((override_a === 1) ? 0 : (override_a === 0) ? 2 : 1);
+
             const override_b = (override & 0x0F00) * (1 - override_a) + 0.5;
             const override_g = (override & 0x00F0) * (1 - override_a) + 0.5;
             const override_r = (override & 0x000F) * (1 - override_a) + 0.5;
@@ -1026,20 +1176,18 @@ function $executeSPR(metaCmd) {
             const override_fb = ((override >> 8) & 0xf) * (1 / 15);
             const override_fg = ((override >> 4) & 0xf) * (1 / 15);
             const override_fr = (override & 0xf) * (1 / 15);
-            
+
             dstY1 |= 0; dstY2 |= 0;
             for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
-                // Offset everything by 0.5 to transform the pixel
-                // center. Needs to be *slightly* less in order to round
-                // the correct way.
-                const xterms = (dstY + 0.4999 - DY) * B + SX + (0.4999 - DX) * A;
-                const yterms = (dstY + 0.4999 - DY) * D + SY + (0.4999 - DX) * C;
-                
+                // Offset by 0.5 to sample the pixel center
+                const xterms = (dstY + 0.5 - DY) * B + SX + (0.5 - DX) * A;
+                const yterms = (dstY + 0.5 - DY) * D + SY + (0.5 - DX) * C;
+
                 let dstOffset = (dstX1 + dstY * $SCREEN_WIDTH) | 0;
-                
+
                 for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
-                    const srcX = (dstX * A + xterms) | 0;
-                    const srcY = (dstX * C + yterms) | 0;
+                    const srcX = ($Math.floor(kX * (dstX * A + xterms)) * kX + oX) | 0;
+                    const srcY = ($Math.floor(kY * (dstX * C + yterms)) * kY + oY) | 0;
 
                     if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
                         // Inside the source sprite
@@ -1048,14 +1196,14 @@ function $executeSPR(metaCmd) {
                         let color = srcData[srcX + srcY * srcDataWidth];
                         if (opacity < 1) {
                             // Make more transparent
-                            
+
                             // 4 high bits
                             const alpha4 = ((color >>> 12) * opacity + 0.5) | 0;
                             color = ((alpha4 << 12) | (color & 0xFFF)) >>> 0;
                         }
-                        
+
                         // the following is an inlining of: $pset(dstX, dstY, color, clipX1, clipY1, clipX2, clipY2);
-                        
+
                         // Must be unsigned shift to avoid sign extension
                         const a15 = color >>> 12;
                         if (a15 === 0) {
@@ -1310,11 +1458,15 @@ var $executeTable = Object.freeze({
 //   - open1, open2
 //   - clipX1, clipY1, clipX2, clipY2
 //
-// SPN (Span, run-length encoded):
+// SPN (Span of map texels, one run per map cell; see draw_map_span()):
 //   - opcode: 'SPN'
-//   - data: Uint16Array
+//   - data: Uint16Array of runs
 //   - data_length: number
 //   - dx, dy, x, y
+//   - map_x0, map_y0, step_x, step_y: map coordinate of pixel 0 and per-pixel step
+//   - sprite_size_x, sprite_size_y
+//   - override_mode (0 none, 1 lerp, 2 multiply), override_r, override_g, override_b, override_a
+//   - low_res: even pixels repeat the previous drawn pixel
 //
 // PIX (Pixel batch):
 //   - opcode: 'PIX'

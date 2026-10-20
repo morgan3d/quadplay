@@ -20,6 +20,22 @@ const deadZoneArray = Array.from(document.getElementsByClassName('deadZone'));
 // Maps touch.identifiers to objects with x and y members
 const activeTouchTracker = {};
 
+/* Safari before 26.4 returns rects from getBoundingClientRect() in
+   the element's own coordinates, ignoring CSS zoom (WebKit bug
+   77998). Safari 26.4 follows the CSS Viewport specification and
+   returns zoomed rects. The screen coordinate conversion must divide
+   by the zoom only in the first case, so measure which behavior this
+   browser has once at load. */
+function measureZoomScalesClientRects() {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position: absolute; visibility: hidden; width: 100px; height: 1px; zoom: 2';
+    document.body.appendChild(probe);
+    const scaled = probe.getBoundingClientRect().width > 150;
+    document.body.removeChild(probe);
+    return scaled;
+}
+const zoomScalesClientRects = measureZoomScalesClientRects();
+
 /* event must have clientX and clientY */
 function inElement(event, element) {
     const rect = element.getBoundingClientRect();
@@ -213,7 +229,7 @@ function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
     const rect = emulatorScreen.getBoundingClientRect();
     
     let zoom = 1;
-    if (isSafari) {
+    if (isSafari && ! zoomScalesClientRects) {
         zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
     }
 
@@ -247,7 +263,7 @@ function updateMouseDevice(event) {
                 const rect = emulatorScreen.getBoundingClientRect();
 
                 let zoom = 1;
-                if (isSafari) {
+                if (isSafari && ! zoomScalesClientRects) {
                     zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
                 }
 

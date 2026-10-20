@@ -1,4 +1,4 @@
-<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
+<meta charset="utf-8"><script>window.markdeepOptions = {main_nav: {align: 'none'}};</script><script src="quadplay.js" markdeep="2"></script><plaintext>
 
 # quadplay✜
                            **Change Log**
@@ -6,11 +6,10 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
+## 2026 October 20
 
-## 2025 October TBD
-
-- quadplay Discord linked from Console/gear menu
 - API and language changes:
+  - optimized map span rendering and fixed off-by one errors; 4x speedup of Warlock 3D example
   - `touch` pointer input is now in world space instead of camera space
   - Allowed a larger set of unicode superscripts in code
   - `particle_lib` particle systems are now explicitly in world space
@@ -46,7 +45,10 @@ of [<quadplay/>](manual.md.html).
   - Fixed game version change not forcing full reload
   - Fixed iOS Safari audio loss when page is defocused
   - Fixed Go to Definition not working when the function was defined after the usage point in the file
-
+  - Detected missing python-tk for homebrew/apt installs
+  - Fixed controller vibration crash on Firefox
+  - Fixed iOS touch events for late-2025 iOS/Safari zoom change
+- quadplay Discord linked from Console/gear menu
 
 ## 2025 August 29
 
@@ -2566,43 +2568,16 @@ and the [codeheart.js](https://casual-effects.com/codeheart/) project
 from which the nano JAMMER codebase originally forked.
 
 
-<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
-<link rel="shortcut icon" href="../console/favicon.ico">
 
 
-<script>
-markdeepOptions = {tocStyle:'none', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
-<link rel="stylesheet" href="slate.css">
 <style>
-@font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
-.big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
-em.asterisk { font-style: normal; font-weight: bold; }
-.md h1 { font-family: quadplay; font-size: 40px}
-.md h1, .md div.subtitle {text-align: center}
 .md h2::before { content: ""}
 body {left: 50px; right: 50px}
-img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
 .md .hljs-built_in {font-weight: bold; color: inherit}
-.md div.listingcaption {margin: 5px 0 15px}
 .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-selector-tag {
 color: #80bfff !important;
 }
-
-quadplay::before {
-content: "quadplay✜";
-font-family: quadplay;
-}
-
-.md h2, .md h3, .md h4 { font-family: quadplay }
-.md pre.listing.backtick {
-  margin-bottom: 0px;
-}
-
 </style>
 <title>change log✜</title>
 <script>setTimeout(function(){document.title='change log✜';},1000);
 setTimeout(function(){document.title='change log✜';},5000)</script>
-<link rel="shortcut icon" href="../console/favicon.ico">
-<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">

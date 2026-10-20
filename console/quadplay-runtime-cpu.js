@@ -11,7 +11,9 @@
 // If undefined, the virtual GPU runs on the same thread as the CPU.
 var $GPU;
 if ($THREADED_GPU) {
-    $GPU = new Worker('quadplay-runtime-gpu.js');
+    // loadScript() in quadplay.html adds the refresh token to the
+    // scripts it writes. This URL is written here, so it adds its own.
+    $GPU = new Worker('quadplay-runtime-gpu.js?refresh=' + new Date().getTime());
     $GPU.onmessage = function (event) {
         // This message handler runs on the main "quadplay CPU" thread, within
         // the $QRuntime scope context.
@@ -5047,158 +5049,165 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
     }
 
     width = width >>> 0;
+    if (width === 0) {
+        $logicToGraphicsTimeShift += $performance.now() - startTime;
+        return;
+    }
 
-    const color = {r:0, g:0, b:0, a:0};
-    
-    if (override_color === undefined) {
-        override_blend = false;
-    } else {
+    // The override is sent to the virtual GPU as plain numbers:
+    // override_mode 0 = none, 1 = lerp, 2 = multiply
+    let override_mode = 0, override_r = 0, override_g = 0, override_b = 0, override_a = 0;
+    if (override_color !== undefined) {
         override_blend = override_blend || "lerp";
         override_color = rgba(override_color);
 
         if ((override_blend === "lerp" && override_color.a < 1/32) ||
             (override_blend === "multiply" && $Math.min(override_color.r, override_color.g, override_color.b) > 0.96)) {
             // Blending will have no visible effect but will be slow, so disable it
-            override_blend = false;
+        } else {
+            override_mode = (override_blend === "lerp") ? 1 : 2;
+            override_r = override_color.r;
+            override_g = override_color.g;
+            override_b = override_color.b;
+            override_a = override_color.a;
         }
     }
-
-    // Preallocate the encoded span array for the graphics
-    // command. Using a typed array seems to reduce garbage collection
-    // substantially, even though it doesn't actually affect the
-    // average cost of the writes or reads.
-    //
-    // Allocate the worst case, which is a series of blocks of length 1.
-    //
-    // Alternates header blocks and value blocks. For each block, the header
-    // element specifies:
-    //
-    // - header & 0x1 is 1 if the entire block has alpha = 0xf and can be memcpy'd
-    // - header & 0x2 is 1 if the block has alpha = 0x0 (in which case, there is
-    //              no actual data in the block)
-    // - header >> 2 is the length of the span.
-    const color_data = new Uint16Array(2 * width);
-    
-    // Actually used elements (we always use the first element)
-    let color_data_length = 1 >>> 0;
 
     if (invert_sprite_y === undefined) {
         invert_sprite_y = $scaleY < 0;
     }
 
-    // Index in color_data where there the run (block) began
-    let run_start_index = 0;
-
-    // AND of all of the pixel_values for this run.
-    // Only the alpha channel is actually used.
-    let run_mask    = 0xffff;
-    let run_is_skip = false;
-    let run_length  = 0;
+    // Flips that apply to every sprite in the span. Each run entry
+    // combines these with the sprite's own flip.
+    const flip_x_span = ($scaleX < 0);
+    const flip_y_span = (($scaleY < 0) !== invert_sprite_y);
 
     const low_res = quality <= 0.5;
-    let prev_read = -1;
-    
-    // Draw the scanline. Because it has constant camera-space z, the 
-    // texture coordinate ("read_point") interpolates linearly
-    // under perspective projection.
-    for (let i = 0;
-         i < width;
-         ++i, map_point_x += step_x, map_point_y += step_y) {
 
-        let pixel_value;
+    // Map coordinate of pixel i is map_x0 + i * step_x. The virtual
+    // GPU evaluates the same expression, so both sides agree on
+    // every pixel's coordinate bit for bit.
+    const map_x0 = map_point_x, map_y0 = map_point_y;
 
-        if (low_res && (i & 1) === 0 && (prev_read !== -1)) {
-            // Reuse the previous value to avoid the most expensive
-            // part, which is the get_map_pixel_color() call. This could
-            // be exploited further by having the actual runs be encoded
-            // at half resolution, reducing the data transfer and storage
-            // and making the RIGHT edges more consistent.
-            pixel_value = prev_read;
-        } else {
-            // Call the low-level version, which avoids conversion to rgba() in the common case.
-            // Nearly all of the time of this routine (including the actual drawing) is spent in
-            // the following call.
-            pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
-            prev_read = pixel_value;
+    const layer_array = map.layer;
+    const map_size_x = map.size.x, map_size_y = map.size.y;
+    const layer_count = max_layer_exclusive - min_layer;
+
+    // The span is encoded as runs, one per map cell crossed. The
+    // virtual GPU samples the texels, so this routine touches the
+    // map once per cell.
+    //
+    // Run layout, in Uint16 words:
+    //
+    //   length
+    //   count | (0x8000 if the last pixel repeats the previous pixel)
+    //   when count > 0:
+    //     mx, my               cell, as two's complement int16
+    //     count entries of:
+    //       spritesheet index, sheet corner x, sheet corner y,
+    //       flags (1 = flip x, 2 = flip y)
+    //     ordered from the top layer down
+    //
+    // A run with count = 0 is a skip. The worst case is one run per
+    // cell crossed plus the two ends.
+    const max_runs = $Math.ceil($Math.abs(step_x * width)) + $Math.ceil($Math.abs(step_y * width)) + 3;
+    const data = new Uint16Array(max_runs * (4 + 4 * layer_count));
+    let data_length = 0;
+
+    // Index of the previous run's length word when that run drew
+    // pixels, or -1 after a skip
+    let prev_run_index = -1;
+
+    let i = 0;
+    while (i < width) {
+        const px = map_x0 + i * step_x, py = map_y0 + i * step_y;
+        const mx = $Math.floor(px), my = $Math.floor(py);
+
+        // Number of pixels from i that stay in cell (mx, my). The
+        // boundary is computed analytically and then verified with
+        // the per-pixel floor, so the boundary is exact.
+        let n = width - i;
+        if (step_x > 0) {
+            n = $Math.min(n, $Math.ceil((mx + 1 - map_x0) / step_x) - i);
+        } else if (step_x < 0) {
+            n = $Math.min(n, $Math.floor((mx - map_x0) / step_x) + 1 - i);
+        }
+        if (step_y > 0) {
+            n = $Math.min(n, $Math.ceil((my + 1 - map_y0) / step_y) - i);
+        } else if (step_y < 0) {
+            n = $Math.min(n, $Math.floor((my - map_y0) / step_y) + 1 - i);
+        }
+        if (n < 1) { n = 1; }
+        while ((n > 1) &&
+               (($Math.floor(map_x0 + (i + n - 1) * step_x) !== mx) ||
+                ($Math.floor(map_y0 + (i + n - 1) * step_y) !== my))) {
+            --n;
+        }
+        while ((i + n < width) &&
+               ($Math.floor(map_x0 + (i + n) * step_x) === mx) &&
+               ($Math.floor(map_y0 + (i + n) * step_y) === my)) {
+            ++n;
         }
 
-        if (pixel_value === -1) {
-            if (! run_is_skip) {
-                if (i > 0) {
-                    // Complete the previous run
-                    color_data[run_start_index] =
-                        (run_length << 2) |
-                        (((run_mask & 0xf000) === 0xf000) ? 1 : 0);
-                    run_length = 0;
-                    // Consume a new element
-                    run_start_index = color_data_length++;
+        // Cell used for the lookup, wrapped when the map loops. The
+        // virtual GPU subtracts the unwrapped cell to get the texel
+        // coordinate, and the fraction is the same either way.
+        let cx = mx, cy = my;
+        if (map.loop_x) { cx = mx - $Math.floor(mx / map_size_x) * map_size_x; }
+        if (map.loop_y) { cy = my - $Math.floor(my / map_size_y) * map_size_y; }
+
+        const run_index = data_length;
+        let count = 0;
+        if ((cx >= 0) && (cy >= 0) && (cx < map_size_x) && (cy < map_size_y)) {
+            data_length += 4;
+            for (let layer = max_layer_exclusive - 1; layer >= min_layer; --layer) {
+                let sprite = layer_array[layer][cx][cy];
+                if (sprite) {
+                    if (replacement_array) {
+                        for (let r = 0; r < replacement_array.length; r += 2) {
+                            if (replacement_array[r] === sprite) {
+                                sprite = replacement_array[r + 1];
+                                break;
+                            }
+                        }
+                        if (! sprite) { continue; }
+                    }
+                    data[data_length++] = sprite.$spritesheet.$index[0];
+                    data[data_length++] = sprite.$x;
+                    data[data_length++] = sprite.$y;
+                    data[data_length++] =
+                        (((sprite.scale.x < 0) !== flip_x_span) ? 1 : 0) |
+                        (((sprite.scale.y < 0) !== flip_y_span) ? 2 : 0);
+                    ++count;
                 }
-                run_is_skip = true;
             }
-            
-            // Skip ahead to the next map cell because this one is
-            // empty. This is a 15% net performance improvement for
-            // rendering sparse hallway floors.
-            const mx = $Math.floor(map_point_x), my = $Math.floor(map_point_y);
+        }
 
-            // Just skip without even writing, since everything is transparent
-            const before = i;
-            for (; (i < width) && (mx === $Math.floor(map_point_x)) && (my === $Math.floor(map_point_y));
-                 ++i, map_point_x += step_x, map_point_y += step_y) {
+        if (count === 0) {
+            data_length = run_index;
+            let skip = n;
+            if (low_res && ((i & 1) === 0) && (prev_run_index >= 0)) {
+                // At half resolution an even pixel repeats the
+                // previous drawn pixel, so this pixel belongs to the
+                // previous run
+                ++data[prev_run_index];
+                data[prev_run_index + 1] |= 0x8000;
+                --skip;
             }
-            // The iterator will necessarily go one step too far, so
-            // back everything up before the master iterator hits
-            --i; map_point_x -= step_x; map_point_y -= step_y;
-
-            // We're now at the end of this map cell
-            run_length += i - before;
-            
+            if (skip > 0) {
+                data[data_length++] = skip;
+                data[data_length++] = 0;
+                prev_run_index = -1;
+            }
         } else {
-            // Not in a skip. End the previous run if it was a skip
-            if (run_is_skip) {
-                color_data[run_start_index] = (run_length << 2) | 0x2;
-                run_length = 0;
-                run_is_skip = false;
-                run_mask = 0xffff;
-                // Consume a new element
-                run_start_index = color_data_length++;
-            }
+            data[run_index]     = n;
+            data[run_index + 1] = count;
+            data[run_index + 2] = mx & 0xFFFF;
+            data[run_index + 3] = my & 0xFFFF;
+            prev_run_index = run_index;
+        }
 
-            if (override_blend) {
-                if (pixel_value >= 0) {
-                    // Compute color from pixel, as it is not present yet
-                    // because $get_pixel_color() used an optimized path.
-                    color.a = ((pixel_value >>> 12) & 0xf) * (1 / 15);
-                    color.b = ((pixel_value >>> 8) & 0xf) * (1 / 15);
-                    color.g = ((pixel_value >>> 4) & 0xf) * (1 / 15);
-                    color.r = (pixel_value & 0xf) * (1 / 15);
-                    pixel_value = -2;
-                }
-                
-                // The following surprisingly seem to cost almost
-                // nothing, so we do not optimize them by performing
-                // operations in fixed point.
-                if (override_blend === "lerp") {
-                    RGB_LERP(color, override_color, override_color.a, color);
-                } else { // Multiply
-                    RGB_MUL_RGB(color, override_color, color);
-                }
-            }
-            
-            // -2 = value in color
-            pixel_value = pixel_value < 0 ? $colorToUint16(color) : pixel_value;
-
-            run_mask &= pixel_value;
-            color_data[color_data_length++] = pixel_value;
-            ++run_length;
-        } // if sprite present
-    } // for i
-
-    // End the last run
-    if (run_is_skip) {
-        color_data[run_start_index] = (run_length << 2) | 0x2;
-    } else {
-        color_data[run_start_index] = (run_length << 2) | (((run_mask & 0xf000) === 0xf000) ? 1 : 0);
+        i += n;
     }
 
     $addGraphicsCommand({
@@ -5209,8 +5218,20 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
         y: y,
         dx: 1,
         dy: 0,
-        data_length: color_data_length,
-        data: color_data})
+        map_x0: map_x0,
+        map_y0: map_y0,
+        step_x: step_x,
+        step_y: step_y,
+        sprite_size_x: map.sprite_size.x,
+        sprite_size_y: map.sprite_size.y,
+        override_mode: override_mode,
+        override_r: override_r,
+        override_g: override_g,
+        override_b: override_b,
+        override_a: override_a,
+        low_res: low_res,
+        data_length: data_length,
+        data: data})
 
     $logicToGraphicsTimeShift += $performance.now() - startTime;
 }
@@ -6589,7 +6610,7 @@ function $makeRayGridIterator(rayPos, rayDir, rayLength, numCells, cellSize) {
 
     let startsOutside = false;
     let startLocation = {x: it.ray.pos.x, y: it.ray.pos.y};
-    let inside = startLocation.x >= 0 && startLocation.x < numCells.y * cellSize.x &&
+    let inside = startLocation.x >= 0 && startLocation.x < numCells.x * cellSize.x &&
         startLocation.y >= 0 && startLocation.y < numCells.y * cellSize.y;
     
     ///////////////////////////////
@@ -6771,8 +6792,9 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
             if (sprite_callback) {
                 const result = sprite_callback(sprite, ps_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
                 if (result !== undefined) {
-                    // Shorten ray
-                    ray.length = $distanceSquared2D(ws_coord, ray.pos);
+                    // Shorten ray. ws_coord = ray.pos + enterDistance * dir
+                    // with a unit dir, so this is the distance.
+                    ray.length = it.enterDistance;
                     return result;
                 }
             }
@@ -10837,9 +10859,13 @@ function $hashCommandList(commandList, backgroundSpritesheetIndex, backgroundCol
 
             case 'SPN':
                 hash($HASH_SPN);
-                for (let i = 0; i < cmd.data.length; ++i) { hashInteger(cmd.data[i]); }
+                for (let i = 0; i < cmd.data_length; ++i) { hashInteger(cmd.data[i]); }
                 hashInteger(cmd.data_length);
                 hashInteger(cmd.dx); hashInteger(cmd.dy); hashInteger(cmd.x); hashInteger(cmd.y);
+                hashNumber(cmd.map_x0); hashNumber(cmd.map_y0); hashNumber(cmd.step_x); hashNumber(cmd.step_y);
+                hashInteger(cmd.sprite_size_x); hashInteger(cmd.sprite_size_y);
+                hashInteger(cmd.override_mode); hashBool(cmd.low_res);
+                hashNumber(cmd.override_r); hashNumber(cmd.override_g); hashNumber(cmd.override_b); hashNumber(cmd.override_a);
                 break;
 
             case 'PIX':

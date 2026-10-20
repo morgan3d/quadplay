@@ -11,16 +11,6 @@ img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px
 .md .hljs-title {font-weight: bold; color: #FFF}
 .md div.listingcaption {margin: 5px 0 15px}
 
-@media screen and (min-width: 750px) {
-.md .longToc {
-font-size: 80%;
-width: 200px;
-}
-body {
-left: 230px;
-}
-}
-
 .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-built_in, a code .hljs-selector-tag {
 color: #80bfff !important;
 }

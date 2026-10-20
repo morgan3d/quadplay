@@ -404,7 +404,7 @@ function loadGame(gameURL, callback, errorCallback) {
         
 
         if (! gameJSON.scripts) { gameJSON.scripts = []; }
-        if (! gameJSON.modes) { gameJSON.modess = []; }
+        if (! gameJSON.modes) { gameJSON.modes = []; }
         
         // Inject OS support
         gameJSON.scripts.push(
@@ -476,9 +476,28 @@ function loadGame(gameURL, callback, errorCallback) {
 
         // Modes:
         {
+            // Error messages cite the line of the game.json source text that jsonParser stored
+            const gameJSONSource = fileContents[gameURL];
+            console.assert(gameJSONSource !== undefined);
+            function gameJSONLineNumber(text) {
+                const index = gameJSONSource.indexOf(text);
+                console.assert(index !== -1);
+                return gameJSONSource.substring(0, index).split('\n').length;
+            }
+
+            const modeNameRegex = RegExp('^' + identifierPattern);
+
             gameSource.modes = [];
             let numStartModes = 0;
             for (let i = 0; i < gameJSON.modes.length; ++i) {
+                // The compiler emits each mode name as a PyxlScript identifier
+                const baseName = gameJSON.modes[i].replace(/^.*\//, '');
+                const identifierMatch = baseName.match(modeNameRegex);
+                const identifierLength = identifierMatch ? identifierMatch[0].length : 0;
+                if (identifierLength < baseName.length) {
+                    throw new Error(`${gameURL} line ${gameJSONLineNumber('"' + gameJSON.modes[i] + '"')}: mode name "${baseName}" contains illegal character "${baseName[identifierLength]}". Mode names must be PyxlScript identifiers.`);
+                }
+
                 const modeURL = makeURLAbsolute(gameURL, gameJSON.modes[i] + '.pyxl');
                 // Remove any URL prefix and change leading underscore to $ on the name
                 // (we don't use $ in the actual URL because it confuses a lot of shells)
@@ -493,8 +512,10 @@ function loadGame(gameURL, callback, errorCallback) {
                 gameSource.modes.push({name: name, url: modeURL});                
             }
 
-            if (numStartModes === 0) {
-                throw new Error('No "start_mode" specified');
+            if (gameJSON.start_mode === undefined) {
+                throw new Error(`${gameURL} missing required "start_mode" key. Recommendation: add \`"start_mode": "${gameJSON.modes[0]}"\` at line ${gameJSONLineNumber('"modes"')}`);
+            } else if (numStartModes === 0) {
+                throw new Error(`${gameURL} line ${gameJSONLineNumber('"start_mode"')}: "start_mode" value "${gameJSON.start_mode}" does not name a mode in "modes".`);
             }
 
             // Load all modes

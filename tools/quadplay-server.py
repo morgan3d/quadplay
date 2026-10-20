@@ -60,11 +60,18 @@
 #
 # A "webpath" is a URL subpath, where '/' means the server root = filesystem root_path
 
+import sys, platform
 
-# --git-dir (dir)
-# --work-tree (dir)
+try:
+    import tkinter
+except ImportError as e:
+    print('\nError! tkinter is missing from your Python. To fix, ' +
+          {'Darwin'  : 'run:\n\n  brew install python-tk\n',
+           'Linux'   : 'run:\n\n  sudo apt-get install python3-tk\n',
+           'Windows' : 'reinstall Python from python.org\n'}[platform.system()])
+    sys.exit(-1)
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request, types, tempfile, stat
+import os, time, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request, types, tempfile, stat
 
 quadplay_origin = 'git clone' if os.path.isdir(os.path.join(os.path.dirname(__file__), '../.git')) else 'downloaded release'
 if quadplay_origin == 'git clone' and os.path.exists(os.path.join(os.path.dirname(__file__), '../_dev')):
@@ -430,8 +437,11 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
         self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
 
-        # Try to reduce overcaching
-        self.send_header('Cache-Control', 'must-revalidate')
+        # no-cache forces a conditional request on every load, which
+        # SimpleHTTPRequestHandler answers with 304 via Last-Modified.
+        # must-revalidate only applies once the heuristic freshness
+        # lifetime expires, and browsers compute that differently.
+        self.send_header('Cache-Control', 'no-cache')
         SimpleHTTPRequestHandler.end_headers(self)
 
         

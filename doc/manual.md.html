@@ -1,7 +1,4 @@
-<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
-<link rel="icon" type="image/png" sizes="64x64" href="../console/icons/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/icons/favicon-32x32.png">
-<link rel="shortcut icon" href="../console/icons/favicon.ico">
+<meta charset="utf-8"><script src="quadplay.js" markdeep="2"></script><plaintext>
 
 # quadplay✜
     Fantasy Console by [Casual Effects](https://casual-effects.com)
@@ -178,38 +175,38 @@ visible, you can run `tools/quadplay-server` instead.
 
 These examples assume that your directory structure is:
 
-*****************************************************************************
-*   📂 HOME (~/ on Mac and Linux, %HOMEDRIVE%%HOMEPATH% on Windows)
-*   |
-*   +-- 📂 my_quadplay
-*   |   |
-*   |   '-- 📂 space
-*   |       |
-*   |       +-- 📄 space.game.json
-*   |       |
-*   ⋮       ⋮
-*
-*   📂 quadplay
-*   |
-*   +-- 📄 quadplay
-*   +-- 📄 quadplay.vbs
-*   |
-*   +-- 📂 fonts
-*   |   |
-*   |   ⋮
-*   |
-*   +-- 📂 games
-*   |   |
-*   |   +-- 📂 quadpaddle
-*   |   |   |
-*   |   |   +-- 📄 quadpaddle.game.json
-*   |   |   |
-*   |   ⋮   ⋮
-*   |
-*   +-- 📂 sprites
-*   |   |
-*   ⋮   ⋮
-*****************************************************************************
+```text
+   📂 HOME (~/ on Mac and Linux, %HOMEDRIVE%%HOMEPATH% on Windows)
+   |
+   +-- 📂 my_quadplay
+   |   |
+   |   '-- 📂 space
+   |       |
+   |       +-- 📄 space.game.json
+   |       |
+   ⋮       ⋮
+
+   📂 quadplay
+   |
+   +-- 📄 quadplay
+   +-- 📄 quadplay.vbs
+   |
+   +-- 📂 fonts
+   |   |
+   |   ⋮
+   |
+   +-- 📂 games
+   |   |
+   |   +-- 📂 quadpaddle
+   |   |   |
+   |   |   +-- 📄 quadpaddle.game.json
+   |   |   |
+   |   ⋮   ⋮
+   |
+   +-- 📂 sprites
+   |   |
+   ⋮   ⋮
+```
 [Directory structure with the `quadplay` script in the root.]
 
 The directory and `.game.json` file do not have to have the same
@@ -1092,11 +1089,11 @@ menu.leave();
 Push and pop on modes aren't always paired, because sometimes an exceptional
 change to state flow occurs. 
 
-*********************************************************************
-*   .-----.   push_mode(B)   .-----.   set_mode(C)   .-----.
-*  (   A   )--------------->(   B   )-------------->(   C   )
-*   '-----'                  '-----'                 '-----'
-*********************************************************************
+```diagram
+   .-----.   push_mode(B)   .-----.   set_mode(C)   .-----.
+  (   A   )--------------->(   B   )-------------->(   C   )
+   '-----'                  '-----'                 '-----'
+```
 [Actual code executed with unmatched push/pop mode calls.]
  
 
@@ -1111,16 +1108,16 @@ For example, if mode `A` executes `push_mode(B)`, and then
 This is as if `B` had run the `pop_mode` and then `A` directly
 transitioned to C.
 
-*********************************************************************
-*             push_mode(B)                  
-*   .-----.----------------->.--+--.                 .-----.
-*  (   A   )                (   B   )               (   C   )
-*   '--+--'<-----------------'-----'                 '-----'
-*      |       pop_mode()                               ^
-*      |                                                |
-*       '----------------------------------------------'
-*                          set_mode(C)
-*********************************************************************
+```diagram
+             push_mode(B)
+   .-----.----------------->.--+--.                 .-----.
+  (   A   )                (   B   )               (   C   )
+   '--+--'<-----------------'-----'                 '-----'
+      |       pop_mode()                               ^
+      |                                                |
+       '----------------------------------------------'
+                          set_mode(C)
+```
 [Equivalent behavior triggered by the actual code, so that PyxlScript can ensure matched push/pop]
 
 
@@ -3883,36 +3880,36 @@ Run `quadplay --help` to see more options for the script.
 
 These examples assume that your directory structure is:
 
-**********************************************************
-*
-*   📂 quadplay
-*   |
-*   +-- 📄 quadplay
-*   |
-*   +-- 📂 fonts
-*   |   |
-*   |   ⋮
-*   |
-*   +-- 📂 games
-*   |   |
-*   |   +-- 📂 quadpaddle
-*   |   |   |
-*   |   |   +-- 📄 quadpaddle.game.json
-*   |   |   |
-*   |   ⋮   ⋮
-*   |
-*   +-- 📂 mygames
-*   |   |
-*   |   '-- 📂 space
-*   |       |
-*   |       +- 📄 space.game.json
-*   |       |
-*   |       ⋮
-*   |
-*   +-- 📂 sprites
-*   |   |
-*   ⋮   ⋮
-**********************************************************
+```text
+
+   📂 quadplay
+   |
+   +-- 📄 quadplay
+   |
+   +-- 📂 fonts
+   |   |
+   |   ⋮
+   |
+   +-- 📂 games
+   |   |
+   |   +-- 📂 quadpaddle
+   |   |   |
+   |   |   +-- 📄 quadpaddle.game.json
+   |   |   |
+   |   ⋮   ⋮
+   |
+   +-- 📂 mygames
+   |   |
+   |   '-- 📂 space
+   |       |
+   |       +- 📄 space.game.json
+   |       |
+   |       ⋮
+   |
+   +-- 📂 sprites
+   |   |
+   ⋮   ⋮
+```
 [Directory structure with the `quadplay` script in the root.]
 
 The directory and `.game.json` file do not have to have the same
@@ -4239,14 +4236,14 @@ well as providing analog access under `device_control()`.
 See the Arcade Controller Mappings Section for more detail on some common
 arcade/fighting game controller mappings.
 
-********************************************************
-*                          |
-*       ⓠ   ⓟ              |       ⓠ   ⓟ     
-*   ⍐            ⓓ   ⓕ     |   ⍐           ⓔ  ⓒ  ⓓ  ⓕ 
-* ⍇   ⍈        ⓒ   ⓑ       | ⍇   ⍈               
-*   ⍗        ⓔ   ⓐ         |   ⍗           ⓔ  ⓐ  ⓑ  ⓕ
-*                          |
-********************************************************
+```diagram
+                          |
+      ⓠ   ⓟ              |       ⓠ   ⓟ
+  ⍐            ⓓ   ⓕ     |   ⍐           ⓔ  ⓒ  ⓓ  ⓕ
+⍇   ⍈        ⓒ   ⓑ       | ⍇   ⍈
+  ⍗        ⓔ   ⓐ         |   ⍗           ⓔ  ⓐ  ⓑ  ⓕ
+                          |
+```
 [Sample layouts for physical controller buttons on arcade sticks]
 
 If you have the option to choose your button layout and mapping, then
@@ -4855,12 +4852,6 @@ already. What packages will provide are namespaces as well as assets
 bundled together with a script.
 
 
-<script>markdeepOptions = {tocStyle:'long', definitionStyle:'long', inlineCodeLang: 'PyxlScript'};</script>
-<link rel="stylesheet" href="slate.css">
-<link rel="stylesheet" href="manual.css">
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);
 setTimeout(function(){document.title='manual✜';},5000)</script>
-<link rel="shortcut icon" href="../console/favicon.ico">
-<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">

@@ -81,8 +81,10 @@ def draw_background(view):
             
 
 def draw_perspective_ground(view, map):
+    // Center of the first pixel and right edge of the last pixel, because
+    // draw_map_span() interpolates map_coord0 to map_coord1 over size.x pixel steps
     const left = xy(½ - ½ SCREEN_SIZE.x, 0)
-    const right = xy(½ SCREEN_SIZE.x - ½, 0)
+    const right = xy(½ SCREEN_SIZE.x + ½, 0)
     const span_size = xy(SCREEN_SIZE.x, 0)
     
     const offset = 128 xyz(sin(view.yaw), 0, cos(view.yaw))

@@ -1,7 +1,93 @@
-<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
-<link rel="icon" type="image/png" sizes="64x64" href="../console/icons/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/icons/favicon-32x32.png">
-<link rel="shortcut icon" href="../console/icons/favicon.ico">
+<meta charset="utf-8"><script>window.markdeepOptions = {mode: 'script'};</script><script src="quadplay.js" markdeep="2"></script>
+<script src="pyxlscript-doc.js?"></script>
+<script>
+    const lib_list = [
+        'cursor_lib',
+        'dice_lib',
+        'mat3x3_lib',
+        'midi_8x8_lib',
+        'particle_lib',
+        'platformer_lib',
+        'screen_lib'
+    ].sort();
+
+    // Maps filename_base names to Markdeep code
+    const mdSource = {};
+
+    // Files to be processed
+    let files_left = lib_list.length;
+
+    // Splice the extracted documentation into the document source and render.
+    function insert_and_render() {
+        let source = '';
+        let summary = 'Library | Summary\n----------|----------\n';
+
+        for (const filename_base of lib_list) {
+            const entry = mdSource[filename_base];
+
+            summary += `[\`${filename_base}\`](#${filename_base}) | ${(entry.summary || ' ').replace(/\n/g, ' ')}\n`;
+            source += entry.markdown || '';
+        }
+
+        // The renderer reads the text of the plaintext element, so the
+        // documentation is spliced into the source rather than into the DOM.
+        // The replacement is a function so that a dollar sign in the generated
+        // markdown is not read as a replacement pattern.
+        const carrier = document.getElementsByTagName('plaintext')[0];
+        carrier.textContent = carrier.textContent.
+            replace('(summary-placeholder)', () => summary).
+            replace('(doc-placeholder)', () => source);
+
+        window.markdeep.formatDocument();
+    }
+
+    // This script runs in the preamble, ahead of both the document source and
+    // the renderer, which the theme loads asynchronously. Run the callback once
+    // the source has parsed and the renderer has published its API.
+    function when_ready(callback) {
+        let pending = 2;
+        const arrived = () => { if (--pending === 0) { callback(); } };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', arrived);
+        } else {
+            arrived();
+        }
+
+        if (window.markdeep) {
+            arrived();
+        } else {
+            document.querySelector('script[data-theme]').addEventListener('load', arrived);
+        }
+    }
+
+    // Mark a file as completed with downloading and Markeep extraction.
+    // When the final file is completed, it launches the Markdeep processor.
+    function file_completed() {
+        --files_left;
+
+        if (files_left === 0) { when_ready(insert_and_render); }
+    }
+
+    for (const filename_base of lib_list) {
+        const filename = filename_base + '.pyxl';
+        const quad_url = 'quad://scripts/' + filename_base;
+        const url = '../scripts/' + filename;
+
+        fetch(url).then((response) => {
+            if (response.ok) {
+                response.text().then((pyxlSource) => {
+                    console.assert(pyxlSource);
+                    mdSource[filename_base] = pyxlScriptToMarkdeepDoc(filename_base, pyxlSource, quad_url);
+                    file_completed();
+                });
+            } else {
+                console.warn('Skipping ' + url + ' because fetch failed with code ' + response.status);
+                file_completed();
+            }
+        });
+    }
+</script><plaintext>
 
 # Bundled Libraries
     Built-in Libraries of the [<quadplay/>](manual.md.html)
@@ -24,76 +110,6 @@ Note that unlike the standard library API, bundled libraries:
 - Have individual (non-viral) open source licenses
 - Do not have their license automatically added to CREDITS (you must do this yourself)
 
-<div id="summary-placeholder"></div>
+(summary-placeholder)
 
-<div id="doc-placeholder"></div>
-
-<script src="pyxlscript-doc.js?"></script>
-<script>
-    const lib_list = [
-        'cursor_lib',
-        'dice_lib',
-        'mat3x3_lib',
-        'midi_8x8_lib',
-        'particle_lib',
-        'platformer_lib',
-        'screen_lib'
-    ].sort();
-
-    window.markdeepOptions = {mode: 'script', tocStyle:'long', definitionStyle:'long', inlineCodeLang: 'PyxlScript'};
-
-    // Maps filename_base names to Markdeep code
-    const mdSource = {};
-
-    // Files to be processed
-    let files_left = lib_list.length;
-
-    // Mark a file as completed with downloading and Markeep extraction.
-    // When the final file is completed, it launches the Markdeep processor.
-    function file_completed() {
-        --files_left;
-
-        if (files_left === 0) {
-            // Ready to process
-            let source = '';
-            let summary = 'Library | Summary\n----------|----------\n';
-
-            for (const filename_base of lib_list) {
-                const entry = mdSource[filename_base]; 
-                
-                summary += `[\`${filename_base}\`](#${filename_base}) | ${(entry.summary || ' ').replace(/\n/g, ' ')}\n`;
-                source += entry.markdown || '';
-            }
-
-            // Insert into the document
-            document.getElementById('summary-placeholder').outerHTML = summary;
-            document.getElementById('doc-placeholder').outerHTML = source;
-
-            // Run Markdeep
-            window.markdeep.formatDocument();
-        }
-    }
-
-    for (const filename_base of lib_list) {
-        const filename = filename_base + '.pyxl';
-        const quad_url = 'quad://scripts/' + filename_base;
-        const url = '../scripts/' + filename;
-
-        fetch(url).then((response) => {
-            if (response.ok) {
-                response.text().then((pyxlSource) => {
-                    console.assert(pyxlSource);
-                    mdSource[filename_base] = pyxlScriptToMarkdeepDoc(filename_base, pyxlSource, quad_url);
-                    file_completed();
-                });
-            } else {
-                console.warn('Skipping ' + url + ' because fetch failed with code ' + response.status);
-                file_completed();
-            }
-        });
-    }
-</script>
-
-
-<link rel="stylesheet" href="slate.css">
-<link rel="stylesheet" href="manual.css">
+(doc-placeholder)

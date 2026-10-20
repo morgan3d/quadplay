@@ -31,7 +31,7 @@ body {
     font-weight: 300;
 }
 
-.md .longTOC .level1 {
+.md .longTOC li.level2 > a {
     font-weight: 300;
     margin-bottom: -30px;
 }
@@ -109,33 +109,13 @@ body {
 }
 
 
-/* Darkmode, wide screen: TOC on side */
+/* Darkmode, wide screen: the overview is the left pane */
 @media screen and (min-width: 40em) {
-    .md .longTOC {
-        display: block;
-        white-space: nowrap;    
-        width: 170px;
+    #main_nav {
+        white-space: nowrap;
         border-right: 1px solid #777;
-        overflow-y:scroll;
-        font-family: inherit;
         background: #202020;
-        position: fixed;
-        left: 0px;
-        top: 0px;
-        bottom:0px;
-        margin: 0px;
-        padding: 0px;
-        padding-left:10px;
-    }
-    
-    body {
-        position: absolute;
-        left: 200px;
-        right:0px;
-        margin: 0px;
-        padding: 0px;
-        max-width: unset;
-        padding-right: 15px;
+        padding-left: 10px;
     }
 }
 

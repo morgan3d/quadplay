@@ -3075,9 +3075,12 @@ function reloadRuntime(oncomplete) {
     QRuntime.document.open();
     
     let src = `<!DOCTYPE html><script>var $THREADED_GPU = ${$THREADED_GPU};</script>\n`;
+    // loadScript() in quadplay.html adds the refresh token to the
+    // scripts it writes. These are written here, so they add their own.
+    const refresh = '?refresh=' + new Date().getTime();
     for (const script of ['cpu', $THREADED_GPU ? false : 'gpu', 'physics', 'ai', 'common']) {
         if (script) {
-            src += `<script src='quadplay-runtime-${script}.js'></script>\n`;
+            src += `<script src='quadplay-runtime-${script}.js${refresh}'></script>\n`;
         }
     }
     QRuntime.document.write(src);

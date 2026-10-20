@@ -1,11 +1,8 @@
-<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
-<link rel="icon" type="image/png" sizes="64x64" href="../console/icons/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/icons/favicon-32x32.png">
-<link rel="shortcut icon" href="../console/icons/favicon.ico">
+<meta charset="utf-8"><script src="quadplay.js" markdeep="2"></script><plaintext>
 
 # Assets✜
-          Built-in Assets of the [<quadplay/>](manual.md.html)
-    Fantasy Console by [Casual Effects](https://casual-effects.com)
+Built-in Assets of the [<quadplay/>](manual.md.html)
+Fantasy Console by [Casual Effects](https://casual-effects.com)
 
 
 The <quadplay/> console provides thousands of built-in assets so that you
@@ -18,9 +15,8 @@ when loaded.
 
 
 ## Sprites
-<div id="sprites">
 <style>
-#sprites img {
+.md img.sprite {
   max-width: 384px;
   max-height: 224px;
   width: auto;
@@ -32,9 +28,7 @@ table tr {
 }
 </style>
 
-
-
-<script>
+<script type="generator">
 const spriteCategories = {
   'Kenney': [
     'kenney-blocks-16x16',
@@ -109,37 +103,39 @@ const spriteCategories = {
   ]
 };
 
-for (const [categoryTitle, sprites] of Object.entries(spriteCategories)) {
-  document.write(`\n## ${categoryTitle}\n\n`);
-  
-  for (let i = 0; i < sprites.length; ++i) {
-    const sprite = sprites[i];
-    
-    // Handle both string and object formats
-    let jsonName = sprite, pngName = sprite;
-    if (typeof sprite !== 'string') {
-      jsonName = sprite.json;
-      pngName = sprite.png;
+{
+    let output = '';
+    for (const [categoryTitle, sprites] of Object.entries(spriteCategories)) {
+        output += `\n### ${categoryTitle}\n\n`;
+        
+        for (let i = 0; i < sprites.length; ++i) {
+            const sprite = sprites[i];
+            
+            // Handle both string and object formats
+            let jsonName = sprite, pngName = sprite;
+            if (typeof sprite !== 'string') {
+            jsonName = sprite.json;
+            pngName = sprite.png;
+            }
+            
+            output += `![\`quad://sprites/${jsonName}.sprite.json\`](../sprites/${pngName}.png class="sprite") `;
+            
+            // Add line break after every 2 sprites or at the end of the array
+            if (((i & 1) === 1) || (i === sprites.length - 1)) {
+            output += '\n';
+            }
+        }
+        
+        output += '\n';
     }
-    
-    document.write(`![\`quad://sprites/${jsonName}.sprite.json\`](../sprites/${pngName}.png) `);
-    
-    // Add line break after every 2 sprites or at the end of the array
-    if (((i & 1) === 1) || (i === sprites.length - 1)) {
-      document.write('\n');
-    }
-  }
-  
-  document.write('\n');
+    markdeep_write(output);
 }
-</script> 
-
-</div>
+</script>
 
 ## Fonts
 
 
-<script>
+<script type="generator">
 for (const font of [
 'novarese-bold-20',
 'novarese-20',
@@ -193,7 +189,7 @@ for (const font of [
 'deja-3',
 'nanob-3'])
 
-   document.write(`
+   markdeep_write(`
 <div style="display: inline-block; margin-right: 20px; margin-bottom: 10px">
   <div class="font" style="background-image:url('../fonts/${font.replace(/-mono/, '')}.png')"></div>
 \`quad://fonts/${font}.font.json\`
@@ -203,7 +199,7 @@ for (const font of [
 
 ## Sounds
 
-<script>
+<script type="generator">
 const soundCategories = {
   'Music': [
     'music-opening',
@@ -358,7 +354,7 @@ const soundCategories = {
 };
 
 for (const [categoryTitle, categoryData] of Object.entries(soundCategories)) {
-  document.write(`\n## ${categoryTitle}\n`);
+  markdeep_write(`\n### ${categoryTitle}\n`);
   
   // Handle both array format and object format with optional note
   let sounds, note;
@@ -370,10 +366,10 @@ for (const [categoryTitle, categoryData] of Object.entries(soundCategories)) {
   }
   
   if (note) {
-    document.write(`${note}\n`);
+    markdeep_write(`${note}\n`);
   }
   
-  document.write('\n');
+  markdeep_write('\n');
   
   for (let i = 0; i < sounds.length; ++i) {
     const sound = sounds[i];
@@ -385,15 +381,15 @@ for (const [categoryTitle, categoryData] of Object.entries(soundCategories)) {
       mp3Name = sound.mp3;
     }
     
-    document.write(`![\`quad://sounds/${jsonName}.sound.json\`](../sounds/${mp3Name}.mp3) `);
+    markdeep_write(`![\`quad://sounds/${jsonName}.sound.json\`](../sounds/${mp3Name}.mp3) `);
     
     // Add line break after every 2 sounds or at the end of the array
     if (((i & 1) === 1) || (i === sounds.length - 1)) {
-      document.write('\n');
+      markdeep_write('\n');
     }
   }
   
-  document.write('\n');
+  markdeep_write('\n');
 }
 </script>
 
@@ -434,73 +430,3 @@ for (const [categoryTitle, categoryData] of Object.entries(soundCategories)) {
   showing or to be communicated between players as they are considered
   deeply offensive to different groups.
   Rerpresented as an object mapping words in this set to `true`.
-  
-
-<script>
-markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
-<link rel="stylesheet" href="slate.css">
-<style>
-@font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
-.big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
-em.asterisk { font-style: normal; font-weight: bold; }
-.md h1 { font-family: quadplay; font-size: 40px}
-.md h1, .md div.subtitle {text-align: center}
-img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
-.md .hljs-built_in {font-weight: bold; color: #f7a8fd}
-.md .hljs-keyword {font-weight: bold; color: #a1aefe}
-.md .hljs-title {font-weight: bold; color: #FFF}
-.md div.listingcaption {margin: 5px 0 15px}
-.md .longToc {
-font-size: 80%;
-width: 200px;
-}
-body {
-left: 230px;
-}
-.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-built_in, a code .hljs-selector-tag {
-color: #80bfff !important;
-}
-table.aligned tr {
-  vertical-align: top;
-}
-
-div.preview, div.font {
-  width:  335px;
-  height: 100px;
-  background-size: auto 550px;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: pixelated;
-  border: 1px solid #666;
-}
-
-
-div.preview {
-  background-size: 600% 1000%;
-  width: 256px;
-  height: 149px;
-  float:right;
-}
-
-.md h2, .md h3, .md h4 { font-family: quadplay }
-.md pre.listing.backtick {
-  margin-bottom: 0px;
-}
-
-quadplay::before {
-content: "quadplay✜";
-font-family: quadplay;
-}
-
-table {font-size: 16px}
-table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
-table.nested td code {white-space: nowrap} 
-table.nested th {border-bottom: 1px solid}
-table.nested tr {vertical-align: top}
-table.nested td {margin-bottom: 5px}
-</style>
-<title>assets✜</title>
-<script>setTimeout(function(){document.title='assets✜';},1000);
-setTimeout(function(){document.title='assets✜';},5000)</script>
-<link rel="shortcut icon" href="../console/favicon.ico">
-<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">

@@ -260,6 +260,25 @@ def make_good_board_string(board_rng):
         if tries > 0 and DEBUG.BOARD_SEARCH: debug_print("\n****************************************\n*** Rerolling because still bad after " + GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES + " shuffles ***") 
 
         seed_base = random_integer(0x0, 0x7FFFFFFF, board_rng)
+        
+        // Compute valuable letters once per outer loop (letters don't change during shuffles)
+        const initial_gen = make_random_board_string(seed_base, 0)
+        valuable_letter_use_count = {}
+        let num_valuable_letter_instances = 0
+        let num_very_valuable_letter_instances = 0
+        for letter in initial_gen.board_string:
+            if LETTER_POINT_TABLE[letter] ≥ 4:
+                valuable_letter_use_count[letter] = 0
+                ++num_valuable_letter_instances
+                if LETTER_POINT_TABLE[letter] ≥ 5:
+                    ++num_very_valuable_letter_instances
+        
+        const valuable_letters = keys(valuable_letter_use_count)
+        
+        // Check vowel count before trying any permutations (constant across shuffles)
+        if initial_gen.vowels < ROWS or initial_gen.vowels ≥ 2 ROWS:
+            if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + initial_gen.vowels + " vowels ***")
+            continue
                 
         // Loop for shuffling
         for permute_number < GENERATE_BOARD.CRITERIA.SHUFFLE_RETRIES:
@@ -275,13 +294,6 @@ def make_good_board_string(board_rng):
                 if DEBUG.BOARD_SEARCH: debug_print("Gave up and accepted " + seed_base)
                 done = true
                 break
-                        
-            // Between 4 and 7 vowels seems to be the sweet spot for a good 4x4 grid,
-            // so re-roll if we fail on this
-            if gen.vowels < ROWS or gen.vowels ≥ 2 ROWS:
-                if DEBUG.BOARD_SEARCH: debug_print("\n*** Rerolling because " + gen.vowels + " vowels ***")
-                // Break out of the shuffle loop
-                break
     
             if board_string_has_obvious_sensitive_word(board_string, tries > ½ GENERATE_BOARD.CRITERIA.RETRIES):
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it had an obvious sensitive word")
@@ -291,18 +303,10 @@ def make_good_board_string(board_rng):
             // are enough good words
             word_array = board_string_find_all_words(board_string)
             
-            // Number of times a valuable letter was used
-            valuable_letter_use_count = {}
-            let num_valuable_letter_instances = 0
-            let num_very_valuable_letter_instances = 0
-            for letter in board_string:
-                if LETTER_POINT_TABLE[letter] ≥ 4:
-                    valuable_letter_use_count[letter] = 0
-                    ++num_valuable_letter_instances
-                    if LETTER_POINT_TABLE[letter] ≥ 5:
-                        ++num_very_valuable_letter_instances
-            
-            const valuable_letters = keys(valuable_letter_use_count)
+            // Reset valuable letter counters for this permutation
+            // (which letters are valuable was computed once in outer loop)
+            for letter in valuable_letters:
+                valuable_letter_use_count[letter] = 0
 
             if size(word_array) < (if size(valuable_letters) then GENERATE_BOARD.CRITERIA.MIN_WORDS_VERY_VALUABLE_LETTER_BOARD else GENERATE_BOARD.CRITERIA.MIN_WORDS):
                 // Not enough words to even examine the board
@@ -343,16 +347,17 @@ def make_good_board_string(board_rng):
                         if size(word) ≥ 5:
                             ++valuable_letter_long_count[letter]
             
-            if short_word_count < GENERATE_BOARD.CRITERIA.MIN_SHORT_WORDS:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + short_word_count + " short words")        
+            // Check most-likely-to-fail criteria first (most restrictive threshold)
+            if very_long_word_count < GENERATE_BOARD.CRITERIA.MIN_VERY_LONG_WORDS:
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + very_long_word_count + " very long words")        
                 continue
             
             if long_word_count < GENERATE_BOARD.CRITERIA.MIN_LONG_WORDS:
                 if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + long_word_count + " long words")        
                 continue
             
-            if very_long_word_count < GENERATE_BOARD.CRITERIA.MIN_VERY_LONG_WORDS:
-                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + very_long_word_count + " very long words")        
+            if short_word_count < GENERATE_BOARD.CRITERIA.MIN_SHORT_WORDS:
+                if DEBUG.BOARD_SEARCH: debug_print("\nShuffled board " + seed_base + " because it only produced " + short_word_count + " short words")        
                 continue
             
             // See if we used the valuable letters.

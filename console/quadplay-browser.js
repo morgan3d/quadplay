@@ -1372,7 +1372,7 @@ function updateInput() {
                                 weakMagnitude: strength,
                                 strongMagnitude: strength};
                             gamepad.vibrationActuator.playEffect('dual-rumble', args);
-                        } else if (gamepad.hapticActuators) {
+                        } else if (gamepad.hapticActuators && gamepad.hapticActuators[0]?.pulse) {
                             gamepad.hapticActuators[0].pulse(strength, milliseconds);
                         }
                         return;

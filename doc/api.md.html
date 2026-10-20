@@ -1,4 +1,4 @@
-<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script>
+<meta charset="utf-8"><script src="quadplay.js" markdeep="2"></script><plaintext>
 ## Standard Library
 
 ### Types
@@ -1659,22 +1659,22 @@ The <quadplay/> default coordinate system places the origin at the
 upper-left corner of the screen, with the y-axis facing down, 0° to
 the right, 90° upwards, and the z-axis out of the screen.
 
-************************************************************
-*  2048 (out of the screen)
-*    ^
-*     \  z
-*      \
-*       \0            x
-*        *----------------------->* SCREEN_SIZE.x
-*        |\                       |
-*        | \                      |
-*        |  \                     |
-*     y  |   v                    |
-*        |     -2047              |
-*        v                        |
-*        *------------------------*
-*   SCREEN_SIZE.y
-***********************************************************
+```diagram
+  2048 (out of the screen)
+    ^
+     \  z
+      \
+       \0            x
+        *----------------------->* SCREEN_SIZE.x
+        |\                       |
+        | \                      |
+        |  \                     |
+     y  |   v                    |
+        |     -2047              |
+        v                        |
+        *------------------------*
+   SCREEN_SIZE.y
+```
 [Figure [coords]: Default quadplay coordinate system.]
 
 The z-axis is used for 3D perspective via the `camera.zoom`, 
@@ -2105,19 +2105,19 @@ The direction of `entity.angle` is always counter-clockwise in screen
 coordinates. The direction in draw coordinates is given by
 `rotation_sign()`.
 
-******************************************************************
-*  Default Entity Space         With flipped y-axis
-*
-*                                       ^ y
-*                                       |
-*     .---------.                  .----|----.
-*     |    ↶    |                  |    |↶   |
-*     |    *-------> x             |    *--------> x
-*     |    |    |                  |         |
-*     '----|----'                  '---------'
-*          |
-*          v y
-******************************************************************
+```diagram
+  Default Entity Space         With flipped y-axis
+
+                                      ^ y
+                                      |
+    .---------.                  .----|----.
+    |    ↶    |                  |    |↶   |
+    |    *-------> x             |    *--------> x
+    |    |    |                  |         |
+    '----|----'                  '---------'
+         |
+         v y
+```
 
 The axes of the entity space in draw space are given by:
 
@@ -2130,7 +2130,7 @@ const Y = xy(-sin θ, cos θ) * entity.scale
 
 const X = transform_entity_to_draw(entity, xy(1, 0)) - entity.pos
 const Y = transform_entity_to_draw(entity, xy(0, 1)) - entity.pos
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Entity space is mostly used for moving a character relative to its own
 axes or resolving attachment points. Drawing commands always take 
@@ -4023,8 +4023,10 @@ indices. The map's z-axis corresponds to layers.
   `y` axis (vertical spans are reserved for future expansion). 
   The span will be transformed by the `camera.pos`, but does not rotate with
   the `camera.angle`.  `map_coord0` is an `xy()` in map coordinates for the source colors,
-  which corresponds to the `start` pixel on screen. `map_coord1` is
-  the end coordinate in map coordinates.
+  which corresponds to the center of the `start` pixel on screen. `map_coord1` is
+  the map coordinate at the center of the pixel one past the last pixel of the span,
+  which is `size.x` pixels to the right of `start`. Pixel `i`
+  of the span samples the map at `lerp(map_coord0, map_coord1, i / size.x)`.
   
   `map`, `replacement_array`, `min_layer`, `max_layer_exclusive`, and `invert_sprite_y` 
   are as for `get_map_pixel_color()`.
@@ -4968,15 +4970,15 @@ A conduit has the following properties:
 `conduit.netid`
 : The `netid` of the group or node being communicated with through this conduit.
 
-*****************************************************
-*                    .-> "closed" <-.
-*                   |                |
-*                   |                |
-* "pending" ---> "online" <-----> "offline"
-*     |                              ^
-*     |                              |
-*      '----------------------------'
-*****************************************************
+```diagram
+                    .-> "closed" <-.
+                   |                |
+                   |                |
+ "pending" ---> "online" <-----> "offline"
+     |                              ^
+     |                              |
+      '----------------------------'
+```
 [`conduit.status` transitions]
 
 The functions in the conduit API are:
@@ -5472,6 +5474,3 @@ and other operations that naturally compile with maximum efficiency.
   which can be the same object as `srcxyzw`. The `dstxyzw.w = srcxyzw.w`.
 
 
-<script>markdeepOptions = {tocStyle:'long', definitionStyle:'long', inlineCodeLang: 'PyxlScript'};</script>
-<link rel="stylesheet" href="slate.css">
-<link rel="stylesheet" href="manual.css">
