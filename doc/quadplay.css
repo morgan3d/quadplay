@@ -1,0 +1,165 @@
+/* quadplay✜ documentation stylesheet, the other half of quadplay.js.
+
+   This file holds only what markdeepOptions cannot say: the custom properties
+   the layout is written against, pseudo-elements, media queries, and the
+   classes the manual's own markup uses. Everything with a name in the style
+   vocabulary [RMDc9j] — the body, headings, links, code, listings and tables —
+   is in quadplay.js.
+
+   It was three files. slate.css was a dark template written before Markdeep had
+   a dark scheme of its own; almost all of it — the page and body colors, the
+   diagram strokes, the table shading and rules, the listing panel, the inline
+   code color, the whole highlight.js color block, the admonition boxes and the
+   white headings — is what the default stylesheet now produces from its own
+   dark scheme, so it is gone rather than restated. What survived of slate.css
+   and manual.css is below. */
+
+:root {
+    --nav-size: 200px;
+    /* The manual's tables and listings are wide, so it takes most of the window
+       rather than a prose measure. */
+    --content-max-width: 1400px;
+
+    /* A listing is a panel lifted off the page, ruled in grey. Inline code
+       takes no panel at all: a signature in running prose is nearly all code,
+       and chipping every span of it turns a sentence into a row of boxes. The
+       two are separate variables for exactly this. */
+    --code-background: #202020;
+    --inline-code-background: transparent;
+    --listing-line: #777;
+}
+
+em.asterisk { font-style: normal; font-weight: bold; }
+
+/* The product name, wherever it is written as a tag rather than typed. */
+quadplay::before {
+    content: "quadplay✜";
+    font-family: quadplay;
+}
+
+.big {
+    font-size: 150%;
+    font-family: "Lucida Console", Monaco, monospace;
+    line-height: 150%;
+}
+
+/* Screenshots of the console and of pixel art: never smoothed. */
+img {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+    border: 1px solid #666;
+}
+
+/* The rule that separates the title from the article, run out to the edges of
+   the column. It has no name in the style vocabulary. */
+.md div.afterTitles {
+    margin-top: 20px;
+    margin-left: -20px;
+    margin-right: -20px;
+    height: 0px;
+    border-bottom: 1px solid #fff;
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+}
+
+.md div.afterTitles + p {
+    margin-top: 30px;
+}
+
+/* A header that carries no section number has no name in the vocabulary, so the
+   sizes the h2 through h6 keys set have to be repeated for it. */
+.md .nonumberh2 { font-size: 175% }
+.md .nonumberh3 { font-size: 150% }
+.md .nonumberh4, .md .nonumberh5, .md .nonumberh6 { font-size: 120% }
+
+/* The overview is the left pane, ruled off from the article. Below this width
+   Markdeep drops the pane, so the rule would be a stray line. */
+@media screen and (min-width: 40em) {
+    #main_nav {
+        white-space: nowrap;
+        border-right: 1px solid #777;
+        background: #202020;
+        padding-left: 10px;
+    }
+}
+
+@media screen and (max-width: 100em) {
+    body {
+        padding: 4px;
+    }
+}
+
+.md .longTOC {
+    font-family: 'Roboto', Arial, Helvetica, "sans serif";
+    font-weight: 300;
+    font-size: 15px;
+}
+
+.md .longTOC li.level2 > a {
+    font-weight: 300;
+}
+
+.md .longTOC a, .md .longTOC code {
+    color: #80bfff !important;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* A link's own code spans take the link color rather than the code color, in
+   the article and in the syntax-highlighted signatures the API pages link. */
+.md a:link code, .md a:visited code,
+a code .hljs-keyword, a code .hljs-built_in, a code .hljs-selector-tag {
+    color: #80bfff !important;
+}
+
+/* A listing's code is plain: the panel and the syntax colors are the listing's,
+   not the inline code chip's. */
+.md pre.listing code {
+    font-weight: unset;
+    background: none;
+    color: unset;
+}
+
+/* PyxlScript's own token colors, over the defaults the highlighter gives every
+   other language. */
+.md .hljs-built_in { font-weight: bold; color: #f7a8fd }
+.md .hljs-keyword  { font-weight: bold; color: #a1aefe }
+.md .hljs-title    { font-weight: bold; color: #FFF }
+
+.md div.listingcaption { margin: 5px 0 15px }
+
+/* A backtick listing that captions itself keeps the caption against it. */
+.md pre.listing.backtick { margin-bottom: 0px }
+
+/* The sprite and font previews on the asset pages: a window onto one cell of a
+   sheet, scaled up without smoothing. */
+div.preview, div.font {
+    width:  335px;
+    height: 100px;
+    background-size: auto 550px;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+    border: 1px solid #666;
+}
+
+div.preview {
+    background-size: 600% 1000%;
+    width: 256px;
+    height: 149px;
+    float: right;
+}
+
+/* Reference tables. `aligned` tops its rows; `nested` is the API index, whose
+   first column hangs its continuation lines under the name. */
+table.aligned tr {
+    vertical-align: top;
+}
+
+table.nested td:first-child {
+    margin-right: 25px;
+    padding-left: 22px;
+    text-indent: -22px;
+}
+
+table.nested td code { white-space: nowrap }
+table.nested th { border-bottom: 1px solid }
+table.nested tr { vertical-align: top }
+table.nested td { margin-bottom: 5px }

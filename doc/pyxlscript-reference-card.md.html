@@ -1,0 +1,431 @@
+<meta charset="utf-8"><script src="markdeep2.min.js" markdeep="2"></script><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
+<link rel="icon" type="image/png" sizes="64x64" href="../console/icons/favicon-64x64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../console/icons/favicon-32x32.png">
+<link rel="shortcut icon" href="../console/icons/favicon.ico">
+
+# PyxlScript Language Reference Card
+       Quick Reference for Developers and AI Coding Assistants
+
+This is a concise reference for PyxlScript semantics and syntax. For detailed 
+examples and tutorials, see [manual.md.html](manual.md.html) and [api.md.html](api.md.html).
+
+
+## Core Semantics
+
+**Truthiness**
+: `0`, `∅` (nil), and `""` (empty string) are **false**. All other values are **true**, 
+  including empty arrays `[]` and empty objects `{}`.
+
+**Indexing**
+: All collections (arrays, strings, objects) use **0-based indexing**.
+
+**Immutability**
+: Assignment and mutating operators (`=`, `+=`, `-=`, etc.) return `∅`, not the value.
+
+**Type System**
+: Dynamic typing. Types: `"nil"`, `"boolean"`, `"number"`, `"string"`, `"array"`, 
+  `"object"`, `"function"`.
+
+**Loop Control**
+: `break` and `continue` affect only the **innermost** enclosing loop.
+
+
+## Basic Syntax
+
+### Literals
+
+```````````````````````````````````````````````````````````````````
+Type          Example                      Notes
+============  ===========================  =============================
+Boolean       true, false                  Lowercase only
+Nil           ∅, nil                       Both forms accepted
+Number        42, -3.14, ½, 0xFF, 0b1010  Fractions: ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒
+              90°, 45deg, 50%              Converted to radians/decimal
+String        "hello", 'world'             Both quotes work
+Array         [1, 2, 3]                    Mutable, dynamic
+Object        {a: 1, b: 2}                 Keys are strings or integers
+```````````````````````````````````````````````````````````````````
+
+
+### Variables & Assignment
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let x = 5                // Mutable variable
+const PI = 3.14159       // Immutable constant
+x += 1                   // Mutating operators (return ∅)
+y = x default 10         // Default value if x is ∅
+z = if x > 5 then "big" else "small"  // Conditional expression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+## Operators
+
+### Comparison & Logic
+
+```````````````````````````````````````````````````````````````````
+Operator      Unicode   Meaning
+============  ========  =============================================
+==            ≟         Equal (also works for NaN)
+!=            ≠         Not equal
+<, <=         ≤         Less than (or equal)
+>, >=         ≥         Greater than (or equal)
+and                     Logical AND (short-circuit)
+or                      Logical OR (short-circuit)
+not                     Logical NOT
+in            ∈         Element of (for loops, contains check)
+```````````````````````````````````````````````````````````````````
+
+### Arithmetic
+
+```````````````````````````````````````````````````````````````````
+Operator      Unicode   Meaning
+============  ========  =============================================
++, -, *                 Standard arithmetic
+/                       Float division (always returns float)
+//                      Integer division (floor divide)
+mod                     Modulo (remainder)
+^                       Exponentiation (also: x², x³ unicode)
+2 x, 3(y+1)            Implicit multiplication
+```````````````````````````````````````````````````````````````````
+
+**Implicit Multiplication**: A number followed by a variable, function call, or 
+parenthesized expression implies multiplication: `2x` = `2 * x`, `3(y+1)` = `3 * (y+1)`.
+
+### Bitwise
+
+```````````````````````````````````````````````````````````````````
+Operator      Unicode   Meaning
+============  ========  =============================================
+<<, bitshl    ◀         Bit shift left
+>>, bitshr    ▶         Bit shift right (arithmetic)
+and           ∩         Bitwise AND (when used with numbers)
+or            ∪         Bitwise OR (when used with numbers)
+xor                     Bitwise XOR
+not                     Bitwise NOT (when used with numbers)
+```````````````````````````````````````````````````````````````````
+
+
+## Control Flow
+
+### Conditionals
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// Multi-line if statement
+if x > 0:
+   y = 1
+else if x < 0:
+   y = -1
+else:
+   y = 0
+
+// Single-line if statement (no else allowed)
+if x > 0: y = 1
+
+// Conditional expression (ternary)
+y = if x > 0 then 1 else -1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Loops
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// For loop with counter (0-based, exclusive end)
+for i < 10:
+   debug_print(i)        // Prints 0, 1, 2, ..., 9
+
+// For loop with range
+for i <= 5 <= 10:
+   debug_print(i)        // Prints 5, 6, 7, 8, 9, 10
+
+// Iterate array elements
+for value in array:
+   debug_print(value)
+
+// Iterate array indices
+for i < size(array):
+   debug_print(array[i])
+
+// Iterate object key-value pairs
+for value at key in object:
+   debug_print(key, value)
+
+// While loop
+while condition:
+   // ...
+   
+// Loop control
+break                    // Exit innermost loop
+continue                 // Next iteration of innermost loop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Important**: `for value at key in object:` means `value` is the value and `key` 
+is the key, equivalent to Python's `for key, value in dict.items():`.
+
+
+## Functions
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// Function definition
+def add(a, b):
+   return a + b
+
+// Single-line function
+def square(x): return x²
+
+// Default parameters
+def greet(name, greeting default "Hello"):
+   return greeting + ", " + name
+
+// Rest parameters
+def sum(...nums):
+   let total = 0
+   for n in nums: total += n
+   return total
+
+// Spread operator
+let arr = [1, 2, 3]
+sum(...arr)              // Same as sum(1, 2, 3)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+## Common Data Structure Operations
+
+### Arrays
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let arr = [1, 2, 3]
+size(arr)                // 3 (length)
+arr[0]                   // 1 (0-based indexing)
+arr[-1]                  // Error (no negative indexing)
+last_value(arr)          // 3
+push(arr, 4)             // [1, 2, 3, 4] - mutates arr
+pop(arr)                 // Returns 4, arr is [1, 2, 3]
+arr[1] = 99              // [1, 99, 3]
+
+// Slicing (end is exclusive)
+slice(arr, 0, 2)         // [1, 99] (elements 0 and 1)
+slice(arr, 1)            // [99, 3] (from index 1 to end)
+
+// Functional operations
+clone(arr)               // Shallow copy (preserves pointer structure)
+deep_clone(arr)          // Deep copy (preserves graph structure, not tree)
+shuffled(arr, rng)       // Returns shuffled copy
+sorted(arr)              // Returns sorted copy
+reversed(arr)            // Returns reversed copy
+
+// Mutation operations
+shuffle(arr, rng)        // Mutates arr, returns ∅
+sort(arr)                // Mutates arr, returns ∅
+reverse(arr)             // Mutates arr, returns ∅
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Strings
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let s = "hello"
+size(s)                  // 5
+s[0]                     // "h" (single character substring)
+s + " world"             // "hello world"
+uppercase(s)             // "HELLO"
+lowercase(s)             // "hello"
+
+// Slicing (end is exclusive, same as arrays)
+slice(s, 0, 2)           // "he"
+slice(s, 2)              // "llo"
+
+// String operations return new strings (immutable)
+replace(s, "ll", "yy")   // "heyyo"
+split("a,b,c", ",")      // ["a", "b", "c"]
+join(["a", "b"], ",")    // "a,b"
+
+// String type is preserved by operations
+shuffled("abc", rng)     // Returns shuffled string (not array)
+reversed("abc")          // "cba"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Objects
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let obj = {name: "Alice", age: 30}
+obj.name                 // "Alice"
+obj["name"]              // "Alice"
+obj.city = "NYC"         // Add property
+keys(obj)                // ["name", "age", "city"] (array)
+values(obj)              // ["Alice", 30, "NYC"] (array)
+size(obj)                // 3 (number of keys)
+
+// Check for key
+"name" in obj            // true
+"height" in obj          // false
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+## Key Differences from Other Languages
+
+### From Python
+
+- Use `for value at key in obj:` instead of `for key, value in dict.items():`
+- Use `size(x)` instead of `len(x)`
+- Use `∅` or `nil` instead of `None`
+- Use `true`/`false` instead of `True`/`False`
+- Use `def foo(...rest)` instead of `def foo(*args)`
+- Use `x = if t then a else b` instead of `x = a if t else b`
+- No list comprehensions (use `iterate()` or `iterated()`)
+- No negative indexing: use `last_value(arr)` instead of `arr[-1]`
+- Empty arrays/objects are **truthy** (unlike Python where `[]` is falsy)
+
+### From JavaScript
+
+- Use `def` instead of `function`
+- Use `:` and indentation instead of `{}`
+- Use `size(x)` instead of `x.length`
+- Use `for v at k in object:` instead of `for (k in object)`
+- Use `for v in array:` instead of `for (v of array)`
+- Use `==` for all equality (no `===` vs `==` distinction)
+- Use `x = if t then a else b` instead of `x = t ? a : b`
+- No semicolons required (except for multiple statements on one line)
+- Empty arrays/objects are **truthy** (same as JavaScript)
+
+### From Lua
+
+- **0-based indexing** (not 1-based like Lua)
+- Use `size(x)` instead of `#x`
+- Use `∅` or `nil` instead of just `nil`
+- Use `def` instead of `function`
+- Use `true`/`false` instead of `true`/`false` (same!)
+- **Number 0 is falsy** (unlike Lua where only `nil` and `false` are falsy)
+
+
+## Common API Patterns
+
+### Randomness
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// Global random (uses game seed)
+random()                          // Random float [0, 1)
+random(10)                        // Random integer [0, 10)
+random(5, 10)                     // Random integer [5, 10)
+random_value(array)               // Random element
+random_gaussian()                 // Normal distribution
+
+// Seeded random
+let rng = make_random(seed)       // Create RNG with seed
+rng()                             // Use like random()
+random_value(array, rng)          // Pass rng to functions
+shuffled(array, rng)              // Deterministic shuffle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Iteration with Callback
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// iterate() modifies array in place, returns true if any removed
+def my_filter(element):
+   if element < 0: return iterate.REMOVE
+   if element > 100: return iterate.BREAK
+
+iterate(array, my_filter)
+
+// iterated() returns new array/string/object
+def double_positives(element):
+   if element < 0: return iterate.REMOVE  // Skip element
+   return element * 2                      // Transform element
+
+let positives = iterated(array, double_positives)
+
+// Constants for iteration control
+iterate.CONTINUE              // Continue (default)
+iterate.REMOVE                // Remove current element
+iterate.BREAK                 // Stop iteration
+iterate.REMOVE_AND_BREAK      // Remove then stop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Vector Operations
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let v = xy(3, 4)              // 2D vector
+let w = xyz(1, 2, 3)          // 3D vector
+v.x, v.y                      // Component access
+magnitude(v)                  // sqrt(x² + y²)
+‖v‖                          // Same as magnitude(v)
+direction(v)                  // Angle in radians
+v + w                         // Element-wise addition
+v - w                         // Element-wise subtraction
+3 * v                         // Scalar multiplication
+dot(v, w)                     // Dot product
+perp(v)                       // Perpendicular vector (2D)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### Common Constants
+
+```````````````````````````````````````````````````````````````````
+Constant          Value/Type        Description
+================  ================  =================================
+∅, nil            nil               Null/None/undefined
+infinity, ∞       +inf              Positive infinity
+nan               NaN               Not a number
+π, pi             3.14159...        Pi
+ε, epsilon        0.0001            Small value for comparisons
+SCREEN_SIZE       xy()              Screen dimensions
+gamepad_array     array             Connected gamepads
+mode_frames       number            Frames in current mode
+```````````````````````````````````````````````````````````````````
+
+
+## Memory & Performance Notes
+
+- Arrays and objects are **mutable** and passed by **reference**
+- Use `clone()` for shallow copy, `deep_clone()` for deep copy
+- **Important**: `clone()` and `deep_clone()` preserve **graph structure**, including 
+  shared references and cycles. If object A references object B twice, the clone will 
+  also reference the same cloned B twice (not create two separate copies)
+- String operations create **new strings** (strings are immutable)
+- `push(array, x)` is O(1) amortized time
+- `pop(array)` is O(1) amortized time  
+- `fast_remove_value(array, x)` is O(1) but does not preserve order
+- `remove_key(array, i)` is O(n) but preserves order
+- Iteration with `for` loops is safe for mutation via `push()` only
+
+
+## Quick Lookup: slice() Behavior
+
+**Arrays and Strings**: `slice(data, start, end)` where `end` is **exclusive**.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let arr = [10, 20, 30, 40, 50]
+slice(arr, 0, 3)         // [10, 20, 30]  (indices 0, 1, 2)
+slice(arr, 2)            // [30, 40, 50]   (from index 2 to end)
+slice(arr, 1, 4)         // [20, 30, 40]   (indices 1, 2, 3)
+
+let s = "hello"
+slice(s, 0, 2)           // "he"
+slice(s, 2)              // "llo"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Matches **JavaScript** `slice()` behavior (exclusive end), not Python's.
+
+
+## Quick Lookup: Mutating vs Functional Functions
+
+Many operations have two forms: one that mutates in place (returns `∅`) and one 
+that returns a new value.
+
+```````````````````````````````````````````````````````````````````
+Operation         Mutating (returns ∅)   Functional (returns new)
+================  =====================  ==========================
+Sort              sort(arr)              sorted(arr)
+Reverse           reverse(arr)           reversed(arr)
+Shuffle           shuffle(arr, rng)      shuffled(arr, rng)
+Remove            remove_key(arr, i)     slice() + concatenation
+Extend            extend(arr1, arr2)     extended(arr1, arr2)
+Splice            splice(arr, ...)       spliced(arr, ...)
+```````````````````````````````````````````````````````````````````
+
+**Rule**: If a function name ends in "ed", it returns a new value. Otherwise, it 
+likely mutates and returns `∅`.
+
+
